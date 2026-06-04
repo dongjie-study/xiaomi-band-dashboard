@@ -330,11 +330,25 @@ def update(filepath, our_filepath=None):
         print(f"Loading competitor data: {filepath}")
         comp_df = load_and_clean(filepath)
         comp_df['type'] = '竞对'
+        comp_df['source'] = 'comp'
         print(f"Loading our data: {our_filepath}")
         our_df = load_and_clean(our_filepath)
         our_df['type'] = '我方'
-        df = pd.concat([comp_df, our_df], ignore_index=True)
-        print(f"Combined: {len(df)} orders ({len(comp_df)} comp + {len(our_df)} ours)")
+        our_df['source'] = 'ours'
+        raw = pd.concat([comp_df, our_df], ignore_index=True)
+        # Check for duplicate rooms (same room in both files -> sum)
+        room_sources = raw.groupby('room')['source'].nunique()
+        dup_rooms = room_sources[room_sources > 1]
+        if len(dup_rooms) > 0:
+            print(f"Duplicate rooms (merged by sum): {', '.join(dup_rooms.index)}")
+        # Final type: 我方 if room appears in our file, else 竞对
+        has_ours = raw.groupby('room')['type'].apply(lambda x: '我方' in x.values)
+        type_map = {r: '我方' if has_ours[r] else '竞对' for r in has_ours.index}
+        raw['type'] = raw['room'].map(type_map)
+        our_n = sum(1 for t in type_map.values() if t == '我方')
+        comp_n = sum(1 for t in type_map.values() if t == '竞对')
+        print(f"Combined: {len(raw)} orders, {raw['room'].nunique()} rooms ({our_n} ours, {comp_n} comp)")
+        df = raw
     else:
         print(f"Loading: {filepath}")
         df = load_and_clean(filepath)
