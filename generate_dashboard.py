@@ -13,6 +13,11 @@ plt.rcParams['font.family'] = 'sans-serif'
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(DATA_DIR, 'history.json')
 
+OUR_ROOMS = {
+    '小米数码旗舰店', '小米官方手表', '小米官方手环直播间',
+    '小米官方耳机直播间', '小米手环10Pro直播间',
+}
+
 COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
           '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9']
 ROOM_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
@@ -73,6 +78,7 @@ def analyze_data(filepath):
     df['hour'] = df['time'].dt.hour
     df['product_short'] = df['product'].apply(shorten_product)
     df['room'] = df['room'].astype(str).str.strip()
+    df['type'] = df['room'].apply(lambda r: '我方' if r in OUR_ROOMS else '竞对')
     return df
 
 

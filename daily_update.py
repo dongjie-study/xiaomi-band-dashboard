@@ -14,6 +14,12 @@ from datetime import datetime
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(DATA_DIR, 'history.json')
 
+# Our rooms — everything else is competitor
+OUR_ROOMS = {
+    '小米数码旗舰店', '小米官方手表', '小米官方手环直播间',
+    '小米官方耳机直播间', '小米手环10Pro直播间',
+}
+
 
 def shorten_product(name):
     name = str(name)
@@ -70,7 +76,8 @@ def load_and_clean(filepath):
     df['hour'] = df['time'].dt.hour
     df['product_short'] = df['product'].apply(shorten_product)
     df['room'] = df['room'].astype(str).str.strip()
-    df['type'] = df['type'].astype(str).str.strip()
+    # Always classify by room name
+    df['type'] = df['room'].apply(lambda r: '我方' if r in OUR_ROOMS else '竞对')
     return df
 
 
@@ -102,7 +109,8 @@ def summarize_day(df):
     rooms = {}
     for room_name, room_df in df.groupby('room'):
         rsum = summarize_room(room_df)
-        rsum['type'] = room_df['type'].iloc[0]
+        types = room_df['type'].value_counts()
+        rsum['type'] = '我方' if '我方' in types.index else types.index[0]
         rooms[room_name] = rsum
 
     # Identify our rooms
@@ -327,28 +335,20 @@ def print_comparison(today, yesterday=None):
 
 def update(filepath, our_filepath=None):
     if our_filepath:
-        print(f"Loading competitor data: {filepath}")
-        comp_df = load_and_clean(filepath)
-        comp_df['type'] = '竞对'
-        comp_df['source'] = 'comp'
-        print(f"Loading our data: {our_filepath}")
-        our_df = load_and_clean(our_filepath)
-        our_df['type'] = '我方'
-        our_df['source'] = 'ours'
-        raw = pd.concat([comp_df, our_df], ignore_index=True)
-        # Check for duplicate rooms (same room in both files -> sum)
-        room_sources = raw.groupby('room')['source'].nunique()
-        dup_rooms = room_sources[room_sources > 1]
-        if len(dup_rooms) > 0:
-            print(f"Duplicate rooms (merged by sum): {', '.join(dup_rooms.index)}")
-        # Final type: 我方 if room appears in our file, else 竞对
-        has_ours = raw.groupby('room')['type'].apply(lambda x: '我方' in x.values)
-        type_map = {r: '我方' if has_ours[r] else '竞对' for r in has_ours.index}
-        raw['type'] = raw['room'].map(type_map)
-        our_n = sum(1 for t in type_map.values() if t == '我方')
-        comp_n = sum(1 for t in type_map.values() if t == '竞对')
-        print(f"Combined: {len(raw)} orders, {raw['room'].nunique()} rooms ({our_n} ours, {comp_n} comp)")
-        df = raw
+        print(f"Loading data source 1: {filepath}")
+        df1 = load_and_clean(filepath)
+        print(f"Loading data source 2: {our_filepath}")
+        df2 = load_and_clean(our_filepath)
+        df = pd.concat([df1, df2], ignore_index=True)
+        dup = set(df1['room'].unique()) & set(df2['room'].unique())
+        if dup:
+            print(f"Rooms in both sources (summed): {', '.join(sorted(dup))}")
+        n_our_rooms = len([r for r in df['room'].unique() if r in OUR_ROOMS])
+        n_comp_rooms = df['room'].nunique() - n_our_rooms
+        n_our_orders = len(df[df['type'] == '我方'])
+        n_comp_orders = len(df[df['type'] == '竞对'])
+        print(f"Combined: {len(df)} orders ({n_our_orders} ours + {n_comp_orders} comp), "
+              f"{df['room'].nunique()} rooms ({n_our_rooms} ours + {n_comp_rooms} comp)")
     else:
         print(f"Loading: {filepath}")
         df = load_and_clean(filepath)
