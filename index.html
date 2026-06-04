@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小米手环直播间竞对分析仪表盘</title>
+<script src="chart.umd.min.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #333; }
+  .container { max-width: 1500px; margin: 0 auto; padding: 20px; }
+  h1 { text-align: center; color: #1a1a2e; margin: 20px 0; font-size: 28px; }
+  h2 { color: #1a1a2e; margin: 10px 0; font-size: 20px; }
+  .controls { text-align: center; margin: 16px 0; display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; align-items: center; }
+  .controls button, .controls select { padding: 8px 18px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer; font-size: 14px; }
+  .controls button.active, .controls button:hover { background: #4ECDC4; color: white; border-color: #4ECDC4; }
+  .controls select { background: white; min-width: 140px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 16px 0; }
+  .kpi-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); text-align: center; }
+  .kpi-card.ours { border: 2px solid #FFD700; background: linear-gradient(135deg, #fff9e6 0%, #fff 100%); }
+  .kpi-card .label { font-size: 12px; color: #888; margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; }
+  .kpi-card .value { font-size: 28px; font-weight: 700; color: #1a1a2e; }
+  .kpi-card .change { font-size: 12px; margin-top: 4px; }
+  .kpi-card .change.up { color: #e74c3c; }
+  .kpi-card .change.down { color: #27ae60; }
+  .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .chart-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .chart-card h3 { font-size: 15px; color: #555; margin-bottom: 14px; }
+  .chart-container { position: relative; height: 320px; }
+  .chart-container.tall { height: 400px; }
+  .full-width { grid-column: 1 / -1; }
+  .product-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  .product-table th, .product-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #f0f0f0; font-size: 13px; }
+  .product-table th { color: #888; font-weight: 600; font-size: 12px; }
+  .product-table .bar-cell { width: 100px; }
+  .product-table .bar { height: 8px; background: #4ECDC4; border-radius: 4px; display: inline-block; vertical-align: middle; }
+  .product-table .bar-bg { width: 100px; height: 8px; background: #f0f0f0; border-radius: 4px; display: inline-block; vertical-align: middle; }
+  .room-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 16px 0; }
+  .room-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+  .room-card.ours { border: 2px solid #FFD700; }
+  .room-card .room-name { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: #1a1a2e; }
+  .room-card .room-name .badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
+  .room-card .room-name .badge.ours { background: #FFD700; color: #333; }
+  .room-card .room-name .badge.comp { background: #e0e0e0; color: #666; }
+  .room-card .stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
+  .room-card .stat-row .stat-label { color: #888; }
+  .room-card .stat-row .stat-value { font-weight: 600; color: #333; }
+  .summary-box { background: #fff; border-radius: 12px; padding: 20px 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); line-height: 2; font-size: 14px; }
+  .summary-box h3 { margin-bottom: 8px; }
+  .note { color: #888; font-size: 12px; text-align: center; margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>小米手环直播间竞对分析仪表盘</h1>
+
+  <div class="controls">
+    <div id="dateSelector"></div>
+    <span style="color:#888;margin:0 4px;">|</span>
+    <select id="roomSelector" onchange="switchRoom(this.value)">
+      <option value="__all__">全部直播间（汇总）</option>
+    </select>
+  </div>
+
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <!-- Room comparison cards (visible when "all rooms" selected) -->
+  <div id="roomCardsSection" style="display:none;">
+    <h2>各直播间对比</h2>
+    <div class="room-cards" id="roomCards"></div>
+  </div>
+
+  <!-- Product + hourly charts -->
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3>各产品订单量</h3>
+      <div class="chart-container"><canvas id="chartProductOrders"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>24小时订单分布</h3>
+      <div class="chart-container"><canvas id="chartHourlyOrders"></canvas></div>
+    </div>
+  </div>
+
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3>24小时销售额趋势</h3>
+      <div class="chart-container"><canvas id="chartHourlyRevenue"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3>产品收入占比</h3>
+      <div class="chart-container"><canvas id="chartRevenuePie"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Multi-room overlay charts (visible when "all" selected) -->
+  <div id="multiRoomCharts" style="display:none;">
+    <h2>多直播间时段对比</h2>
+    <div class="charts-row">
+      <div class="chart-card full-width">
+        <h3>各直播间24小时订单分布对比</h3>
+        <div class="chart-container tall"><canvas id="chartRoomHours"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Day-over-day comparison -->
+  <div class="charts-row" id="comparisonCharts" style="display:none;">
+    <div class="chart-card full-width">
+      <h3>每日对比趋势</h3>
+      <div class="chart-container"><canvas id="chartComparison"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Product details table -->
+  <div class="charts-row">
+    <div class="chart-card full-width">
+      <h3>产品销售明细</h3>
+      <table class="product-table" id="productTable">
+        <thead><tr>
+          <th>排名</th><th>产品名称</th><th class="bar-cell">占比</th><th>订单数</th><th>销售额</th><th>均价</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = {"date": "2026-06-03", "total_orders": 2266, "total_revenue": 843111.08, "avg_price": 372.07, "products": {"REDMI Watch 6": {"orders": 359, "revenue": 181177.53, "avg_price": 504.67}, "REDMI 手环 3": {"orders": 7, "revenue": 821.99, "avg_price": 117.43}, "【多地国补】小米手环 10": {"orders": 1, "revenue": 218.0, "avg_price": 218.0}, "【平台自营】XIaomI Watch S5 新品手": {"orders": 11, "revenue": 11177.6, "avg_price": 1016.15}, "【平台自营国补】小米手环 10": {"orders": 11, "revenue": 3479.0, "avg_price": 316.27}, "【新品正式】小米手环 10": {"orders": 7, "revenue": 1730.19, "avg_price": 247.17}, "【新品配件】小米手环10pro腕带配件": {"orders": 2, "revenue": 266.0, "avg_price": 133.0}, "【自营】Xiaomi Watch 5 全智能旗舰 ": {"orders": 1, "revenue": 1934.1, "avg_price": 1934.1}, "【自营】Xiaomi Watch S5 时尚新品智": {"orders": 1, "revenue": 935.1, "avg_price": 935.1}, "【自营加黑】Xiaomi Watch S4 41m": {"orders": 1, "revenue": 899.1, "avg_price": 899.1}, "【自营国补】  Xiaomi Watch S4 4": {"orders": 1, "revenue": 849.0, "avg_price": 849.0}, "【自营国补】Xiaomi Watch S5  小米": {"orders": 3, "revenue": 3172.1, "avg_price": 1057.37}, "【自营国补】小米手环10标准黑专业运动健康监测睡眠": {"orders": 5, "revenue": 1276.99, "avg_price": 255.4}, "充电配件": {"orders": 16, "revenue": 314.5, "avg_price": 19.66}, "小米AI眼镜": {"orders": 2, "revenue": 3098.0, "avg_price": 1549.0}, "小米手环10": {"orders": 876, "revenue": 251251.2, "avg_price": 286.82}, "小米手环10 Pro": {"orders": 879, "revenue": 357228.78, "avg_price": 406.4}, "小米手环10 陶瓷版": {"orders": 13, "revenue": 4577.0, "avg_price": 352.08}, "小米手环9 Pro": {"orders": 50, "revenue": 14975.0, "avg_price": 299.5}, "耳机配件": {"orders": 20, "revenue": 3729.9, "avg_price": 186.5}}, "rooms": {"小米官方手环直播间": {"orders": 464, "revenue": 155228.65, "avg_price": 334.54, "products": {"REDMI Watch 6": {"orders": 17, "revenue": 8516.2, "avg_price": 500.95}, "REDMI 手环 3": {"orders": 2, "revenue": 188.99, "avg_price": 94.5}, "【多地国补】小米手环 10": {"orders": 1, "revenue": 218.0, "avg_price": 218.0}, "【平台自营】XIaomI Watch S5 新品手": {"orders": 2, "revenue": 1998.0, "avg_price": 999.0}, "【平台自营国补】小米手环 10": {"orders": 6, "revenue": 1884.0, "avg_price": 314.0}, "【新品正式】小米手环 10": {"orders": 2, "revenue": 482.2, "avg_price": 241.1}, "【新品配件】小米手环10pro腕带配件": {"orders": 2, "revenue": 266.0, "avg_price": 133.0}, "充电配件": {"orders": 4, "revenue": 68.6, "avg_price": 17.15}, "小米手环10": {"orders": 250, "revenue": 72140.7, "avg_price": 288.56}, "小米手环10 Pro": {"orders": 156, "revenue": 63190.97, "avg_price": 405.07}, "小米手环9 Pro": {"orders": 14, "revenue": 4186.0, "avg_price": 299.0}, "耳机配件": {"orders": 8, "revenue": 2088.99, "avg_price": 261.12}}, "_hourly_stats": {"0": {"orders": 29, "revenue": 8724.0}, "1": {"orders": 17, "revenue": 4859.9}, "2": {"orders": 8, "revenue": 2089.19}, "4": {"orders": 4, "revenue": 1316.0}, "5": {"orders": 2, "revenue": 618.0}, "6": {"orders": 10, "revenue": 3371.2}, "7": {"orders": 18, "revenue": 5502.05}, "8": {"orders": 28, "revenue": 9508.08}, "9": {"orders": 59, "revenue": 17916.52}, "10": {"orders": 30, "revenue": 10743.45}, "11": {"orders": 24, "revenue": 8999.0}, "12": {"orders": 24, "revenue": 7502.71}, "13": {"orders": 26, "revenue": 8695.94}, "14": {"orders": 15, "revenue": 5592.2}, "15": {"orders": 12, "revenue": 4622.2}, "16": {"orders": 9, "revenue": 3481.25}, "17": {"orders": 14, "revenue": 5551.8}, "18": {"orders": 20, "revenue": 6169.0}, "19": {"orders": 13, "revenue": 4974.2}, "20": {"orders": 21, "revenue": 7054.82}, "21": {"orders": 34, "revenue": 11531.2}, "22": {"orders": 22, "revenue": 7952.5}, "23": {"orders": 25, "revenue": 8453.44}}, "type": "我方"}, "小米官方手表": {"orders": 152, "revenue": 75496.47, "avg_price": 496.69, "products": {"REDMI Watch 6": {"orders": 122, "revenue": 61923.18, "avg_price": 507.57}, "【平台自营】XIaomI Watch S5 新品手": {"orders": 4, "revenue": 4068.3, "avg_price": 1017.08}, "【平台自营国补】小米手环 10": {"orders": 2, "revenue": 703.0, "avg_price": 351.5}, "【新品正式】小米手环 10": {"orders": 1, "revenue": 228.99, "avg_price": 228.99}, "小米AI眼镜": {"orders": 1, "revenue": 1599.0, "avg_price": 1599.0}, "小米手环10": {"orders": 12, "revenue": 3284.0, "avg_price": 273.67}, "小米手环10 Pro": {"orders": 7, "revenue": 2793.0, "avg_price": 399.0}, "小米手环9 Pro": {"orders": 3, "revenue": 897.0, "avg_price": 299.0}}, "_hourly_stats": {"0": {"orders": 4, "revenue": 2048.2}, "1": {"orders": 6, "revenue": 3432.4}, "2": {"orders": 3, "revenue": 1323.1}, "3": {"orders": 1, "revenue": 485.1}, "4": {"orders": 1, "revenue": 539.0}, "5": {"orders": 4, "revenue": 1917.1}, "6": {"orders": 2, "revenue": 1192.1}, "7": {"orders": 5, "revenue": 2297.2}, "8": {"orders": 9, "revenue": 4135.39}, "9": {"orders": 7, "revenue": 3351.3}, "10": {"orders": 11, "revenue": 5275.4}, "11": {"orders": 7, "revenue": 3423.5}, "12": {"orders": 8, "revenue": 4130.3}, "13": {"orders": 9, "revenue": 5512.18}, "14": {"orders": 10, "revenue": 4392.7}, "15": {"orders": 7, "revenue": 3391.3}, "16": {"orders": 5, "revenue": 2821.1}, "17": {"orders": 4, "revenue": 1994.3}, "18": {"orders": 2, "revenue": 840.0}, "19": {"orders": 10, "revenue": 4818.8}, "20": {"orders": 10, "revenue": 4750.3}, "21": {"orders": 12, "revenue": 6037.8}, "22": {"orders": 4, "revenue": 1872.1}, "23": {"orders": 11, "revenue": 5515.8}}, "type": "我方"}, "小米手环": {"orders": 944, "revenue": 338862.1, "avg_price": 358.96, "products": {"REDMI Watch 6": {"orders": 25, "revenue": 12726.7, "avg_price": 509.07}, "REDMI 手环 3": {"orders": 5, "revenue": 633.0, "avg_price": 126.6}, "【自营国补】小米手环10标准黑专业运动健康监测睡眠": {"orders": 3, "revenue": 750.99, "avg_price": 250.33}, "充电配件": {"orders": 6, "revenue": 126.5, "avg_price": 21.08}, "小米AI眼镜": {"orders": 1, "revenue": 1499.0, "avg_price": 1499.0}, "小米手环10": {"orders": 321, "revenue": 91083.73, "avg_price": 283.75}, "小米手环10 Pro": {"orders": 548, "revenue": 222332.11, "avg_price": 405.72}, "小米手环10 陶瓷版": {"orders": 11, "revenue": 3844.0, "avg_price": 349.45}, "小米手环9 Pro": {"orders": 18, "revenue": 5407.0, "avg_price": 300.39}, "耳机配件": {"orders": 6, "revenue": 459.07, "avg_price": 76.51}}, "_hourly_stats": {"0": {"orders": 28, "revenue": 11391.2}, "1": {"orders": 18, "revenue": 6792.0}, "2": {"orders": 6, "revenue": 2394.0}, "3": {"orders": 3, "revenue": 1467.1}, "4": {"orders": 4, "revenue": 1736.1}, "5": {"orders": 4, "revenue": 1816.0}, "6": {"orders": 1, "revenue": 399.0}, "7": {"orders": 7, "revenue": 2608.0}, "8": {"orders": 21, "revenue": 7181.06}, "9": {"orders": 67, "revenue": 25393.7}, "10": {"orders": 60, "revenue": 21793.97}, "11": {"orders": 53, "revenue": 19606.92}, "12": {"orders": 58, "revenue": 20866.7}, "13": {"orders": 47, "revenue": 17471.3}, "14": {"orders": 48, "revenue": 16398.9}, "15": {"orders": 47, "revenue": 16338.1}, "16": {"orders": 33, "revenue": 12119.2}, "17": {"orders": 72, "revenue": 24411.1}, "18": {"orders": 48, "revenue": 16183.1}, "19": {"orders": 45, "revenue": 15005.9}, "20": {"orders": 47, "revenue": 16532.0}, "21": {"orders": 75, "revenue": 26417.18}, "22": {"orders": 75, "revenue": 25699.53}, "23": {"orders": 77, "revenue": 28840.04}}, "type": "竞对"}, "小米手表官方直播间": {"orders": 190, "revenue": 97189.35, "avg_price": 511.52, "products": {"REDMI Watch 6": {"orders": 173, "revenue": 86887.95, "avg_price": 502.24}, "【自营】Xiaomi Watch 5 全智能旗舰 ": {"orders": 1, "revenue": 1934.1, "avg_price": 1934.1}, "【自营】Xiaomi Watch S5 时尚新品智": {"orders": 1, "revenue": 935.1, "avg_price": 935.1}, "【自营加黑】Xiaomi Watch S4 41m": {"orders": 1, "revenue": 899.1, "avg_price": 899.1}, "【自营国补】Xiaomi Watch S5  小米": {"orders": 2, "revenue": 2214.1, "avg_price": 1107.05}, "小米手环10": {"orders": 1, "revenue": 319.0, "avg_price": 319.0}, "小米手环10 Pro": {"orders": 8, "revenue": 3103.0, "avg_price": 387.88}, "小米手环9 Pro": {"orders": 3, "revenue": 897.0, "avg_price": 299.0}}, "_hourly_stats": {"0": {"orders": 1, "revenue": 485.1}, "1": {"orders": 1, "revenue": 485.1}, "2": {"orders": 1, "revenue": 485.1}, "3": {"orders": 3, "revenue": 3534.3}, "7": {"orders": 5, "revenue": 2479.4}, "8": {"orders": 4, "revenue": 1940.4}, "9": {"orders": 4, "revenue": 1994.3}, "10": {"orders": 10, "revenue": 5120.5}, "11": {"orders": 10, "revenue": 5094.4}, "12": {"orders": 7, "revenue": 3371.4}, "13": {"orders": 9, "revenue": 4333.7}, "14": {"orders": 10, "revenue": 4686.7}, "15": {"orders": 7, "revenue": 3557.4}, "16": {"orders": 10, "revenue": 4906.6}, "17": {"orders": 14, "revenue": 7184.9}, "18": {"orders": 8, "revenue": 4096.4}, "19": {"orders": 22, "revenue": 10762.7}, "20": {"orders": 17, "revenue": 8345.35}, "21": {"orders": 16, "revenue": 7897.2}, "22": {"orders": 18, "revenue": 9301.4}, "23": {"orders": 13, "revenue": 7127.0}}, "type": "竞对"}, "小米数码旗舰店": {"orders": 222, "revenue": 75708.39, "avg_price": 341.03, "products": {"REDMI Watch 6": {"orders": 16, "revenue": 8159.0, "avg_price": 509.94}, "【平台自营】XIaomI Watch S5 新品手": {"orders": 5, "revenue": 5111.3, "avg_price": 1022.26}, "【平台自营国补】小米手环 10": {"orders": 3, "revenue": 892.0, "avg_price": 297.33}, "【新品正式】小米手环 10": {"orders": 4, "revenue": 1019.0, "avg_price": 254.75}, "【自营国补】  Xiaomi Watch S4 4": {"orders": 1, "revenue": 849.0, "avg_price": 849.0}, "充电配件": {"orders": 6, "revenue": 119.4, "avg_price": 19.9}, "小米手环10": {"orders": 126, "revenue": 36256.25, "avg_price": 287.75}, "小米手环10 Pro": {"orders": 49, "revenue": 20326.6, "avg_price": 414.83}, "小米手环9 Pro": {"orders": 6, "revenue": 1794.0, "avg_price": 299.0}, "耳机配件": {"orders": 6, "revenue": 1181.84, "avg_price": 196.97}}, "_hourly_stats": {"0": {"orders": 19, "revenue": 6085.1}, "1": {"orders": 10, "revenue": 2968.85}, "2": {"orders": 4, "revenue": 1176.0}, "3": {"orders": 2, "revenue": 678.0}, "4": {"orders": 2, "revenue": 884.1}, "5": {"orders": 3, "revenue": 1035.3}, "6": {"orders": 7, "revenue": 2002.0}, "7": {"orders": 6, "revenue": 1915.36}, "8": {"orders": 18, "revenue": 4979.53}, "9": {"orders": 13, "revenue": 4034.1}, "10": {"orders": 12, "revenue": 3751.6}, "11": {"orders": 8, "revenue": 2780.0}, "12": {"orders": 12, "revenue": 4219.8}, "13": {"orders": 6, "revenue": 2497.2}, "14": {"orders": 4, "revenue": 1741.0}, "15": {"orders": 8, "revenue": 3705.85}, "16": {"orders": 5, "revenue": 1880.0}, "17": {"orders": 4, "revenue": 1859.0}, "18": {"orders": 11, "revenue": 3197.8}, "19": {"orders": 12, "revenue": 3695.9}, "20": {"orders": 12, "revenue": 4039.0}, "21": {"orders": 15, "revenue": 5904.8}, "22": {"orders": 17, "revenue": 6820.1}, "23": {"orders": 12, "revenue": 3858.0}}, "type": "我方"}, "小米数码智能旗舰店": {"orders": 294, "revenue": 100626.12, "avg_price": 342.27, "products": {"REDMI Watch 6": {"orders": 6, "revenue": 2964.5, "avg_price": 494.08}, "【自营国补】Xiaomi Watch S5  小米": {"orders": 1, "revenue": 958.0, "avg_price": 958.0}, "【自营国补】小米手环10标准黑专业运动健康监测睡眠": {"orders": 2, "revenue": 526.0, "avg_price": 263.0}, "小米手环10": {"orders": 166, "revenue": 48167.52, "avg_price": 290.17}, "小米手环10 Pro": {"orders": 111, "revenue": 45483.1, "avg_price": 409.76}, "小米手环10 陶瓷版": {"orders": 2, "revenue": 733.0, "avg_price": 366.5}, "小米手环9 Pro": {"orders": 6, "revenue": 1794.0, "avg_price": 299.0}}, "_hourly_stats": {"0": {"orders": 5, "revenue": 1735.0}, "1": {"orders": 1, "revenue": 394.8}, "2": {"orders": 3, "revenue": 937.0}, "3": {"orders": 1, "revenue": 269.0}, "4": {"orders": 2, "revenue": 798.0}, "6": {"orders": 4, "revenue": 1346.0}, "7": {"orders": 4, "revenue": 2011.1}, "8": {"orders": 6, "revenue": 1824.0}, "9": {"orders": 19, "revenue": 6760.0}, "10": {"orders": 15, "revenue": 5069.65}, "11": {"orders": 11, "revenue": 4177.0}, "12": {"orders": 9, "revenue": 3231.0}, "13": {"orders": 3, "revenue": 1146.8}, "14": {"orders": 8, "revenue": 3234.0}, "15": {"orders": 10, "revenue": 3671.55}, "16": {"orders": 13, "revenue": 4487.0}, "17": {"orders": 19, "revenue": 6640.5}, "18": {"orders": 24, "revenue": 7678.15}, "19": {"orders": 33, "revenue": 11148.42}, "20": {"orders": 42, "revenue": 14187.0}, "21": {"orders": 37, "revenue": 12015.15}, "22": {"orders": 17, "revenue": 5323.0}, "23": {"orders": 8, "revenue": 2542.0}}, "type": "竞对"}}, "our_rooms": ["小米官方手环直播间", "小米官方手表", "小米数码旗舰店"], "comp_rooms": ["小米手环", "小米手表官方直播间", "小米数码智能旗舰店"], "type_summary": {"我方": {"orders": 838, "revenue": 306433.51, "avg_price": 365.67, "rooms": 3}, "竞对": {"orders": 1428, "revenue": 536677.57, "avg_price": 375.82, "rooms": 3}}, "_hourly_stats": {"0": {"orders": 86, "revenue": 30468.6}, "1": {"orders": 53, "revenue": 18933.05}, "2": {"orders": 25, "revenue": 8404.39}, "3": {"orders": 10, "revenue": 6433.5}, "4": {"orders": 13, "revenue": 5273.2}, "5": {"orders": 13, "revenue": 5386.4}, "6": {"orders": 24, "revenue": 8310.3}, "7": {"orders": 45, "revenue": 16813.11}, "8": {"orders": 86, "revenue": 29568.46}, "9": {"orders": 169, "revenue": 59449.92}, "10": {"orders": 138, "revenue": 51754.57}, "11": {"orders": 113, "revenue": 44080.82}, "12": {"orders": 118, "revenue": 43321.91}, "13": {"orders": 100, "revenue": 39657.12}, "14": {"orders": 95, "revenue": 36045.5}, "15": {"orders": 91, "revenue": 35286.4}, "16": {"orders": 75, "revenue": 29695.15}, "17": {"orders": 127, "revenue": 47641.6}, "18": {"orders": 113, "revenue": 38164.45}, "19": {"orders": 135, "revenue": 50405.92}, "20": {"orders": 149, "revenue": 54908.47}, "21": {"orders": 189, "revenue": 69803.33}, "22": {"orders": 153, "revenue": 56968.63}, "23": {"orders": 146, "revenue": 56336.28}}};
+const HISTORY = [{"date": "2026-06-02", "total_orders": 804, "total_revenue": 303990.35, "avg_price": 378.1, "products": {"REDMI Watch 6": {"orders": 23, "revenue": 11696.5, "avg_price": 508.54}, "【自营国补】Xiaomi Watch 5 全智能旗": {"orders": 1, "revenue": 1999.0, "avg_price": 1999.0}, "【自营国补】小米手环10标准黑专业运动健康监测睡眠": {"orders": 3, "revenue": 725.35, "avg_price": 241.78}, "充电配件": {"orders": 7, "revenue": 292.58, "avg_price": 41.8}, "小米手环10": {"orders": 138, "revenue": 38390.45, "avg_price": 278.19}, "小米手环10 Pro": {"orders": 595, "revenue": 241164.57, "avg_price": 405.32}, "小米手环10 陶瓷版": {"orders": 5, "revenue": 1720.0, "avg_price": 344.0}, "小米手环9 Pro": {"orders": 23, "revenue": 6586.0, "avg_price": 286.35}, "小米插线板（4位4控）插座插排拖线板独立开关带线家": {"orders": 2, "revenue": 55.9, "avg_price": 27.95}, "耳机配件": {"orders": 7, "revenue": 1360.0, "avg_price": 194.29}}, "_hourly_stats": {"0": {"orders": 18, "revenue": 6902.0}, "1": {"orders": 11, "revenue": 4064.1}, "2": {"orders": 5, "revenue": 2075.0}, "3": {"orders": 1, "revenue": 399.0}, "7": {"orders": 20, "revenue": 6800.8}, "8": {"orders": 30, "revenue": 11850.31}, "9": {"orders": 39, "revenue": 14671.4}, "10": {"orders": 51, "revenue": 19574.8}, "11": {"orders": 48, "revenue": 19335.9}, "12": {"orders": 58, "revenue": 21831.46}, "13": {"orders": 57, "revenue": 20444.3}, "14": {"orders": 35, "revenue": 13532.0}, "15": {"orders": 51, "revenue": 19686.2}, "16": {"orders": 44, "revenue": 16886.0}, "17": {"orders": 32, "revenue": 11368.0}, "18": {"orders": 38, "revenue": 13791.57}, "19": {"orders": 46, "revenue": 16022.3}, "20": {"orders": 42, "revenue": 14419.01}, "21": {"orders": 55, "revenue": 21066.93}, "22": {"orders": 74, "revenue": 30240.77}, "23": {"orders": 49, "revenue": 19028.5}}}, {"date": "2026-06-03", "total_orders": 2266, "total_revenue": 843111.08, "avg_price": 372.07, "products": {"REDMI Watch 6": {"orders": 359, "revenue": 181177.53, "avg_price": 504.67}, "REDMI 手环 3": {"orders": 7, "revenue": 821.99, "avg_price": 117.43}, "【多地国补】小米手环 10": {"orders": 1, "revenue": 218.0, "avg_price": 218.0}, "【平台自营】XIaomI Watch S5 新品手": {"orders": 11, "revenue": 11177.6, "avg_price": 1016.15}, "【平台自营国补】小米手环 10": {"orders": 11, "revenue": 3479.0, "avg_price": 316.27}, "【新品正式】小米手环 10": {"orders": 7, "revenue": 1730.19, "avg_price": 247.17}, "【新品配件】小米手环10pro腕带配件": {"orders": 2, "revenue": 266.0, "avg_price": 133.0}, "【自营】Xiaomi Watch 5 全智能旗舰 ": {"orders": 1, "revenue": 1934.1, "avg_price": 1934.1}, "【自营】Xiaomi Watch S5 时尚新品智": {"orders": 1, "revenue": 935.1, "avg_price": 935.1}, "【自营加黑】Xiaomi Watch S4 41m": {"orders": 1, "revenue": 899.1, "avg_price": 899.1}, "【自营国补】  Xiaomi Watch S4 4": {"orders": 1, "revenue": 849.0, "avg_price": 849.0}, "【自营国补】Xiaomi Watch S5  小米": {"orders": 3, "revenue": 3172.1, "avg_price": 1057.37}, "【自营国补】小米手环10标准黑专业运动健康监测睡眠": {"orders": 5, "revenue": 1276.99, "avg_price": 255.4}, "充电配件": {"orders": 16, "revenue": 314.5, "avg_price": 19.66}, "小米AI眼镜": {"orders": 2, "revenue": 3098.0, "avg_price": 1549.0}, "小米手环10": {"orders": 876, "revenue": 251251.2, "avg_price": 286.82}, "小米手环10 Pro": {"orders": 879, "revenue": 357228.78, "avg_price": 406.4}, "小米手环10 陶瓷版": {"orders": 13, "revenue": 4577.0, "avg_price": 352.08}, "小米手环9 Pro": {"orders": 50, "revenue": 14975.0, "avg_price": 299.5}, "耳机配件": {"orders": 20, "revenue": 3729.9, "avg_price": 186.5}}, "rooms": {"小米官方手环直播间": {"orders": 464, "revenue": 155228.65, "avg_price": 334.54, "products": {"REDMI Watch 6": {"orders": 17, "revenue": 8516.2, "avg_price": 500.95}, "REDMI 手环 3": {"orders": 2, "revenue": 188.99, "avg_price": 94.5}, "【多地国补】小米手环 10": {"orders": 1, "revenue": 218.0, "avg_price": 218.0}, "【平台自营】XIaomI Watch S5 新品手": {"orders": 2, "revenue": 1998.0, "avg_price": 999.0}, "【平台自营国补】小米手环 10": {"orders": 6, "revenue": 1884.0, "avg_price": 314.0}, "【新品正式】小米手环 10": {"orders": 2, "revenue": 482.2, "avg_price": 241.1}, "【新品配件】小米手环10pro腕带配件": {"orders": 2, "revenue": 266.0, "avg_price": 133.0}, "充电配件": {"orders": 4, "revenue": 68.6, "avg_price": 17.15}, "小米手环10": {"orders": 250, "revenue": 72140.7, "avg_price": 288.56}, "小米手环10 Pro": {"orders": 156, "revenue": 63190.97, "avg_price": 405.07}, "小米手环9 Pro": {"orders": 14, "revenue": 4186.0, "avg_price": 299.0}, "耳机配件": {"orders": 8, "revenue": 2088.99, "avg_price": 261.12}}, "_hourly_stats": {"0": {"orders": 29, "revenue": 8724.0}, "1": {"orders": 17, "revenue": 4859.9}, "2": {"orders": 8, "revenue": 2089.19}, "4": {"orders": 4, "revenue": 1316.0}, "5": {"orders": 2, "revenue": 618.0}, "6": {"orders": 10, "revenue": 3371.2}, "7": {"orders": 18, "revenue": 5502.05}, "8": {"orders": 28, "revenue": 9508.08}, "9": {"orders": 59, "revenue": 17916.52}, "10": {"orders": 30, "revenue": 10743.45}, "11": {"orders": 24, "revenue": 8999.0}, "12": {"orders": 24, "revenue": 7502.71}, "13": {"orders": 26, "revenue": 8695.94}, "14": {"orders": 15, "revenue": 5592.2}, "15": {"orders": 12, "revenue": 4622.2}, "16": {"orders": 9, "revenue": 3481.25}, "17": {"orders": 14, "revenue": 5551.8}, "18": {"orders": 20, "revenue": 6169.0}, "19": {"orders": 13, "revenue": 4974.2}, "20": {"orders": 21, "revenue": 7054.82}, "21": {"orders": 34, "revenue": 11531.2}, "22": {"orders": 22, "revenue": 7952.5}, "23": {"orders": 25, "revenue": 8453.44}}, "type": "我方"}, "小米官方手表": {"orders": 152, "revenue": 75496.47, "avg_price": 496.69, "products": {"REDMI Watch 6": {"orders": 122, "revenue": 61923.18, "avg_price": 507.57}, "【平台自营】XIaomI Watch S5 新品手": {"orders": 4, "revenue": 4068.3, "avg_price": 1017.08}, "【平台自营国补】小米手环 10": {"orders": 2, "revenue": 703.0, "avg_price": 351.5}, "【新品正式】小米手环 10": {"orders": 1, "revenue": 228.99, "avg_price": 228.99}, "小米AI眼镜": {"orders": 1, "revenue": 1599.0, "avg_price": 1599.0}, "小米手环10": {"orders": 12, "revenue": 3284.0, "avg_price": 273.67}, "小米手环10 Pro": {"orders": 7, "revenue": 2793.0, "avg_price": 399.0}, "小米手环9 Pro": {"orders": 3, "revenue": 897.0, "avg_price": 299.0}}, "_hourly_stats": {"0": {"orders": 4, "revenue": 2048.2}, "1": {"orders": 6, "revenue": 3432.4}, "2": {"orders": 3, "revenue": 1323.1}, "3": {"orders": 1, "revenue": 485.1}, "4": {"orders": 1, "revenue": 539.0}, "5": {"orders": 4, "revenue": 1917.1}, "6": {"orders": 2, "revenue": 1192.1}, "7": {"orders": 5, "revenue": 2297.2}, "8": {"orders": 9, "revenue": 4135.39}, "9": {"orders": 7, "revenue": 3351.3}, "10": {"orders": 11, "revenue": 5275.4}, "11": {"orders": 7, "revenue": 3423.5}, "12": {"orders": 8, "revenue": 4130.3}, "13": {"orders": 9, "revenue": 5512.18}, "14": {"orders": 10, "revenue": 4392.7}, "15": {"orders": 7, "revenue": 3391.3}, "16": {"orders": 5, "revenue": 2821.1}, "17": {"orders": 4, "revenue": 1994.3}, "18": {"orders": 2, "revenue": 840.0}, "19": {"orders": 10, "revenue": 4818.8}, "20": {"orders": 10, "revenue": 4750.3}, "21": {"orders": 12, "revenue": 6037.8}, "22": {"orders": 4, "revenue": 1872.1}, "23": {"orders": 11, "revenue": 5515.8}}, "type": "我方"}, "小米手环": {"orders": 944, "revenue": 338862.1, "avg_price": 358.96, "products": {"REDMI Watch 6": {"orders": 25, "revenue": 12726.7, "avg_price": 509.07}, "REDMI 手环 3": {"orders": 5, "revenue": 633.0, "avg_price": 126.6}, "【自营国补】小米手环10标准黑专业运动健康监测睡眠": {"orders": 3, "revenue": 750.99, "avg_price": 250.33}, "充电配件": {"orders": 6, "revenue": 126.5, "avg_price": 21.08}, "小米AI眼镜": {"orders": 1, "revenue": 1499.0, "avg_price": 1499.0}, "小米手环10": {"orders": 321, "revenue": 91083.73, "avg_price": 283.75}, "小米手环10 Pro": {"orders": 548, "revenue": 222332.11, "avg_price": 405.72}, "小米手环10 陶瓷版": {"orders": 11, "revenue": 3844.0, "avg_price": 349.45}, "小米手环9 Pro": {"orders": 18, "revenue": 5407.0, "avg_price": 300.39}, "耳机配件": {"orders": 6, "revenue": 459.07, "avg_price": 76.51}}, "_hourly_stats": {"0": {"orders": 28, "revenue": 11391.2}, "1": {"orders": 18, "revenue": 6792.0}, "2": {"orders": 6, "revenue": 2394.0}, "3": {"orders": 3, "revenue": 1467.1}, "4": {"orders": 4, "revenue": 1736.1}, "5": {"orders": 4, "revenue": 1816.0}, "6": {"orders": 1, "revenue": 399.0}, "7": {"orders": 7, "revenue": 2608.0}, "8": {"orders": 21, "revenue": 7181.06}, "9": {"orders": 67, "revenue": 25393.7}, "10": {"orders": 60, "revenue": 21793.97}, "11": {"orders": 53, "revenue": 19606.92}, "12": {"orders": 58, "revenue": 20866.7}, "13": {"orders": 47, "revenue": 17471.3}, "14": {"orders": 48, "revenue": 16398.9}, "15": {"orders": 47, "revenue": 16338.1}, "16": {"orders": 33, "revenue": 12119.2}, "17": {"orders": 72, "revenue": 24411.1}, "18": {"orders": 48, "revenue": 16183.1}, "19": {"orders": 45, "revenue": 15005.9}, "20": {"orders": 47, "revenue": 16532.0}, "21": {"orders": 75, "revenue": 26417.18}, "22": {"orders": 75, "revenue": 25699.53}, "23": {"orders": 77, "revenue": 28840.04}}, "type": "竞对"}, "小米手表官方直播间": {"orders": 190, "revenue": 97189.35, "avg_price": 511.52, "products": {"REDMI Watch 6": {"orders": 173, "revenue": 86887.95, "avg_price": 502.24}, "【自营】Xiaomi Watch 5 全智能旗舰 ": {"orders": 1, "revenue": 1934.1, "avg_price": 1934.1}, "【自营】Xiaomi Watch S5 时尚新品智": {"orders": 1, "revenue": 935.1, "avg_price": 935.1}, "【自营加黑】Xiaomi Watch S4 41m": {"orders": 1, "revenue": 899.1, "avg_price": 899.1}, "【自营国补】Xiaomi Watch S5  小米": {"orders": 2, "revenue": 2214.1, "avg_price": 1107.05}, "小米手环10": {"orders": 1, "revenue": 319.0, "avg_price": 319.0}, "小米手环10 Pro": {"orders": 8, "revenue": 3103.0, "avg_price": 387.88}, "小米手环9 Pro": {"orders": 3, "revenue": 897.0, "avg_price": 299.0}}, "_hourly_stats": {"0": {"orders": 1, "revenue": 485.1}, "1": {"orders": 1, "revenue": 485.1}, "2": {"orders": 1, "revenue": 485.1}, "3": {"orders": 3, "revenue": 3534.3}, "7": {"orders": 5, "revenue": 2479.4}, "8": {"orders": 4, "revenue": 1940.4}, "9": {"orders": 4, "revenue": 1994.3}, "10": {"orders": 10, "revenue": 5120.5}, "11": {"orders": 10, "revenue": 5094.4}, "12": {"orders": 7, "revenue": 3371.4}, "13": {"orders": 9, "revenue": 4333.7}, "14": {"orders": 10, "revenue": 4686.7}, "15": {"orders": 7, "revenue": 3557.4}, "16": {"orders": 10, "revenue": 4906.6}, "17": {"orders": 14, "revenue": 7184.9}, "18": {"orders": 8, "revenue": 4096.4}, "19": {"orders": 22, "revenue": 10762.7}, "20": {"orders": 17, "revenue": 8345.35}, "21": {"orders": 16, "revenue": 7897.2}, "22": {"orders": 18, "revenue": 9301.4}, "23": {"orders": 13, "revenue": 7127.0}}, "type": "竞对"}, "小米数码旗舰店": {"orders": 222, "revenue": 75708.39, "avg_price": 341.03, "products": {"REDMI Watch 6": {"orders": 16, "revenue": 8159.0, "avg_price": 509.94}, "【平台自营】XIaomI Watch S5 新品手": {"orders": 5, "revenue": 5111.3, "avg_price": 1022.26}, "【平台自营国补】小米手环 10": {"orders": 3, "revenue": 892.0, "avg_price": 297.33}, "【新品正式】小米手环 10": {"orders": 4, "revenue": 1019.0, "avg_price": 254.75}, "【自营国补】  Xiaomi Watch S4 4": {"orders": 1, "revenue": 849.0, "avg_price": 849.0}, "充电配件": {"orders": 6, "revenue": 119.4, "avg_price": 19.9}, "小米手环10": {"orders": 126, "revenue": 36256.25, "avg_price": 287.75}, "小米手环10 Pro": {"orders": 49, "revenue": 20326.6, "avg_price": 414.83}, "小米手环9 Pro": {"orders": 6, "revenue": 1794.0, "avg_price": 299.0}, "耳机配件": {"orders": 6, "revenue": 1181.84, "avg_price": 196.97}}, "_hourly_stats": {"0": {"orders": 19, "revenue": 6085.1}, "1": {"orders": 10, "revenue": 2968.85}, "2": {"orders": 4, "revenue": 1176.0}, "3": {"orders": 2, "revenue": 678.0}, "4": {"orders": 2, "revenue": 884.1}, "5": {"orders": 3, "revenue": 1035.3}, "6": {"orders": 7, "revenue": 2002.0}, "7": {"orders": 6, "revenue": 1915.36}, "8": {"orders": 18, "revenue": 4979.53}, "9": {"orders": 13, "revenue": 4034.1}, "10": {"orders": 12, "revenue": 3751.6}, "11": {"orders": 8, "revenue": 2780.0}, "12": {"orders": 12, "revenue": 4219.8}, "13": {"orders": 6, "revenue": 2497.2}, "14": {"orders": 4, "revenue": 1741.0}, "15": {"orders": 8, "revenue": 3705.85}, "16": {"orders": 5, "revenue": 1880.0}, "17": {"orders": 4, "revenue": 1859.0}, "18": {"orders": 11, "revenue": 3197.8}, "19": {"orders": 12, "revenue": 3695.9}, "20": {"orders": 12, "revenue": 4039.0}, "21": {"orders": 15, "revenue": 5904.8}, "22": {"orders": 17, "revenue": 6820.1}, "23": {"orders": 12, "revenue": 3858.0}}, "type": "我方"}, "小米数码智能旗舰店": {"orders": 294, "revenue": 100626.12, "avg_price": 342.27, "products": {"REDMI Watch 6": {"orders": 6, "revenue": 2964.5, "avg_price": 494.08}, "【自营国补】Xiaomi Watch S5  小米": {"orders": 1, "revenue": 958.0, "avg_price": 958.0}, "【自营国补】小米手环10标准黑专业运动健康监测睡眠": {"orders": 2, "revenue": 526.0, "avg_price": 263.0}, "小米手环10": {"orders": 166, "revenue": 48167.52, "avg_price": 290.17}, "小米手环10 Pro": {"orders": 111, "revenue": 45483.1, "avg_price": 409.76}, "小米手环10 陶瓷版": {"orders": 2, "revenue": 733.0, "avg_price": 366.5}, "小米手环9 Pro": {"orders": 6, "revenue": 1794.0, "avg_price": 299.0}}, "_hourly_stats": {"0": {"orders": 5, "revenue": 1735.0}, "1": {"orders": 1, "revenue": 394.8}, "2": {"orders": 3, "revenue": 937.0}, "3": {"orders": 1, "revenue": 269.0}, "4": {"orders": 2, "revenue": 798.0}, "6": {"orders": 4, "revenue": 1346.0}, "7": {"orders": 4, "revenue": 2011.1}, "8": {"orders": 6, "revenue": 1824.0}, "9": {"orders": 19, "revenue": 6760.0}, "10": {"orders": 15, "revenue": 5069.65}, "11": {"orders": 11, "revenue": 4177.0}, "12": {"orders": 9, "revenue": 3231.0}, "13": {"orders": 3, "revenue": 1146.8}, "14": {"orders": 8, "revenue": 3234.0}, "15": {"orders": 10, "revenue": 3671.55}, "16": {"orders": 13, "revenue": 4487.0}, "17": {"orders": 19, "revenue": 6640.5}, "18": {"orders": 24, "revenue": 7678.15}, "19": {"orders": 33, "revenue": 11148.42}, "20": {"orders": 42, "revenue": 14187.0}, "21": {"orders": 37, "revenue": 12015.15}, "22": {"orders": 17, "revenue": 5323.0}, "23": {"orders": 8, "revenue": 2542.0}}, "type": "竞对"}}, "our_rooms": ["小米官方手环直播间", "小米官方手表", "小米数码旗舰店"], "comp_rooms": ["小米手环", "小米手表官方直播间", "小米数码智能旗舰店"], "type_summary": {"我方": {"orders": 838, "revenue": 306433.51, "avg_price": 365.67, "rooms": 3}, "竞对": {"orders": 1428, "revenue": 536677.57, "avg_price": 375.82, "rooms": 3}}, "_hourly_stats": {"0": {"orders": 86, "revenue": 30468.6}, "1": {"orders": 53, "revenue": 18933.05}, "2": {"orders": 25, "revenue": 8404.39}, "3": {"orders": 10, "revenue": 6433.5}, "4": {"orders": 13, "revenue": 5273.2}, "5": {"orders": 13, "revenue": 5386.4}, "6": {"orders": 24, "revenue": 8310.3}, "7": {"orders": 45, "revenue": 16813.11}, "8": {"orders": 86, "revenue": 29568.46}, "9": {"orders": 169, "revenue": 59449.92}, "10": {"orders": 138, "revenue": 51754.57}, "11": {"orders": 113, "revenue": 44080.82}, "12": {"orders": 118, "revenue": 43321.91}, "13": {"orders": 100, "revenue": 39657.12}, "14": {"orders": 95, "revenue": 36045.5}, "15": {"orders": 91, "revenue": 35286.4}, "16": {"orders": 75, "revenue": 29695.15}, "17": {"orders": 127, "revenue": 47641.6}, "18": {"orders": 113, "revenue": 38164.45}, "19": {"orders": 135, "revenue": 50405.92}, "20": {"orders": 149, "revenue": 54908.47}, "21": {"orders": 189, "revenue": 69803.33}, "22": {"orders": 153, "revenue": 56968.63}, "23": {"orders": 146, "revenue": 56336.28}}}];
+
+let currentDate = DATA.date;
+let currentRoom = '__all__';
+
+// Extract room list
+function getRooms(d) { return d.rooms ? Object.keys(d.rooms) : []; }
+
+function getRoomData(d, room) {
+  if (room === '__all__') return d;
+  if (d.rooms && d.rooms[room]) {
+    const r = d.rooms[room];
+    return {
+      date: d.date,
+      total_orders: r.orders,
+      total_revenue: r.revenue,
+      avg_price: r.avg_price,
+      products: r.products,
+      _hourly_stats: r._hourly_stats || {},
+      room: room
+    };
+  }
+  return d;
+}
+
+function renderDateSelector() {
+  const selector = document.getElementById('dateSelector');
+  selector.innerHTML = HISTORY.map(h =>
+    `<button class="${h.date === currentDate ? 'active' : ''}" onclick="switchDate('${h.date}')">${h.date}</button>`
+  ).join('');
+}
+
+function renderRoomSelector(d) {
+  const rooms = getRooms(d);
+  const sel = document.getElementById('roomSelector');
+  sel.innerHTML = '<option value="__all__">全部直播间（汇总）</option>' +
+    rooms.map(r => `<option value="${r}" ${r === currentRoom ? 'selected' : ''}>${r}</option>`).join('');
+}
+
+function switchDate(date) {
+  currentDate = date;
+  const d = HISTORY.find(h => h.date === date);
+  if (d) { renderAll(d); renderDateSelector(); renderRoomSelector(d); }
+}
+
+function switchRoom(room) {
+  currentRoom = room;
+  const d = HISTORY.find(h => h.date === currentDate);
+  if (d) renderAll(d);
+}
+
+function formatCurrency(n) { return '¥' + Number(n).toLocaleString('zh-CN', {minimumFractionDigits: 0, maximumFractionDigits: 0}); }
+function formatChange(current, previous) {
+  if (previous === undefined || previous === null || previous === 0) return '';
+  const diff = current - previous;
+  const pct = (diff / previous * 100).toFixed(1);
+  const cls = diff >= 0 ? 'up' : 'down';
+  const sign = diff >= 0 ? '+' : '';
+  return `<span class="change ${cls}">${sign}${diff.toLocaleString()} (${sign}${pct}%)</span>`;
+}
+
+let charts = {};
+function destroyCharts() {
+  Object.values(charts).forEach(c => c.destroy());
+  charts = {};
+}
+
+function renderKPI(d, prev) {
+  const container = document.getElementById('kpiRow');
+
+  const isRoomView = currentRoom !== '__all__';
+  const numCards = isRoomView ? 4 : 5;
+  container.style.gridTemplateColumns = `repeat(${numCards}, 1fr)`;
+
+  let html = `
+    <div class="kpi-card${isRoomView ? '' : ''}">
+      <div class="label">${isRoomView ? currentRoom : '总订单数'}</div>
+      <div class="value">${d.total_orders.toLocaleString()}</div>
+      <div class="change" id="kpiOrdersChange">${prev ? formatChange(d.total_orders, prev.total_orders) : ''}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">总销售额</div>
+      <div class="value">${formatCurrency(d.total_revenue)}</div>
+      <div class="change">${prev ? formatChange(d.total_revenue, prev.total_revenue) : ''}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">平均单价</div>
+      <div class="value">${formatCurrency(d.avg_price)}</div>
+      <div class="change">${prev ? formatChange(d.avg_price, prev.avg_price) : ''}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="label">在售产品数</div>
+      <div class="value">${Object.keys(d.products).length}</div>
+    </div>`;
+
+  if (!isRoomView) {
+    const roomCount = getRooms(d).length;
+    html += `
+    <div class="kpi-card">
+      <div class="label">直播间数</div>
+      <div class="value">${roomCount}</div>
+    </div>`;
+  }
+
+  container.innerHTML = html;
+}
+
+function renderRoomCards(d) {
+  const rooms = getRooms(d);
+  const section = document.getElementById('roomCardsSection');
+  const cards = document.getElementById('roomCards');
+
+  if (rooms.length <= 1) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+
+  const totalOrders = d.total_orders;
+  const sorted = rooms.map(r => ({name: r, ...d.rooms[r]})).sort((a, b) => b.orders - a.orders);
+
+  cards.innerHTML = sorted.map((r, i) => {
+    const pct = (r.orders / totalOrders * 100).toFixed(1);
+    const topProd = Object.entries(r.products).sort((a, b) => b[1].orders - a[1].orders)[0];
+    return `
+    <div class="room-card" style="border-left: 4px solid ${['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4'][i % 4]}">
+      <div class="room-name">
+        ${i === 0 ? '👑 ' : ''}${r.name}
+        <span class="badge comp">第${i+1}名</span>
+      </div>
+      <div class="stat-row"><span class="stat-label">订单数</span><span class="stat-value">${r.orders} 单 (${pct}%)</span></div>
+      <div class="stat-row"><span class="stat-label">销售额</span><span class="stat-value">${formatCurrency(r.revenue)}</span></div>
+      <div class="stat-row"><span class="stat-label">平均单价</span><span class="stat-value">${formatCurrency(r.avg_price)}</span></div>
+      <div class="stat-row"><span class="stat-label">SKU数</span><span class="stat-value">${Object.keys(r.products).length}</span></div>
+      <div class="stat-row"><span class="stat-label">销冠产品</span><span class="stat-value">${topProd[0]} (${topProd[1].orders}单)</span></div>
+    </div>`;
+  }).join('');
+}
+
+function renderProductChart(d) {
+  const sorted = Object.entries(d.products).sort((a, b) => b[1].orders - a[1].orders);
+  const labels = sorted.map(([name]) => name);
+  const orders = sorted.map(([, info]) => info.orders);
+  const revenues = sorted.map(([, info]) => info.revenue);
+  const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD','#F7DC6F','#BB8FCE','#85C1E9','#98D8C8'];
+
+  charts.productOrders = new Chart(document.getElementById('chartProductOrders'), {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: '订单量',
+        data: orders,
+        backgroundColor: colors.slice(0, labels.length),
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, title: { display: true, text: '订单数' } } }
+    }
+  });
+
+  charts.revenuePie = new Chart(document.getElementById('chartRevenuePie'), {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: revenues,
+        backgroundColor: colors.slice(0, labels.length),
+        borderWidth: 2,
+        borderColor: '#fff'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 11 }, padding: 12 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ¥${ctx.raw.toLocaleString()}` } }
+      }
+    }
+  });
+}
+
+function renderHourlyCharts(d) {
+  const hours = Array.from({length: 24}, (_, i) => i);
+  const hourlyData = d._hourly_stats || {};
+  const orders = hours.map(h => (hourlyData[h] || {}).orders || 0);
+  const revenue = hours.map(h => ((hourlyData[h] || {}).revenue || 0) / 1000);
+
+  charts.hourlyOrders = new Chart(document.getElementById('chartHourlyOrders'), {
+    type: 'line',
+    data: {
+      labels: hours.map(h => `${h}:00`),
+      datasets: [{
+        label: '订单量',
+        data: orders,
+        borderColor: '#FF6B6B',
+        backgroundColor: 'rgba(255,107,107,0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { title: { display: true, text: '小时' } }, y: { beginAtZero: true, title: { display: true, text: '订单数' } } }
+    }
+  });
+
+  charts.hourlyRevenue = new Chart(document.getElementById('chartHourlyRevenue'), {
+    type: 'line',
+    data: {
+      labels: hours.map(h => `${h}:00`),
+      datasets: [{
+        label: '销售额（千元）',
+        data: revenue,
+        borderColor: '#4ECDC4',
+        backgroundColor: 'rgba(78,205,196,0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ¥${(ctx.raw * 1000).toLocaleString()}` } } },
+      scales: { x: { title: { display: true, text: '小时' } }, y: { beginAtZero: true, title: { display: true, text: '销售额（千元）' } } }
+    }
+  });
+}
+
+function renderRoomHourlyOverlay(d) {
+  const rooms = getRooms(d);
+  const section = document.getElementById('multiRoomCharts');
+  if (rooms.length <= 1) {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+
+  const hours = Array.from({length: 24}, (_, i) => i);
+  const roomColors = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD'];
+  const datasets = rooms.map((r, i) => {
+    const hd = (d.rooms[r]._hourly_stats || {});
+    const data = hours.map(h => (hd[h] || {}).orders || 0);
+    return {
+      label: r,
+      data: data,
+      borderColor: roomColors[i % roomColors.length],
+      backgroundColor: 'transparent',
+      tension: 0.3,
+      pointRadius: 3,
+      borderWidth: 2
+    };
+  });
+
+  charts.roomHours = new Chart(document.getElementById('chartRoomHours'), {
+    type: 'line',
+    data: { labels: hours.map(h => `${h}:00`), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { title: { display: true, text: '小时' } },
+        y: { beginAtZero: true, title: { display: true, text: '订单数' } }
+      }
+    }
+  });
+}
+
+function renderComparison() {
+  if (HISTORY.length < 2) return;
+  document.getElementById('comparisonCharts').style.display = '';
+
+  const dates = HISTORY.map(h => h.date);
+  const orders = HISTORY.map(h => h.total_orders);
+  const revenue = HISTORY.map(h => h.total_revenue / 1000);
+
+  charts.comparison = new Chart(document.getElementById('chartComparison'), {
+    type: 'bar',
+    data: {
+      labels: dates,
+      datasets: [
+        { label: '订单量', data: orders, backgroundColor: '#FF6B6B', yAxisID: 'y', borderRadius: 6 },
+        { label: '销售额（千元）', data: revenue, backgroundColor: '#4ECDC4', yAxisID: 'y1', borderRadius: 6 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: { callbacks: { label: ctx => ctx.dataset.yAxisID === 'y' ? ` ${ctx.raw} 单` : ` ¥${(ctx.raw*1000).toLocaleString()}` } }
+      },
+      scales: {
+        y: { type: 'linear', position: 'left', title: { display: true, text: '订单数' }, beginAtZero: true },
+        y1: { type: 'linear', position: 'right', title: { display: true, text: '销售额（千元）' }, beginAtZero: true, grid: { drawOnChartArea: false } }
+      }
+    }
+  });
+}
+
+function renderProductTable(d) {
+  const sorted = Object.entries(d.products).sort((a, b) => b[1].orders - a[1].orders);
+  const maxOrders = sorted[0] ? sorted[0][1].orders : 1;
+  const tbody = document.getElementById('productTable').querySelector('tbody');
+  tbody.innerHTML = sorted.map(([name, info], i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td><strong>${name}</strong></td>
+      <td class="bar-cell"><span class="bar-bg"><span class="bar" style="width:${info.orders/maxOrders*100}%"></span></span></td>
+      <td>${info.orders} (${(info.orders/d.total_orders*100).toFixed(1)}%)</td>
+      <td>¥${info.revenue.toLocaleString()}</td>
+      <td>¥${Math.round(info.avg_price)}</td>
+    </tr>
+  `).join('');
+}
+
+function renderAll(d, prev) {
+  destroyCharts();
+  const data = getRoomData(d, currentRoom);
+  const prevData = prev ? getRoomData(prev, currentRoom) : null;
+  renderKPI(data, prevData);
+  renderProductChart(data);
+  renderHourlyCharts(data);
+  renderComparison();
+  renderProductTable(data);
+  renderRoomCards(d);
+  renderRoomHourlyOverlay(d);
+}
+
+// Init
+const d = HISTORY.find(h => h.date === currentDate) || DATA;
+const idx = HISTORY.findIndex(h => h.date === currentDate);
+const prev = idx > 0 ? HISTORY[idx - 1] : null;
+renderAll(d, prev);
+renderDateSelector();
+renderRoomSelector(d);
+</script>
+</body>
+</html>
