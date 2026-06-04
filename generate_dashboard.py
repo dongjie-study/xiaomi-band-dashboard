@@ -57,18 +57,41 @@ def shorten_product(name):
 
 def analyze_data(filepath):
     df = pd.read_excel(filepath)
-    ncols = len(df.columns)
-    if ncols >= 5:
-        df = df.iloc[:, :5]
-        df.columns = ['product', 'price', 'time', 'room', 'type']
-    elif ncols == 4:
-        df = df.iloc[:, :4]
-        df.columns = ['product', 'price', 'time', 'room']
-        df['type'] = '竞对'
-    else:
-        df.columns = ['product', 'price', 'time']
+    col_map = {}
+    for i, col in enumerate(df.columns):
+        name = str(col)
+        if any(kw in name for kw in ['商品', '产品', 'product']):
+            col_map['product'] = i
+        elif any(kw in name for kw in ['金额', '价格', 'price', '应付']):
+            col_map['price'] = i
+        elif any(kw in name for kw in ['时间', '提交', 'time', 'date']):
+            col_map['time'] = i
+        elif any(kw in name for kw in ['直播', '房间', 'room', '达人']):
+            col_map['room'] = i
+        elif any(kw in name for kw in ['类型', '我方', '竞对', 'type']):
+            col_map['type'] = i
+
+    cols = []
+    for key in ['product', 'price', 'time', 'room', 'type']:
+        if key in col_map:
+            cols.append(df.columns[col_map[key]])
+        else:
+            cols.append(None)
+
+    new_names = {}
+    for key, col in zip(['product', 'price', 'time', 'room', 'type'], cols):
+        if col is not None:
+            new_names[col] = key
+    df = df.rename(columns=new_names)
+
+    if 'time' not in df.columns:
+        df['time'] = pd.NaT
+    if 'room' not in df.columns:
         df['room'] = '未知直播间'
+    if 'type' not in df.columns:
         df['type'] = '竞对'
+
+    df = df[['product', 'price', 'time', 'room', 'type']]
 
     df['product'] = df['product'].astype(str).str.replace('\t', '', regex=False)
     df['time'] = df['time'].astype(str).str.replace('\t', '', regex=False)
