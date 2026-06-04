@@ -8,20 +8,33 @@ echo ============================================
 echo.
 
 if "%~1"=="" (
-    echo 请将当天 Excel 文件拖放到此 bat 图标上运行
+    echo 用法 1（推荐）: 先选竞对Excel，按住Ctrl再选我方Excel
+    echo          → 两个文件一起拖到此bat图标上
     echo.
-    echo 当前目录下的 Excel 文件:
+    echo 用法 2: 只拖一个合并好的Excel（需含type列）
+    echo.
+    echo 当前目录的 Excel 文件：
     for %%f in (*.xlsx) do echo   %%~nxf
     echo.
     pause
     exit /b 1
 )
 
-echo 文件: %~nx1
+echo 竞对数据: %~nx1
+if "%~2"=="" (
+    echo 我方数据: (未提供，按单文件合并模式处理)
+) else (
+    echo 我方数据: %~nx2
+)
 echo.
 
 echo [1/3] 运行数据分析...
-python daily_update.py "%~1"
+if "%~2"=="" (
+    python daily_update.py "%~1"
+) else (
+    python daily_update.py "%~1" "%~2"
+)
+
 if %errorlevel% neq 0 (
     echo.
     echo 分析失败！请检查 Excel 文件格式
@@ -40,6 +53,7 @@ git push
 
 echo.
 echo ============================================
-echo   完成！Cloudflare Pages 将自动部署更新
+echo   完成！网站已自动更新
+echo   https://xiaomi-band-dashboard.pages.dev
 echo ============================================
 pause

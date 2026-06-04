@@ -325,9 +325,19 @@ def print_comparison(today, yesterday=None):
     print("=" * 70)
 
 
-def update(filepath, our_room=None):
-    print(f"Loading: {filepath}")
-    df = load_and_clean(filepath)
+def update(filepath, our_filepath=None):
+    if our_filepath:
+        print(f"Loading competitor data: {filepath}")
+        comp_df = load_and_clean(filepath)
+        comp_df['type'] = '竞对'
+        print(f"Loading our data: {our_filepath}")
+        our_df = load_and_clean(our_filepath)
+        our_df['type'] = '我方'
+        df = pd.concat([comp_df, our_df], ignore_index=True)
+        print(f"Combined: {len(df)} orders ({len(comp_df)} comp + {len(our_df)} ours)")
+    else:
+        print(f"Loading: {filepath}")
+        df = load_and_clean(filepath)
     today = summarize_day(df)
 
     # Load history and compare
@@ -373,10 +383,11 @@ def update(filepath, our_room=None):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        filepath = sys.argv[1]
+    if len(sys.argv) >= 3:
+        # Two files: competitor data + our data
+        update(sys.argv[1], our_filepath=sys.argv[2])
+    elif len(sys.argv) > 1:
+        # One combined file
+        update(sys.argv[1])
     else:
-        filepath = os.path.join(DATA_DIR, '小米手环分析.xlsx')
-
-    our_room = sys.argv[2] if len(sys.argv) > 2 else None
-    update(filepath, our_room)
+        update(os.path.join(DATA_DIR, '小米手环分析.xlsx'))
