@@ -409,8 +409,8 @@ function renderComparison() {
   document.getElementById('comparisonCharts').style.display = '';
 
   const dates = HISTORY.map(h => h.date);
-  const orders = HISTORY.map(h => h.total_orders);
-  const revenue = HISTORY.map(h => h.total_revenue / 1000);
+  const orders = HISTORY.map(h => getRoomData(h, currentRoom).total_orders);
+  const revenue = HISTORY.map(h => getRoomData(h, currentRoom).total_revenue / 1000);
 
   charts.comparison = new Chart(document.getElementById('chartComparison'), {
     type: 'bar',
