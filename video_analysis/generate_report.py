@@ -1,6 +1,7 @@
 """
 竞对视频分析报告生成器
 对比良米 vs 我司的视频广告投放数据，生成可视化HTML报告
+自动发现 video_analysis/ 下所有 良米* / 我司* 目录并合并数据
 """
 import pandas as pd
 import numpy as np
@@ -12,7 +13,6 @@ from pathlib import Path
 from datetime import datetime
 
 BASE = Path(__file__).resolve().parent
-FRAMES_DIR = BASE / "frames"
 
 def img_to_b64(path):
     with open(path, 'rb') as f:
@@ -41,41 +41,75 @@ def parse_number(val):
             return 0
     return float(val)
 
-def is_avg_metric(name):
-    return any(kw in name for kw in ['ROI', '率', '成本', '单价', '费用'])
+def discover_dirs():
+    """Find all 良米* and 我司* directories under video_analysis/."""
+    lm_dirs = sorted(
+        [d for d in os.listdir(BASE) if d.startswith('良米') and os.path.isdir(BASE / d)],
+        key=lambda d: d
+    )
+    ws_dirs = sorted(
+        [d for d in os.listdir(BASE) if d.startswith('我司') and os.path.isdir(BASE / d)],
+        key=lambda d: d
+    )
+    return lm_dirs, ws_dirs
+
+def load_brand_data(brand_dirs):
+    """Load Excel data and collect video file info from multiple directories."""
+    all_dfs = []
+    all_videos = []  # list of (dir_name, filename)
+
+    for dir_name in brand_dirs:
+        dir_path = BASE / dir_name
+        xlsx_files = [f for f in os.listdir(dir_path)
+                      if f.endswith('.xlsx') and not f.startswith('~$')]
+        if xlsx_files:
+            df = pd.read_excel(dir_path / xlsx_files[0])
+            df.columns = df.columns.str.strip()
+            # Tag with source directory for reference
+            df['_source_dir'] = dir_name
+            all_dfs.append(df)
+
+        mp4s = get_video_order(dir_path)
+        for mp4 in mp4s:
+            all_videos.append((dir_name, mp4))
+
+    combined_df = pd.concat(all_dfs, ignore_index=True) if all_dfs else pd.DataFrame()
+    return combined_df, all_videos
 
 def build_report():
-    lm_df = pd.read_excel(BASE / "良米1-5号视频" / "良米6.1-6.5视频数据.xlsx")
-    ws_df = pd.read_excel(BASE / "我司1-5号视频" / "我司6.1-6.5视频数据.xlsx")
-    lm_df.columns = lm_df.columns.str.strip()
-    ws_df.columns = ws_df.columns.str.strip()
+    lm_dirs, ws_dirs = discover_dirs()
+    lm_df, lm_videos = load_brand_data(lm_dirs)
+    ws_df, ws_videos = load_brand_data(ws_dirs)
 
-    lm_videos = get_video_order(BASE / "良米1-5号视频")
-    ws_videos = get_video_order(BASE / "我司1-5号视频")
+    if lm_df.empty and ws_df.empty:
+        raise FileNotFoundError("No video data found. Place Excel files in 良米*/ or 我司*/ directories.")
 
-    # ===== Build video cards =====
-    def build_cards(df, videos, prefix, rel_dir):
+    def build_cards(df, videos, prefix):
+        """Build card list. videos is list of (dir_name, filename). frames/ lives inside each dir."""
         cards = []
-        for idx, vname in enumerate(videos):
+        for idx, (dir_name, vname) in enumerate(videos):
             if idx >= len(df):
                 break
             row = df.iloc[idx]
             frame_imgs = []
             poster_b64 = ''
             for pct in [0.25, 0.50, 0.75]:
-                fpath = FRAMES_DIR / prefix / f"{idx}_{pct:.2f}.jpg"
+                fpath = BASE / dir_name / "frames" / f"{idx}_{pct:.2f}.jpg"
+                # Fall back to legacy frame location if not found in batch dir
+                if not fpath.exists():
+                    fpath = BASE / "frames" / prefix / f"{idx}_{pct:.2f}.jpg"
                 if fpath.exists():
                     b64 = img_to_b64(fpath)
                     frame_imgs.append(b64)
                     if pct == 0.50:
                         poster_b64 = b64
 
-            # Relative path from HTML to video file
-            video_rel = f"{rel_dir}/{vname}"
+            video_rel = f"video_analysis/{dir_name}/{vname}"
 
             cards.append({
                 'index': idx,
                 'filename': vname,
+                'dir_name': dir_name,
                 'name': str(row.iloc[0])[:80],
                 'duration': str(row.iloc[3]) if len(row) > 3 else '',
                 'frames': frame_imgs,
@@ -85,16 +119,14 @@ def build_report():
             })
         return cards
 
-    lm_cards = build_cards(lm_df, lm_videos, 'liangmi', 'video_analysis/良米1-5号视频')
-    ws_cards = build_cards(ws_df, ws_videos, 'wosi', 'video_analysis/我司1-5号视频')
+    lm_cards = build_cards(lm_df, lm_videos, 'liangmi')
+    ws_cards = build_cards(ws_df, ws_videos, 'wosi')
 
     # ===== Compute summaries =====
     lm_s = {}
     ws_s = {}
 
-    # Define all metrics with their aggregation type
     metric_defs = [
-        # (display_name, column_name, agg_type)  agg_type: 'sum' or 'avg'
         ('总消耗', '整体消耗', 'sum'),
         ('平均支付ROI', '整体支付ROI', 'avg'),
         ('总成交金额', '整体成交金额', 'sum'),
@@ -139,7 +171,6 @@ def build_report():
             'ws': [parse_number(ws_df.iloc[i][col]) if i < len(ws_df) and col in ws_df.columns else 0 for i in range(n)],
         }
 
-    # 良米-only charts
     for col in ['整体展现次数', '整体点击率', '整体转化率']:
         if col in lm_df.columns:
             charts[col] = {
@@ -148,38 +179,35 @@ def build_report():
                 'ws': None,
             }
 
-    # ===== Generate HTML =====
     return render_html(lm_cards, ws_cards, lm_s, ws_s, charts, lm_df, ws_df)
 
 
 def render_html(lm_cards, ws_cards, lm_s, ws_s, charts, lm_df, ws_df):
     now = datetime.now()
 
-    # --- Summary comparison table ---
     def build_summary_table():
         rows = []
         for disp in lm_s:
             lm_v = lm_s.get(disp)
             ws_v = ws_s.get(disp)
-            is_avg = any(kw in disp for kw in ['ROI', '率', '成本', '单价', '费用', '平均'])
 
-            # Format values
-            if is_avg and '率' in disp:
-                lm_f = f'{lm_v*100:.2f}%' if lm_v else '-'
-                ws_f = f'{ws_v*100:.2f}%' if ws_v else '-'
-            elif is_avg:
-                lm_f = f'{lm_v:,.2f}' if lm_v else '-'
-                ws_f = f'{ws_v:,.2f}' if ws_v else '-'
+            if any(kw in disp for kw in ['ROI', '率', '成本', '单价', '费用', '平均']):
+                if '率' in disp:
+                    lm_f = f'{lm_v*100:.2f}%' if lm_v else '-'
+                    ws_f = f'{ws_v*100:.2f}%' if ws_v else '-'
+                else:
+                    lm_f = f'{lm_v:,.2f}' if lm_v else '-'
+                    ws_f = f'{ws_v:,.2f}' if ws_v else '-'
             else:
                 lm_f = f'{lm_v:,.0f}' if lm_v else '-'
                 ws_f = f'{ws_v:,.0f}' if ws_v else '-'
 
             if ws_v and lm_v and ws_v != 0:
                 diff_pct = (lm_v - ws_v) / abs(ws_v) * 100
-                # For cost metrics, lower is better
-                better = 'lm' if '成本' in disp or '费用' in disp else 'lm' if lm_v > ws_v else 'ws'
                 if '成本' in disp or '费用' in disp:
                     better = 'lm' if lm_v < ws_v else 'ws'
+                else:
+                    better = 'lm' if lm_v > ws_v else 'ws'
                 arrow = '▲' if better == 'lm' else ''
                 arrow_ws = '▲' if better == 'ws' else ''
                 diff_text = f'{diff_pct:+.1f}%'
@@ -199,8 +227,7 @@ def render_html(lm_cards, ws_cards, lm_s, ws_s, charts, lm_df, ws_df):
             </tr>''')
         return '\n'.join(rows)
 
-    # --- Video pair cards ---
-    vid_counter = [0]  # mutable counter for unique IDs
+    vid_counter = [0]
 
     def video_card(card, side, label, color):
         if not card:
@@ -231,11 +258,13 @@ def render_html(lm_cards, ws_cards, lm_s, ws_s, charts, lm_df, ws_df):
                 else:
                     mrows += f'<tr><td class="mk">{k}</td><td class="mv">{v:,.0f}</td></tr>'
 
+        batch_tag = f'<span style="font-size:.7em;color:#888;margin-left:4px">[{card.get("dir_name","")}]</span>' if card.get('dir_name') else ''
+
         return f'''
         <div class="vcard" style="border-left:3px solid {color}">
             <div class="vhead">
                 <span class="vbadge" style="background:{color}">{label}#{card['index']+1}</span>
-                <span class="vname" title="{card['name']}">{card['name'][:50]}</span>
+                <span class="vname" title="{card['name']}">{card['name'][:50]}{batch_tag}</span>
                 <span class="vdur">{card['duration']}</span>
             </div>
             <div class="vbody">
@@ -260,7 +289,6 @@ def render_html(lm_cards, ws_cards, lm_s, ws_s, charts, lm_df, ws_df):
             </div>
         </div>'''
 
-    # --- Charts ---
     chart_divs = ''
     chart_json = {}
     for i, (title, data) in enumerate(charts.items()):
@@ -277,7 +305,6 @@ def render_html(lm_cards, ws_cards, lm_s, ws_s, charts, lm_df, ws_df):
         chart_json[cid] = {'labels': data['labels'], 'datasets': datasets}
         chart_divs += f'<div class="cbox"><h4>{title}</h4><canvas id="{cid}"></canvas></div>'
 
-    # --- Insights ---
     def insight():
         lines = []
         lm_spend = lm_s.get('总消耗', 0)
@@ -311,7 +338,6 @@ def render_html(lm_cards, ws_cards, lm_s, ws_s, charts, lm_df, ws_df):
         if lm_ctr > 0:
             lines.append(f'良米平均点击率<span class="hl">{lm_ctr*100:.2f}%</span>，平均转化率<span class="hl">{lm_cvr*100:.2f}%</span>。')
 
-        # Best/worst performers
         if len(lm_cards) > 0:
             lm_best = max(lm_cards, key=lambda c: c['data'].get('整体支付ROI', 0))
             lm_worst = min(lm_cards, key=lambda c: c['data'].get('整体支付ROI', 0))
@@ -324,7 +350,13 @@ def render_html(lm_cards, ws_cards, lm_s, ws_s, charts, lm_df, ws_df):
 
         return '\n'.join(f'<li>{l}</li>' for l in lines)
 
-    # ===== Full HTML =====
+    # Source dirs summary
+    lm_dir_list = sorted(set(c.get('dir_name', '') for c in lm_cards if c.get('dir_name')))
+    ws_dir_list = sorted(set(c.get('dir_name', '') for c in ws_cards if c.get('dir_name')))
+    dir_info = ''
+    if len(lm_dir_list) > 1 or len(ws_dir_list) > 1:
+        dir_info = f'<div class="sub" style="margin-top:4px">数据批次: 良米 [{", ".join(lm_dir_list)}] | 我司 [{", ".join(ws_dir_list)}]</div>'
+
     html = f'''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -348,7 +380,6 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;
 
 .section-title{{font-size:1.2em;color:#555;margin:24px 0 16px;padding-left:12px;border-left:4px solid #667eea}}
 
-/* Summary Table */
 .stable{{width:100%;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:24px}}
 .stable table{{width:100%;border-collapse:collapse}}
 .stable th{{background:#f8f9fa;padding:12px 16px;text-align:left;font-weight:600;color:#666;font-size:.85em}}
@@ -362,20 +393,17 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;
 .stable .diff.good{{color:#27ae60}}
 .stable .diff.bad{{color:#e74c3c}}
 
-/* Charts */
 .charts{{display:grid;grid-template-columns:repeat(auto-fit,minmax(460px,1fr));gap:16px;margin-bottom:24px}}
 .cbox{{background:#fff;border-radius:12px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.06)}}
 .cbox h4{{margin-bottom:12px;color:#555;font-size:.95em}}
 .cbox canvas{{max-height:280px}}
 
-/* Insights */
 .insights{{background:#fff;border-radius:12px;padding:24px 28px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,.06)}}
 .insights h2{{margin-bottom:16px;font-size:1.1em}}
 .insights ul{{list-style:none;padding:0}}
 .insights li{{padding:8px 0;border-bottom:1px solid #f5f5f5;line-height:1.7}}
 .insights .hl{{color:#667eea;font-weight:600}}
 
-/* Video pairs */
 .pair{{background:#fff;border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.06)}}
 .ptitle{{font-size:1em;color:#666;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #eee}}
 .prow{{display:grid;grid-template-columns:1fr 1fr;gap:16px}}
@@ -407,7 +435,7 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;
 <div class="header">
     <div>
         <h1>竞对视频广告分析报告</h1>
-        <div class="sub">良米 vs 我司 · 巨量广告投放数据 · {now.strftime('%Y年%m月%d日')}</div>
+        <div class="sub">良米 vs 我司 · 巨量广告投放数据 · {now.strftime('%Y年%m月%d日')}{dir_info}</div>
     </div>
     <div class="kpis">
         <div class="kpi lm">
@@ -425,7 +453,6 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;
     </div>
 </div>
 
-<!-- Summary Table -->
 <h2 class="section-title">投放数据总览</h2>
 <div class="stable">
     <table>
@@ -438,17 +465,14 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;
     </table>
 </div>
 
-<!-- Insights -->
 <div class="insights">
     <h2>分析洞察</h2>
     <ul>{insight()}</ul>
 </div>
 
-<!-- Charts -->
 <h2 class="section-title">分视频指标对比</h2>
 <div class="charts">{chart_divs}</div>
 
-<!-- Video Details -->
 <h2 class="section-title">逐视频详细对比</h2>
 {paired}
 

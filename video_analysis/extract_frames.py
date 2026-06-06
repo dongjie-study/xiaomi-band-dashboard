@@ -4,19 +4,29 @@ import re
 from pathlib import Path
 
 BASE = Path(__file__).resolve().parent
-FRAMES_DIR = BASE / "frames"
-FRAMES_DIR.mkdir(exist_ok=True)
 
 def sort_key(name):
     """Sort: 下载 (1).mp4, 下载 (2).mp4, ..., 下载.mp4 last"""
     m = re.search(r'\((\d+)\)', name)
     if m:
         return (0, int(m.group(1)))
-    return (1, 0)  # 下载.mp4 goes last
+    return (1, 0)
 
-def extract_frames(video_dir, prefix):
-    """Extract 3 frames from each video, save as jpg thumbnails."""
-    out_dir = FRAMES_DIR / prefix
+def discover_dirs():
+    """Find all 良米* and 我司* directories with MP4 files."""
+    all_dirs = []
+    for entry in sorted(os.listdir(BASE)):
+        entry_path = BASE / entry
+        if not entry_path.is_dir():
+            continue
+        if entry.startswith('良米') or entry.startswith('我司'):
+            mp4s = [f for f in os.listdir(entry_path) if f.endswith('.mp4')]
+            if mp4s:
+                all_dirs.append(entry)
+    return all_dirs
+
+def extract_frames(video_dir, out_dir):
+    """Extract 3 frames from each video in video_dir, save to out_dir as jpg."""
     out_dir.mkdir(exist_ok=True)
 
     videos = sorted(
@@ -38,12 +48,10 @@ def extract_frames(video_dir, prefix):
             ret, frame = cap.read()
             if ret:
                 h, w = frame.shape[:2]
-                # Resize to max 640px wide
                 if w > 640:
                     ratio = 640 / w
                     frame = cv2.resize(frame, (640, int(h * ratio)))
                 fname = f"{idx}_{pct:.2f}.jpg"
-                # cv2.imwrite doesn't support Chinese paths on Windows
                 buf = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, 75])[1]
                 with open(str(out_dir / fname), 'wb') as f:
                     f.write(buf.tobytes())
@@ -57,16 +65,22 @@ def extract_frames(video_dir, prefix):
             'duration': round(duration, 1),
             'total_frames': total_frames,
         })
-        print(f"  [{prefix}] {vname} -> {len(frames)} frames ({duration:.1f}s)")
+        print(f"  {vname} -> {len(frames)} frames ({duration:.1f}s)")
 
     return results
 
-print("=== 提取良米视频帧 ===")
-lm = extract_frames(BASE / "良米1-5号视频", "liangmi")
-print(f"  共 {len(lm)} 个视频\n")
+dirs = discover_dirs()
+if not dirs:
+    print("No video directories found (looking for 良米*/ or 我司*/ with MP4s)")
+    exit(1)
 
-print("=== 提取我司视频帧 ===")
-ws = extract_frames(BASE / "我司1-5号视频", "wosi")
-print(f"  共 {len(ws)} 个视频\n")
+print(f"Found {len(dirs)} video directories: {', '.join(dirs)}\n")
 
-print("Done!")
+for d in dirs:
+    print(f"=== 提取: {d} ===")
+    video_dir = BASE / d
+    frames_out = BASE / d / "frames"
+    results = extract_frames(video_dir, frames_out)
+    print(f"  Done: {len(results)} videos -> {frames_out}\n")
+
+print("All frames extracted!")
