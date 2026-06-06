@@ -429,7 +429,18 @@ body{{font-family:-apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;
 .footer{{text-align:center;padding:30px;color:#bbb;font-size:.8em}}
 </style>
 </head>
-<body>
+<body style="display:none">
+<script>
+(function(){{
+var K='mi_band_auth_v1';
+if(localStorage.getItem(K)){{
+document.body.style.display='';
+return;
+}}
+document.body.innerHTML='<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,\'Microsoft YaHei\',sans-serif;background:#f0f2f5"><div style="background:#fff;border-radius:16px;padding:48px 40px;box-shadow:0 4px 24px rgba(0,0,0,.08);width:380px;max-width:90vw"><div style="text-align:center;font-size:2.4em;margin-bottom:8px">🔐</div><h1 style="font-size:1.4em;color:#1a1a2e;margin-bottom:8px;text-align:center">小米手环竞对分析平台</h1><p style="color:#888;font-size:.85em;text-align:center;margin-bottom:32px">请登录后查看数据</p><label style="display:block;font-size:.85em;color:#555;margin-bottom:6px">用户名</label><input type="text" id="lu" style="width:100%;padding:12px 16px;border:1px solid #ddd;border-radius:8px;font-size:.95em;margin-bottom:20px;outline:none" placeholder="请输入用户名" autofocus><label style="display:block;font-size:.85em;color:#555;margin-bottom:6px">密码</label><input type="password" id="lp" style="width:100%;padding:12px 16px;border:1px solid #ddd;border-radius:8px;font-size:.95em;margin-bottom:20px;outline:none" placeholder="请输入密码" onkeydown="if(event.key===\'Enter\')document.getElementById(\'lb\').click()"><p id="le" style="color:#e74c3c;font-size:.8em;text-align:center;margin-bottom:12px;display:none">用户名或密码错误</p><button id="lb" style="width:100%;padding:12px;background:#4ECDC4;color:#fff;border:none;border-radius:8px;font-size:1em;font-weight:600;cursor:pointer" onclick="var u=document.getElementById(\'lu\').value;var p=document.getElementById(\'lp\').value;if(u===\'zhangdongjie\'&&p===\'zdjzdj\'){{localStorage.setItem(\'mi_band_auth_v1\',\'1\');location.reload()}}else{{document.getElementById(\'le\').style.display=\'block\'}}">登 录</button></div></div>';
+document.body.style.display='';
+}})();
+</script>
 <div class="container">
 
 <div class="header">
