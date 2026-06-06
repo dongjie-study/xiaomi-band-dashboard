@@ -32,7 +32,7 @@ def run_video(extract=False):
     print("  生成视频广告分析报告")
     print("=" * 60)
     subprocess.run([sys.executable, "generate_report.py"], check=True)
-    print(f"Video report saved to: {OUTPUT_DIR / '竞对视频分析报告.html'}")
+    print(f"Video report saved to: {ROOT / '竞对视频分析报告.html'}")
     os.chdir(ROOT)
 
 

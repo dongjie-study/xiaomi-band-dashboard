@@ -85,8 +85,8 @@ def build_report():
             })
         return cards
 
-    lm_cards = build_cards(lm_df, lm_videos, 'liangmi', '../video_analysis/良米1-5号视频')
-    ws_cards = build_cards(ws_df, ws_videos, 'wosi', '../video_analysis/我司1-5号视频')
+    lm_cards = build_cards(lm_df, lm_videos, 'liangmi', 'video_analysis/良米1-5号视频')
+    ws_cards = build_cards(ws_df, ws_videos, 'wosi', 'video_analysis/我司1-5号视频')
 
     # ===== Compute summaries =====
     lm_s = {}
@@ -481,7 +481,7 @@ Object.entries(chartData).forEach(function(e) {{
 
 if __name__ == '__main__':
     html = build_report()
-    out_path = BASE.parent / 'output' / '竞对视频分析报告.html'
+    out_path = BASE.parent / '竞对视频分析报告.html'
     out_path.parent.mkdir(exist_ok=True)
     with open(out_path, 'w', encoding='utf-8') as f:
         f.write(html)
