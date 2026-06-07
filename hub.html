@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小米手环竞对分析平台</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;background:#f0f2f5;color:#333;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.container{max-width:700px;width:100%;padding:20px}
+.header{text-align:center;margin-bottom:40px}
+.header h1{font-size:2em;color:#1a1a2e;margin-bottom:8px}
+.header p{color:#888;font-size:.95em}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:600px){.cards{grid-template-columns:1fr}}
+.card{background:#fff;border-radius:16px;padding:32px 24px;text-decoration:none;box-shadow:0 2px 12px rgba(0,0,0,.06);transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column;align-items:center;text-align:center}
+.card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.1)}
+.card .icon{font-size:2.8em;margin-bottom:16px}
+.card h2{font-size:1.2em;color:#333;margin-bottom:8px}
+.card p{color:#888;font-size:.85em;line-height:1.5}
+.card.sales{border-top:4px solid #FF6B6B}
+.card.video{border-top:4px solid #4ECDC4}
+.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:.7em;font-weight:600;margin-top:12px}
+.badge.live{background:#fff0f0;color:#FF6B6B}
+.badge.ad{background:#f0fffe;color:#4ECDC4}
+.footer{text-align:center;margin-top:40px;color:#bbb;font-size:.8em}
+.logout-btn{display:block;margin:0 auto;margin-top:32px;padding:8px 24px;background:none;border:1px solid #ddd;border-radius:8px;color:#999;font-size:.85em;cursor:pointer;transition:all .2s}
+.logout-btn:hover{color:#e74c3c;border-color:#e74c3c}
+</style>
+</head>
+<body style="display:none">
+<script>
+(function(){
+var K='mi_band_auth_v1';
+if(!localStorage.getItem(K)){
+window.location.href='index.html';
+return;
+}
+document.body.style.display='';
+})();
+</script>
+<div class="container">
+<div class="header">
+<h1>小米手环竞对分析平台</h1>
+<p>请选择需要浏览的模块</p>
+</div>
+<div class="cards">
+<a href="sales_analysis/index.html" class="card sales">
+<div class="icon">📈</div>
+<h2>直播间销量分析</h2>
+<p>每日订单追踪、竞对直播间对比、小时分布、产品结构分析</p>
+<span class="badge live">LIVE SALES</span>
+</a>
+<a href="竞对视频分析报告.html" class="card video">
+<div class="icon">🎬</div>
+<h2>视频广告分析</h2>
+<p>良米 vs 我司视频广告ROI、消耗、转化率逐视频对比</p>
+<span class="badge ad">VIDEO ADS</span>
+</a>
+</div>
+<div class="footer">数据来源：巨量广告 · 抖音直播订单 &nbsp;|&nbsp; 报告由系统自动生成</div>
+<button class="logout-btn" onclick="localStorage.removeItem('mi_band_auth_v1');window.location.href='index.html'">退出登录</button>
+</div>
+</body>
+</html>
