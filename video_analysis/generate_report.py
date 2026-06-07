@@ -193,8 +193,8 @@ def render_html(lm_cards, ws_cards, lm_s, ws_s, charts, lm_df, ws_df):
 
             if any(kw in disp for kw in ['ROI', '率', '成本', '单价', '费用', '平均']):
                 if '率' in disp:
-                    lm_f = f'{lm_v*100:.2f}%' if lm_v else '-'
-                    ws_f = f'{ws_v*100:.2f}%' if ws_v else '-'
+                    lm_f = f'{lm_v:.2f}%' if lm_v else '-'
+                    ws_f = f'{ws_v:.2f}%' if ws_v else '-'
                 else:
                     lm_f = f'{lm_v:,.2f}' if lm_v else '-'
                     ws_f = f'{ws_v:,.2f}' if ws_v else '-'
@@ -336,7 +336,7 @@ def render_html(lm_cards, ws_cards, lm_s, ws_s, charts, lm_df, ws_df):
             lines.append(f'平均订单成本：良米<span class="hl">{lm_cpa:,.2f}元</span> vs 我司<span class="hl">{ws_cpa:,.2f}元</span>，{"良米" if lm_cpa < ws_cpa else "我司"}成本更低。')
 
         if lm_ctr > 0:
-            lines.append(f'良米平均点击率<span class="hl">{lm_ctr*100:.2f}%</span>，平均转化率<span class="hl">{lm_cvr*100:.2f}%</span>。')
+            lines.append(f'良米平均点击率<span class="hl">{lm_ctr:.2f}%</span>，平均转化率<span class="hl">{lm_cvr:.2f}%</span>。')
 
         if len(lm_cards) > 0:
             lm_best = max(lm_cards, key=lambda c: c['data'].get('整体支付ROI', 0))
