@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小米手环10 Pro · 全域营销战略总纲</title>
+<style>
+  :root {
+    --bg: #f5f6fa;
+    --card: #ffffff;
+    --border: #e2e5ec;
+    --mi-orange: #ff6900;
+    --apple: #0077ed;
+    --qianchuan: #ff6b35;
+    --doujia: #0ea89d;
+    --gold: #c8960c;
+    --green: #1da85c;
+    --red: #e74c3c;
+    --purple: #7c6ff7;
+    --porcelain: #c45a3c;
+    --text: #1a1a2e;
+    --sub: #777;
+    --head: #f0f1f5;
+    --shadow: 0 2px 12px rgba(0,0,0,.06);
+    --radius: 14px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+  }
+
+  /* ===== SIDEBAR ===== */
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: 240px; flex-shrink: 0; background: #fff;
+    border-right: 1px solid var(--border); position: fixed; top: 0; left: 0;
+    height: 100vh; overflow-y: auto; padding: 24px 0; z-index: 10;
+    box-shadow: 1px 0 8px rgba(0,0,0,.03);
+  }
+  .sidebar-logo {
+    padding: 0 20px 20px; border-bottom: 1px solid var(--border); margin-bottom: 16px;
+    font-size: 1.1em; font-weight: 800; color: var(--mi-orange); letter-spacing: 1px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sidebar-logo .dot { width: 8px; height: 8px; background: var(--mi-orange); border-radius: 50%; }
+  .nav-section { padding: 6px 20px; font-size: 0.7em; color: var(--sub); letter-spacing: 2px; margin-top: 8px; text-transform: uppercase; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 20px; font-size: 0.85em;
+    color: #555; text-decoration: none; transition: all 0.15s;
+    border-left: 3px solid transparent;
+  }
+  .nav-item:hover { color: var(--text); background: #f5f5f7; }
+  .nav-item.active { color: var(--mi-orange); background: rgba(255,105,0,0.06); border-left-color: var(--mi-orange); font-weight: 600; }
+  .nav-item .m { font-size: 0.7em; padding: 1px 6px; border-radius: 6px; font-weight: 600; }
+  .nav-item .m.m1 { background: rgba(0,119,237,0.1); color: var(--apple); }
+  .nav-item .m.m2 { background: rgba(255,107,53,0.1); color: var(--qianchuan); }
+  .nav-item .m.m3 { background: rgba(196,90,60,0.1); color: var(--porcelain); }
+  .nav-item .m.m4 { background: rgba(29,168,92,0.1); color: var(--green); }
+
+  .back-link {
+    display: flex; align-items: center; gap: 8px; padding: 10px 20px; margin-top: 16px;
+    font-size: 0.82em; color: var(--sub); text-decoration: none; border-top: 1px solid var(--border);
+    transition: color 0.15s;
+  }
+  .back-link:hover { color: var(--mi-orange); }
+
+  /* ===== MAIN ===== */
+  .main { margin-left: 240px; flex: 1; padding: 30px 36px 60px; max-width: 1200px; }
+
+  /* Hero */
+  .hero {
+    text-align: center; padding: 44px 28px 36px; margin-bottom: 36px;
+    background: linear-gradient(160deg, #f0f3f9 0%, #fafbfd 40%, #f5f6fa 100%);
+    border-radius: 20px; border: 1px solid var(--border); position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -40%; left: -40%; width: 180%; height: 180%;
+    background: radial-gradient(ellipse at 25% 40%, rgba(0,119,237,0.04) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 60%, rgba(255,105,0,0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 75% 40%, rgba(29,168,92,0.03) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .hero h1 { font-size: 2.2em; position: relative; z-index: 1; line-height: 1.3; color: #1a1a2e; }
+  .hero h1 .mi { color: var(--mi-orange); }
+  .hero .subtitle { color: var(--sub); font-size: 1em; margin-top: 8px; position: relative; z-index: 1; }
+
+  /* Sections */
+  section { margin-bottom: 44px; scroll-margin-top: 20px; }
+  .s-header { margin-bottom: 22px; }
+  .s-header h2 {
+    font-size: 1.35em; padding-left: 14px; border-left: 4px solid var(--mi-orange); letter-spacing: 1px;
+  }
+  .s-header p { color: var(--sub); font-size: 0.88em; margin-top: 4px; padding-left: 18px; }
+
+  /* Module intro card */
+  .module-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 22px 26px; margin-bottom: 22px; box-shadow: var(--shadow);
+  }
+  .module-card .m-title { font-size: 1.05em; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+  .module-card .m-title .m-tag { font-size: 0.72em; padding: 3px 10px; border-radius: 12px; letter-spacing: 1px; }
+  .module-card p { font-size: 0.88em; color: #555; line-height: 1.75; }
+
+  /* KPI Row */
+  .kpi-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 24px;
+  }
+  .kpi {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px; text-align: center; box-shadow: var(--shadow);
+  }
+  .kpi .kpi-num { font-size: 2em; font-weight: 800; line-height: 1.1; }
+  .kpi .kpi-num.c1 { color: var(--apple); }
+  .kpi .kpi-num.c2 { color: var(--mi-orange); }
+  .kpi .kpi-num.c3 { color: var(--gold); }
+  .kpi .kpi-num.c4 { color: var(--green); }
+  .kpi .kpi-label { font-size: 0.8em; color: var(--sub); margin-top: 4px; }
+  .kpi .kpi-src { font-size: 0.7em; color: #aaa; margin-top: 2px; }
+
+  /* Grids */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+  /* Info Card */
+  .card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; box-shadow: var(--shadow);
+  }
+  .card h4 { font-size: 0.93em; margin-bottom: 8px; }
+  .card ul { padding-left: 16px; font-size: 0.84em; color: #555; }
+  .card li { margin-bottom: 4px; }
+  .card.accent { border-left: 3px solid var(--mi-orange); }
+  .card.apple { border-left: 3px solid var(--apple); }
+  .card.green { border-left: 3px solid var(--green); }
+  .card.gold { border-left: 3px solid var(--gold); }
+  .card.red { border-left: 3px solid var(--red); }
+
+  /* Highlight box */
+  .hl {
+    border-radius: var(--radius); padding: 20px 24px; margin-top: 14px; border: 1px solid;
+  }
+  .hl.orange { background: rgba(255,105,0,0.04); border-color: rgba(255,105,0,0.18); }
+  .hl.gold-hl { background: rgba(200,150,12,0.04); border-color: rgba(200,150,12,0.18); }
+  .hl.green-hl { background: rgba(29,168,92,0.04); border-color: rgba(29,168,92,0.18); }
+
+  /* Tables */
+  .tbl {
+    width: 100%; border-collapse: collapse; font-size: 0.86em;
+    border-radius: 10px; overflow: hidden; border: 1px solid var(--border);
+  }
+  .tbl th {
+    background: var(--head); text-align: left; padding: 11px 14px;
+    font-weight: 600; border-bottom: 2px solid var(--border); color: #555;
+  }
+  .tbl td { padding: 10px 14px; border-bottom: 1px solid var(--border); color: #555; background: var(--card); }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl td:first-child { color: var(--text); font-weight: 500; }
+
+  /* Funnel */
+  .funnel { max-width: 600px; margin: 0 auto; }
+  .f-level { margin-bottom: 0; text-align: center; }
+  .f-bar { margin: 0 auto; padding: 12px 18px; border-radius: 6px; font-weight: 600; font-size: 0.84em; color: #fff; }
+  .f-arrow { text-align: center; color: var(--sub); font-size: 1.1em; margin: 2px 0; }
+
+  /* Timeline */
+  .tl { position: relative; padding: 10px 0; }
+  .tl::before { content: ''; position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; background: var(--border); }
+  .tl-item { display: flex; gap: 16px; margin-bottom: 18px; position: relative; }
+  .tl-dot {
+    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0; display: flex;
+    align-items: center; justify-content: center; font-size: 0.85em; font-weight: 700; z-index: 1; color: #fff;
+  }
+  .tl-body { padding-top: 6px; }
+  .tl-body h5 { font-size: 0.9em; margin-bottom: 2px; }
+  .tl-body p { font-size: 0.82em; color: var(--sub); }
+
+  /* Bar chart */
+  .bar-row { display: flex; align-items: center; gap: 10px; margin: 5px 0; font-size: 0.82em; }
+  .bar-row .bl { width: 90px; flex-shrink: 0; text-align: right; color: var(--sub); }
+  .bar-row .bt { flex: 1; height: 26px; border-radius: 5px; display: flex; align-items: center; padding: 0 10px; font-weight: 600; font-size: 0.8em; color: #fff; }
+  .bt.qc { background: rgba(255,107,53,0.7); }
+  .bt.dj { background: rgba(14,168,157,0.7); }
+
+  /* Flow row */
+  .flow { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0; padding: 16px 0; }
+  .flow-node {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 16px; text-align: center; font-size: 0.82em; min-width: 80px; box-shadow: var(--shadow);
+  }
+  .flow-node strong { display: block; }
+  .flow-node span { font-size: 0.78em; color: var(--sub); }
+  .flow-arrow { margin: 0 12px; color: var(--mi-orange); font-size: 1.2em; }
+
+  /* Strategy map */
+  .map-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .map-card {
+    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 20px 22px; position: relative; box-shadow: var(--shadow);
+  }
+  .map-card::after {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 3px; border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .map-card.m1::after { background: var(--apple); }
+  .map-card.m2::after { background: var(--qianchuan); }
+  .map-card.m3::after { background: var(--porcelain); }
+  .map-card.m4::after { background: var(--green); }
+
+  /* Conclusion */
+  .conclusion {
+    background: linear-gradient(135deg, rgba(255,105,0,0.04), rgba(0,119,237,0.03), rgba(29,168,92,0.03));
+    border: 1px solid var(--border); border-radius: 18px; padding: 32px;
+  }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .sidebar { display: none; }
+    .main { margin-left: 0; }
+    .grid-2, .grid-3, .grid-4, .map-grid { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+    .flow { flex-direction: column; }
+    .flow-arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body style="display:none">
+<script>
+(function(){
+var K='mi_band_auth_v1';
+if(!localStorage.getItem(K)){
+window.location.href='index.html';
+return;
+}
+document.body.style.display='';
+})();
+</script>
+
+<div class="layout">
+
+<!-- ===== SIDEBAR ===== -->
+<nav class="sidebar">
+  <div class="sidebar-logo"><span class="dot"></span> 小米手环10 Pro</div>
+  <div class="nav-section">战略总纲</div>
+  <a href="#overview" class="nav-item active">🎯 全景总览</a>
+  <div class="nav-section">四大模块</div>
+  <a href="#m1" class="nav-item"><span class="m m1">M1</span> iPhone市场机会</a>
+  <a href="#m2" class="nav-item"><span class="m m2">M2</span> 投放策略</a>
+  <a href="#m3" class="nav-item"><span class="m m3">M3</span> 许昌活动</a>
+  <a href="#m4" class="nav-item"><span class="m m4">M4</span> 游戏模式脚本</a>
+  <div class="nav-section">决策</div>
+  <a href="#playbook" class="nav-item">📋 执行Playbook</a>
+  <a href="#summary" class="nav-item">🏁 核心结论</a>
+  <a href="hub.html" class="back-link">← 返回导航页</a>
+</nav>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="main">
+
+<!-- ==================== HERO ==================== -->
+<header class="hero" id="overview">
+  <h1>小米手环10 Pro<br><span class="mi">全域营销战略总纲</span></h1>
+  <p class="subtitle">市场分析 → 投放策略 → 线下活动 → 内容创意 · 四合一作战地图</p>
+  <p style="color:var(--sub);font-size:0.82em;margin-top:10px;position:relative;z-index:1;">2026年5月 · 618冲刺期 · 版本 v2.0</p>
+</header>
+
+<!-- ==================== 0. 全景总览 ==================== -->
+<section>
+  <div class="s-header">
+    <h2>全景总览：四模块串联逻辑</h2>
+    <p>四大模块不是孤岛，而是一条完整链路——从"找对人"到"说对话"到"做对事"到"拍对片"</p>
+  </div>
+
+  <div class="flow" style="margin-bottom:28px;">
+    <div class="flow-node" style="border-left:3px solid var(--apple);">
+      <strong>M1 · 找对人</strong>
+      <span>iPhone用户市场分析<br>2.5亿目标用户池</span>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node" style="border-left:3px solid var(--qianchuan);">
+      <strong>M2 · 投对渠道</strong>
+      <span>千川 vs 抖加策略<br>精准收割+自然量撬动</span>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node" style="border-left:3px solid var(--porcelain);">
+      <strong>M3 · 做对活动</strong>
+      <span>许昌品质生活节<br>文化IP+服务+游戏联动</span>
+    </div>
+    <span class="flow-arrow">→</span>
+    <div class="flow-node" style="border-left:3px solid var(--green);">
+      <strong>M4 · 拍对内容</strong>
+      <span>游戏模式视频脚本<br>赛博朋克·电竞生物外挂</span>
+    </div>
+  </div>
+
+  <!-- 核心KPI -->
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-num c1">2.5亿</div><div class="kpi-label">iPhone无AW用户</div><div class="kpi-src">M1 · 市场空间</div></div>
+    <div class="kpi"><div class="kpi-num c2">375万</div><div class="kpi-label">实际可收割目标</div><div class="kpi-src">M1 · 转化漏斗</div></div>
+    <div class="kpi"><div class="kpi-num c3">3.75倍</div><div class="kpi-label">性价比倍率 vs AW</div><div class="kpi-src">M1 · 价格力</div></div>
+    <div class="kpi"><div class="kpi-num c4">¥399</div><div class="kpi-label">10Pro起售价</div><div class="kpi-src">全模块</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--qianchuan);">60-70%</div><div class="kpi-label">千川预算占比</div><div class="kpi-src">M2 · 收割主力</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--doujia);">30-40%</div><div class="kpi-label">抖加预算占比</div><div class="kpi-src">M2 · 种草+测素材</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--porcelain);">3天</div><div class="kpi-label">许昌活动周期</div><div class="kpi-src">M3 · 线下活动</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--green);">60s</div><div class="kpi-label">游戏视频正片</div><div class="kpi-src">M4 · 内容创意</div></div>
+  </div>
+
+  <div class="hl gold-hl" style="text-align:center;">
+    <strong style="color:var(--gold);">一句话战略：</strong>
+    把iPhone用户找出来(M1) → 用千川+抖加精准投(M2) → 在线下活动引爆传播(M3) → 用游戏模式内容打动人心(M4) → <strong style="color:var(--mi-orange);">不降一分钱，用策略和内容打赢618</strong>
+  </div>
+</section>
+
+<!-- ==================== M1 ==================== -->
+<section id="m1">
+  <div class="s-header">
+    <h2>模块一：iPhone用户市场机会</h2>
+    <p>核心洞察：2.5亿中国iPhone用户没有Apple Watch，10Pro 399元是完美的"平替+互补"方案</p>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi"><div class="kpi-num c1">2.75亿</div><div class="kpi-label">中国iPhone存量用户</div></div>
+    <div class="kpi"><div class="kpi-num c3">91%</div><div class="kpi-label">没有Apple Watch</div></div>
+    <div class="kpi"><div class="kpi-num c4">1,500万</div><div class="kpi-label">399价位购买意愿用户</div></div>
+    <div class="kpi"><div class="kpi-num c2">375万</div><div class="kpi-label">实际可收割目标</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h4 style="color:var(--gold);">📊 市场空间漏斗</h4>
+      <div class="funnel" style="margin-top:12px;">
+        <div class="f-level"><div class="f-bar" style="background:rgba(0,119,237,0.55);width:100%;">2.5亿 无AW的iPhone用户</div></div>
+        <div class="f-arrow">× 30% 对健康/穿戴有兴趣</div>
+        <div class="f-level"><div class="f-bar" style="background:rgba(0,119,237,0.45);width:80%;">7,500万 有兴趣用户</div></div>
+        <div class="f-arrow">× 20% 在399价位产生购买</div>
+        <div class="f-level"><div class="f-bar" style="background:rgba(255,105,0,0.5);width:55%;">1,500万 可转化</div></div>
+        <div class="f-arrow">× 25% 内容+直播触达转化</div>
+        <div class="f-level"><div class="f-bar" style="background:rgba(255,105,0,0.65);width:35%;">375万 实际收割</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h4 style="color:var(--green);">💰 价格碾压</h4>
+      <div style="padding:10px 0;">
+        <div class="bar-row"><span class="bl">AW Ultra 3</span><span class="bt" style="background:rgba(0,119,237,0.5);width:100%;">¥6,499</span></div>
+        <div class="bar-row"><span class="bl">AW S11</span><span class="bt" style="background:rgba(0,119,237,0.4);width:50%;">¥3,199</span></div>
+        <div class="bar-row"><span class="bl">AW SE 3</span><span class="bt" style="background:rgba(0,119,237,0.35);width:32%;">¥1,999</span></div>
+        <div class="bar-row"><span class="bl" style="color:var(--mi-orange);font-weight:700;">10 Pro</span><span class="bt" style="background:rgba(255,105,0,0.7);width:6%;">¥399</span></div>
+      </div>
+      <p style="font-size:0.82em;color:var(--sub);margin-top:8px;">功能重合度75-80%，性价比倍率3.75倍</p>
+    </div>
+  </div>
+
+  <div class="grid-3" style="margin-top:16px;">
+    <div class="card apple">
+      <h4 style="color:var(--apple);">信息一</h4>
+      <p style="font-size:0.9em;font-weight:600;">你的iPhone数据不会丢</p>
+      <p style="font-size:0.82em;color:var(--sub);">心率/睡眠/运动全自动进Apple健康</p>
+    </div>
+    <div class="card accent">
+      <h4 style="color:var(--mi-orange);">信息二</h4>
+      <p style="font-size:0.9em;font-weight:600;">苹果做不了的它反而能做</p>
+      <p style="font-size:0.82em;color:var(--sub);">NFC门禁/公交卡/21天续航/游戏模式</p>
+    </div>
+    <div class="card green">
+      <h4 style="color:var(--green);">信息三</h4>
+      <p style="font-size:0.9em;font-weight:600;">399，无痛升级</p>
+      <p style="font-size:0.82em;color:var(--sub);">一顿饭钱，七天无理由，试试呗</p>
+    </div>
+  </div>
+
+  <div class="hl orange" style="margin-top:14px;">
+    <strong style="color:var(--mi-orange);">决策：</strong>将"苹果生态/iPhone用户"内容占比从20%提高到<strong>30-35%</strong>，作为618第一大内容方向。目标：从iPhone用户池转化<strong>10-20万台</strong>10Pro。
+  </div>
+</section>
+
+<!-- ==================== M2 ==================== -->
+<section id="m2">
+  <div class="s-header">
+    <h2>模块二：千川 vs 抖加 — 投放底层逻辑</h2>
+    <p>不是二选一，而是前后配合：抖加 = 播种机（种草+测素材+撬自然量），千川 = 收割机（精准定向+全链路转化）</p>
+  </div>
+
+  <div class="grid-2">
+    <div class="card" style="border-top:3px solid var(--qianchuan);">
+      <h4 style="color:var(--qianchuan);">🔸 千川 — 电商广告引擎</h4>
+      <ul>
+        <li><strong>本质：</strong>花钱买<strong style="color:var(--qianchuan);">生意</strong>（成交/ROI）</li>
+        <li><strong>竞价：</strong>oCPM，eCPM = 出价 × pCTR × pCVR × 1000</li>
+        <li><strong>定向：</strong>DMP人群包 + 行为兴趣 + 达人粉丝</li>
+        <li><strong>数据：</strong>全链路回传（展现→点击→加购→下单→支付）</li>
+        <li><strong>适合：</strong>硬广/促销/挂车短视频/直播间引流</li>
+        <li><strong>手环CPM：</strong>10-25元 | <strong>CPC：</strong>0.5-1.5元</li>
+        <li><strong>劣势：</strong>有"广告"标识、信任门槛高、不能撬自然量</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top:3px solid var(--doujia);">
+      <h4 style="color:var(--doujia);">🔹 抖加 — 内容加热器</h4>
+      <ul>
+        <li><strong>本质：</strong>花钱买<strong style="color:var(--doujia);">流量</strong>（播放/互动/涨粉）</li>
+        <li><strong>竞价：</strong>固定CPM，无实时竞价，无学习期</li>
+        <li><strong>定向：</strong>基础三级（性别/年龄/地域），粗粒度</li>
+        <li><strong>数据：</strong>播放/完播/互动/涨粉，无后链路</li>
+        <li><strong>适合：</strong>原生种草/测评/开箱/Vlog/达人软植入</li>
+        <li><strong>CPM：</strong>8-20元 | <strong>最低起投：</strong>100元</li>
+        <li><strong>优势：</strong>无广告标识、能撬动自然推荐、原生感强</li>
+      </ul>
+    </div>
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-top:16px;box-shadow:var(--shadow);">
+    <h4 style="margin-bottom:12px;font-size:0.9em;">核心能力雷达对比</h4>
+    <div class="bar-row"><span class="bl">人群精准度</span><span class="bt qc" style="width:90%;">极高</span><span class="bt dj" style="width:35%;margin-left:4px;">低</span></div>
+    <div class="bar-row"><span class="bl">转化能力</span><span class="bt qc" style="width:90%;">极强</span><span class="bt dj" style="width:15%;margin-left:4px;">弱</span></div>
+    <div class="bar-row"><span class="bl">撬动自然流</span><span class="bt qc" style="width:30%;">弱</span><span class="bt dj" style="width:85%;margin-left:4px;">极强</span></div>
+    <div class="bar-row"><span class="bl">种草适配度</span><span class="bt qc" style="width:40%;">中</span><span class="bt dj" style="width:90%;margin-left:4px;">极高</span></div>
+    <div class="bar-row"><span class="bl">营销适配度</span><span class="bt qc" style="width:90%;">极高</span><span class="bt dj" style="width:20%;margin-left:4px;">低</span></div>
+    <div class="bar-row"><span class="bl">内容原生感</span><span class="bt qc" style="width:30%;">有广告标</span><span class="bt dj" style="width:90%;margin-left:4px;">无广告标</span></div>
+  </div>
+
+  <div style="margin-top:20px;">
+    <h4 style="font-size:0.95em;margin-bottom:14px;">组合投放四阶段</h4>
+    <div class="tl">
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--doujia);">1</div>
+        <div class="tl-body">
+          <h5>冷启动 · Day 1-3 <span style="color:var(--doujia);">抖加测素材</span></h5>
+          <p>5-8条素材同步发，每条投抖加100-200元。不看ROI只看互动率。互动率>5%、完播率>30%的素材进入下一阶段。</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--doujia);">2</div>
+        <div class="tl-body">
+          <h5>加热期 · Day 3-5 <span style="color:var(--doujia);">抖加追投 + 自然量撬动</span></h5>
+          <p>优质素材追加抖加到500-1000元，同步发布挂车版素材。观察自然流量占比是否上升。</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--qianchuan);">3</div>
+        <div class="tl-body">
+          <h5>收割期 · Day 5-14 <span style="color:var(--qianchuan);">千川精准转化</span></h5>
+          <p>自然量跑起来的素材做挂车版，千川定向"视频互动人群"+"相似人群"。手环ROI>1.3，手表ROI>1.5。</p>
+        </div>
+      </div>
+      <div class="tl-item">
+        <div class="tl-dot" style="background:var(--qianchuan);">4</div>
+        <div class="tl-body">
+          <h5>迭代期 · Day 14+ <span style="color:var(--qianchuan);">素材轮换 · 稳定跑量</span></h5>
+          <p>千川计划7-14天自然衰退 → 新素材抖加测 → 好的给千川 → 循环。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hl gold-hl" style="margin-top:16px;">
+    <strong style="color:var(--gold);">预算分配模型：</strong>千川60-70%（后链路转化） + 抖加30-40%（前链路种草+测素材）。最忌讳：用千川投软种草（成本高）、用抖加投硬广（限流+转化弱）。
+  </div>
+</section>
+
+<!-- ==================== M3 ==================== -->
+<section id="m3">
+  <div class="s-header">
+    <h2>模块三：许昌大厂品质生活节 · 活动方案</h2>
+    <p>三大许昌IP（钧瓷/服务口碑/三国）+ 三大卖点（陶瓷版/品质服务/游戏模式）= 不降一分钱打爆活动</p>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:18px;">
+    <div class="card accent">
+      <h4 style="color:var(--porcelain);">🏺 钧瓷之都 → 陶瓷版10Pro</h4>
+      <p style="font-size:0.84em;color:#555;">"入窑一色出窑万彩"<br>去禹州窑口拍摄开窑仪式<br>陶瓷手环文化溯源</p>
+    </div>
+    <div class="card gold">
+      <h4 style="color:var(--gold);">🛡️ 服务口碑 → 品质无忧购</h4>
+      <p style="font-size:0.84em;color:#555;">15天无理由退换<br>许昌同城2小时送达<br>直播间现场验货+品质承诺卡</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--green);">
+      <h4 style="color:var(--green);">⚔️ 三国故都 → 游戏模式</h4>
+      <p style="font-size:0.84em;color:#555;">王者/三国杀/率土之滨挑战赛<br>每天一场游戏赛事<br>UGC裂变：#10Pro三国争霸</p>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card" style="border-top:3px solid var(--porcelain);">
+      <h4 style="color:var(--porcelain);">🏺 Day 1（周五）预热+造势</h4>
+      <p style="font-size:0.82em;color:#555;line-height:1.8;">
+        12-14点 午间场：活动预告+定制礼盒首曝<br>
+        16-19点 外景@曹魏古城：汉服主播+游戏演示<br>
+        20-22点 晚间场：陶瓷礼盒限量抢
+      </p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--gold);">
+      <h4 style="color:var(--gold);">⚔️ Day 2（周六）高潮+引爆</h4>
+      <p style="font-size:0.82em;color:#555;line-height:1.8;">
+        12-14点 午间场：首日战报+礼盒余量<br>
+        16-19点 外景@商圈街访："猜价格"<br>
+        20-23点 主力场：挑战赛连线+同城配送
+      </p>
+    </div>
+    <div class="card" style="border-top:3px solid var(--green);">
+      <h4 style="color:var(--green);">🏯 Day 3（周日）收官+返场</h4>
+      <p style="font-size:0.82em;color:#555;line-height:1.8;">
+        10点 外景@钧瓷窑口：开窑仪式<br>
+        14-16点 午间场：挑战赛颁奖<br>
+        18-21点 收官场：返场福利+下场预告
+      </p>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:14px;">
+    <div class="card accent">
+      <h4>🎁 赠品机制（不讲价）</h4>
+      <table class="tbl" style="margin-top:8px;">
+        <tr><th>版本</th><th>赠品</th><th>限量</th></tr>
+        <tr><td>陶瓷版</td><td>钧瓷风韵定制礼盒 + 1年延保</td><td>前100单</td></tr>
+        <tr><td>标准版</td><td>米兰尼斯表带 + 品质生活手册</td><td>前200单</td></tr>
+        <tr><td>真皮版</td><td>真皮护理套装 + 品质生活手册</td><td>前100单</td></tr>
+      </table>
+    </div>
+    <div class="card gold">
+      <h4>📊 活动目标 & 预算</h4>
+      <p style="font-size:0.84em;color:#555;line-height:1.8;">
+        <strong>曝光目标：</strong>500万+<br>
+        <strong>销量目标：</strong>日常3倍<br>
+        <strong>涨粉目标：</strong>2万+<br>
+        <strong>总预算：</strong>28,000-35,000元<br>
+        <span style="color:var(--sub);">（含千川1.5-2万+物料1.3-1.5万）</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="hl orange" style="margin-top:14px;">
+    <strong style="color:var(--mi-orange);">一句话活动主张：</strong>在许昌，用钧瓷匠心讲陶瓷手环故事，用三国游戏挑战赛让用户替你传播，用好的服务理念做差异化——不降一分钱，用内容和服务把流量和销量同时拉起来。
+  </div>
+</section>
+
+<!-- ==================== M4 ==================== -->
+<section id="m4">
+  <div class="s-header">
+    <h2>模块四：游戏模式 — 视频创意脚本</h2>
+    <p>核心概念：「你的心率，就是你的战力表」— 赛博朋克×游戏HUD，60秒竖屏，6场景叙事</p>
+  </div>
+
+  <div class="module-card">
+    <div class="m-title">
+      🎯 创意概念
+      <span class="m-tag" style="background:rgba(29,168,92,0.1);color:var(--green);">电竞级生物外挂</span>
+    </div>
+    <p>洞察：每个玩家都有过"明明很冷静手却在抖"的时刻。10Pro游戏模式实时监测心率、压力、血氧，把看不见的身体状态变成可视化的战力数据。从菜鸟被虐 → 发现游戏模式 → 掌控身体节奏 → 五杀翻盘。用<strong style="color:var(--green);">赛博朋克视觉 + 游戏HUD叠加</strong>，让手环数据成为画面中的"屏幕UI元件"。</p>
+  </div>
+
+  <div class="grid-3" style="margin-bottom:16px;">
+    <div class="card red">
+      <h4 style="color:var(--red);">S1 · 深夜连败 (0-8s)</h4>
+      <p style="font-size:0.82em;color:#555;">深夜房间，"DEFEAT"映在瞳孔中。主角揉手腕，手环亮起→滑入游戏模式→绿色光晕扩散</p>
+      <p style="font-size:0.78em;color:var(--sub);margin-top:4px;">影调：暗蓝+暗红 · VO："又输了"</p>
+    </div>
+    <div class="card" style="border-left:3px solid var(--purple);">
+      <h4 style="color:var(--purple);">S2 · 手环变身HUD (8-20s)</h4>
+      <p style="font-size:0.82em;color:#555;">赛博朋克风格：游戏画面+右侧HUD数据面板叠加心率/压力/时长。数据随战况实时变化</p>
+      <p style="font-size:0.78em;color:var(--sub);margin-top:4px;">影调：霓虹绿+紫 · 核心功能可视化</p>
+    </div>
+    <div class="card green">
+      <h4 style="color:var(--green);">S3 · 掌控节奏 (20-32s)</h4>
+      <p style="font-size:0.82em;color:#555;">手环震动提醒"压力偏高，调整呼吸"。心率从132→98，绿色波纹扩散全身，色调由红紫转蓝绿</p>
+      <p style="font-size:0.78em;color:var(--sub);margin-top:4px;">影调：冷暖转换 · 情绪转折点</p>
+    </div>
+    <div class="card accent">
+      <h4 style="color:var(--mi-orange);">S4 · 五杀翻盘 (32-48s)</h4>
+      <p style="font-size:0.82em;color:#555;">上下分屏：游戏操作+心率曲线同步。击杀瞬间心率精准跳至波峰。五杀定格→手环显示MVP数据</p>
+      <p style="font-size:0.78em;color:var(--sub);margin-top:4px;">影调：高饱和橙+绿 · 动作高潮</p>
+    </div>
+    <div class="card" style="border-left:3px solid #2196f3;">
+      <h4 style="color:#2196f3;">S5 · 赛后复盘 (48-55s)</h4>
+      <p style="font-size:0.82em;color:#555;">手环游戏报告+手机App健康面板。"你的五杀时刻心率156——这就是热爱的样子"</p>
+      <p style="font-size:0.78em;color:var(--sub);margin-top:4px;">影调：清爽蓝白 · 科技感</p>
+    </div>
+    <div class="card accent">
+      <h4 style="color:var(--mi-orange);">S6 · 落版 (55-60s)</h4>
+      <p style="font-size:0.82em;color:#555;">产品360°旋转+呼吸光效。Slogan大字：「你的心率，就是你的战力表」+产品名+价格</p>
+      <p style="font-size:0.78em;color:var(--sub);margin-top:4px;">影调：极简黑+橙 · 品牌定妆</p>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card"><h4 style="color:#e91e63;">备选A：KOL背书</h4><p style="font-size:0.82em;color:#555;">电竞选手训练赛心率全纪录，真实数据建立信任。适合B站/抖音KOL投放。</p></div>
+    <div class="card"><h4 style="color:#00bcd4;">备选B：情感路线</h4><p style="font-size:0.82em;color:#555;">女友视角："见你时心率比打团战还高。"适合小红书/抖音情感向。</p></div>
+    <div class="card"><h4 style="color:#ff9800;">备选C：搞笑玩梗</h4><p style="font-size:0.82em;color:#555;">电竞体检报告："团战就是一场马拉松。"适合抖音搞笑/整活内容。</p></div>
+  </div>
+</section>
+
+<!-- ==================== 执行Playbook ==================== -->
+<section id="playbook">
+  <div class="s-header">
+    <h2>执行Playbook：如何把这四件事串起来</h2>
+    <p>一个完整的618冲刺作战时间线</p>
+  </div>
+
+  <div class="tl">
+    <div class="tl-item">
+      <div class="tl-dot" style="background:var(--apple);">M1</div>
+      <div class="tl-body">
+        <h5>第一周 · 定人群 (6月第1周)</h5>
+        <p>千川建立iPhone用户专属人群包（设备品牌=iPhone + 无Apple Watch数据）；抖加发布3条"iPhone平替"种草视频AB测试；直播间话术按"三句话打穿"模版迭代</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:var(--doujia);">M2</div>
+      <div class="tl-body">
+        <h5>第二周 · 投渠道 (6月第2周)</h5>
+        <p>抖加冷启动测出3-5条高互动素材（互动率>5%）；千川挂车版素材上线，定向iPhone人群；许昌活动预热视频发布（窑口+预告+街访）</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:var(--porcelain);">M3</div>
+      <div class="tl-body">
+        <h5>第三周 · 搞活动 (6月第3周 周五-周日)</h5>
+        <p>许昌品质生活节3天执行：外景直播+挑战赛+定制礼盒限量；千川日预算5,000元直播间直投；活动切片同步抖加加热+千川追投</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:var(--green);">M4</div>
+      <div class="tl-body">
+        <h5>第四周 · 放内容 (6月第3-4周 持续)</h5>
+        <p>游戏模式视频正片上线（千川+抖加同步推）；许昌活动高光纪录片发布（千川长尾投放）；iPhone用户定向持续收割至618当天</p>
+      </div>
+    </div>
+  </div>
+
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-top:18px;box-shadow:var(--shadow);">
+    <h4 style="font-size:0.93em;margin-bottom:12px;">📊 最终内容配比（618冲刺期）</h4>
+    <div class="bar-row"><span class="bl" style="color:var(--apple);">iPhone生态</span><span class="bt qc" style="width:35%;">35% ← 上调</span></div>
+    <div class="bar-row"><span class="bl" style="color:var(--green);">游戏模式</span><span class="bt" style="width:20%;background:rgba(29,168,92,0.55);">20%</span></div>
+    <div class="bar-row"><span class="bl" style="color:var(--gold);">数据评测</span><span class="bt" style="width:20%;background:rgba(200,150,12,0.5);">20%</span></div>
+    <div class="bar-row"><span class="bl" style="color:var(--sub);">许昌活动</span><span class="bt" style="width:15%;background:rgba(196,90,60,0.5);">15%</span></div>
+    <div class="bar-row"><span class="bl" style="color:var(--sub);">颜值穿搭</span><span class="bt" style="width:10%;background:rgba(150,150,160,0.4);">10%</span></div>
+  </div>
+</section>
+
+<!-- ==================== 总结 ==================== -->
+<section id="summary">
+  <div class="s-header">
+    <h2>核心结论：一张图说清楚</h2>
+    <p>四个模块的交叉协同关系</p>
+  </div>
+
+  <div class="map-grid">
+    <div class="map-card m1">
+      <h4 style="color:var(--apple);">🎯 M1 · 找对人</h4>
+      <p style="font-size:0.84em;color:#555;line-height:1.8;">
+        <strong>用户池：</strong>2.5亿无AW的iPhone用户<br>
+        <strong>收割目标：</strong>375万台（触达×转化）<br>
+        <strong>三句话打穿：</strong>数据不丢 · 苹果做不了的它能做 · 399无痛上车<br>
+        <strong style="color:var(--apple);">→ 输出到M2：</strong>iPhone用户人群包<br>
+        <strong style="color:var(--apple);">→ 输出到M3：</strong>Apple健康同步现场演示
+      </p>
+    </div>
+    <div class="map-card m2">
+      <h4 style="color:var(--qianchuan);">📊 M2 · 投对渠道</h4>
+      <p style="font-size:0.84em;color:#555;line-height:1.8;">
+        <strong>抖加：</strong>种草+测素材+撬自然量（30-40%预算）<br>
+        <strong>千川：</strong>精准收割+ROI追踪+放量（60-70%预算）<br>
+        <strong style="color:var(--qianchuan);">→ 输出到M3：</strong>活动期千川日预算5000元<br>
+        <strong style="color:var(--qianchuan);">→ 输出到M4：</strong>游戏视频抖加测→千川追投
+      </p>
+    </div>
+    <div class="map-card m3">
+      <h4 style="color:var(--porcelain);">🏺 M3 · 做对活动</h4>
+      <p style="font-size:0.84em;color:#555;line-height:1.8;">
+        <strong>许昌三大IP：</strong>钧瓷+服务口碑+三国<br>
+        <strong>四大玩法：</strong>钧瓷溯源 · 无忧购 · 三国挑战赛 · 外景直播<br>
+        <strong style="color:var(--porcelain);">→ 输出到M2：</strong>活动切片供千川投放<br>
+        <strong style="color:var(--porcelain);">→ 输出到M4：</strong>挑战赛UGC二次传播
+      </p>
+    </div>
+    <div class="map-card m4">
+      <h4 style="color:var(--green);">🎬 M4 · 拍对内容</h4>
+      <p style="font-size:0.84em;color:#555;line-height:1.8;">
+        <strong>主视频：</strong>60s赛博朋克游戏模式<br>
+        <strong>3备选：</strong>KOL背书 / 情感路线 / 搞笑玩梗<br>
+        <strong>Slogan：</strong>你的心率，就是你的战力表<br>
+        <strong style="color:var(--green);">→ 输出到M2：</strong>视频素材供千川/抖加投放<br>
+        <strong style="color:var(--green);">→ 输出到M3：</strong>许昌活动游戏挑战赛联动
+      </p>
+    </div>
+  </div>
+
+  <div class="conclusion" style="margin-top:24px;">
+    <h3 style="color:var(--gold);text-align:center;margin-bottom:16px;">🏁 终极结论</h3>
+    <div class="grid-2">
+      <div>
+        <div style="font-size:1.4em;font-weight:800;color:var(--apple);margin-bottom:4px;">M1 市场</div>
+        <p style="font-size:0.86em;color:#555;">2.5亿iPhone用户中有1,500万潜在买家。399元对苹果用户"约等于不要钱"——这是<strong style="color:var(--green);">认知差红利</strong>。</p>
+        <div style="font-size:1.4em;font-weight:800;color:var(--qianchuan);margin-top:14px;margin-bottom:4px;">M2 投放</div>
+        <p style="font-size:0.86em;color:#555;">抖加播种+千川收割。种草视频用抖加撬自然量，营销视频用千川精准转化。<strong style="color:var(--gold);">不是二选一，是前后配合</strong>。</p>
+      </div>
+      <div>
+        <div style="font-size:1.4em;font-weight:800;color:var(--porcelain);margin-bottom:4px;">M3 活动</div>
+        <p style="font-size:0.86em;color:#555;">许昌3天活动，用钧瓷文化、服务口碑、三国IP三大引擎驱动。不降一分钱，用文化+服务+游戏内容打爆直播间。</p>
+        <div style="font-size:1.4em;font-weight:800;color:var(--green);margin-top:14px;margin-bottom:4px;">M4 内容</div>
+        <p style="font-size:0.86em;color:#555;">游戏模式视频是"钩子内容"——赛博朋克视觉+真实心率数据的冲击力，是其他竞品无法复制的<strong style="color:var(--mi-orange);">独占优势</strong>。</p>
+      </div>
+    </div>
+    <p style="text-align:center;margin-top:20px;font-size:1.05em;font-weight:700;color:var(--mi-orange);">
+      M1定方向 → M2定渠道 → M3造事件 → M4出内容 → 四环相扣，618一击必中
+    </p>
+  </div>
+</section>
+
+<footer style="text-align:center;color:var(--sub);font-size:0.78em;margin-top:44px;padding-top:20px;border-top:1px solid var(--border);">
+  小米手环10 Pro · 全域营销战略总纲 · 2026年5月 · 整合自四大专项文档
+</footer>
+
+</main>
+</div>
+
+</body>
+</html>
