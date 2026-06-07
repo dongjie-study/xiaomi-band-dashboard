@@ -516,7 +516,7 @@ Object.entries(chartData).forEach(function(e) {{
 
 if __name__ == '__main__':
     html = build_report()
-    out_path = BASE.parent / '竞对视频分析报告.html'
+    out_path = BASE.parent / 'video-report.html'
     out_path.parent.mkdir(exist_ok=True)
     with open(out_path, 'w', encoding='utf-8') as f:
         f.write(html)
