@@ -363,7 +363,7 @@ def render_html(lm_cards, ws_cards, lm_s, ws_s, charts, lm_df, ws_df):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>竞对视频分析 — 良米 vs 我司</title>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="sales_analysis/chart.umd.min.js"></script>
 <style>
 *{{margin:0;padding:0;box-sizing:border-box}}
 body{{font-family:-apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;background:#f0f2f5;color:#333;line-height:1.6}}
