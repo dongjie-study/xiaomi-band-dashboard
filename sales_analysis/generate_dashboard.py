@@ -231,7 +231,7 @@ def generate_room_comparison(df, our_rooms=None, output_path=None):
     if isinstance(our_rooms, str):
         our_rooms = [our_rooms]
 
-    rooms = sorted(df['room'].unique())
+    rooms = sorted([r for r in df['room'].unique() if isinstance(r, str)])
     if len(rooms) < 2:
         print("Only one room found, skipping room comparison chart")
         return None

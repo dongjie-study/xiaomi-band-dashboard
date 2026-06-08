@@ -134,9 +134,17 @@ def load_and_clean(filepath):
 def summarize_room(grp):
     hourly_stats = {}
     for hour, hgrp in grp.groupby('hour'):
+        products = {}
+        for pname, pgrp in hgrp.groupby('product_short'):
+            products[pname] = {
+                'orders': int(len(pgrp)),
+                'revenue': float(round(pgrp['price'].sum(), 2)),
+                'pct': round(len(pgrp) / len(hgrp) * 100, 1)
+            }
         hourly_stats[str(hour)] = {
             'orders': int(len(hgrp)),
-            'revenue': float(round(hgrp['price'].sum(), 2))
+            'revenue': float(round(hgrp['price'].sum(), 2)),
+            'products': products
         }
 
     return {
@@ -189,9 +197,17 @@ def summarize_day(df):
 
     hourly_stats = {}
     for hour, grp in df.groupby('hour'):
+        products = {}
+        for pname, pgrp in grp.groupby('product_short'):
+            products[pname] = {
+                'orders': int(len(pgrp)),
+                'revenue': float(round(pgrp['price'].sum(), 2)),
+                'pct': round(len(pgrp) / len(grp) * 100, 1)
+            }
         hourly_stats[str(hour)] = {
             'orders': int(len(grp)),
-            'revenue': float(round(grp['price'].sum(), 2))
+            'revenue': float(round(grp['price'].sum(), 2)),
+            'products': products
         }
 
     return {

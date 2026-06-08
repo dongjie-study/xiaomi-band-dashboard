@@ -50,6 +50,21 @@
   .note { color: #888; font-size: 12px; text-align: center; margin-top: 8px; }
   .back-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1px solid #ddd; background: white; border-radius: 6px; cursor: pointer; font-size: 14px; color: #888; text-decoration: none; transition: all .2s; }
   .back-link:hover { color: #ff6900; border-color: #ff6900; }
+  .hourly-breakdown { margin: 16px 0; }
+  .hourly-breakdown h2 { margin-bottom: 16px; }
+  .hour-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
+  .hour-card { background: white; border-radius: 12px; padding: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
+  .hour-card .hour-header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #FFD700; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
+  .hour-card .hour-header .hour-label { font-size: 18px; font-weight: 700; }
+  .hour-card .hour-header .hour-summary { font-size: 13px; color: #ccc; text-align: right; }
+  .hour-card .hour-header .hour-summary span { color: #fff; font-weight: 600; }
+  .hour-card .hour-body { padding: 8px 0; max-height: 420px; overflow-y: auto; }
+  .hour-card .hour-body table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .hour-card .hour-body th { padding: 6px 12px; text-align: left; color: #888; font-weight: 600; font-size: 11px; border-bottom: 2px solid #f0f0f0; position: sticky; top: 0; background: #fff; }
+  .hour-card .hour-body td { padding: 5px 12px; border-bottom: 1px solid #f5f5f5; }
+  .hour-card .hour-body tr:hover td { background: #fafafa; }
+  .hour-card .hour-body .pct-bar { display: inline-block; height: 6px; background: #4ECDC4; border-radius: 3px; vertical-align: middle; margin-right: 6px; }
+  .hour-empty { text-align: center; color: #aaa; padding: 40px; font-size: 14px; }
 </style>
 </head>
 <body style="display:none">
@@ -137,6 +152,12 @@ document.body.style.display='';
         <tbody></tbody>
       </table>
     </div>
+  </div>
+
+  <!-- Hourly product breakdown -->
+  <div class="hourly-breakdown">
+    <h2>逐小时产品粒度分析</h2>
+    <div class="hour-cards" id="hourCards"></div>
   </div>
 </div>
 
@@ -476,6 +497,48 @@ function renderAll(d, prev) {
   renderProductTable(data);
   renderRoomCards(d);
   renderRoomHourlyOverlay(d);
+  renderHourlyBreakdown(data);
+}
+
+function renderHourlyBreakdown(data) {
+  const hourlyData = data._hourly_stats || {};
+  const hours = Object.keys(hourlyData).sort((a, b) => parseInt(a) - parseInt(b));
+  const container = document.getElementById('hourCards');
+  if (hours.length === 0) {
+    container.innerHTML = '<div class="hour-empty">暂无小时级数据</div>';
+    return;
+  }
+  const maxHourOrders = Math.max(...hours.map(h => hourlyData[h].orders || 0));
+  container.innerHTML = hours.map(hour => {
+    const h = hourlyData[hour];
+    const products = h.products || {};
+    const sorted = Object.entries(products).sort((a, b) => b[1].orders - a[1].orders);
+    return `
+    <div class="hour-card">
+      <div class="hour-header">
+        <span class="hour-label">${hour}:00</span>
+        <div class="hour-summary">
+          订单 <span>${h.orders}</span> 单 &nbsp;|&nbsp;
+          销售额 <span>¥${h.revenue.toLocaleString()}</span>
+        </div>
+      </div>
+      <div class="hour-body">
+        <table>
+          <thead><tr><th>#</th><th>产品</th><th style="width:80px">占比</th><th style="text-align:right">订单</th><th style="text-align:right">销售额</th></tr></thead>
+          <tbody>
+            ${sorted.map(([name, p], i) => `
+            <tr>
+              <td>${i + 1}</td>
+              <td><strong>${name}</strong></td>
+              <td><span class="pct-bar" style="width:${p.orders/h.orders*80}px"></span>${p.pct}%</td>
+              <td style="text-align:right">${p.orders}</td>
+              <td style="text-align:right">¥${p.revenue.toLocaleString()}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // Init
