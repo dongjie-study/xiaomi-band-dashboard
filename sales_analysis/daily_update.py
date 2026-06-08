@@ -139,7 +139,7 @@ def summarize_room(grp):
             products[pname] = {
                 'orders': int(len(pgrp)),
                 'revenue': float(round(pgrp['price'].sum(), 2)),
-                'pct': round(len(pgrp) / len(hgrp) * 100, 1)
+                'room_pct': round(len(pgrp) / len(hgrp) * 100, 1)
             }
         hourly_stats[str(hour)] = {
             'orders': int(len(hgrp)),
@@ -202,13 +202,28 @@ def summarize_day(df):
             products[pname] = {
                 'orders': int(len(pgrp)),
                 'revenue': float(round(pgrp['price'].sum(), 2)),
-                'pct': round(len(pgrp) / len(grp) * 100, 1)
+                'room_pct': round(len(pgrp) / len(grp) * 100, 1)
             }
         hourly_stats[str(hour)] = {
             'orders': int(len(grp)),
             'revenue': float(round(grp['price'].sum(), 2)),
             'products': products
         }
+
+    # Compute cross-room market share for each room-hour-product
+    # Build (product, hour) -> total orders across all rooms
+    product_hour_totals = {}
+    for room_name, room_info in rooms.items():
+        for hour_str, hdata in room_info['_hourly_stats'].items():
+            for pname, pinfo in hdata['products'].items():
+                key = (pname, hour_str)
+                product_hour_totals[key] = product_hour_totals.get(key, 0) + pinfo['orders']
+    # Apply market_pct to each room's product-hour
+    for room_info in rooms.values():
+        for hour_str, hdata in room_info['_hourly_stats'].items():
+            for pname, pinfo in hdata['products'].items():
+                total = product_hour_totals.get((pname, hour_str), 0)
+                pinfo['market_pct'] = round(pinfo['orders'] / total * 100, 1) if total > 0 else 0
 
     return {
         'date': str(df['date'].iloc[0]),

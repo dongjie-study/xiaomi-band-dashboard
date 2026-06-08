@@ -504,15 +504,28 @@ function renderHourlyBreakdown(data) {
   const hourlyData = data._hourly_stats || {};
   const hours = Object.keys(hourlyData).sort((a, b) => parseInt(a) - parseInt(b));
   const container = document.getElementById('hourCards');
+  const isRoomView = !!data.room;
   if (hours.length === 0) {
     container.innerHTML = '<div class="hour-empty">暂无小时级数据</div>';
     return;
   }
-  const maxHourOrders = Math.max(...hours.map(h => hourlyData[h].orders || 0));
+
+  // Update section title
+  const titleEl = document.querySelector('.hourly-breakdown h2');
+  if (titleEl) {
+    titleEl.textContent = isRoomView ? `逐小时产品粒度分析 - ${data.room}` : '逐小时产品粒度分析（全部直播间汇总）';
+  }
+
   container.innerHTML = hours.map(hour => {
     const h = hourlyData[hour];
     const products = h.products || {};
     const sorted = Object.entries(products).sort((a, b) => b[1].orders - a[1].orders);
+
+    // Different columns depending on view
+    const headerCols = isRoomView
+      ? '<th>#</th><th>产品</th><th style="width:70px">本直播间占比</th><th style="width:70px">全平台该品占比</th><th style="text-align:right">订单</th><th style="text-align:right">销售额</th>'
+      : '<th>#</th><th>产品</th><th style="width:80px">占比</th><th style="text-align:right">订单</th><th style="text-align:right">销售额</th>';
+
     return `
     <div class="hour-card">
       <div class="hour-header">
@@ -524,16 +537,31 @@ function renderHourlyBreakdown(data) {
       </div>
       <div class="hour-body">
         <table>
-          <thead><tr><th>#</th><th>产品</th><th style="width:80px">占比</th><th style="text-align:right">订单</th><th style="text-align:right">销售额</th></tr></thead>
+          <thead><tr>${headerCols}</tr></thead>
           <tbody>
-            ${sorted.map(([name, p], i) => `
+            ${sorted.map(([name, p], i) => {
+              const roomPct = p.room_pct != null ? p.room_pct : 0;
+              if (isRoomView) {
+                const marketPct = p.market_pct != null ? p.market_pct : 0;
+                return `
             <tr>
               <td>${i + 1}</td>
               <td><strong>${name}</strong></td>
-              <td><span class="pct-bar" style="width:${p.orders/h.orders*80}px"></span>${p.pct}%</td>
+              <td><span class="pct-bar" style="width:${roomPct}px"></span>${roomPct}%</td>
+              <td><span class="pct-bar" style="background:#FF6B6B;width:${marketPct}px"></span>${marketPct}%</td>
               <td style="text-align:right">${p.orders}</td>
               <td style="text-align:right">¥${p.revenue.toLocaleString()}</td>
-            </tr>`).join('')}
+            </tr>`;
+              }
+              return `
+            <tr>
+              <td>${i + 1}</td>
+              <td><strong>${name}</strong></td>
+              <td><span class="pct-bar" style="width:${roomPct}px"></span>${roomPct}%</td>
+              <td style="text-align:right">${p.orders}</td>
+              <td style="text-align:right">¥${p.revenue.toLocaleString()}</td>
+            </tr>`;
+            }).join('')}
           </tbody>
         </table>
       </div>
