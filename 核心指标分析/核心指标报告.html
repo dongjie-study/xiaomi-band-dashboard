@@ -1,0 +1,85 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>千川视频数据 - 核心指标分析</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; }
+.header { background: linear-gradient(135deg, #FF4757 0%, #1E90FF 100%); color: white; padding: 45px 20px; text-align: center; }
+.header h1 { font-size: 38px; margin-bottom: 10px; letter-spacing: 2px; }
+.header p { font-size: 18px; opacity: 0.9; }
+.kpi-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; max-width: 1400px; margin: -30px auto 0; padding: 0 20px; position: relative; z-index: 10; }
+.kpi-card { background: white; border-radius: 12px; padding: 20px 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+.kpi-card .value { font-size: 26px; font-weight: bold; }
+.kpi-card .label { font-size: 13px; color: #888; margin-top: 5px; }
+.container { max-width: 1400px; margin: 40px auto; padding: 0 20px; }
+.section { background: white; border-radius: 12px; padding: 30px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.section h2 { font-size: 22px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 3px solid #FF4757; }
+.section img { width: 100%; border-radius: 8px; }
+.footer { text-align: center; color: #999; padding: 30px; }
+.nav-bar { display: flex; justify-content: center; gap: 12px; padding: 16px 20px; background: #fff; border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.nav-btn { padding: 10px 28px; border-radius: 24px; border: 2px solid #ddd; background: #fff; color: #666; font-size: 15px; cursor: pointer; text-decoration: none; transition: all 0.2s; font-family: inherit; }
+.nav-btn:hover { border-color: #1E90FF; color: #1E90FF; background: #e3f2fd; }
+.nav-btn.active { background: #1E90FF; color: #fff; border-color: #1E90FF; font-weight: bold; }
+</style></head><body style="display:none">
+<script>
+(function(){
+var K='mi_band_auth_v1';
+if(!localStorage.getItem(K)){
+window.location.href='../index.html';
+return;
+}
+document.body.style.display='';
+})();
+</script>
+<div class="nav-bar">
+  <a href="../hub.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:24px;border:2px solid #ddd;background:#fff;color:#666;font-size:15px;cursor:pointer;text-decoration:none;transition:all .2s;font-family:inherit;margin-right:8px;" onmouseover="this.style.borderColor='#ff6900';this.style.color='#ff6900'" onmouseout="this.style.borderColor='#ddd';this.style.color='#666'">← 返回导航页</a>
+  <a class="nav-btn active" href="核心指标报告.html">我司数据</a>
+  <a class="nav-btn" href="竞对数据报告.html">竞对数据</a>
+  <a class="nav-btn" href="竞对对比报告.html">对比分析</a>
+</div>
+<div class="header">
+<h1>千川视频数据 - 核心指标分析</h1>
+<p>2026年6月1日 - 6月7日 | 有消耗视频 1,880 条 | 整体ROI 15.05 | 总成交 ¥876,254</p>
+</div>
+<div class="kpi-row">
+<div class="kpi-card"><div class="value" style="color:#FF4757;">¥58,238</div><div class="label">总消耗</div></div>
+<div class="kpi-card"><div class="value" style="color:#2ED573;">¥876,254</div><div class="label">总成交金额</div></div>
+<div class="kpi-card"><div class="value" style="color:#1E90FF;">15.05</div><div class="label">整体ROI</div></div>
+<div class="kpi-card"><div class="value" style="color:#FF6B35;">200.6万</div><div class="label">总播放量</div></div>
+<div class="kpi-card"><div class="value" style="color:#A855F7;">7.23%</div><div class="label">整体点击率</div></div>
+<div class="kpi-card"><div class="value" style="color:#FFA502;">2,249</div><div class="label">总订单数</div></div>
+</div>
+<div class="container">
+<div class="section">
+<h2>核心KPI仪表盘</h2>
+<img src="01_核心KPI仪表盘.png" alt="核心KPI仪表盘" loading="lazy">
+</div>
+<div class="section">
+<h2>消耗 vs 成交金额（每条视频一个点）</h2>
+<img src="02_消耗vs成交散点图.png" alt="消耗 vs 成交金额（每条视频一个点）" loading="lazy">
+</div>
+<div class="section">
+<h2>消耗TOP15 vs 播放量TOP15</h2>
+<img src="03_消耗与播放量TOP15.png" alt="消耗TOP15 vs 播放量TOP15" loading="lazy">
+</div>
+<div class="section">
+<h2>标题热词分析 & 产品线表现</h2>
+<img src="04_标题分析与产品线.png" alt="标题热词分析 & 产品线表现" loading="lazy">
+</div>
+<div class="section">
+<h2>点击率 vs ROI 四象限分析</h2>
+<img src="05_CTRvsROI四象限.png" alt="点击率 vs ROI 四象限分析" loading="lazy">
+</div>
+<div class="section">
+<h2>素材来源渠道对比</h2>
+<img src="06_渠道对比.png" alt="素材来源渠道对比" loading="lazy">
+</div>
+<div class="section">
+<h2>ROI分布深入分析</h2>
+<img src="07_ROI深入分析.png" alt="ROI分布深入分析" loading="lazy">
+</div>
+<div class="section">
+<h2>标题字数 & 标签数量优化分析</h2>
+<img src="08_标题优化分析.png" alt="标题字数 & 标签数量优化分析" loading="lazy">
+</div>
+</div>
+<div class="footer">千川视频数据 · 核心指标可视化分析</div>
+</body></html>

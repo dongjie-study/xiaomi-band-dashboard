@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>千川视频数据 - 我司 vs 竞对 对比分析</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; }
+.header { background: linear-gradient(135deg, #1E90FF 0%, #FF4757 100%); color: white; padding: 45px 20px; text-align: center; }
+.header h1 { font-size: 38px; margin-bottom: 10px; letter-spacing: 2px; }
+.header p { font-size: 18px; opacity: 0.9; }
+.kpi-row { display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; max-width: 1500px; margin: -30px auto 0; padding: 0 20px; position: relative; z-index: 10; }
+.kpi-card { background: white; border-radius: 12px; padding: 18px 12px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+.kpi-card .values { font-size: 22px; font-weight: bold; line-height: 1.4; }
+.kpi-card .label { font-size: 12px; color: #888; margin-top: 5px; }
+.ours-color { color: #1E90FF; }
+.theirs-color { color: #FF6B35; }
+.container { max-width: 1400px; margin: 40px auto; padding: 0 20px; }
+.section { background: white; border-radius: 12px; padding: 30px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.section h2 { font-size: 22px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 3px solid #1E90FF; }
+.chart-box { height: 450px; }
+.chart-box-lg { height: 550px; }
+table { width: 100%; border-collapse: collapse; }
+th { background: #f8f9fa; text-align: left; padding: 12px 15px; font-size: 13px; color: #666; border-bottom: 2px solid #eee; }
+td { padding: 12px 15px; font-size: 14px; border-bottom: 1px solid #eee; }
+tr:hover td { background: #fafbfc; }
+.finding { padding: 16px 20px; margin-bottom: 12px; border-radius: 0 8px 8px 0; font-size: 14px; line-height: 1.8; }
+.finding.good { background: #e8f5e9; border-left: 4px solid #2e7d32; }
+.finding.warn { background: #fff3e0; border-left: 4px solid #e65100; }
+.finding.info { background: #e3f2fd; border-left: 4px solid #1565c0; }
+.footer { text-align: center; color: #999; padding: 30px; }
+.nav-bar { display: flex; justify-content: center; gap: 12px; padding: 16px 20px; background: #fff; border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.nav-btn { padding: 10px 28px; border-radius: 24px; border: 2px solid #ddd; background: #fff; color: #666; font-size: 15px; cursor: pointer; text-decoration: none; transition: all 0.2s; font-family: inherit; }
+.nav-btn:hover { border-color: #1E90FF; color: #1E90FF; background: #e3f2fd; }
+.nav-btn.active { background: linear-gradient(135deg, #1E90FF, #FF4757); color: #fff; border-color: transparent; font-weight: bold; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin-left: 6px; }
+.tag-up { background: #fff3e0; color: #e65100; }
+.tag-down { background: #e8f5e9; color: #2e7d32; }
+.diff-up { color: #e65100; }
+.diff-down { color: #2e7d32; }
+</style>
+</head>
+<body style="display:none">
+<script>
+(function(){
+var K='mi_band_auth_v1';
+if(!localStorage.getItem(K)){
+window.location.href='../index.html';
+return;
+}
+document.body.style.display='';
+})();
+</script>
+<div class="nav-bar">
+  <a href="../hub.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:24px;border:2px solid #ddd;background:#fff;color:#666;font-size:15px;cursor:pointer;text-decoration:none;transition:all .2s;font-family:inherit;margin-right:8px;" onmouseover="this.style.borderColor='#ff6900';this.style.color='#ff6900'" onmouseout="this.style.borderColor='#ddd';this.style.color='#666'">← 返回导航页</a>
+  <a class="nav-btn" href="核心指标报告.html">我司数据</a>
+  <a class="nav-btn" href="竞对数据报告.html">竞对数据</a>
+  <a class="nav-btn active" href="竞对对比报告.html">对比分析</a>
+</div>
+
+<div class="header">
+  <h1>千川视频数据 — 我司 vs 竞对(良米) 对比分析</h1>
+  <p>2026年6月1日 - 6月7日 | 我司 1,880条 vs 竞对 2,566条 | 全面对比</p>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi-card">
+    <div class="values"><span class="ours-color">1,880</span><br><span class="theirs-color">2,566</span></div>
+    <div class="label">有消耗视频数 <span class="tag tag-up">+36%</span></div>
+  </div>
+  <div class="kpi-card">
+    <div class="values"><span class="ours-color">¥5.8万</span><br><span class="theirs-color">¥9.6万</span></div>
+    <div class="label">总消耗 <span class="tag tag-up">+64%</span></div>
+  </div>
+  <div class="kpi-card">
+    <div class="values"><span class="ours-color">¥87.6万</span><br><span class="theirs-color">¥141.4万</span></div>
+    <div class="label">总成交 <span class="tag tag-up">+61%</span></div>
+  </div>
+  <div class="kpi-card">
+    <div class="values"><span class="ours-color">2,249</span><br><span class="theirs-color">3,708</span></div>
+    <div class="label">总订单 <span class="tag tag-up">+65%</span></div>
+  </div>
+  <div class="kpi-card">
+    <div class="values"><span class="ours-color">200万</span><br><span class="theirs-color">807万</span></div>
+    <div class="label">总播放量 <span class="tag tag-up">+302%</span></div>
+  </div>
+  <div class="kpi-card">
+    <div class="values"><span class="ours-color">15.05</span><br><span class="theirs-color">14.77</span></div>
+    <div class="label">ROI <span class="tag tag-down">-1.9%</span></div>
+  </div>
+  <div class="kpi-card">
+    <div class="values"><span class="ours-color">7.23%</span><br><span class="theirs-color">4.36%</span></div>
+    <div class="label">CTR <span class="tag tag-down">-2.87pp</span></div>
+  </div>
+  <div class="kpi-card">
+    <div class="values"><span class="ours-color">1.55%</span><br><span class="theirs-color">1.03%</span></div>
+    <div class="label">CVR <span class="tag tag-down">-0.52pp</span></div>
+  </div>
+</div>
+
+<div class="container">
+
+<div class="section">
+  <h2>01 核心指标雷达图对比（我司=100%基准）</h2>
+  <div class="chart-box" id="chart-radar"></div>
+</div>
+
+<div class="section">
+  <h2>02 核心指标柱状图对比</h2>
+  <div class="grid-2">
+    <div class="chart-box" id="chart-kpi-compare"></div>
+    <div class="chart-box" id="chart-efficiency"></div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>03 渠道对比</h2>
+  <div class="chart-box" id="chart-channel-bubble"></div>
+  <table>
+    <tr><th>渠道</th><th>我司消耗</th><th>我司成交</th><th>我司ROI</th><th>竞对消耗</th><th>竞对成交</th><th>竞对ROI</th><th>ROI差距</th></tr>
+    <tr><td>抖音号主页素材</td><td>¥44,143</td><td>¥694,374</td><td><b class="ours-color">15.7</b></td><td>¥79,655</td><td>¥1,205,759</td><td><b class="theirs-color">15.1</b></td><td class="diff-down">-0.6</td></tr>
+    <tr><td>AIGC动态创意</td><td>¥9,927</td><td>¥133,399</td><td><b class="ours-color">13.4</b></td><td>¥7,714</td><td>¥107,583</td><td><b class="theirs-color">13.9</b></td><td class="diff-up">+0.5</td></tr>
+    <tr><td>本地上传</td><td>¥3,875</td><td>¥40,932</td><td><b class="ours-color">10.6</b></td><td>¥7,321</td><td>¥88,819</td><td><b class="theirs-color">12.1</b></td><td class="diff-up">+1.5</td></tr>
+    <tr><td>即创共享素材</td><td>-</td><td>-</td><td>-</td><td>¥1,017</td><td>¥11,826</td><td><b class="theirs-color">11.6</b></td><td>竞对独有</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>04 产品线对比</h2>
+  <div class="chart-box" id="chart-product"></div>
+  <table>
+    <tr><th>产品线</th><th>我司消耗</th><th>我司ROI</th><th>竞对消耗</th><th>竞对ROI</th><th>ROI差距</th><th>竞对视频数</th></tr>
+    <tr><td>小米手环</td><td>¥27,434 (47.1%)</td><td><b class="ours-color">14.1</b></td><td>¥43,625 (45.6%)</td><td><b class="theirs-color">12.7</b></td><td class="diff-down">-1.4</td><td>877</td></tr>
+    <tr><td>红米Watch6</td><td>¥13,754 (23.6%)</td><td><b class="ours-color">18.9</b></td><td>¥34,402 (35.9%)</td><td><b class="theirs-color">17.5</b></td><td class="diff-down">-1.4</td><td>908</td></tr>
+    <tr><td>耳机</td><td>¥3,202 (5.5%)</td><td><b class="ours-color">15.3</b></td><td>¥3,908 (4.1%)</td><td><b class="theirs-color">19.9</b></td><td class="diff-up">+4.6</td><td>712</td></tr>
+    <tr><td>AIGC集合</td><td>¥9,927 (17.0%)</td><td><b class="ours-color">13.4</b></td><td>¥7,714 (8.1%)</td><td><b class="theirs-color">13.9</b></td><td class="diff-up">+0.5</td><td>1</td></tr>
+    <tr><td>其他/通用</td><td>¥3,921 (6.7%)</td><td><b class="ours-color">12.2</b></td><td>¥6,057 (6.3%)</td><td><b class="theirs-color">11.8</b></td><td class="diff-down">-0.4</td><td>68</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>05 效率指标逐项对比</h2>
+  <div class="chart-box" id="chart-eff-compare"></div>
+</div>
+
+<div class="section">
+  <h2>06 ROI分布对比</h2>
+  <div class="grid-2">
+    <div class="chart-box" id="chart-roi-compare"></div>
+    <div style="padding:30px;">
+      <table>
+        <tr><th>指标</th><th>我司</th><th>竞对</th></tr>
+        <tr><td>ROI>1 视频占比</td><td><b>21.5%</b></td><td>15.4%</td></tr>
+        <tr><td>ROI=0 视频占比</td><td>~78.5%</td><td><b>84.6%</b></td></tr>
+        <tr><td>中位ROI</td><td>0.00</td><td>0.00</td></tr>
+        <tr><td>均值ROI</td><td>12.42</td><td><b>37.32</b></td></tr>
+        <tr><td>有消耗视频数</td><td>1,880</td><td><b>2,566</b></td></tr>
+        <tr><td>总视频数</td><td>1,880</td><td><b>3,808</b></td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>07 关键发现与建议</h2>
+  <div class="finding good">
+    <strong>优势 1：内容质量领先</strong><br>
+    我司 CTR（7.23%）和 CVR（1.55%）均显著优于竞对（4.36%/1.03%）。视频素材更吸引点击，直播间承接转化能力更强，这是核心竞争力。
+  </div>
+  <div class="finding good">
+    <strong>优势 2：ROI整体领先</strong><br>
+    我司整体ROI（15.05）高于竞对（14.77），尤其在手环和Watch6两大主力品类上ROI均领先竞对1.4个点。
+  </div>
+  <div class="finding good">
+    <strong>优势 3：AIGC是我们的护城河</strong><br>
+    我司已建立完整AIGC渠道（17%消耗占比），竞对仅1条AIGC视频。这是我们显著的技术和效率优势。
+  </div>
+  <div class="finding warn">
+    <strong>劣势 1：流量规模差距大</strong><br>
+    竞对总播放量807万是我们的4倍，播放效率84.3次/元是我们（34.5次/元）的2.4倍。竞对可能在出价和定向策略上更激进。
+  </div>
+  <div class="finding warn">
+    <strong>劣势 2：投放总量不足</strong><br>
+    竞对消耗是我们的1.6倍，视频数是1.4倍。在千川生态中，规模也是重要的竞争维度，需要评估是否加大投放预算。
+  </div>
+  <div class="finding info">
+    <strong>建议 1：加大AIGC投入</strong><br>
+    继续扩大AIGC渠道优势，竞对在此领域几乎空白。AIGC ROI（13.4）稳定且可规模化，是拉开差距的最佳路径。
+  </div>
+  <div class="finding info">
+    <strong>建议 2：提升视频播放效率</strong><br>
+    研究竞对为何能以低成本获取高播放量（84.3 vs 34.5次/元），优化出价策略和定向设置，提升流量获取效率。
+  </div>
+  <div class="finding info">
+    <strong>建议 3：定期清理低效素材</strong><br>
+    双方都有大量ROI=0的素材（我司~78.5%，竞对84.6%），建议建立素材自动关停机制，ROI持续为0的素材及时止损。
+  </div>
+</div>
+
+<div class="footer">数据来源：千川后台导出 | 分析周期：2026.6.1 - 2026.6.7 | 我司 vs 竞对(良米)</div>
+
+</div>
+
+<script>
+var oursColor = '#1E90FF';
+var theirsColor = '#FF6B35';
+
+// Radar Chart
+(function() {
+  var dom = document.getElementById('chart-radar');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'item' },
+    legend: { bottom: 0 },
+    radar: {
+      center: ['50%', '48%'],
+      radius: '65%',
+      axisName: { fontSize: 12 },
+      indicator: [
+        { name: 'ROI', max: 20 },
+        { name: 'CTR(%)', max: 10 },
+        { name: 'CVR(%)', max: 3 },
+        { name: '视频数', max: 3000 },
+        { name: '播放效率', max: 100 },
+        { name: '客单价(¥)', max: 400 }
+      ]
+    },
+    series: [{
+      type: 'radar',
+      data: [
+        { value: [15.05, 7.23, 1.55, 1880, 34.5, 389.6], name: '我司', lineStyle: { color: oursColor }, areaStyle: { color: 'rgba(30,144,255,0.15)' }, itemStyle: { color: oursColor } },
+        { value: [14.77, 4.36, 1.03, 2566, 84.3, 381.3], name: '竞对(良米)', lineStyle: { color: theirsColor }, areaStyle: { color: 'rgba(255,107,53,0.15)' }, itemStyle: { color: theirsColor } }
+      ]
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// KPI Compare Bars
+(function() {
+  var dom = document.getElementById('chart-kpi-compare');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0 },
+    grid: { left: 20, right: 20, top: 40, bottom: 0 },
+    xAxis: { type: 'category', data: ['消耗(万)','成交(十万)','订单(千)','播放(十万)','ROI','CTR(%)','CVR(%)'], axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#eee' } } },
+    series: [
+      { name: '我司', type: 'bar', data: [5.82, 8.76, 2.25, 20.06, 15.05, 7.23, 1.55], itemStyle: { color: oursColor }, barWidth: 28, label: { show: true, position: 'top', fontSize: 11 } },
+      { name: '竞对', type: 'bar', data: [9.57, 14.14, 3.71, 80.73, 14.77, 4.36, 1.03], itemStyle: { color: theirsColor }, barWidth: 28, label: { show: true, position: 'top', fontSize: 11 } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// Efficiency Compare
+(function() {
+  var dom = document.getElementById('chart-efficiency');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0 },
+    grid: { left: 100, right: 20, top: 40, bottom: 0 },
+    xAxis: { type: 'value', splitLine: { lineStyle: { color: '#eee' } } },
+    yAxis: { type: 'category', data: ['播放/元','均视频消耗(¥)','均视频成交(¥)','均单消耗(¥)','客单价(¥)'], axisLabel: { fontSize: 12 } },
+    series: [
+      { name: '我司', type: 'bar', data: [34.5, 30.98, 466.09, 25.89, 389.62], itemStyle: { color: oursColor }, barWidth: 20, label: { show: true, position: 'right', fontSize: 11, formatter: '{c}' } },
+      { name: '竞对', type: 'bar', data: [84.3, 37.30, 551.05, 25.81, 381.33], itemStyle: { color: theirsColor }, barWidth: 20, label: { show: true, position: 'right', fontSize: 11, formatter: '{c}' } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// Channel Bubble
+(function() {
+  var dom = document.getElementById('chart-channel-bubble');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'item', formatter: function(p) { return p.seriesName + '<br>' + p.name + '<br>消耗: ' + p.value[0] + '<br>ROI: ' + p.value[1]; } },
+    legend: { top: 0 },
+    grid: { left: 80, right: 30, top: 40, bottom: 10 },
+    xAxis: { type: 'value', name: '消耗 (¥)', nameLocation: 'center', nameGap: 35, splitLine: { lineStyle: { color: '#eee' } } },
+    yAxis: { type: 'value', name: 'ROI', splitLine: { lineStyle: { color: '#eee' } } },
+    series: [
+      { name: '我司', type: 'scatter', data: [[44143,15.7],[9927,13.4],[3875,10.6]], symbolSize: 28, itemStyle: { color: oursColor }, label: { show: true, formatter: function(p) { return ['主页','AIGC','本地上传'][p.dataIndex]; }, fontSize: 12, position: 'top' } },
+      { name: '竞对', type: 'scatter', data: [[79655,15.1],[7714,13.9],[7321,12.1],[1017,11.6]], symbolSize: 28, itemStyle: { color: theirsColor }, label: { show: true, formatter: function(p) { return ['主页','AIGC','本地上传','即创'][p.dataIndex]; }, fontSize: 12, position: 'bottom' } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// Product Compare
+(function() {
+  var dom = document.getElementById('chart-product');
+  var chart = echarts.init(dom);
+  var categories = ['小米手环', '红米Watch6', '耳机', 'AIGC', '其他'];
+  var option = {
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0 },
+    grid: { left: 20, right: 20, top: 60, bottom: 0 },
+    xAxis: { type: 'category', data: categories, axisLabel: { fontSize: 12 } },
+    yAxis: [
+      { type: 'value', name: '消耗 (¥)', splitLine: { lineStyle: { color: '#eee' } } },
+      { type: 'value', name: 'ROI' }
+    ],
+    series: [
+      { name: '我司消耗', type: 'bar', data: [27434, 13754, 3202, 9927, 3921], itemStyle: { color: oursColor }, barWidth: 22, label: { show: true, position: 'top', fontSize: 10 } },
+      { name: '竞对消耗', type: 'bar', data: [43625, 34402, 3908, 7714, 6057], itemStyle: { color: theirsColor }, barWidth: 22, label: { show: true, position: 'top', fontSize: 10 } },
+      { name: '我司ROI', type: 'line', yAxisIndex: 1, data: [14.1, 18.9, 15.3, 13.4, 12.2], lineStyle: { color: oursColor, width: 2.5 }, symbol: 'circle', symbolSize: 10, itemStyle: { color: oursColor } },
+      { name: '竞对ROI', type: 'line', yAxisIndex: 1, data: [12.7, 17.5, 19.9, 13.9, 11.8], lineStyle: { color: theirsColor, width: 2.5, type: 'dashed' }, symbol: 'diamond', symbolSize: 10, itemStyle: { color: theirsColor } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// Efficiency Horizontal Compare
+(function() {
+  var dom = document.getElementById('chart-eff-compare');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0 },
+    grid: { left: 30, right: 20, top: 40, bottom: 10 },
+    xAxis: { type: 'category', data: ['均视频消耗','均视频成交','均视频播放','均单消耗','客单价','播放/元'], axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#eee' } } },
+    series: [
+      { name: '我司', type: 'bar', data: [30.98, 466.09, 1067, 25.89, 389.62, 34.5], itemStyle: { color: oursColor }, barWidth: 25, label: { show: true, position: 'top', fontSize: 10 } },
+      { name: '竞对', type: 'bar', data: [37.30, 551.05, 3146, 25.81, 381.33, 84.3], itemStyle: { color: theirsColor }, barWidth: 25, label: { show: true, position: 'top', fontSize: 10 } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// ROI Distribution Compare
+(function() {
+  var dom = document.getElementById('chart-roi-compare');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0 },
+    grid: { left: 60, right: 20, top: 40, bottom: 10 },
+    xAxis: { type: 'category', data: ['ROI=0', '0<ROI<=1', '1<ROI<=5', '5<ROI<=10', 'ROI>10'], axisLabel: { fontSize: 11 } },
+    yAxis: { type: 'value', name: '视频占比(%)', splitLine: { lineStyle: { color: '#eee' } } },
+    series: [
+      { name: '我司', type: 'bar', data: [78.5, 0, 21.5, 0, 0], itemStyle: { color: oursColor }, barWidth: 25, label: { show: true, position: 'top', fontSize: 10 } },
+      { name: '竞对', type: 'bar', data: [84.6, 6.6, 2.6, 1.1, 0.1], itemStyle: { color: theirsColor }, barWidth: 25, label: { show: true, position: 'top', fontSize: 10 } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+</body>
+</html>

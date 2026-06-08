@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>千川视频数据 - 竞对(良米)核心指标分析</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: "Microsoft YaHei", sans-serif; background: #f0f2f5; color: #333; }
+.header { background: linear-gradient(135deg, #FF6B35 0%, #FF4757 100%); color: white; padding: 45px 20px; text-align: center; }
+.header h1 { font-size: 38px; margin-bottom: 10px; letter-spacing: 2px; }
+.header p { font-size: 18px; opacity: 0.9; }
+.kpi-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; max-width: 1400px; margin: -30px auto 0; padding: 0 20px; position: relative; z-index: 10; }
+.kpi-card { background: white; border-radius: 12px; padding: 20px 15px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+.kpi-card .value { font-size: 26px; font-weight: bold; }
+.kpi-card .label { font-size: 13px; color: #888; margin-top: 5px; }
+.container { max-width: 1400px; margin: 40px auto; padding: 0 20px; }
+.section { background: white; border-radius: 12px; padding: 30px; margin-bottom: 24px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+.section h2 { font-size: 22px; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 3px solid #FF6B35; }
+.chart-box { height: 450px; }
+.chart-box-lg { height: 550px; }
+table { width: 100%; border-collapse: collapse; }
+th { background: #f8f9fa; text-align: left; padding: 12px 15px; font-size: 13px; color: #666; border-bottom: 2px solid #eee; }
+td { padding: 12px 15px; font-size: 14px; border-bottom: 1px solid #eee; }
+tr:hover td { background: #fafbfc; }
+.finding { padding: 16px 20px; background: #fff8f0; border-left: 4px solid #FF6B35; margin-bottom: 12px; border-radius: 0 8px 8px 0; font-size: 14px; line-height: 1.8; }
+.footer { text-align: center; color: #999; padding: 30px; }
+.nav-bar { display: flex; justify-content: center; gap: 12px; padding: 16px 20px; background: #fff; border-bottom: 1px solid #e8e8e8; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.nav-btn { padding: 10px 28px; border-radius: 24px; border: 2px solid #ddd; background: #fff; color: #666; font-size: 15px; cursor: pointer; text-decoration: none; transition: all 0.2s; font-family: inherit; }
+.nav-btn:hover { border-color: #FF6B35; color: #FF6B35; background: #fff3e0; }
+.nav-btn.active { background: #FF6B35; color: #fff; border-color: #FF6B35; font-weight: bold; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+.tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; margin-left: 8px; }
+.tag-good { background: #e8f5e9; color: #2e7d32; }
+.tag-warn { background: #fff3e0; color: #e65100; }
+</style>
+</head>
+<body style="display:none">
+<script>
+(function(){
+var K='mi_band_auth_v1';
+if(!localStorage.getItem(K)){
+window.location.href='../index.html';
+return;
+}
+document.body.style.display='';
+})();
+</script>
+<div class="nav-bar">
+  <a href="../hub.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:24px;border:2px solid #ddd;background:#fff;color:#666;font-size:15px;cursor:pointer;text-decoration:none;transition:all .2s;font-family:inherit;margin-right:8px;" onmouseover="this.style.borderColor='#ff6900';this.style.color='#ff6900'" onmouseout="this.style.borderColor='#ddd';this.style.color='#666'">← 返回导航页</a>
+  <a class="nav-btn" href="核心指标报告.html">我司数据</a>
+  <a class="nav-btn active" href="竞对数据报告.html">竞对数据</a>
+  <a class="nav-btn" href="竞对对比报告.html">对比分析</a>
+</div>
+
+<div class="header">
+  <h1>千川视频数据 — 竞对(良米)核心指标分析</h1>
+  <p>2026年6月1日 - 6月7日 | 有消耗视频 2,566 条 | 整体ROI 14.77 | 总成交 ¥1,413,987</p>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi-card"><div class="value" style="color:#FF6B35;">¥95,707</div><div class="label">总消耗</div></div>
+  <div class="kpi-card"><div class="value" style="color:#2ED573;">¥141.4万</div><div class="label">总成交金额</div></div>
+  <div class="kpi-card"><div class="value" style="color:#1E90FF;">14.77</div><div class="label">整体ROI</div></div>
+  <div class="kpi-card"><div class="value" style="color:#FF4757;">807.3万</div><div class="label">总播放量</div></div>
+  <div class="kpi-card"><div class="value" style="color:#A855F7;">4.36%</div><div class="label">整体点击率</div></div>
+  <div class="kpi-card"><div class="value" style="color:#FFA502;">3,708</div><div class="label">总订单数</div></div>
+</div>
+
+<div class="container">
+
+<div class="section">
+  <h2>01 核心指标概览</h2>
+  <div class="chart-box" id="chart-overview"></div>
+</div>
+
+<div class="section">
+  <h2>02 渠道表现</h2>
+  <div class="grid-2">
+    <div class="chart-box" id="chart-channel-bar"></div>
+    <div class="chart-box" id="chart-channel-pie"></div>
+  </div>
+  <table>
+    <tr><th>渠道</th><th>消耗</th><th>成交金额</th><th>订单数</th><th>ROI</th><th>播放量</th><th>视频数</th></tr>
+    <tr><td>抖音号主页素材</td><td>¥79,655</td><td>¥1,205,759</td><td>3,178</td><td><b>15.1</b></td><td>7,468,340</td><td>2,498</td></tr>
+    <tr><td>AIGC动态创意</td><td>¥7,714</td><td>¥107,583</td><td>259</td><td><b>13.9</b></td><td>123,456</td><td>1</td></tr>
+    <tr><td>本地上传</td><td>¥7,321</td><td>¥88,819</td><td>231</td><td><b>12.1</b></td><td>467,393</td><td>56</td></tr>
+    <tr><td>即创共享素材</td><td>¥1,017</td><td>¥11,826</td><td>40</td><td><b>11.6</b></td><td>13,566</td><td>11</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>03 产品线表现</h2>
+  <div class="grid-2">
+    <div class="chart-box" id="chart-product-bar"></div>
+    <div class="chart-box" id="chart-product-roi"></div>
+  </div>
+  <table>
+    <tr><th>产品线</th><th>消耗</th><th>成交金额</th><th>ROI</th><th>播放量</th><th>视频数</th></tr>
+    <tr><td>小米手环</td><td>¥43,625 (45.6%)</td><td>¥553,793</td><td><b>12.7</b></td><td>4,921,582</td><td>877</td></tr>
+    <tr><td>红米Watch6</td><td>¥34,402 (35.9%)</td><td>¥604,055</td><td><b>17.5</b></td><td>2,021,744</td><td>908</td></tr>
+    <tr><td>耳机</td><td>¥3,908 (4.1%)</td><td>¥77,936</td><td><b>19.9</b></td><td>580,661</td><td>712</td></tr>
+    <tr><td>AIGC集合</td><td>¥7,714 (8.1%)</td><td>¥107,583</td><td><b>13.9</b></td><td>123,456</td><td>1</td></tr>
+    <tr><td>其他/通用</td><td>¥6,057 (6.3%)</td><td>¥70,620</td><td><b>11.8</b></td><td>425,312</td><td>68</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>04 TOP10 消耗视频</h2>
+  <table>
+    <tr><th>#</th><th>视频名称</th><th>消耗</th><th>成交金额</th><th>ROI</th><th>播放量</th><th>CTR</th></tr>
+    <tr><td>1</td><td>好消息！红米Watch 6直播间现在三百多就能拿下！ #价格力#REDMIWatch6#红米W6#米兰尼斯#AI视频</td><td>¥7,790</td><td>¥169,476</td><td><b>21.8</b></td><td>787,648</td><td>6.1%</td></tr>
+    <tr><td>2</td><td>AIGC动态创意素材集合</td><td>¥7,714</td><td>¥107,583</td><td><b>13.9</b></td><td>123,456</td><td>9.9%</td></tr>
+    <tr><td>3</td><td>直播间小米手环10粉/银色即将补货，关注入群抢先购！ #小米手环10 #小米手环10周年 #小米手环 #活动 #补货</td><td>¥5,896</td><td>¥64,472</td><td><b>10.9</b></td><td>149,665</td><td>12.5%</td></tr>
+    <tr><td>4</td><td>0910雷总1.mp4</td><td>¥5,749</td><td>¥64,208</td><td><b>11.2</b></td><td>415,232</td><td>9.6%</td></tr>
+    <tr><td>5</td><td>小米手环10 Pro，新品发布，329起就能拿下，只在今天！ #小米新品#小米新品手环#小米手环10pro#小米手环#小米新品发布会</td><td>¥3,950</td><td>¥57,567</td><td><b>14.6</b></td><td>75,228</td><td>8.5%</td></tr>
+    <tr><td>6</td><td>REDMI Watch 6：大屏 24天长续航 焦点通知 #小米 #REDMIWatch6 #小米手表 #数码科技 #智能穿戴</td><td>¥3,528</td><td>¥55,222</td><td><b>15.7</b></td><td>211,202</td><td>8.6%</td></tr>
+    <tr><td>7</td><td>REDMI Watch 6全新发布！宝子们快来看看吧~ #小米手表 #红米watch6 #手表 #智能穿戴</td><td>¥3,507</td><td>¥61,165</td><td><b>17.4</b></td><td>235,637</td><td>10.5%</td></tr>
+    <tr><td>8</td><td>这个双十一我们只降价！小米手环10入手好时机~ #双十一好物 #双十一优惠 #小米手环10 #小米手环 #补货</td><td>¥3,135</td><td>¥23,395</td><td><b>7.5</b></td><td>91,386</td><td>11.4%</td></tr>
+    <tr><td>9</td><td>就问你这个价格香不香！！#小米手环 #小米手环10Pro #手环10Pro #智能穿戴 #小米</td><td>¥2,399</td><td>¥31,255</td><td><b>13.0</b></td><td>79,244</td><td>7.4%</td></tr>
+    <tr><td>10</td><td>七夕礼物不如送小米手环10！ #小米手环10 #小米手环10周年 #小米手环 #七夕 #记录我的心动一刻</td><td>¥2,172</td><td>¥22,254</td><td><b>10.2</b></td><td>60,456</td><td>11.6%</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>05 高ROI黑马视频（消耗≤50，ROI>50）</h2>
+  <table>
+    <tr><th>#</th><th>视频名称</th><th>消耗</th><th>成交金额</th><th>ROI</th><th>播放量</th></tr>
+    <tr><td>1</td><td>永远太飘渺了，在一起一辈子吧。 #囚于永夜 #迟述 #信息素手环 #小米手环10 #小米手环</td><td>¥0</td><td>¥6,021</td><td><b>46,313.1</b></td><td>797,468</td></tr>
+    <tr><td>2</td><td>REDMI Buds 8 Pro真的价美又实用！ #新品上新#蓝牙耳机#红米Buds8pro#性价比超高#好物推荐</td><td>¥0</td><td>¥129</td><td><b>12,900.0</b></td><td>1,908</td></tr>
+    <tr><td>3</td><td>一张图告诉你手环手表该怎么选！ #好物推荐#小米手环#小米手环10pronfc#小米手环推荐#小米手环10Pro</td><td>¥0</td><td>¥399</td><td><b>3,990.0</b></td><td>4,772</td></tr>
+    <tr><td>4</td><td>户外出行记得带上REDMI Buds 8 青春版！ #新品上新#蓝牙耳机#红米Buds8青春版#性价比超高#好物推荐</td><td>¥0</td><td>¥374</td><td><b>2,077.8</b></td><td>12</td></tr>
+    <tr><td>5</td><td>呼叫"小爱同学"就能切歌、查天气、定日程，不用动手动口就行！ #小米耳夹式耳机</td><td>¥0</td><td>¥374</td><td><b>1,496.0</b></td><td>31</td></tr>
+  </table>
+</div>
+
+<div class="section">
+  <h2>06 ROI分布分析</h2>
+  <div class="grid-2">
+    <div class="chart-box" id="chart-roi-dist"></div>
+    <div style="padding:30px;">
+      <table>
+        <tr><th>指标</th><th>数值</th></tr>
+        <tr><td>ROI>1 视频占比</td><td>15.4% (394条)</td></tr>
+        <tr><td>ROI=0 视频占比</td><td>84.6% (2,170条)</td></tr>
+        <tr><td>中位ROI</td><td>0.00</td></tr>
+        <tr><td>均值ROI</td><td>37.32</td></tr>
+        <tr><td>消耗TOP1 ROI</td><td>21.76</td></tr>
+        <tr><td>总视频数</td><td>3,808条</td></tr>
+        <tr><td>有消耗视频</td><td>2,566条</td></tr>
+        <tr><td>零消耗视频</td><td>1,242条</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>07 关键发现</h2>
+  <div class="finding"><strong>1. 流量获取能力强：</strong>总播放量807万，84.3次播放/元，流量获取效率极高。抖音号主页素材是绝对主力（93%消耗、92%成交、92%播放）。</div>
+  <div class="finding"><strong>2. 红米Watch6是最优品类：</strong>Watch6 ROI达17.5，成交量¥60.4万，是利润贡献最大的产品线。耳机品类ROI最高（19.9）但规模小。</div>
+  <div class="finding"><strong>3. 长尾问题严重：</strong>84.6%的视频ROI=0，中位ROI=0，大量低效素材在消耗预算。建议定期清理零转化素材。</div>
+  <div class="finding"><strong>4. AIGC几乎未使用：</strong>仅1条AIGC素材，消耗¥7,714占8.1%。相比我司已建立完整AIGC渠道，这是他们的明显短板。</div>
+  <div class="finding"><strong>5. 手环投放量大但ROI低：</strong>手环消耗占比45.6%最高，但ROI仅12.7（全品类最低），投入产出不匹配。</div>
+</div>
+
+<div class="footer">数据来源：千川后台导出 | 分析周期：2026.6.1 - 2026.6.7 | 竞对：良米</div>
+
+</div>
+
+<script>
+// Chart 1: Core Metrics Overview - Gauge style
+(function() {
+  var dom = document.getElementById('chart-overview');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0 },
+    grid: { left: 80, right: 40, top: 40, bottom: 0 },
+    xAxis: { type: 'value', splitLine: { lineStyle: { color: '#eee' } } },
+    yAxis: { type: 'category', data: ['总消耗(¥)','成交金额(¥)','订单数','播放量','ROI','CTR(%)','CVR(%)'], axisLabel: { fontSize: 13 } },
+    series: [{
+      type: 'bar',
+      data: [
+        { value: 95707, itemStyle: { color: '#FF6B35' } },
+        { value: 1413987, itemStyle: { color: '#2ED573' } },
+        { value: 3708, itemStyle: { color: '#FFA502' } },
+        { value: 8072755, itemStyle: { color: '#FF4757' } },
+        { value: 14.77, itemStyle: { color: '#1E90FF' } },
+        { value: 4.36, itemStyle: { color: '#A855F7' } },
+        { value: 1.03, itemStyle: { color: '#FF6348' } }
+      ],
+      barMaxWidth: 35,
+      label: { show: true, position: 'right', fontSize: 13, formatter: function(p) {
+        var v = p.value;
+        if (v >= 10000) return (v/10000).toFixed(1) + '万';
+        if (v >= 1000) return v.toLocaleString();
+        return v.toFixed(2);
+      }}
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// Chart 2: Channel Bar
+(function() {
+  var dom = document.getElementById('chart-channel-bar');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0 },
+    grid: { left: 20, right: 20, top: 40, bottom: 0 },
+    xAxis: { type: 'category', data: ['抖音主页','AIGC','本地上传','即创共享'], axisLabel: { fontSize: 12 } },
+    yAxis: { type: 'value', name: '消耗 (¥)', splitLine: { lineStyle: { color: '#eee' } } },
+    series: [
+      { name: '消耗', type: 'bar', data: [79655, 7714, 7321, 1017], itemStyle: { color: '#FF6B35' }, barWidth: 40, label: { show: true, position: 'top', formatter: '{c}' } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// Chart 3: Channel Pie
+(function() {
+  var dom = document.getElementById('chart-channel-pie');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    legend: { bottom: 0 },
+    series: [{
+      type: 'pie',
+      radius: ['45%', '75%'],
+      label: { formatter: '{b}\n{d}%' },
+      data: [
+        { value: 79655, name: '抖音主页', itemStyle: { color: '#FF6B35' } },
+        { value: 7714, name: 'AIGC动态', itemStyle: { color: '#1E90FF' } },
+        { value: 7321, name: '本地上传', itemStyle: { color: '#2ED573' } },
+        { value: 1017, name: '即创共享', itemStyle: { color: '#A855F7' } }
+      ]
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// Chart 4: Product Bar + ROI Line
+(function() {
+  var dom = document.getElementById('chart-product-bar');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0 },
+    grid: { left: 20, right: 50, top: 40, bottom: 0 },
+    xAxis: { type: 'category', data: ['小米手环','红米Watch6','耳机','AIGC','其他'], axisLabel: { fontSize: 12 } },
+    yAxis: [
+      { type: 'value', name: '消耗 (¥)', splitLine: { lineStyle: { color: '#eee' } } },
+      { type: 'value', name: 'ROI' }
+    ],
+    series: [
+      { name: '消耗', type: 'bar', data: [43625, 34402, 3908, 7714, 6057], itemStyle: { color: '#FF6B35' }, barWidth: 30, label: { show: true, position: 'top', fontSize: 11 } },
+      { name: 'ROI', type: 'line', yAxisIndex: 1, data: [12.7, 17.5, 19.9, 13.9, 11.8], lineStyle: { color: '#1E90FF', width: 3 }, symbol: 'circle', symbolSize: 10, itemStyle: { color: '#1E90FF' }, label: { show: true, fontSize: 12 } }
+    ]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// Chart 5: Product ROI sorted
+(function() {
+  var dom = document.getElementById('chart-product-roi');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'axis' },
+    grid: { left: 100, right: 60, top: 10, bottom: 20 },
+    xAxis: { type: 'value', name: 'ROI', splitLine: { lineStyle: { color: '#eee' } } },
+    yAxis: { type: 'category', data: ['耳机','红米Watch6','AIGC','小米手环','其他'], axisLabel: { fontSize: 13 } },
+    series: [{
+      type: 'bar',
+      data: [
+        { value: 19.9, itemStyle: { color: '#2ED573' } },
+        { value: 17.5, itemStyle: { color: '#1E90FF' } },
+        { value: 13.9, itemStyle: { color: '#A855F7' } },
+        { value: 12.7, itemStyle: { color: '#FF6B35' } },
+        { value: 11.8, itemStyle: { color: '#ccc' } }
+      ],
+      barWidth: 25,
+      label: { show: true, position: 'right', fontSize: 14, fontWeight: 'bold' }
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+
+// Chart 6: ROI Distribution
+(function() {
+  var dom = document.getElementById('chart-roi-dist');
+  var chart = echarts.init(dom);
+  var option = {
+    tooltip: { trigger: 'item', formatter: '{b}: {c}条 ({d}%)' },
+    legend: { bottom: 0 },
+    series: [{
+      type: 'pie',
+      radius: ['55%', '80%'],
+      label: { formatter: '{b}\n{d}%', fontSize: 13 },
+      data: [
+        { value: 2170, name: 'ROI=0', itemStyle: { color: '#ccc' } },
+        { value: 252, name: '0<ROI<=1', itemStyle: { color: '#FFA502' } },
+        { value: 98, name: '1<ROI<=5', itemStyle: { color: '#FF6B35' } },
+        { value: 41, name: '5<ROI<=10', itemStyle: { color: '#FF4757' } },
+        { value: 5, name: 'ROI>10', itemStyle: { color: '#2ED573' } }
+      ]
+    }]
+  };
+  chart.setOption(option);
+  window.addEventListener('resize', function() { chart.resize(); });
+})();
+</script>
+
+</body>
+</html>
