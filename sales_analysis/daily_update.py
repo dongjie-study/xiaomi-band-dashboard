@@ -89,7 +89,7 @@ def load_and_clean(filepath):
             col_map['price'] = i
         elif any(kw in name for kw in ['时间', '提交', 'time', 'date']):
             col_map['time'] = i
-        elif any(kw in name for kw in ['直播', '房间', 'room', '达人']):
+        elif any(kw in name for kw in ['直播', '房间', 'room', '达人', '昵称']):
             col_map['room'] = i
         elif any(kw in name for kw in ['类型', '我方', '竞对', 'type']):
             col_map['type'] = i
