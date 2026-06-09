@@ -45,6 +45,7 @@ data = {
         {"time": "2026-06-07", "reason": "赠品活动信息与宣传不符", "location": "管理员评论", "product": "REDMI Watch", "action": "预警", "penalty": "下架商品+冻结佣金5%+中断直播", "ticket": "7648496881592516883", "violation_phrase": "凑单到手403起+教育优惠返20+额外腕带"},
         {"time": "2026-05-21", "reason": "售后服务不符", "location": "直播画面", "product": "-", "action": "预警", "penalty": "警告", "ticket": "76422923203391491190", "violation_phrase": "一年质保"},
         {"time": "2026-05-06", "reason": "效果虚假", "location": "直播口播", "product": "REDMI Watch", "action": "预警", "penalty": "下架商品+冻结佣金5%+中断直播+关闭商品分享1天", "ticket": "7536494293812658473", "violation_phrase": "五十米深度防水(夸大宣传)"},
+        {"time": "2026-06-10", "reason": "未使用平台福袋工具", "location": "直播口播", "product": "REDMI Watch", "action": "预警", "penalty": "下架商品+冻结佣金5%+中断直播", "ticket": "76530149197860", "violation_phrase": "引导观众扣订单号到评论区进行抽奖，未使用平台官方福袋工具"},
     ],
     "小米官方耳机直播间": [
         {"time": "2026-05-02", "reason": "赠品活动信息与宣传不符", "location": "直播口播", "product": "REDMI Buds Pro", "action": "预警", "penalty": "下架商品+冻结佣金5%+中断直播", "ticket": "76352147209546632040", "violation_phrase": "赠送耳机包"},
@@ -359,8 +360,8 @@ print(" [图4] 严重度分布图已保存: report_severity.png")
 # Save structured JSON
 # ============
 output = {
-    'report_time': '2026-06-07',
-    'period': '2026年5月 - 2026年6月7日',
+    'report_time': '2026-06-10',
+    'period': '2026年5月 - 2026年6月10日',
     'total_violations': total,
     'total_rooms': len(data),
     'summary': {
@@ -377,7 +378,7 @@ output = {
         '效果虚假出现1次(REDMI Watch防水夸大宣传)',
         '存在处罚升级趋势：从警告 → 冻结佣金5% → 冻结佣金15% → 关闭分享 → 提升保证金',
         '小米官方耳机直播间出现账号级别处罚(提升保证金至3000元)，表明累计违规导致账号风险评级升高',
-        '截止6月7日，6月已有5次违规，需高度关注',
+        '截止6月10日，6月已有5次违规，新增「未使用平台福袋工具」违规类型，需高度关注',
     ],
     'recommendations': [
         '1. 立即规范直播间话术，不得在未确权的情况下承诺"全国联保""终生售后""一年质保"等',
