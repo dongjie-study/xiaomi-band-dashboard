@@ -49,6 +49,24 @@ tr:hover td { background: #f8f9ff; }
 .room-section { margin-bottom: 20px; }
 .room-section h4 { font-size: 15px; color: #3867d6; margin-bottom: 8px; padding: 8px 12px; background: #e8f0fe; border-radius: 6px; border-left: 3px solid #3867d6; }
 .penalty { font-size: 11px; color: #e94560; }
+.alert-section { margin-bottom: 16px; }
+.alert-card { background: linear-gradient(135deg, #fff5f5 0%, #fff 50%, #fff5f5 100%); border: 2px solid #e94560; border-radius: 12px; padding: 24px; box-shadow: 0 4px 16px rgba(233,69,96,0.12); }
+.alert-card h3 { font-size: 18px; color: #e94560; margin-bottom: 6px; padding-bottom: 0; border-bottom: none; display: flex; align-items: center; gap: 8px; }
+.alert-card .alert-subtitle { font-size: 12px; color: #888; margin-bottom: 20px; }
+.violation-item { background: #fff; border: 1px solid #f0d0d0; border-radius: 10px; padding: 16px 20px; margin-bottom: 12px; border-left: 4px solid #e94560; transition: box-shadow .2s; }
+.violation-item:hover { box-shadow: 0 2px 12px rgba(233,69,96,0.1); }
+.violation-item .vi-header { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 8px; }
+.violation-item .vi-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+.violation-item .vi-title { font-size: 15px; font-weight: 700; color: #c0392b; line-height: 1.4; }
+.violation-item .vi-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 0; }
+.violation-item .vi-tags .kw { display: inline-block; padding: 3px 10px; background: #fde8ec; color: #e94560; border-radius: 4px; font-size: 12px; font-weight: 600; border: 1px solid #f8c4cf; }
+.violation-item .vi-body { font-size: 13px; color: #555; line-height: 1.8; margin-top: 6px; }
+.violation-item .vi-body .highlight { color: #e94560; font-weight: 700; }
+.violation-item .verdict { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-left: 4px; }
+.violation-item .verdict.fail { background: #fde8ec; color: #e94560; border: 1px solid #f8c4cf; }
+.violation-item .verdict.chance { background: #fff3e0; color: #e17055; border: 1px solid #ffe0b2; }
+.violation-item .vi-action { margin-top: 10px; padding: 10px 14px; background: #fef9e7; border-radius: 6px; font-size: 13px; color: #7d6608; line-height: 1.7; border: 1px solid #f9e79f; }
+.violation-item .vi-action strong { color: #d4ac0d; }
 @media (max-width: 1024px) {
   .stats-row { grid-template-columns: repeat(3, 1fr); }
   .row.col2, .row.col3 { grid-template-columns: 1fr; }
@@ -140,7 +158,114 @@ document.body.style.display='';
   </div>
 </div>
 
-<!-- Row 6: Key findings & recommendations -->
+
+<!-- Row 6: High-frequency violation alerts -->
+<div class="row col1 alert-section">
+  <div class="alert-card">
+    <h3>❗️❗️❗️ 最近高发违规 — 平台严查重点汇总</h3>
+    <p class="alert-subtitle">以下违规类型近期频发，基本申诉不回来，请务必传达至所有直播间运营及主播</p>
+
+    <div class="violation-item">
+      <div class="vi-header">
+        <span class="vi-icon">🔥</span>
+        <div>
+          <div class="vi-title">降温 / 省电 / 节能 / 终身质保</div>
+          <div class="vi-tags"><span class="kw">降温</span><span class="kw">省电</span><span class="kw">节能</span><span class="kw">终身质保</span></div>
+        </div>
+      </div>
+      <div class="vi-body">
+        老生常谈的问题，但仍有商家在<span class="highlight">详情页呈现</span>、<span class="highlight">主播口述</span>中使用此类话术。平台严查且<span class="verdict fail">申诉不回来</span>。不要为了不起眼的转化效果触碰这个霉头。
+      </div>
+    </div>
+
+    <div class="violation-item">
+      <div class="vi-header">
+        <span class="vi-icon">📢</span>
+        <div>
+          <div class="vi-title">假一赔三 / 质保X年 / 只换不修</div>
+          <div class="vi-tags"><span class="kw">假一赔三</span><span class="kw">质保X年</span><span class="kw">只换不修</span></div>
+        </div>
+      </div>
+      <div class="vi-body">
+        此类承诺类话术，<span class="highlight">详情页需要明显标注出来</span>，且与口播或直播页面展示<span class="highlight">完全一致</span>。此类基本也<span class="verdict fail">申诉不回来</span>。
+      </div>
+    </div>
+
+    <div class="violation-item">
+      <div class="vi-header">
+        <span class="vi-icon">📦</span>
+        <div>
+          <div class="vi-title">送货上门 / 运费险</div>
+          <div class="vi-tags"><span class="kw">送货上门</span><span class="kw">运费险</span><span class="kw">送货到家</span></div>
+        </div>
+      </div>
+      <div class="vi-body">
+        <strong>包邮 ≠ 送货上门/送货到家</strong>，<strong>运费险 ≠ 来回不需要出运费</strong>。正常说"包邮"和"有运费险"即可，不要过度承诺。此类基本也<span class="verdict fail">申诉不回来</span>。
+      </div>
+    </div>
+
+    <div class="violation-item">
+      <div class="vi-header">
+        <span class="vi-icon">🧪</span>
+        <div>
+          <div class="vi-title">杀菌 / 抗菌 / 除螨</div>
+          <div class="vi-tags"><span class="kw">杀菌</span><span class="kw">抗菌</span><span class="kw">除螨</span></div>
+        </div>
+      </div>
+      <div class="vi-body">
+        详情页<span class="highlight">必须标注检验报告</span>，有检测报告但未在详情页标注也不行。此类可拿着抗菌除螨类的质检报告尝试<span class="verdict chance">申诉</span>。
+      </div>
+    </div>
+
+    <div class="violation-item">
+      <div class="vi-header">
+        <span class="vi-icon">⚠️</span>
+        <div>
+          <div class="vi-title">劣质 / 低质 等判罚</div>
+          <div class="vi-tags"><span class="kw">劣质</span><span class="kw">低质</span><span class="kw">消费者投诉</span></div>
+        </div>
+      </div>
+      <div class="vi-body">
+        基本原因是<span class="highlight">消费者投诉到平台</span>造成。解决办法：尽可能处理好消费者的诉求，开门做生意，不太过分的建议都处理了，避免升级投诉对店铺造成影响。
+      </div>
+    </div>
+
+    <div class="violation-item">
+      <div class="vi-header">
+        <span class="vi-icon">💰</span>
+        <div>
+          <div class="vi-title">千川侧新规 — 素材价格与产品不符</div>
+          <div class="vi-tags"><span class="kw">千川</span><span class="kw">价格不符</span><span class="kw">12分严重违规</span></div>
+        </div>
+      </div>
+      <div class="vi-body">
+        素材里说的价格和产品不符，目前<span class="highlight">判12分严重违规</span>，大家规避下素材。多少钱就是多少钱：明明卖100多，口播说"2位数"；卖11块说"个位数"。还有一些拿来的素材看都不看，人家19.9自己卖29.9，这种都过一下素材。
+      </div>
+      <div class="vi-action">
+        <strong>🔧 行动项：</strong>所有在投千川素材，安排一次价格一致性排查，确保素材标价与实际售价完全一致。
+      </div>
+    </div>
+
+    <div class="violation-item">
+      <div class="vi-header">
+        <span class="vi-icon">🧾</span>
+        <div>
+          <div class="vi-title">小店后台发票及时开具</div>
+          <div class="vi-tags"><span class="kw">发票</span><span class="kw">行为分</span></div>
+        </div>
+      </div>
+      <div class="vi-body">
+        不要等系统出罚单扣行为分，<span class="highlight">及时开具发票</span>。
+      </div>
+      <div class="vi-action">
+        <strong>🔧 行动项：</strong>安排专人每日检查小店后台发票待开列表，当日清零。
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Row 7: Key findings & recommendations -->
 <div class="row col2">
   <div class="card">
     <h3>关键发现</h3>
