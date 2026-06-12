@@ -65,6 +65,21 @@
   .hour-card .hour-body tr:hover td { background: #fafafa; }
   .hour-card .hour-body .pct-bar { display: inline-block; height: 6px; background: #4ECDC4; border-radius: 3px; vertical-align: middle; margin-right: 6px; }
   .hour-empty { text-align: center; color: #aaa; padding: 40px; font-size: 14px; }
+  .daily-summary-module { margin: 24px 0; }
+  .daily-summary-module h2 { margin-bottom: 16px; }
+  .insight-line { margin: 6px 0; padding: 4px 0 4px 10px; border-left: 3px solid transparent; line-height: 1.6; }
+  .insight-line.positive { border-left-color: #27ae60; }
+  .insight-line.negative { border-left-color: #e74c3c; }
+  .insight-line.neutral { border-left-color: #4ECDC4; }
+  .daily-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .daily-table th, .daily-table td { padding: 6px 10px; text-align: center; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+  .daily-table th { background: #f8f9fa; color: #555; font-weight: 600; font-size: 11px; position: sticky; top: 0; z-index: 1; }
+  .daily-table tbody tr:hover { background: #fafafa; }
+  .daily-table .change-up { color: #e74c3c; font-weight: 600; }
+  .daily-table .change-down { color: #27ae60; font-weight: 600; }
+  .daily-table .ours-bg { background: #fffbeb; }
+  .daily-table .best-day { background: #f0fff4; }
+  .daily-table .worst-day { background: #fff5f5; }
 </style>
 </head>
 <body style="display:none">
@@ -158,6 +173,32 @@ document.body.style.display='';
   <div class="hourly-breakdown">
     <h2>逐小时产品粒度分析</h2>
     <div class="hour-cards" id="hourCards"></div>
+  </div>
+
+  <!-- 每日数据总结分析模块 -->
+  <div class="daily-summary-module" id="dailySummaryModule">
+    <h2>每日数据总结分析（全平台历史总览）</h2>
+
+    <div class="kpi-row" id="summaryKpiRow"></div>
+
+    <div class="charts-row">
+      <div class="chart-card full-width">
+        <h3>我方 vs 竞对 每日趋势 & 份额变化</h3>
+        <div class="chart-container tall"><canvas id="chartDailyTrend"></canvas></div>
+      </div>
+    </div>
+
+    <div class="chart-card" style="margin:16px 0;">
+      <h3>每日数据明细</h3>
+      <div style="overflow-x:auto;">
+        <table class="daily-table" id="dailyDetailTable">
+          <thead></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="summary-box" id="dailyInsights"></div>
   </div>
 </div>
 
@@ -569,6 +610,223 @@ function renderHourlyBreakdown(data) {
   }).join('');
 }
 
+// ===== 每日数据总结分析模块 =====
+let dailyTrendChart = null;
+
+function renderSummaryKPIs() {
+  const ourOrders = HISTORY.map(d => (d.type_summary && d.type_summary['我方']) ? d.type_summary['我方'].orders : 0);
+  const compOrders = HISTORY.map(d => (d.type_summary && d.type_summary['竞对']) ? d.type_summary['竞对'].orders : 0);
+  const shares = ourOrders.map((o, i) => o + compOrders[i] > 0 ? (o / (o + compOrders[i]) * 100) : 0);
+
+  const recent7 = ourOrders.slice(-7);
+  const prev7 = ourOrders.slice(-14, -7);
+  const avgOur = Math.round(recent7.reduce((a, b) => a + b, 0) / recent7.length);
+  const avgPrevOur = prev7.length > 0 ? Math.round(prev7.reduce((a, b) => a + b, 0) / prev7.length) : null;
+  const avgShare = shares.slice(-7).reduce((a, b) => a + b, 0) / Math.min(7, shares.slice(-7).length);
+  const avgComp = Math.round(compOrders.slice(-7).reduce((a, b) => a + b, 0) / Math.min(7, compOrders.slice(-7).length));
+
+  let bestIdx = 0, worstIdx = 0;
+  ourOrders.forEach((o, i) => { if (o > ourOrders[bestIdx]) bestIdx = i; if (o < ourOrders[worstIdx]) worstIdx = i; });
+
+  document.getElementById('summaryKpiRow').innerHTML = [
+    { label: '我方日均订单 (7日)', value: avgOur.toLocaleString(), change: avgPrevOur != null ? formatChange(avgOur, avgPrevOur) : '' },
+    { label: '我方日均份额 (7日)', value: avgShare.toFixed(1) + '%', change: '' },
+    { label: '竞对日均订单 (7日)', value: avgComp.toLocaleString(), change: '' },
+    { label: '最佳单日', value: HISTORY[bestIdx].date, change: '我方 ' + ourOrders[bestIdx].toLocaleString() + ' 单' },
+    { label: '最差单日', value: HISTORY[worstIdx].date, change: '我方 ' + ourOrders[worstIdx].toLocaleString() + ' 单' },
+  ].map(k => '<div class="kpi-card"><div class="label">' + k.label + '</div><div class="value">' + k.value + '</div><div class="change">' + k.change + '</div></div>').join('');
+}
+
+function renderDailyTrendChart() {
+  const dates = HISTORY.map(h => h.date);
+  const ourOrders = HISTORY.map(d => (d.type_summary && d.type_summary['我方']) ? d.type_summary['我方'].orders : 0);
+  const compOrders = HISTORY.map(d => (d.type_summary && d.type_summary['竞对']) ? d.type_summary['竞对'].orders : 0);
+  const shares = ourOrders.map((o, i) => o + compOrders[i] > 0 ? parseFloat((o / (o + compOrders[i]) * 100).toFixed(1)) : 0);
+
+  if (dailyTrendChart) dailyTrendChart.destroy();
+
+  dailyTrendChart = new Chart(document.getElementById('chartDailyTrend'), {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [
+        {
+          label: '我方订单', data: ourOrders,
+          borderColor: '#FFD700', backgroundColor: 'rgba(255,215,0,0.15)',
+          fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#FFD700',
+          borderWidth: 2, yAxisID: 'y'
+        },
+        {
+          label: '竞对订单', data: compOrders,
+          borderColor: '#FF6B6B', backgroundColor: 'rgba(255,107,107,0.08)',
+          fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#FF6B6B',
+          borderWidth: 2, yAxisID: 'y'
+        },
+        {
+          label: '我方份额 %', data: shares,
+          type: 'line', borderColor: '#4ECDC4', backgroundColor: 'rgba(78,205,196,0)',
+          borderWidth: 3, tension: 0.4, pointRadius: 5,
+          pointBackgroundColor: '#4ECDC4', pointBorderColor: '#fff', pointBorderWidth: 2,
+          yAxisID: 'y1', fill: false, order: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 20 } },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              if (ctx.dataset.yAxisID === 'y1') return ' 我方份额: ' + ctx.raw + '%';
+              return ' ' + ctx.dataset.label + ': ' + ctx.raw.toLocaleString() + ' 单';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          type: 'linear', position: 'left',
+          title: { display: true, text: '订单数' },
+          beginAtZero: false, grid: { color: '#f0f0f0' }
+        },
+        y1: {
+          type: 'linear', position: 'right',
+          title: { display: true, text: '我方份额 (%)' },
+          min: 0, max: 100, grid: { drawOnChartArea: false },
+          ticks: { callback: function(v) { return v + '%'; } }
+        }
+      }
+    }
+  });
+}
+
+function renderDailyTable() {
+  var thead = document.getElementById('dailyDetailTable').querySelector('thead');
+  var tbody = document.getElementById('dailyDetailTable').querySelector('tbody');
+
+  thead.innerHTML = '<tr><th>日期</th><th>总订单</th><th>我方订单</th><th>环比</th><th>竞对订单</th><th>我方份额</th><th>我方销售额</th><th>竞对销售额</th><th>我方直播间</th><th>竞对直播间</th></tr>';
+
+  var ourOrders = HISTORY.map(function(d) { return (d.type_summary && d.type_summary['我方']) ? d.type_summary['我方'].orders : 0; });
+
+  var bestOur = Math.max.apply(null, ourOrders);
+  var worstOur = Math.min.apply(null, ourOrders);
+
+  tbody.innerHTML = HISTORY.map(function(d, i) {
+    var our = (d.type_summary && d.type_summary['我方']) || {orders:0, revenue:0, rooms:0};
+    var comp = (d.type_summary && d.type_summary['竞对']) || {orders:0, revenue:0, rooms:0};
+    var total = our.orders + comp.orders;
+    var share = total > 0 ? (our.orders / total * 100).toFixed(1) : '0.0';
+
+    var dodHtml = '-';
+    if (i > 0) {
+      var prevOur = (HISTORY[i-1].type_summary && HISTORY[i-1].type_summary['我方']) || {orders:0};
+      var diff = our.orders - prevOur.orders;
+      var pct = prevOur.orders > 0 ? (diff / prevOur.orders * 100) : 0;
+      var cls = diff >= 0 ? 'change-up' : 'change-down';
+      var sign = diff >= 0 ? '+' : '';
+      dodHtml = '<span class="' + cls + '">' + sign + diff + ' (' + sign + pct.toFixed(1) + '%)</span>';
+    }
+
+    var rowClass = '';
+    if (our.orders === bestOur) rowClass = 'best-day';
+    else if (our.orders === worstOur) rowClass = 'worst-day';
+
+    return '<tr class="' + rowClass + '"><td><strong>' + d.date + '</strong></td><td>' + total.toLocaleString() + '</td><td class="ours-bg">' + our.orders.toLocaleString() + '</td><td>' + dodHtml + '</td><td>' + comp.orders.toLocaleString() + '</td><td><strong>' + share + '%</strong></td><td>' + formatCurrency(our.revenue) + '</td><td>' + formatCurrency(comp.revenue) + '</td><td>' + (our.rooms || 0) + '</td><td>' + (comp.rooms || 0) + '</td></tr>';
+  }).join('');
+}
+
+function renderDailyInsights() {
+  if (HISTORY.length < 3) {
+    document.getElementById('dailyInsights').innerHTML = '<h3>关键洞察</h3><p style="color:#888;">数据不足，需要至少3天数据才能生成分析。</p>';
+    return;
+  }
+
+  var lines = [];
+  var n = HISTORY.length;
+
+  var ourOrders = HISTORY.map(function(d) { return (d.type_summary && d.type_summary['我方']) ? d.type_summary['我方'].orders : 0; });
+  var compOrders = HISTORY.map(function(d) { return (d.type_summary && d.type_summary['竞对']) ? d.type_summary['竞对'].orders : 0; });
+  var shares = ourOrders.map(function(o, i) { return o + compOrders[i] > 0 ? (o / (o + compOrders[i]) * 100) : 0; });
+  var ourRevenues = HISTORY.map(function(d) { return (d.type_summary && d.type_summary['我方']) ? d.type_summary['我方'].revenue : 0; });
+
+  // 1. Share trend: first 3 vs last 3
+  var first3Share = (shares[0] + shares[1] + shares[2]) / 3;
+  var last3Share = (shares[n-3] + shares[n-2] + shares[n-1]) / 3;
+  var shareDelta = last3Share - first3Share;
+
+  if (shareDelta > 1.5) {
+    lines.push({ cls: 'positive', text: '&#x1F4C8; 我方份额呈上升趋势：近3日均 ' + last3Share.toFixed(1) + '%，较首3日均 ' + first3Share.toFixed(1) + '% 提升了 ' + shareDelta.toFixed(1) + ' 个百分点。' });
+  } else if (shareDelta < -1.5) {
+    lines.push({ cls: 'negative', text: '&#x1F4C9; 我方份额呈下降趋势：近3日均 ' + last3Share.toFixed(1) + '%，较首3日均 ' + first3Share.toFixed(1) + '% 下降了 ' + Math.abs(shareDelta).toFixed(1) + ' 个百分点，需重点关注。' });
+  } else {
+    lines.push({ cls: 'neutral', text: '&#x1F4CA; 我方份额整体稳定，近3日均 ' + last3Share.toFixed(1) + '%，波动在1.5个百分点以内。' });
+  }
+
+  // 2. Recent momentum (last 3 days vs previous 3 days)
+  if (n >= 6) {
+    var recent3 = (ourOrders[n-3] + ourOrders[n-2] + ourOrders[n-1]) / 3;
+    var prev3 = (ourOrders[n-6] + ourOrders[n-5] + ourOrders[n-4]) / 3;
+    if (prev3 > 0) {
+      var momChange = (recent3 - prev3) / prev3 * 100;
+      if (momChange > 10) {
+        lines.push({ cls: 'positive', text: '&#x1F680; 我方近期增长强劲：近3天日均订单 ' + Math.round(recent3).toLocaleString() + ' 单，较前3天增长 ' + momChange.toFixed(1) + '%。' });
+      } else if (momChange < -10) {
+        lines.push({ cls: 'negative', text: '&#x26A0; 我方近期出现下滑：近3天日均订单 ' + Math.round(recent3).toLocaleString() + ' 单，较前3天下降 ' + Math.abs(momChange).toFixed(1) + '%。' });
+      }
+    }
+  }
+
+  // 3. Best and worst days
+  var bestIdx = 0, worstIdx = 0;
+  ourOrders.forEach(function(o, i) { if (o > ourOrders[bestIdx]) bestIdx = i; if (o < ourOrders[worstIdx]) worstIdx = i; });
+  lines.push({ cls: 'neutral', text: '&#x1F3C6; 最佳单日：' + HISTORY[bestIdx].date + '，我方 ' + ourOrders[bestIdx].toLocaleString() + ' 单（份额 ' + shares[bestIdx].toFixed(1) + '%）。' });
+  lines.push({ cls: 'neutral', text: '&#x1F4AD; 最低单日：' + HISTORY[worstIdx].date + '，我方 ' + ourOrders[worstIdx].toLocaleString() + ' 单（份额 ' + shares[worstIdx].toFixed(1) + '%）。' });
+
+  // 4. Volatility: flag >5pp day-over-day share swings
+  var bigSwings = [];
+  for (var i = 1; i < shares.length; i++) {
+    if (Math.abs(shares[i] - shares[i-1]) > 5) {
+      bigSwings.push({ date: HISTORY[i].date, delta: (shares[i] - shares[i-1]).toFixed(1) });
+    }
+  }
+  if (bigSwings.length > 0) {
+    var last = bigSwings[bigSwings.length - 1];
+    lines.push({ cls: 'negative', text: '&#x26A0; 共检测到 ' + bigSwings.length + ' 次份额大幅波动（日环比>5pp），最近一次：' + last.date + '（' + (last.delta > 0 ? '+' : '') + last.delta + 'pp），需关注异常原因。' });
+  }
+
+  // 5. Full-period cumulative
+  var totalOur = ourOrders.reduce(function(a,b){return a+b;}, 0);
+  var totalComp = compOrders.reduce(function(a,b){return a+b;}, 0);
+  var totalOurRev = ourRevenues.reduce(function(a,b){return a+b;}, 0);
+  var overallShare = (totalOur / (totalOur + totalComp) * 100).toFixed(1);
+  var ourAvgPrice = totalOur > 0 ? (totalOurRev / totalOur).toFixed(0) : 0;
+  lines.push({ cls: 'neutral', text: '&#x1F4CA; 全周期汇总：' + n + '天，我方累计 ' + totalOur.toLocaleString() + ' 单（占比 ' + overallShare + '%），销售额 ' + formatCurrency(totalOurRev) + '，均价 ' + formatCurrency(ourAvgPrice) + '。' });
+
+  // 6. Room count stability
+  var ourRoomsFirst = (HISTORY[0].type_summary && HISTORY[0].type_summary['我方']) ? HISTORY[0].type_summary['我方'].rooms : 0;
+  var ourRoomsLast = (HISTORY[n-1].type_summary && HISTORY[n-1].type_summary['我方']) ? HISTORY[n-1].type_summary['我方'].rooms : 0;
+  if (ourRoomsLast !== ourRoomsFirst) {
+    lines.push({ cls: 'neutral', text: '&#x1F3EA; 我方直播间数量变化：从 ' + ourRoomsFirst + ' 间变为 ' + ourRoomsLast + ' 间。' });
+  }
+
+  document.getElementById('dailyInsights').innerHTML =
+    '<h3>关键洞察</h3>' +
+    lines.map(function(l) { return '<div class="insight-line ' + l.cls + '">' + l.text + '</div>'; }).join('');
+}
+
+function renderDailySummary() {
+  if (HISTORY.length < 2) {
+    document.getElementById('dailySummaryModule').innerHTML = '<h2>每日数据总结分析</h2><div class="hour-empty">历史数据不足（需要至少2天数据）</div>';
+    return;
+  }
+  renderSummaryKPIs();
+  renderDailyTrendChart();
+  renderDailyTable();
+  renderDailyInsights();
+}
+
 // Init
 const d = HISTORY.find(h => h.date === currentDate) || DATA;
 const idx = HISTORY.findIndex(h => h.date === currentDate);
@@ -576,6 +834,7 @@ const prev = idx > 0 ? HISTORY[idx - 1] : null;
 renderAll(d, prev);
 renderDateSelector();
 renderRoomSelector(d);
+renderDailySummary();
 </script>
 </body>
 </html>
