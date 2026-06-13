@@ -539,6 +539,7 @@ function renderAll(d, prev) {
   renderRoomCards(d);
   renderRoomHourlyOverlay(d);
   renderHourlyBreakdown(data);
+  renderDailySummary();
 }
 
 function renderHourlyBreakdown(data) {
@@ -817,8 +818,15 @@ function renderDailyInsights() {
 }
 
 function renderDailySummary() {
+  const module = document.getElementById('dailySummaryModule');
+  // 仅全部直播间汇总页面显示每日总结模块，单直播间不显示
+  if (currentRoom !== '__all__') {
+    module.style.display = 'none';
+    return;
+  }
+  module.style.display = '';
   if (HISTORY.length < 2) {
-    document.getElementById('dailySummaryModule').innerHTML = '<h2>每日数据总结分析</h2><div class="hour-empty">历史数据不足（需要至少2天数据）</div>';
+    module.innerHTML = '<h2>每日数据总结分析</h2><div class="hour-empty">历史数据不足（需要至少2天数据）</div>';
     return;
   }
   renderSummaryKPIs();
