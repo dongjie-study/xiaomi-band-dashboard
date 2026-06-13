@@ -5,74 +5,396 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>小米手环竞对分析平台</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;background:#f0f2f5;color:#333;min-height:100vh;display:flex;align-items:center;justify-content:center}
-.container{max-width:700px;width:100%;padding:20px}
-.header{text-align:center;margin-bottom:40px}
-.header h1{font-size:2em;color:#1a1a2e;margin-bottom:8px}
-.header p{color:#888;font-size:.95em}
-.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
-@media(max-width:900px){.cards{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.cards{grid-template-columns:1fr}}
-.card{background:#fff;border-radius:16px;padding:32px 24px;text-decoration:none;box-shadow:0 2px 12px rgba(0,0,0,.06);transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column;align-items:center;text-align:center}
-.card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.1)}
-.card .icon{font-size:2.8em;margin-bottom:16px}
-.card h2{font-size:1.2em;color:#333;margin-bottom:8px}
-.card p{color:#888;font-size:.85em;line-height:1.5}
-.card.sales{border-top:4px solid #FF6B6B}
-.card.violations{border-top:4px solid #e94560}
-.card.strategy{border-top:4px solid #ff6900}
-.card.video{border-top:4px solid #1E90FF}
-.card.hourly{border-top:4px solid #667eea}
-.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:.7em;font-weight:600;margin-top:12px}
-.badge.live{background:#fff0f0;color:#FF6B6B}
-.badge.warn{background:#fde8ec;color:#e94560}
-.badge.playbook{background:#fff3e8;color:#ff6900}
-.badge.video{background:#e3f2fd;color:#1E90FF}
-.badge.hourly{background:#f0eeff;color:#667eea}
-.footer{text-align:center;margin-top:40px;color:#bbb;font-size:.8em}
+  /* ===== DESIGN TOKENS ===== */
+  :root {
+    --bg:           #f0f4f8;
+    --surface:      #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --text-muted:   #94a3b8;
+    --border-light: #e8ecf1;
+    --shadow-sm:    0 1px 3px rgba(0,0,0,.04), 0 1px 2px rgba(0,0,0,.06);
+    --shadow-md:    0 4px 16px rgba(0,0,0,.06), 0 2px 4px rgba(0,0,0,.04);
+    --shadow-lg:    0 12px 32px rgba(0,0,0,.10), 0 4px 8px rgba(0,0,0,.06);
+    --radius:       18px;
+    --radius-sm:    12px;
+    --transition:   0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* card accents */
+    --clr-sales:      #f97316;
+    --clr-violations: #ef4444;
+    --clr-strategy:   #f59e0b;
+    --clr-video:      #3b82f6;
+    --clr-hourly:     #8b5cf6;
+
+    /* accent light backgrounds */
+    --clr-sales-bg:      #fff7ed;
+    --clr-violations-bg: #fef2f2;
+    --clr-strategy-bg:   #fffbeb;
+    --clr-video-bg:      #eff6ff;
+    --clr-hourly-bg:     #f5f3ff;
+  }
+
+  /* ===== RESET & BASE ===== */
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* subtle dot-grid pattern — the signature element */
+    background-image:
+      radial-gradient(circle, rgba(148,163,184,.18) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  /* ===== CONTAINER ===== */
+  .container {
+    width: 100%;
+    max-width: 920px;
+    padding: 32px 24px 40px;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    position: relative;
+  }
+
+  .header .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .78em;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 16px;
+  }
+
+  .header .eyebrow .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 6px rgba(34,197,94,.5);
+    animation: pulse-dot 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: .5; transform: scale(1.6); }
+  }
+
+  .header h1 {
+    font-size: 2.2em;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -.02em;
+    line-height: 1.25;
+    margin-bottom: 8px;
+  }
+
+  .header h1 .accent {
+    background: linear-gradient(135deg, #f97316 0%, #ef4444 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .header .divider {
+    width: 48px;
+    height: 4px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #f97316, #f59e0b);
+    margin: 16px auto;
+  }
+
+  .header p {
+    color: var(--text-secondary);
+    font-size: .95em;
+    line-height: 1.6;
+  }
+
+  /* ===== CARDS GRID ===== */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 20px;
+  }
+  .cards > a:nth-child(1) { grid-column: span 2; }
+  .cards > a:nth-child(2) { grid-column: span 2; }
+  .cards > a:nth-child(3) { grid-column: span 2; }
+  .cards > a:nth-child(4) { grid-column: 2 / span 2; }
+  .cards > a:nth-child(5) { grid-column: 4 / span 2; }
+
+  /* ===== CARD ===== */
+  .card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 28px 24px 24px;
+    text-decoration: none;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
+    transition:
+      transform var(--transition),
+      box-shadow var(--transition),
+      border-color var(--transition);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+
+    /* staggered entrance */
+    opacity: 0;
+    transform: translateY(20px);
+    animation: card-enter .5s ease-out forwards;
+  }
+
+  .card:nth-child(1) { animation-delay: .06s; }
+  .card:nth-child(2) { animation-delay: .14s; }
+  .card:nth-child(3) { animation-delay: .22s; }
+  .card:nth-child(4) { animation-delay: .30s; }
+  .card:nth-child(5) { animation-delay: .38s; }
+
+  @keyframes card-enter {
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* subtle top accent line */
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 12px; right: 12px;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+    opacity: 0;
+    transition: opacity var(--transition), left .3s ease, right .3s ease;
+  }
+
+  .card:hover::before {
+    opacity: 1;
+    left: 0; right: 0;
+    border-radius: 0;
+  }
+
+  .card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+    border-color: transparent;
+  }
+
+  /* card accent colors */
+  .card.sales::before      { background: var(--clr-sales); }
+  .card.violations::before { background: var(--clr-violations); }
+  .card.strategy::before   { background: var(--clr-strategy); }
+  .card.video::before      { background: var(--clr-video); }
+  .card.hourly::before     { background: var(--clr-hourly); }
+
+  /* ===== ICON CONTAINER ===== */
+  .card .icon-wrap {
+    width: 50px;
+    height: 50px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5em;
+    margin-bottom: 18px;
+    transition: transform var(--transition);
+    flex-shrink: 0;
+  }
+
+  .card:hover .icon-wrap {
+    transform: scale(1.08);
+  }
+
+  .card.sales .icon-wrap      { background: var(--clr-sales-bg); }
+  .card.violations .icon-wrap { background: var(--clr-violations-bg); }
+  .card.strategy .icon-wrap   { background: var(--clr-strategy-bg); }
+  .card.video .icon-wrap      { background: var(--clr-video-bg); }
+  .card.hourly .icon-wrap     { background: var(--clr-hourly-bg); }
+
+  /* ===== CARD TYPOGRAPHY ===== */
+  .card h2 {
+    font-size: 1.08em;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+    letter-spacing: -.01em;
+    line-height: 1.3;
+    transition: color var(--transition);
+  }
+
+  .card.sales:hover h2      { color: var(--clr-sales); }
+  .card.violations:hover h2 { color: var(--clr-violations); }
+  .card.strategy:hover h2   { color: var(--clr-strategy); }
+  .card.video:hover h2      { color: var(--clr-video); }
+  .card.hourly:hover h2     { color: var(--clr-hourly); }
+
+  .card p {
+    color: var(--text-secondary);
+    font-size: .84em;
+    line-height: 1.6;
+    margin-bottom: 14px;
+    flex: 1;
+  }
+
+  /* ===== BADGE ===== */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: .7em;
+    font-weight: 600;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    transition: all var(--transition);
+  }
+
+  .card.sales .badge      { background: var(--clr-sales-bg); color: var(--clr-sales); }
+  .card.violations .badge { background: var(--clr-violations-bg); color: var(--clr-violations); }
+  .card.strategy .badge   { background: var(--clr-strategy-bg); color: var(--clr-strategy); }
+  .card.video .badge      { background: var(--clr-video-bg); color: var(--clr-video); }
+  .card.hourly .badge     { background: var(--clr-hourly-bg); color: var(--clr-hourly); }
+
+  .card:hover .badge {
+    filter: brightness(.95);
+    transform: translateY(-1px);
+  }
+
+  /* ===== FOOTER ===== */
+  .footer {
+    text-align: center;
+    margin-top: 48px;
+    color: var(--text-muted);
+    font-size: .78em;
+    letter-spacing: .02em;
+  }
+
+  .footer span {
+    color: #cbd5e1;
+  }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 780px) {
+    .cards {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 14px;
+    }
+    .cards > a:nth-child(1),
+    .cards > a:nth-child(2),
+    .cards > a:nth-child(3),
+    .cards > a:nth-child(4),
+    .cards > a:nth-child(5) {
+      grid-column: span 1 !important;
+    }
+    .cards > a:nth-child(5) {
+      grid-column: 1 / -1 !important;
+    }
+    .header h1 { font-size: 1.7em; }
+    .card { padding: 22px 18px 18px; }
+  }
+
+  @media (max-width: 480px) {
+    .cards {
+      grid-template-columns: 1fr !important;
+    }
+    .cards > a {
+      grid-column: span 1 !important;
+    }
+    .header h1 { font-size: 1.4em; }
+    .header { margin-bottom: 32px; }
+    .container { padding: 20px 14px 30px; }
+  }
+
+  /* ===== REDUCED MOTION ===== */
+  @media (prefers-reduced-motion: reduce) {
+    .card {
+      animation: none !important;
+      opacity: 1 !important;
+      transform: none !important;
+    }
+    .live-dot {
+      animation: none !important;
+    }
+  }
+
+  /* ===== KEYBOARD FOCUS ===== */
+  .card:focus-visible {
+    outline: 2px solid var(--clr-sales);
+    outline-offset: 3px;
+    border-radius: var(--radius);
+  }
 </style>
 </head>
 <body>
+
 <script>localStorage.setItem('mi_band_auth_v1','1');</script>
+
 <div class="container">
-<div class="header">
-<h1>小米手环竞对分析平台</h1>
-<p>请选择需要浏览的模块</p>
-</div>
-<div class="cards">
-<a href="sales_analysis/index.html" class="card sales">
-<div class="icon">📈</div>
-<h2>穿戴直播间销量分析</h2>
-<p>每日订单追踪、竞对直播间对比、小时分布、产品结构分析</p>
-<span class="badge live">LIVE SALES</span>
-</a>
-<a href="违规情况/report.html" class="card violations">
-<div class="icon">⚠️</div>
-<h2>违规情况分析</h2>
-<p>小米系5个直播间违规判罚追踪、原因分布、处罚升级路径</p>
-<span class="badge warn">VIOLATIONS</span>
-</a>
-<a href="strategy.html" class="card strategy">
-<div class="icon">🗺️</div>
-<h2>全域营销战略</h2>
-<p>10Pro全域营销总纲：iPhone市场、千川抖加投放、许昌活动、游戏视频四合一作战地图</p>
-<span class="badge playbook">PLAYBOOK</span>
-</a>
-<a href="核心指标分析/核心指标报告.html" class="card video">
-<div class="icon">🎬</div>
-<h2>千川视频分析</h2>
-<p>千川视频素材核心指标：消耗/成交/ROI/CTR，我司与竞对(良米)数据对比与深度洞察</p>
-<span class="badge video">VIDEO ANALYTICS</span>
-</a>
-<a href="小时分析/index.html" class="card hourly">
-<div class="icon">⏰</div>
-<h2>直播间小时级出单分析</h2>
-<p>拖入订单Excel表格，自动识别列名并生成小时级分析报告：分品类热力图、直播间对比、环比趋势</p>
-<span class="badge hourly">HOURLY ANALYTICS</span>
-</a>
-</div>
-<div class="footer">数据来源：巨量广告 · 抖音直播订单 &nbsp;|&nbsp; 报告由系统自动生成</div>
+
+  <div class="header">
+    <div class="eyebrow">
+      <span class="live-dot"></span> 系统在线 · 数据实时更新
+    </div>
+    <h1>小米手环<span class="accent">竞对分析</span>平台</h1>
+    <div class="divider"></div>
+    <p>请选择需要浏览的模块</p>
+  </div>
+
+  <div class="cards">
+    <a href="sales_analysis/index.html" class="card sales">
+      <div class="icon-wrap">📈</div>
+      <h2>穿戴直播间销量分析</h2>
+      <p>每日订单追踪、竞对直播间对比、小时分布、产品结构分析</p>
+      <span class="badge">LIVE SALES</span>
+    </a>
+
+    <a href="违规情况/report.html" class="card violations">
+      <div class="icon-wrap">⚠️</div>
+      <h2>违规情况分析</h2>
+      <p>小米系5个直播间违规判罚追踪、原因分布、处罚升级路径</p>
+      <span class="badge">VIOLATIONS</span>
+    </a>
+
+    <a href="strategy.html" class="card strategy">
+      <div class="icon-wrap">🗺️</div>
+      <h2>全域营销战略</h2>
+      <p>10Pro全域营销总纲：iPhone市场、千川抖加投放、许昌活动、游戏视频四合一作战地图</p>
+      <span class="badge">PLAYBOOK</span>
+    </a>
+
+    <a href="核心指标分析/核心指标报告.html" class="card video">
+      <div class="icon-wrap">🎬</div>
+      <h2>千川视频分析</h2>
+      <p>千川视频素材核心指标：消耗/成交/ROI/CTR，我司与竞对(良米)数据对比与深度洞察</p>
+      <span class="badge">VIDEO ANALYTICS</span>
+    </a>
+
+    <a href="小时分析/index.html" class="card hourly">
+      <div class="icon-wrap">⏰</div>
+      <h2>直播间小时级出单分析</h2>
+      <p>拖入订单Excel表格，自动识别列名并生成小时级分析报告：分品类热力图、直播间对比、环比趋势</p>
+      <span class="badge">HOURLY ANALYTICS</span>
+    </a>
+  </div>
+
+  <div class="footer">
+    数据来源：巨量广告 · 抖音直播订单 <span>|</span> 报告由系统自动生成
+  </div>
+
 </div>
 </body>
 </html>
