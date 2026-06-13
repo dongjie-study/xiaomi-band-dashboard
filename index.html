@@ -33,6 +33,8 @@
     --clr-strategy-bg:   #fffbeb;
     --clr-video-bg:      #eff6ff;
     --clr-hourly-bg:     #f5f3ff;
+    --clr-gsv:          #0891b2;
+    --clr-gsv-bg:       #ecfeff;
   }
 
   /* ===== RESET & BASE ===== */
@@ -131,8 +133,9 @@
   .cards > a:nth-child(1) { grid-column: span 2; }
   .cards > a:nth-child(2) { grid-column: span 2; }
   .cards > a:nth-child(3) { grid-column: span 2; }
-  .cards > a:nth-child(4) { grid-column: 2 / span 2; }
-  .cards > a:nth-child(5) { grid-column: 4 / span 2; }
+  .cards > a:nth-child(4) { grid-column: span 2; }
+  .cards > a:nth-child(5) { grid-column: span 2; }
+  .cards > a:nth-child(6) { grid-column: span 2; }
 
   /* ===== CARD ===== */
   .card {
@@ -165,6 +168,7 @@
   .card:nth-child(3) { animation-delay: .22s; }
   .card:nth-child(4) { animation-delay: .30s; }
   .card:nth-child(5) { animation-delay: .38s; }
+  .card:nth-child(6) { animation-delay: .46s; }
 
   @keyframes card-enter {
     to { opacity: 1; transform: translateY(0); }
@@ -199,6 +203,7 @@
   .card.strategy::before   { background: var(--clr-strategy); }
   .card.video::before      { background: var(--clr-video); }
   .card.hourly::before     { background: var(--clr-hourly); }
+  .card.gsv::before         { background: var(--clr-gsv); }
 
   /* ===== ICON CONTAINER ===== */
   .card .icon-wrap {
@@ -223,6 +228,7 @@
   .card.strategy .icon-wrap   { background: var(--clr-strategy-bg); }
   .card.video .icon-wrap      { background: var(--clr-video-bg); }
   .card.hourly .icon-wrap     { background: var(--clr-hourly-bg); }
+  .card.gsv .icon-wrap        { background: var(--clr-gsv-bg); }
 
   /* ===== CARD TYPOGRAPHY ===== */
   .card h2 {
@@ -240,6 +246,7 @@
   .card.strategy:hover h2   { color: var(--clr-strategy); }
   .card.video:hover h2      { color: var(--clr-video); }
   .card.hourly:hover h2     { color: var(--clr-hourly); }
+  .card.gsv:hover h2        { color: var(--clr-gsv); }
 
   .card p {
     color: var(--text-secondary);
@@ -268,6 +275,7 @@
   .card.strategy .badge   { background: var(--clr-strategy-bg); color: var(--clr-strategy); }
   .card.video .badge      { background: var(--clr-video-bg); color: var(--clr-video); }
   .card.hourly .badge     { background: var(--clr-hourly-bg); color: var(--clr-hourly); }
+  .card.gsv .badge        { background: var(--clr-gsv-bg); color: var(--clr-gsv); }
 
   .card:hover .badge {
     filter: brightness(.95);
@@ -297,11 +305,9 @@
     .cards > a:nth-child(2),
     .cards > a:nth-child(3),
     .cards > a:nth-child(4),
-    .cards > a:nth-child(5) {
+    .cards > a:nth-child(5),
+    .cards > a:nth-child(6) {
       grid-column: span 1 !important;
-    }
-    .cards > a:nth-child(5) {
-      grid-column: 1 / -1 !important;
     }
     .header h1 { font-size: 1.7em; }
     .card { padding: 22px 18px 18px; }
@@ -388,6 +394,13 @@
       <h2>直播间小时级出单分析</h2>
       <p>拖入订单Excel表格，自动识别列名并生成小时级分析报告：分品类热力图、直播间对比、环比趋势</p>
       <span class="badge">HOURLY ANALYTICS</span>
+    </a>
+
+    <a href="gsv.html" class="card gsv">
+      <div class="icon-wrap">🛠️</div>
+      <h2>GSV订单处理工具</h2>
+      <p>拖入订单Excel，自动按达人+日期时段汇总，一键生成场次表与主播业绩，支持自定义导出</p>
+      <span class="badge">GSV TOOL</span>
     </a>
   </div>
 
