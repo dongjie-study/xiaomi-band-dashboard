@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>直播间小时级出单分析工具</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif;background:#f5f7fa;color:#333;min-height:100vh}
+.header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:24px 36px}
+.header h1{font-size:24px;margin-bottom:4px}
+.header p{opacity:0.85;font-size:13px}
+
+/* Drag Zone */
+.drop-zone{border:3px dashed #ccc;border-radius:16px;padding:50px 40px;text-align:center;cursor:pointer;transition:all 0.3s;background:white;margin:30px auto;max-width:700px}
+.drop-zone:hover,.drop-zone.drag-over{border-color:#667eea;background:#f8f9ff}
+.drop-zone .icon{font-size:56px;margin-bottom:12px}
+.drop-zone .title{font-size:20px;font-weight:600;color:#555;margin-bottom:8px}
+.drop-zone .hint{font-size:13px;color:#999}
+.drop-zone input{display:none}
+.drop-zone.done{border-color:#50b080;background:#f0fff8}
+.drop-zone .filename{font-size:15px;color:#50b080;font-weight:600;margin-top:10px;display:none}
+.drop-zone.done .filename{display:block}
+.drop-zone.done .icon{font-size:40px}
+
+/* Loading */
+.loading{display:none;text-align:center;padding:30px}
+.loading .spinner{width:40px;height:40px;border:4px solid #e0e0e0;border-top-color:#667eea;border-radius:50%;animation:spin 0.8s linear infinite;margin:0 auto 12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Report Container */
+.report{display:none;max-width:1500px;margin:0 auto;padding:20px}
+.section{background:white;border-radius:12px;padding:20px 24px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
+.section h2{font-size:19px;margin-bottom:14px;padding-bottom:10px;border-bottom:2px solid #f0f0f0}
+.section h3{font-size:15px;color:#555;margin:14px 0 10px 0}
+.chart{width:100%;height:420px}
+.chart-lg{width:100%;height:520px}
+.summary-cards{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.card{flex:1;min-width:150px;background:linear-gradient(135deg,#f8f9ff,#e8ecff);border-radius:10px;padding:18px;text-align:center}
+.card .value{font-size:30px;font-weight:700;color:#667eea}
+.card .label{font-size:12px;color:#888;margin-top:3px}
+.card.orange{background:linear-gradient(135deg,#fff8f0,#ffe8d6)}.card.orange .value{color:#f0a050}
+.card.green{background:linear-gradient(135deg,#f0fff8,#d6ffe8)}.card.green .value{color:#50b080}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{background:#f8f9fa;padding:10px 12px;text-align:center;font-weight:600;border-bottom:2px solid #e0e0e0;white-space:nowrap;position:sticky;top:0;z-index:1}
+td{padding:7px 10px;border-bottom:1px solid #f0f0f0;text-align:center}
+tr:hover{background:#f8f9ff}
+.pos{color:#e05050;font-weight:600}
+.neg{color:#50b080;font-weight:600}
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px}
+.tag-new{background:#e0e0ff;color:#4040a0}
+.tabs{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+.tab{padding:7px 15px;border-radius:18px;cursor:pointer;font-size:12px;background:#f0f0f0;border:none;transition:all 0.2s}
+.tab:hover{background:#e0e0ff}
+.tab.active{background:#667eea;color:white}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+.sticky-col{position:sticky;left:0;background:white;z-index:2;text-align:left!important;font-weight:500}
+th.sticky-col{background:#f8f9fa;z-index:3}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:1000px){.grid-2{grid-template-columns:1fr}}
+.scroll-wrap{overflow-x:auto;max-height:550px;overflow-y:auto}
+.error-msg{color:#e05050;text-align:center;padding:20px;font-size:14px;display:none}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>直播间小时级出单分析工具</h1>
+    <p>拖入订单Excel表格，自动识别列名并生成分析报告 -- 无需关注列顺序和多余列</p>
+</div>
+
+<!-- Drop Zone -->
+<div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <div class="icon">📁</div>
+    <div class="title">拖拽Excel文件到此处</div>
+    <div class="hint">或点击选择文件 (.xlsx / .xls)</div>
+    <div class="filename" id="fileName"></div>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(event)">
+</div>
+
+<!-- Loading -->
+<div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div>正在分析数据...</div>
+</div>
+
+<!-- Error -->
+<div class="error-msg" id="errorMsg"></div>
+
+<!-- Report -->
+<div class="report" id="report">
+
+    <!-- Section 1 -->
+    <div class="section">
+        <h2>一, 整体概况</h2>
+        <div class="summary-cards" id="summaryCards"></div>
+        <div class="grid-2">
+            <div class="chart" id="chart-hourly"></div>
+            <div class="chart" id="chart-product-pie"></div>
+        </div>
+    </div>
+
+    <!-- Section 2 -->
+    <div class="section">
+        <h2>二, 商品品类 x 小时 出单热力图</h2>
+        <div class="chart chart-lg" id="chart-heatmap"></div>
+    </div>
+
+    <!-- Section 3 -->
+    <div class="section">
+        <h2>三, 各商品品类 -- 直播间分小时出单对比</h2>
+        <div class="tabs" id="prod-tabs"></div>
+        <div id="prod-panels"></div>
+    </div>
+
+    <!-- Section 4 -->
+    <div class="section">
+        <h2>四, 各直播间详细数据 -- 分小时分品类 + 环比</h2>
+        <div class="tabs" id="inf-tabs"></div>
+        <div id="inf-panels"></div>
+    </div>
+
+</div>
+
+<script>
+// ============================================================
+// Core Analysis Engine
+// ============================================================
+
+// Product classification rules
+const CLASSIFY_RULES = [
+    ['手环','手环'], ['手表','手表'], ['Watch','手表'], ['耳机','耳机'],
+    ['Buds','耳机'], ['Earbuds','耳机'], ['手机','手机'], ['Phone','手机'],
+    ['平板','平板'], ['Pad','平板'], ['Tablet','平板'], ['电视','电视'],
+    ['TV','电视'], ['笔记本','笔记本'], ['电脑','笔记本'], ['Book','笔记本'],
+    ['Laptop','笔记本'], ['音箱','音箱'], ['音响','音箱'], ['Sound','音箱'],
+    ['Speaker','音箱'], ['路由器','路由器'], ['Router','路由器'],
+    ['充电','充电/配件'], ['数据线','充电/配件'], ['充电器','充电/配件'],
+    ['电源','充电/配件'], ['插线板','插线板'], ['插座','插线板'],
+    ['开关','插线板'], ['剃须','个人护理'], ['牙刷','个人护理'],
+    ['吹风','个人护理'], ['体脂','个人护理'], ['眼镜','智能眼镜'],
+    ['净化','生活家电'], ['加湿','生活家电'], ['风扇','生活家电'],
+    ['门锁','智能安防'], ['摄像','智能安防'], ['监控','智能安防'],
+    ['门铃','智能安防'], ['传感器','智能安防'], ['灯','智能家居'],
+    ['灯泡','智能家居'], ['窗帘','智能家居'], ['滑板','出行工具'],
+    ['平衡','出行工具'], ['出行','出行工具'], ['箱包','箱包'],
+    ['背包','箱包'], ['车','汽车用品'], ['汽车','汽车用品'],
+    ['螺丝刀','工具'], ['工具','工具'], ['包','保护壳/膜'],
+    ['壳','保护壳/膜'], ['膜','保护壳/膜'], ['保护','保护壳/膜'],
+    ['笔','配件'], ['Pen','配件'], ['键盘','配件'],
+    ['Tag','Tag定位器'], ['定位','Tag定位器'], ['追踪','Tag定位器'],
+];
+
+function classifyProduct(name) {
+    let baseCat = '其他';
+    for (const [kw, cat] of CLASSIFY_RULES) {
+        if (name.includes(kw)) { baseCat = cat; break; }
+    }
+
+    if (baseCat === '手环') {
+        let brand = name.includes('小米') ? '小米' : (name.includes('REDMI') || name.includes('Redmi') ? 'REDMI' : '');
+        for (const num of ['10Pro','10 Pro','10','9Pro','9 Pro','9','8Pro','8 Pro','8','7Pro','7 Pro','7','6','5','4','3']) {
+            if (name.includes(num)) {
+                const clean = num.replace(' ','');
+                return brand ? `${brand}手环${clean}` : `手环${clean}`;
+            }
+        }
+        if (name.includes('Pro')) return brand ? `${brand}手环Pro` : '手环Pro';
+        return brand ? `${brand}手环` : '手环';
+    }
+
+    if (baseCat === '手表') {
+        for (const m of ['Watch 6','Watch6','Watch 5','Watch5','Watch S5','WatchS5','Watch S4','WatchS4']) {
+            const c = m.replace(' ','');
+            if (name.includes(m)) return m.startsWith('Watch S') ? `Xiaomi ${m}` : `REDMI ${c}`;
+        }
+        const m = name.match(/Watch\s*(\w?\d+)/);
+        if (m) return `Watch ${m[1]}`;
+        return '其他手表';
+    }
+
+    if (baseCat === '耳机') {
+        if (name.includes('Buds 8 Pro') || name.includes('Buds8 Pro')) return 'REDMI Buds 8 Pro';
+        if (name.includes('Buds 8') || name.includes('Buds8')) return 'REDMI Buds 8 青春版';
+        if (name.includes('Buds 7S') || name.includes('Buds7S')) return 'REDMI Buds 7S';
+        if (name.includes('Buds 7') || name.includes('Buds7')) return 'REDMI Buds 7';
+        if (name.includes('Buds 6') || name.includes('Buds6')) return 'REDMI Buds 6';
+        if (name.includes('Air 4 SE') || name.includes('Air4 SE')) return 'Xiaomi Air 4 SE';
+        if (name.includes('Air 4') || name.includes('Air4')) return 'Xiaomi Air 4';
+        if (name.includes('开放式')) return '开放式耳机';
+        return '其他耳机';
+    }
+
+    if (baseCat === '手机') {
+        if (name.includes('Pro')) return '手机(Pro)';
+        if (name.includes('Ultra')) return '手机(Ultra)';
+        if (name.includes('Fold') || name.includes('Flip')) return '手机(折叠)';
+        return '手机';
+    }
+
+    return baseCat;
+}
+
+function extractProductName(raw) {
+    raw = String(raw);
+    // Remove 【tags】
+    let clean = raw.replace(/【[^】]+】/g, '');
+    // Remove trailing -SKU
+    clean = clean.replace(/-\(\d+\)$/,'').trim();
+    const parts = clean.split('-');
+    return parts[0].trim();
+}
+
+function parseExcel(data) {
+    // Smart column detection: find columns by name regardless of position
+    const rows = XLSX.utils.sheet_to_json(data, {header:1});
+    if (rows.length < 2) throw new Error('Excel文件为空或只有表头');
+
+    // Target columns to find (support partial match / fuzzy match)
+    const TARGETS = {
+        product:  ['选购商品', '商品', '产品', 'product', 'item'],
+        time:     ['订单提交时间', '提交时间', '下单时间', '订单时间', '时间', 'time', 'date'],
+        amount:   ['订单应付金额', '应付金额', '订单金额', '金额', '实付', 'amount', 'price'],
+        influencer: ['达人昵称', '达人', '昵称', '主播', '直播间', 'influencer', 'anchor', 'kol'],
+    };
+
+    // Scan first 10 rows to find header
+    let headerRow = null;
+    let headerIdx = -1;
+    for (let i = 0; i < Math.min(10, rows.length); i++) {
+        const r = rows[i];
+        if (!r || r.length < 2) continue;
+        // Count how many target columns we can match in this row
+        let matchCount = 0;
+        for (const cell of r) {
+            if (!cell) continue;
+            const s = String(cell).trim();
+            for (const [key, keywords] of Object.entries(TARGETS)) {
+                for (const kw of keywords) {
+                    if (s.includes(kw)) { matchCount++; break; }
+                }
+            }
+        }
+        if (matchCount >= 3) { headerRow = r; headerIdx = i; break; }
+    }
+
+    if (!headerRow) {
+        // Fallback: treat first row as header if it has 4+ columns
+        for (let i = 0; i < Math.min(5, rows.length); i++) {
+            if (rows[i] && rows[i].length >= 4) { headerRow = rows[i]; headerIdx = i; break; }
+        }
+    }
+    if (!headerRow) throw new Error('未找到表头行，请确认表格包含: 选购商品, 订单提交时间, 订单应付金额, 达人昵称');
+
+    // Map column indices
+    function findCol(targets) {
+        for (let j = 0; j < headerRow.length; j++) {
+            const s = String(headerRow[j] || '').trim();
+            for (const kw of targets) {
+                if (s.includes(kw)) return j;
+            }
+        }
+        return -1;
+    }
+
+    const colP = findCol(TARGETS.product);
+    const colT = findCol(TARGETS.time);
+    const colA = findCol(TARGETS.amount);
+    const colI = findCol(TARGETS.influencer);
+
+    // Validate we found all required columns
+    const missing = [];
+    if (colP < 0) missing.push('选购商品');
+    if (colT < 0) missing.push('订单提交时间');
+    if (colA < 0) missing.push('订单应付金额');
+    if (colI < 0) missing.push('达人昵称');
+    if (missing.length > 0) {
+        throw new Error('未识别到列: ' + missing.join(', ') + '\n表格列名: ' + headerRow.map(c => String(c||'').trim()).filter(Boolean).join(', '));
+    }
+
+    console.log('Column mapping:', {product: colP, time: colT, amount: colA, influencer: colI});
+
+    const orders = [];
+    for (let i = headerIdx + 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r) continue;
+
+        const productRaw = String(r[colP] || '').trim();
+        if (!productRaw) continue;
+
+        // Parse time
+        let timeStr = String(r[colT] || '').replace(/\t/g,'').trim();
+        let dt;
+        if (timeStr.match(/^\d{4}-\d{2}-\d{2}/)) {
+            dt = new Date(timeStr);
+        } else if (timeStr.match(/^\d+\.\d+$/)) {
+            dt = new Date((parseFloat(timeStr) - 25569) * 86400 * 1000);
+        } else {
+            dt = new Date(timeStr);
+        }
+        if (isNaN(dt.getTime())) continue;
+
+        const hour = dt.getHours();
+        const amount = parseFloat(r[colA]) || 0;
+        const influencer = String(r[colI] || '').trim();
+        if (!influencer) continue;
+
+        const productName = extractProductName(productRaw);
+        const category = classifyProduct(productName);
+
+        orders.push({productRaw, productName, category, dt, hour, amount, influencer});
+    }
+
+    return orders;
+}
+
+// ============================================================
+// Report Building
+// ============================================================
+function buildReport(orders) {
+    // Group data
+    const totalOrders = orders.length;
+    const totalAmt = orders.reduce((s,o) => s + o.amount, 0);
+    const avgAmt = totalAmt / totalOrders;
+
+    const influencerSet = new Set(orders.map(o => o.influencer));
+    const categorySet = new Set(orders.map(o => o.category));
+    const hourSet = new Set(orders.map(o => o.hour));
+
+    const hoursList = [...hourSet].sort((a,b) => a-b);
+    const hoursStr = hoursList.map(h => h+':00');
+
+    // Sort influencers by order count
+    const infCounts = {};
+    orders.forEach(o => infCounts[o.influencer] = (infCounts[o.influencer]||0)+1);
+    const infOrder = Object.entries(infCounts).sort((a,b) => b[1]-a[1]).map(e => e[0]);
+
+    // Sort categories by order count
+    const catCounts = {};
+    orders.forEach(o => catCounts[o.category] = (catCounts[o.category]||0)+1);
+    const prodOrder = Object.entries(catCounts).sort((a,b) => b[1]-a[1]).map(e => e[0]);
+
+    const dateLabel = orders[0].dt.toLocaleDateString('zh-CN', {month:'numeric',day:'numeric'});
+
+    // Update header info
+    const minDt = new Date(Math.min(...orders.map(o => o.dt)));
+    const maxDt = new Date(Math.max(...orders.map(o => o.dt)));
+    const fmt = d => `${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    document.querySelector('.header p').textContent = `数据范围: ${fmt(minDt)} ~ ${fmt(maxDt)} | 总订单 ${totalOrders} 笔 | ${influencerSet.size} 个直播间 | ${hoursList.length} 个小时 | ${prodOrder.length} 个品类`;
+
+    // Summary cards
+    document.getElementById('summaryCards').innerHTML = `
+        <div class="card"><div class="value">${totalOrders}</div><div class="label">总订单数</div></div>
+        <div class="card orange"><div class="value">${totalAmt.toLocaleString('zh-CN',{maximumFractionDigits:0})}</div><div class="label">总销售额(元)</div></div>
+        <div class="card green"><div class="value">${Math.round(avgAmt)}</div><div class="label">平均客单价(元)</div></div>
+        <div class="card"><div class="value">${influencerSet.size}</div><div class="label">直播间数</div></div>
+        <div class="card orange"><div class="value">${prodOrder.length}</div><div class="label">商品品类</div></div>
+    `;
+
+    // Helper: count orders matching filters
+    function cnt(inf, hr, cat) {
+        return orders.filter(o =>
+            (!inf || o.influencer === inf) &&
+            (hr === undefined || hr === null || o.hour === hr) &&
+            (!cat || o.category === cat)
+        ).length;
+    }
+    function amt(inf, hr, cat) {
+        return orders.filter(o =>
+            (!inf || o.influencer === inf) &&
+            (hr === undefined || hr === null || o.hour === hr) &&
+            (!cat || o.category === cat)
+        ).reduce((s,o) => s + o.amount, 0);
+    }
+
+    // ============ Charts ============
+    // Chart 1: Hourly bar
+    const totalHourlyData = hoursList.map(h => cnt(null, h, null));
+    const chart1 = echarts.init(document.getElementById('chart-hourly'));
+    chart1.setOption({
+        tooltip: {trigger:'axis'},
+        title: {text:'全平台分小时订单量',left:'center',textStyle:{fontSize:14}},
+        xAxis: {data:hoursStr},
+        yAxis: {type:'value'},
+        series: [{
+            type:'bar',data:totalHourlyData,
+            itemStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[
+                {offset:0,color:'#667eea'},{offset:1,color:'#b8c4ff'}])},
+            barWidth:'50%',label:{show:true,position:'top',fontSize:11,fontWeight:'bold'}
+        }],
+        grid: {left:'3%',right:'4%',top:'15%',bottom:'8%',containLabel:true}
+    });
+
+    // Chart 2: Pie
+    const pieData = prodOrder.map(p => ({name:p, value:catCounts[p]}));
+    const chart2 = echarts.init(document.getElementById('chart-product-pie'));
+    chart2.setOption({
+        tooltip: {trigger:'item',formatter:'{b}: {c}单 ({d}%)'},
+        title: {text:'商品品类占比',left:'center',textStyle:{fontSize:14}},
+        series: [{type:'pie',radius:['45%','72%'],data:pieData,
+            label:{formatter:'{b}\n{d}%',fontSize:11},
+            emphasis:{label:{fontSize:14,fontWeight:'bold'}}}]
+    });
+
+    // Chart 3: Heatmap
+    const heatData = [];
+    hoursList.forEach((h,hi) => {
+        prodOrder.forEach((p,pi) => {
+            const c = cnt(null, h, p);
+            if (c > 0) heatData.push([hi, pi, c]);
+        });
+    });
+    const maxHeat = Math.max(1, ...heatData.map(d => d[2]));
+    const chart3 = echarts.init(document.getElementById('chart-heatmap'));
+    chart3.setOption({
+        tooltip: {formatter: p => p.data[1]!==undefined ? `${prodOrder[p.data[1]]} ${hoursStr[p.data[0]]}<br/>出单: ${p.data[2]}单` : ''},
+        grid: {left:'18%',right:'5%',bottom:'12%',top:'3%'},
+        xAxis: {data:hoursStr,type:'category',splitArea:{show:true}},
+        yAxis: {data:prodOrder,type:'category',splitArea:{show:true},axisLabel:{fontSize:13,fontWeight:'bold'}},
+        visualMap: {min:0,max:maxHeat,calculable:true,orient:'horizontal',left:'center',bottom:0,
+            inRange:{color:['#f5f5ff','#c5c5ff','#8b8bff','#5555dd','#2d2d8f']}},
+        series: [{type:'heatmap',data:heatData,label:{show:true,fontSize:12,fontWeight:'bold'},
+            emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,0.3)'}}}]
+    });
+
+    // ============ Section 3: Product Tabs ============
+    let prodTabsHtml = '';
+    let prodPanelsHtml = '';
+    prodOrder.forEach((prod, i) => {
+        prodTabsHtml += `<button class="tab ${i===0?'active':''}" data-idx="${i}" data-group="prod">${prod}</button>`;
+
+        prodPanelsHtml += `<div class="tab-panel ${i===0?'active':''}" id="prod-panel-${i}">`;
+        prodPanelsHtml += `<h3>${prod} -- 各直播间分小时出单对比</h3>`;
+        prodPanelsHtml += '<div class="scroll-wrap"><table><thead><tr><th class="sticky-col">小时</th>';
+        infOrder.forEach(inf => prodPanelsHtml += `<th>${inf}</th>`);
+        prodPanelsHtml += '<th style="background:#fffde0">合计</th></tr></thead><tbody>';
+
+        hoursList.forEach(hr => {
+            prodPanelsHtml += `<tr><td class="sticky-col"><strong>${hr}:00</strong></td>`;
+            let rowTotal = 0;
+            infOrder.forEach(inf => {
+                const c = cnt(inf, hr, prod);
+                rowTotal += c;
+                prodPanelsHtml += c > 0 ? `<td style="font-weight:700;color:#667eea">${c}</td>` : '<td style="color:#ddd">-</td>';
+            });
+            prodPanelsHtml += `<td style="background:#fffde0;font-weight:700">${rowTotal || '-'}</td></tr>`;
+        });
+
+        prodPanelsHtml += '<tr style="background:#f8f8f8;font-weight:700"><td class="sticky-col" style="background:#f8f8f8">合计</td>';
+        infOrder.forEach(inf => {
+            const c = cnt(inf, null, prod);
+            prodPanelsHtml += `<td>${c || '-'}</td>`;
+        });
+        prodPanelsHtml += `<td style="background:#fffde0">${catCounts[prod]}</td></tr>`;
+        prodPanelsHtml += '</tbody></table></div></div>';
+    });
+    document.getElementById('prod-tabs').innerHTML = prodTabsHtml;
+    document.getElementById('prod-panels').innerHTML = prodPanelsHtml;
+
+    // ============ Section 4: Influencer Tabs ============
+    let infTabsHtml = '';
+    let infPanelsHtml = '';
+    infOrder.forEach((inf, i) => {
+        infTabsHtml += `<button class="tab ${i===0?'active':''}" data-idx="${i}" data-group="inf">${inf}</button>`;
+
+        const infOrders = orders.filter(o => o.influencer === inf);
+        const infTotal = infOrders.length;
+        const infAmt = infOrders.reduce((s,o) => s + o.amount, 0);
+        const infAvg = infTotal > 0 ? infAmt / infTotal : 0;
+        const infCats = new Set(infOrders.map(o => o.category));
+        const infHours = [...new Set(infOrders.map(o => o.hour))].sort((a,b) => a-b);
+
+        infPanelsHtml += `<div class="tab-panel ${i===0?'active':''}" id="inf-panel-${i}">`;
+        infPanelsHtml += '<div class="summary-cards">';
+        infPanelsHtml += `<div class="card"><div class="value">${infTotal}</div><div class="label">总订单数</div></div>`;
+        infPanelsHtml += `<div class="card orange"><div class="value">${infAmt.toLocaleString('zh-CN',{maximumFractionDigits:0})}</div><div class="label">总销售额(元)</div></div>`;
+        infPanelsHtml += `<div class="card green"><div class="value">${Math.round(infAvg)}</div><div class="label">平均客单价(元)</div></div>`;
+        infPanelsHtml += `<div class="card"><div class="value">${infCats.size}</div><div class="label">覆盖品类</div></div>`;
+        infPanelsHtml += `<div class="card green"><div class="value">${infHours.length}</div><div class="label">活跃小时数</div></div>`;
+        infPanelsHtml += '</div>';
+
+        infPanelsHtml += '<h3>分小时分品类出单明细 + 环比</h3>';
+        infPanelsHtml += '<div class="scroll-wrap"><table><thead><tr><th class="sticky-col">小时</th>';
+        prodOrder.forEach(p => infPanelsHtml += `<th>${p}</th>`);
+        infPanelsHtml += '<th style="background:#f0f4ff">合计订单</th><th style="background:#fff8f0">销售额(元)</th><th style="background:#f0fff0">环比</th></tr></thead><tbody>';
+
+        let prevOrders = null;
+        hoursList.forEach(hr => {
+            infPanelsHtml += `<tr><td class="sticky-col"><strong>${hr}:00</strong></td>`;
+            let rowTotal = 0, rowAmt = 0;
+            prodOrder.forEach(prod => {
+                const c = infOrders.filter(o => o.hour === hr && o.category === prod).length;
+                rowTotal += c;
+                if (c > 0) {
+                    const a = infOrders.filter(o => o.hour === hr && o.category === prod).reduce((s,o) => s + o.amount, 0);
+                    rowAmt += a;
+                    infPanelsHtml += `<td style="font-weight:600;color:#667eea">${c}</td>`;
+                } else {
+                    infPanelsHtml += '<td style="color:#ddd">-</td>';
+                }
+            });
+            if (rowTotal > 0) {
+                infPanelsHtml += `<td style="background:#f0f4ff;font-weight:700">${rowTotal}</td>`;
+                infPanelsHtml += `<td style="background:#fff8f0;font-weight:600">${Math.round(rowAmt).toLocaleString()}</td>`;
+            } else {
+                infPanelsHtml += '<td style="background:#f0f4ff;color:#ddd">-</td>';
+                infPanelsHtml += '<td style="background:#fff8f0;color:#ddd">-</td>';
+            }
+
+            if (rowTotal === 0) {
+                infPanelsHtml += '<td style="color:#ddd">-</td>';
+            } else if (prevOrders === null || prevOrders === 0) {
+                infPanelsHtml += '<td><span class="tag tag-new">首单</span></td>';
+            } else {
+                const change = (rowTotal - prevOrders) / prevOrders * 100;
+                if (change > 0) infPanelsHtml += `<td><span class="pos">+${Math.round(change)}%</span></td>`;
+                else if (change < 0) infPanelsHtml += `<td><span class="neg">${Math.round(change)}%</span></td>`;
+                else infPanelsHtml += '<td>持平</td>';
+            }
+            infPanelsHtml += '</tr>';
+            if (rowTotal > 0) prevOrders = rowTotal;
+        });
+
+        infPanelsHtml += '</tbody></table></div>';
+
+        // Product time distribution
+        infPanelsHtml += '<h3>各品类出单时段分布</h3>';
+        const infCatCounts = {};
+        infOrders.forEach(o => infCatCounts[o.category] = (infCatCounts[o.category]||0)+1);
+        Object.entries(infCatCounts).sort((a,b) => b[1]-a[1]).forEach(([prod, count]) => {
+            const prodHours = [...new Set(infOrders.filter(o => o.category===prod).map(o => o.hour))].sort((a,b)=>a-b);
+            infPanelsHtml += `<div style="margin:4px 0"><strong>${prod}</strong> (${count}单): ${prodHours.map(h=>h+':00').join(' -> ')}</div>`;
+        });
+
+        infPanelsHtml += '</div>';
+    });
+    document.getElementById('inf-tabs').innerHTML = infTabsHtml;
+    document.getElementById('inf-panels').innerHTML = infPanelsHtml;
+
+    // ============ Tab Events ============
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const group = this.dataset.group;
+            const idx = this.dataset.idx;
+            // Deactivate all tabs in this group
+            document.querySelectorAll(`.tab[data-group="${group}"]`).forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            // Show matching panel
+            const panelId = (group === 'prod' ? 'prod-panel-' : 'inf-panel-') + idx;
+            const parent = this.closest('.section');
+            parent.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            const panel = parent.querySelector('#' + panelId);
+            if (panel) panel.classList.add('active');
+        });
+    });
+}
+
+// ============================================================
+// File Handling
+// ============================================================
+function handleFile(event) {
+    const file = event.target.files[0];
+    if (file) processFile(file);
+}
+
+const dropZone = document.getElementById('dropZone');
+
+['dragenter','dragover','dragleave','drop'].forEach(evt => {
+    document.body.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); });
+});
+
+['dragenter','dragover'].forEach(evt => {
+    dropZone.addEventListener(evt, () => dropZone.classList.add('drag-over'));
+});
+
+['dragleave','drop'].forEach(evt => {
+    dropZone.addEventListener(evt, () => dropZone.classList.remove('drag-over'));
+});
+
+dropZone.addEventListener('drop', e => {
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+});
+
+function processFile(file) {
+    if (!file.name.match(/\.xlsx?$/i)) {
+        showError('请上传 .xlsx 或 .xls 格式的Excel文件');
+        return;
+    }
+
+    document.getElementById('errorMsg').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('report').style.display = 'none';
+    dropZone.classList.add('done');
+    document.getElementById('fileName').textContent = file.name;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const wb = XLSX.read(e.target.result, {type:'array'});
+            const sheet = wb.Sheets[wb.SheetNames[0]];
+            const orders = parseExcel(sheet);
+
+            if (orders.length === 0) {
+                showError('未能解析到有效订单数据，请检查表格格式');
+                document.getElementById('loading').style.display = 'none';
+                return;
+            }
+
+            // Dispose old charts
+            ['chart-hourly','chart-product-pie','chart-heatmap'].forEach(id => {
+                const inst = echarts.getInstanceByDom(document.getElementById(id));
+                if (inst) inst.dispose();
+            });
+
+            buildReport(orders);
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('report').style.display = 'block';
+
+            // Resize charts
+            setTimeout(() => {
+                ['chart-hourly','chart-product-pie','chart-heatmap'].forEach(id => {
+                    const inst = echarts.getInstanceByDom(document.getElementById(id));
+                    if (inst) inst.resize();
+                });
+            }, 100);
+
+        } catch(err) {
+            console.error(err);
+            showError('解析失败: ' + err.message);
+            document.getElementById('loading').style.display = 'none';
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function showError(msg) {
+    const el = document.getElementById('errorMsg');
+    el.textContent = msg;
+    el.style.display = 'block';
+    dropZone.classList.remove('done');
+    document.getElementById('fileName').textContent = '';
+}
+
+// Responsive resize
+window.addEventListener('resize', () => {
+    ['chart-hourly','chart-product-pie','chart-heatmap'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            const inst = echarts.getInstanceByDom(el);
+            if (inst) inst.resize();
+        }
+    });
+});
+</script>
+</body>
+</html>
