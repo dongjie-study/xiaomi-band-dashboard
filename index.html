@@ -3,76 +3,682 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>小米手环竞对分析平台</title>
+<title>小米手环直播间销量分析仪表盘</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js">
+</script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Microsoft YaHei',sans-serif;background:#f0f2f5;color:#333;min-height:100vh;display:flex;align-items:center;justify-content:center}
-.container{max-width:700px;width:100%;padding:20px}
-.header{text-align:center;margin-bottom:40px}
-.header h1{font-size:2em;color:#1a1a2e;margin-bottom:8px}
-.header p{color:#888;font-size:.95em}
-.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
-@media(max-width:900px){.cards{grid-template-columns:1fr 1fr}}
-@media(max-width:600px){.cards{grid-template-columns:1fr}}
-.card{background:#fff;border-radius:16px;padding:32px 24px;text-decoration:none;box-shadow:0 2px 12px rgba(0,0,0,.06);transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column;align-items:center;text-align:center}
-.card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.1)}
-.card .icon{font-size:2.8em;margin-bottom:16px}
-.card h2{font-size:1.2em;color:#333;margin-bottom:8px}
-.card p{color:#888;font-size:.85em;line-height:1.5}
-.card.sales{border-top:4px solid #FF6B6B}
-.card.violations{border-top:4px solid #e94560}
-.card.strategy{border-top:4px solid #ff6900}
-.card.video{border-top:4px solid #1E90FF}
-.card.hourly{border-top:4px solid #667eea}
-.badge{display:inline-block;padding:2px 10px;border-radius:10px;font-size:.7em;font-weight:600;margin-top:12px}
-.badge.live{background:#fff0f0;color:#FF6B6B}
-.badge.warn{background:#fde8ec;color:#e94560}
-.badge.playbook{background:#fff3e8;color:#ff6900}
-.badge.video{background:#e3f2fd;color:#1E90FF}
-.badge.hourly{background:#f0eeff;color:#667eea}
-.footer{text-align:center;margin-top:40px;color:#bbb;font-size:.8em}
+/* ===== Reset & Variables ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f3f4f7;
+  --card:#fff;
+  --text:#2c3e50;
+  --text2:#6b7a8d;
+  --text3:#9aa5b4;
+  --primary:#5b7fa5;
+  --primary-light:#e8f0f7;
+  --accent:#e8915a;
+  --accent-light:#fef3eb;
+  --success:#5ea882;
+  --success-light:#eaf7f0;
+  --warning:#c9a44c;
+  --warning-light:#fdf6ea;
+  --danger:#d4746e;
+  --border:#e9ecf1;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.05),0 1px 2px rgba(0,0,0,.03);
+  --shadow:0 4px 16px rgba(0,0,0,.05),0 2px 6px rgba(0,0,0,.03);
+  --shadow-lg:0 12px 36px rgba(0,0,0,.07),0 4px 12px rgba(0,0,0,.03);
+  --radius-sm:8px;
+  --radius:12px;
+  --radius-lg:16px;
+  --transition:0.2s cubic-bezier(0.4,0,0.2,1);
+}
+html{font-size:16px}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Microsoft YaHei','PingFang SC',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ===== Dashboard Layout ===== */
+.dashboard{max-width:1440px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+
+/* ===== Top Navigation Bar ===== */
+.topnav{
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  padding:12px 20px;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow-sm);
+}
+.topnav .brand{font-size:1.1rem;font-weight:700;color:var(--text);white-space:nowrap}
+.topnav .brand span{color:var(--accent)}
+.topnav .nav-links{display:flex;gap:4px;flex-wrap:wrap}
+.topnav .nav-links a{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:6px 12px;border-radius:20px;
+  font-size:.75rem;font-weight:500;color:var(--text2);
+  text-decoration:none;background:transparent;
+  border:1px solid transparent;
+  transition:all var(--transition);white-space:nowrap;
+}
+.topnav .nav-links a:hover{color:var(--primary);background:var(--primary-light);border-color:var(--primary-light)}
+.topnav .nav-links a.active{color:#fff;background:var(--primary);border-color:var(--primary)}
+.topnav .nav-links a.highlight{color:var(--accent);border-color:var(--accent-light);background:var(--accent-light)}
+.topnav .nav-links a.highlight:hover{color:#fff;background:var(--accent);border-color:var(--accent)}
+
+/* ===== Header ===== */
+.header{padding:6px 4px}
+.header h1{font-size:1.5rem;font-weight:700;color:var(--text);margin-bottom:3px}
+.header .subtitle{font-size:.82rem;color:var(--text2)}
+.header .update-time{font-size:.73rem;color:var(--text3);margin-top:2px}
+
+/* ===== Date Tabs ===== */
+.date-tabs{display:flex;gap:7px;flex-wrap:wrap;padding:0 4px}
+.date-tab{
+  padding:7px 18px;border-radius:24px;
+  font-size:.8rem;font-weight:500;color:var(--text2);
+  background:var(--card);border:1.5px solid var(--border);
+  cursor:pointer;transition:all var(--transition);
+  user-select:none;white-space:nowrap;
+}
+.date-tab:hover{color:var(--primary);border-color:var(--primary);background:var(--primary-light)}
+.date-tab.active{color:#fff;background:var(--primary);border-color:var(--primary)}
+
+/* ===== KPI Cards ===== */
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.kpi-card{
+  background:var(--card);border-radius:var(--radius);
+  padding:18px 22px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:5px;
+  position:relative;overflow:hidden;
+  transition:transform var(--transition),box-shadow var(--transition);
+  cursor:default;
+}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.kpi-card::after{content:'';position:absolute;top:0;left:0;width:4px;height:100%;border-radius:4px 0 0 4px}
+.kpi-card.orders::after{background:var(--primary)}
+.kpi-card.revenue::after{background:var(--accent)}
+.kpi-card.avg::after{background:var(--success)}
+.kpi-card.days::after{background:var(--warning)}
+.kpi-card .kpi-icon{font-size:1.5rem;line-height:1}
+.kpi-card .kpi-label{font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.kpi-card .kpi-value{font-size:1.7rem;font-weight:700;color:var(--text);line-height:1.1}
+.kpi-card .kpi-sub{font-size:.74rem;color:var(--text2)}
+
+/* ===== Charts Grid ===== */
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.chart-panel{
+  background:var(--card);border-radius:var(--radius);
+  padding:18px 20px;box-shadow:var(--shadow);
+  display:flex;flex-direction:column;
+}
+.chart-panel.full{grid-column:1/-1}
+.chart-panel h3{font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:3px}
+.chart-panel .chart-subtitle{font-size:.73rem;color:var(--text3);margin-bottom:12px}
+.chart-wrap{position:relative;flex:1;min-height:300px}
+.chart-wrap.tall{min-height:380px}
+
+/* ===== Data Table ===== */
+.data-table{width:100%;border-collapse:collapse;font-size:.8rem}
+.data-table thead th{
+  padding:9px 12px;text-align:left;font-size:.7rem;
+  font-weight:600;color:var(--text3);text-transform:uppercase;
+  letter-spacing:.5px;border-bottom:2px solid var(--border);
+  white-space:nowrap;background:var(--card);
+}
+.data-table tbody td{padding:8px 12px;border-bottom:1px solid var(--border);color:var(--text)}
+.data-table tbody tr{transition:background var(--transition)}
+.data-table tbody tr:hover{background:#f8f9fb}
+.data-table .num{text-align:right;font-variant-numeric:tabular-nums}
+.data-table .bar-wrap{display:flex;align-items:center;gap:8px;min-width:110px}
+.data-table .bar-bg{flex:1;height:7px;background:#eef1f5;border-radius:4px;overflow:hidden}
+.data-table .bar-fg{height:100%;border-radius:4px;transition:width .4s ease}
+.data-table .rank{width:28px;height:22px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700}
+.data-table .rank.r1{background:#fff3e0;color:var(--accent)}
+.data-table .rank.r2{background:#f0f4f8;color:var(--primary)}
+.data-table .rank.r3{background:#f0f4f8;color:var(--text2)}
+
+/* ===== Room Cards ===== */
+.room-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
+.room-card{
+  background:var(--card);border-radius:var(--radius);
+  padding:14px 16px;box-shadow:var(--shadow-sm);
+  border:1px solid var(--border);
+  transition:all var(--transition);
+}
+.room-card:hover{box-shadow:var(--shadow);border-color:var(--primary-light)}
+.room-card .room-name{font-size:.85rem;font-weight:600;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.room-card .room-tag{font-size:.65rem;padding:2px 8px;border-radius:10px;font-weight:500}
+.room-card .room-tag.ours{background:var(--accent-light);color:var(--accent)}
+.room-card .room-tag.comp{background:#eef1f5;color:var(--text3)}
+.room-card .room-stat{display:flex;justify-content:space-between;padding:4px 0;font-size:.76rem;border-bottom:1px solid #f7f8fa}
+.room-card .room-stat:last-child{border-bottom:none}
+.room-card .room-stat .slabel{color:var(--text3)}
+.room-card .room-stat .svalue{font-weight:600;color:var(--text)}
+
+/* ===== Footer ===== */
+.footer{text-align:center;padding:16px;color:var(--text3);font-size:.7rem}
+.footer a{color:var(--primary);text-decoration:none}
+
+/* ===== Responsive: Tablet ===== */
+@media(max-width:1024px){
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .charts-grid{grid-template-columns:1fr}
+  .topnav{flex-direction:column;align-items:flex-start}
+  .header h1{font-size:1.35rem}
+  .room-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+}
+
+/* ===== Responsive: Phone ===== */
+@media(max-width:640px){
+  .dashboard{padding:8px;gap:8px}
+  .kpi-grid{grid-template-columns:1fr 1fr;gap:8px}
+  .kpi-card{padding:12px 14px;gap:3px}
+  .kpi-card .kpi-value{font-size:1.35rem}
+  .kpi-card .kpi-label{font-size:.66rem}
+  .date-tabs{gap:4px}
+  .date-tab{padding:6px 12px;font-size:.73rem}
+  .chart-panel{padding:12px}
+  .chart-wrap{min-height:240px}
+  .chart-wrap.tall{min-height:280px}
+  .room-grid{grid-template-columns:1fr}
+  .topnav .nav-links a{padding:5px 9px;font-size:.7rem}
+  .header h1{font-size:1.15rem}
+  .data-table{font-size:.72rem}
+  .data-table thead th,.data-table tbody td{padding:6px 8px}
+}
+
+/* Very small phone */
+@media(max-width:380px){
+  .kpi-grid{grid-template-columns:1fr;gap:6px}
+  .kpi-card{flex-direction:row;align-items:center;gap:10px;padding:10px 12px}
+  .kpi-card .kpi-value{font-size:1.25rem}
+  .date-tab{padding:5px 10px;font-size:.7rem}
+}
 </style>
 </head>
 <body>
 <script>localStorage.setItem('mi_band_auth_v1','1');</script>
-<div class="container">
-<div class="header">
-<h1>小米手环竞对分析平台</h1>
-<p>请选择需要浏览的模块</p>
+
+<div class="dashboard">
+  <!-- Top Navigation -->
+  <nav class="topnav">
+    <div class="brand">📊 小米手环<span>竞对分析</span></div>
+    <div class="nav-links">
+      <a href="index.html" class="active">📈 销量仪表盘</a>
+      <a href="sales_analysis/index.html" class="highlight">🔍 详细分析</a>
+      <a href="小时分析/index.html">⏰ 小时分析</a>
+      <a href="strategy.html">🗺️ 营销战略</a>
+      <a href="违规情况/report.html">⚠️ 违规</a>
+      <a href="核心指标分析/核心指标报告.html">🎬 视频</a>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <div class="header">
+    <h1>小米手环直播间销量分析仪表盘</h1>
+    <p class="subtitle">4个销售日 · 12,337笔订单 · 9个直播间竞对追踪 · GMV ¥479.5万</p>
+    <p class="update-time">数据来源：巨量广告/抖音直播订单 &nbsp;|&nbsp; 更新：2026-06-13</p>
+  </div>
+
+  <!-- Date Tabs -->
+  <div class="date-tabs" id="dateTabs">
+    <button class="date-tab active" data-date="all">📅 全部汇总</button>
+    <button class="date-tab" data-date="2026-06-01">6月1日 · 4,295单</button>
+    <button class="date-tab" data-date="2026-06-02">6月2日 · 2,341单</button>
+    <button class="date-tab" data-date="2026-06-03">6月3日 · 2,266单</button>
+    <button class="date-tab" data-date="2026-06-11">6月11日 · 3,435单</button>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="kpi-grid" id="kpiGrid">
+    <div class="kpi-card orders">
+      <div class="kpi-icon">📦</div>
+      <div class="kpi-label">总订单量</div>
+      <div class="kpi-value" id="kpiOrders">12,337</div>
+      <div class="kpi-sub" id="kpiOrdersSub">4天累计</div>
+    </div>
+    <div class="kpi-card revenue">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">总GMV</div>
+      <div class="kpi-value" id="kpiRevenue">¥479.5万</div>
+      <div class="kpi-sub" id="kpiRevenueSub">日均 ¥119.9万</div>
+    </div>
+    <div class="kpi-card avg">
+      <div class="kpi-icon">🏷️</div>
+      <div class="kpi-label">客单价</div>
+      <div class="kpi-value" id="kpiAvg">¥389</div>
+      <div class="kpi-sub" id="kpiAvgSub">加权平均</div>
+    </div>
+    <div class="kpi-card days">
+      <div class="kpi-icon">🔥</div>
+      <div class="kpi-label">最高单日</div>
+      <div class="kpi-value" id="kpiDays">4,295单</div>
+      <div class="kpi-sub" id="kpiDaysSub">6月1日 · ¥172.7万</div>
+    </div>
+  </div>
+
+  <!-- Charts Row 1: Hourly Line + Product Doughnut -->
+  <div class="charts-grid">
+    <div class="chart-panel">
+      <h3>⏰ 24小时订单分布</h3>
+      <p class="chart-subtitle">各时段订单量与GMV趋势对比</p>
+      <div class="chart-wrap"><canvas id="chartHourly"></canvas></div>
+    </div>
+    <div class="chart-panel">
+      <h3>🏷️ 产品销量占比</h3>
+      <p class="chart-subtitle">按品类拆分订单占比</p>
+      <div class="chart-wrap"><canvas id="chartProductPie"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2: Room Bar + Product Table -->
+  <div class="charts-grid">
+    <div class="chart-panel">
+      <h3>🏪 各直播间订单对比</h3>
+      <p class="chart-subtitle">按订单数降序 · 悬停查看GMV</p>
+      <div class="chart-wrap tall"><canvas id="chartRoom"></canvas></div>
+    </div>
+    <div class="chart-panel">
+      <h3>📋 产品销售明细</h3>
+      <p class="chart-subtitle">按订单量排序 · 占比进度条</p>
+      <div style="overflow-x:auto">
+        <table class="data-table" id="productTable">
+          <thead><tr><th>#</th><th>品类</th><th>占比</th><th>订单数</th><th>GMV</th><th>均价</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Room Detail Cards -->
+  <div class="chart-panel full">
+    <h3>🏪 直播间明细卡片</h3>
+    <p class="chart-subtitle">切换日期标签查看各直播间当日表现</p>
+    <div class="room-grid" id="roomCards"></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    数据来源：巨量广告 · 抖音直播订单 &nbsp;|&nbsp; 报告由系统自动生成 &nbsp;|&nbsp;
+    <a href="hub.html">返回导航页</a>
+  </div>
 </div>
-<div class="cards">
-<a href="sales_analysis/index.html" class="card sales">
-<div class="icon">📈</div>
-<h2>穿戴直播间销量分析</h2>
-<p>每日订单追踪、竞对直播间对比、小时分布、产品结构分析</p>
-<span class="badge live">LIVE SALES</span>
-</a>
-<a href="违规情况/report.html" class="card violations">
-<div class="icon">⚠️</div>
-<h2>违规情况分析</h2>
-<p>小米系5个直播间违规判罚追踪、原因分布、处罚升级路径</p>
-<span class="badge warn">VIOLATIONS</span>
-</a>
-<a href="strategy.html" class="card strategy">
-<div class="icon">🗺️</div>
-<h2>全域营销战略</h2>
-<p>10Pro全域营销总纲：iPhone市场、千川抖加投放、许昌活动、游戏视频四合一作战地图</p>
-<span class="badge playbook">PLAYBOOK</span>
-</a>
-<a href="核心指标分析/核心指标报告.html" class="card video">
-<div class="icon">🎬</div>
-<h2>千川视频分析</h2>
-<p>千川视频素材核心指标：消耗/成交/ROI/CTR，我司与竞对(良米)数据对比与深度洞察</p>
-<span class="badge video">VIDEO ANALYTICS</span>
-</a>
-<a href="小时分析/index.html" class="card hourly">
-<div class="icon">⏰</div>
-<h2>直播间小时级出单分析</h2>
-<p>拖入订单Excel表格，自动识别列名并生成小时级分析报告：分品类热力图、直播间对比、环比趋势</p>
-<span class="badge hourly">HOURLY ANALYTICS</span>
-</a>
-</div>
-<div class="footer">数据来源：巨量广告 · 抖音直播订单 &nbsp;|&nbsp; 报告由系统自动生成</div>
-</div>
+
+<script>
+/* ================================================================
+   EMBEDDED DATA — Aggregated from combined_6.1/6.2/6.3/6.11.xlsx
+   ================================================================ */
+var DATA = {
+  all: { orders: 12337, revenue: 4795117.05 },
+  dates: ["2026-06-01","2026-06-02","2026-06-03","2026-06-11"],
+  by_date: {
+    "2026-06-01": {"orders":4295,"revenue":1727213.08},
+    "2026-06-02": {"orders":2341,"revenue":900347.25},
+    "2026-06-03": {"orders":2266,"revenue":843111.08},
+    "2026-06-11": {"orders":3435,"revenue":1324445.64}
+  },
+  by_hour: {
+    "0":{"orders":687,"revenue":268520},"1":{"orders":350,"revenue":138327},"2":{"orders":164,"revenue":64531},
+    "3":{"orders":83,"revenue":36537},"4":{"orders":53,"revenue":22922},"5":{"orders":69,"revenue":26608},
+    "6":{"orders":130,"revenue":51469},"7":{"orders":324,"revenue":128184},"8":{"orders":522,"revenue":198917},
+    "9":{"orders":736,"revenue":274635},"10":{"orders":778,"revenue":305883},"11":{"orders":751,"revenue":291072},
+    "12":{"orders":771,"revenue":297015},"13":{"orders":727,"revenue":276802},"14":{"orders":548,"revenue":214643},
+    "15":{"orders":558,"revenue":223211},"16":{"orders":542,"revenue":220557},"17":{"orders":539,"revenue":216940},
+    "18":{"orders":586,"revenue":226784},"19":{"orders":611,"revenue":245239},"20":{"orders":654,"revenue":256965},
+    "21":{"orders":653,"revenue":250094},"22":{"orders":821,"revenue":305043},"23":{"orders":680,"revenue":254219}
+  },
+  by_hour_date: {
+    "2026-06-01": {"0":348,"1":194,"2":84,"3":44,"4":21,"5":32,"6":62,"7":142,"8":228,"9":257,"10":281,"11":256,"12":252,"13":270,"14":201,"15":194,"16":208,"17":189,"18":233,"19":230,"20":238,"21":119,"22":129,"23":83},
+    "2026-06-02": {"0":63,"1":33,"2":20,"3":14,"4":6,"5":5,"6":15,"7":59,"8":94,"9":113,"10":143,"11":136,"12":187,"13":183,"14":121,"15":139,"16":112,"17":96,"18":96,"19":114,"20":122,"21":149,"22":183,"23":138},
+    "2026-06-03": {"0":86,"1":53,"2":25,"3":10,"4":13,"5":13,"6":24,"7":45,"8":86,"9":169,"10":138,"11":113,"12":118,"13":100,"14":95,"15":91,"16":75,"17":127,"18":113,"19":135,"20":149,"21":189,"22":153,"23":146},
+    "2026-06-11": {"0":190,"1":70,"2":35,"3":15,"4":13,"5":19,"6":29,"7":78,"8":114,"9":197,"10":216,"11":246,"12":214,"13":174,"14":131,"15":134,"16":147,"17":127,"18":144,"19":132,"20":145,"21":196,"22":356,"23":313}
+  },
+  by_cat: {
+    "REDMI Watch 6": {"orders":4935,"revenue":2169048},
+    "小米手环10Pro": {"orders":3700,"revenue":1492810},
+    "小米手环10": {"orders":1925,"revenue":551626},
+    "其他": {"orders":1051,"revenue":305286},
+    "耳机/Buds": {"orders":273,"revenue":100315},
+    "小米手环9": {"orders":259,"revenue":73846},
+    "充电配件": {"orders":101,"revenue":2198},
+    "小米手表": {"orders":83,"revenue":81343},
+    "REDMI Watch 5": {"orders":10,"revenue":18646}
+  },
+  by_cat_date: {
+    "2026-06-01": {"REDMI Watch 6":2860,"小米手环10Pro":962,"其他":212,"小米手环10":97,"小米手环9":71,"充电配件":53,"小米手表":23,"耳机/Buds":16,"REDMI Watch 5":1},
+    "2026-06-02": {"小米手环10Pro":1067,"其他":447,"REDMI Watch 6":431,"小米手环10":246,"小米手环9":76,"耳机/Buds":33,"充电配件":22,"小米手表":16,"REDMI Watch 5":3},
+    "2026-06-03": {"小米手环10Pro":881,"小米手环10":542,"其他":380,"REDMI Watch 6":359,"小米手环9":50,"耳机/Buds":20,"小米手表":17,"充电配件":16,"REDMI Watch 5":1},
+    "2026-06-11": {"REDMI Watch 6":1285,"小米手环10":1040,"小米手环10Pro":790,"耳机/Buds":204,"小米手环9":62,"小米手表":27,"其他":12,"充电配件":10,"REDMI Watch 5":5}
+  },
+  by_room: {
+    "小米手环": {"orders":2460,"revenue":921482},
+    "小米手表官方直播间": {"orders":1867,"revenue":820104},
+    "小米官方手环直播间": {"orders":1213,"revenue":408435},
+    "小米官方手表": {"orders":1037,"revenue":444229},
+    "小米智能穿戴国补号": {"orders":730,"revenue":299994},
+    "小米数码旗舰店": {"orders":621,"revenue":215831},
+    "小米数码智能旗舰店": {"orders":615,"revenue":225866},
+    "小米智能穿戴授权号": {"orders":359,"revenue":134731},
+    "其他直播间(6.11)": {"orders":3435,"revenue":1324446}
+  },
+  by_room_date: {
+    "2026-06-01": {"小米手表官方直播间":1503,"小米官方手表":785,"小米手环":704,"小米智能穿戴国补号":580,"小米官方手环直播间":241,"小米智能穿戴授权号":181,"小米数码旗舰店":181,"小米数码智能旗舰店":120},
+    "2026-06-02": {"小米手环":812,"小米官方手环直播间":508,"小米数码旗舰店":218,"小米数码智能旗舰店":201,"小米智能穿戴授权号":178,"小米手表官方直播间":174,"小米智能穿戴国补号":150,"小米官方手表":100},
+    "2026-06-03": {"小米手环":944,"小米官方手环直播间":464,"小米数码智能旗舰店":294,"小米数码旗舰店":222,"小米手表官方直播间":190,"小米官方手表":152},
+    "2026-06-11": {"其他直播间(6.11)":3435}
+  }
+};
+
+/* ===== Chart Colors ===== */
+var C = ['#5b7fa5','#e8915a','#5ea882','#c9a44c','#c47ea0','#6dbece','#8b8fc9','#e07b7b','#9bafc4'];
+
+/* ===== Helpers ===== */
+function fmtNum(n){return n>=1e4?(n/1e4).toFixed(1)+'万':n.toLocaleString('zh-CN')}
+function fmtMoney(n){
+  if(n>=1e6) return '¥'+(n/1e6).toFixed(2)+'百万';
+  if(n>=1e4) return '¥'+(n/1e4).toFixed(1)+'万';
+  return '¥'+Math.round(n).toLocaleString('zh-CN');
+}
+
+/* ===== State ===== */
+var currentDate = 'all';
+var charts = {};
+
+function destroyChart(key){if(charts[key]){charts[key].destroy();charts[key]=null}}
+
+/* ===== Update KPI Cards ===== */
+function updateKPI(dk){
+  var o, r;
+  if(dk==='all'){o=DATA.all.orders;r=DATA.all.revenue}
+  else{var dd=DATA.by_date[dk];o=dd?dd.orders:0;r=dd?dd.revenue:0}
+  var avg=o>0?Math.round(r/o):0;
+  var topDate='6月1日',topOrders=4295,topRev=1727213;
+  if(dk!=='all'){topDate=dk.slice(5);topOrders=o;topRev=r}
+
+  document.getElementById('kpiOrders').textContent=fmtNum(o);
+  document.getElementById('kpiRevenue').textContent=fmtMoney(r);
+  document.getElementById('kpiAvg').textContent='¥'+avg;
+  document.getElementById('kpiDays').textContent=fmtNum(topOrders);
+
+  document.getElementById('kpiOrdersSub').textContent=dk==='all'?'4天累计':dk;
+  document.getElementById('kpiRevenueSub').textContent=dk==='all'?'日均 '+fmtMoney(Math.round(r/4)):'单日GMV';
+  document.getElementById('kpiAvgSub').textContent=dk==='all'?'加权平均 (¥389)':'客单价';
+  document.getElementById('kpiDaysSub').textContent=dk==='all'?'6月1日 · ¥172.7万':fmtMoney(topRev);
+}
+
+/* ===== Update Hourly Chart ===== */
+function updateHourly(dk){
+  var labels=[],odata=[],rdata=[];
+  for(var h=0;h<24;h++){
+    labels.push(String(h).padStart(2,'0')+':00');
+    if(dk==='all'){
+      var hv=DATA.by_hour[String(h)]||{orders:0,revenue:0};
+      odata.push(hv.orders);rdata.push(Math.round(hv.revenue/100)*100);
+    }else{
+      var dh=DATA.by_hour_date[dk]||{};
+      odata.push(dh[String(h)]||0);
+      rdata.push(0); // per-date revenue not embedded but orders are exact
+    }
+  }
+  // For per-date GMV, estimate proportionally
+  if(dk!=='all'){
+    var dd=DATA.by_date[dk];
+    var ratio=dd?dd.revenue/DATA.all.revenue:0;
+    for(var h=0;h<24;h++){
+      var allRev=DATA.by_hour[String(h)]?DATA.by_hour[String(h)].revenue:0;
+      rdata[h]=Math.round(allRev*ratio/100)*100;
+    }
+  }
+
+  destroyChart('hourly');
+  var ctx=document.getElementById('chartHourly').getContext('2d');
+  charts.hourly=new Chart(ctx,{
+    type:'line',
+    data:{
+      labels:labels,
+      datasets:[{
+        label:'订单量',data:odata,
+        borderColor:C[0],backgroundColor:'rgba(91,127,165,0.08)',
+        borderWidth:2.5,fill:true,tension:0.35,
+        pointRadius:2,pointHoverRadius:5,pointBackgroundColor:C[0],
+        order:2
+      },{
+        label:'GMV (¥)',data:rdata,
+        borderColor:C[1],backgroundColor:'rgba(232,145,90,0.05)',
+        borderWidth:2,borderDash:[6,3],fill:false,tension:0.35,
+        pointRadius:0,pointHoverRadius:4,pointBackgroundColor:C[1],
+        yAxisID:'y1',order:1
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      interaction:{mode:'index',intersect:false},
+      plugins:{
+        legend:{position:'bottom',labels:{usePointStyle:true,padding:24,font:{size:11},color:'#6b7a8d'}},
+        tooltip:{backgroundColor:'rgba(44,62,80,0.92)',padding:10,titleFont:{size:12},bodyFont:{size:11}}
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{font:{size:10},color:'#9aa5b4',maxRotation:0}},
+        y:{
+          type:'linear',position:'left',
+          grid:{color:'#f0f1f5'},
+          ticks:{font:{size:10},color:'#9aa5b4',callback:function(v){return v>=1e3?(v/1e3).toFixed(0)+'k':v}},
+          title:{display:true,text:'订单量',font:{size:10},color:'#9aa5b4'}
+        },
+        y1:{
+          type:'linear',position:'right',
+          grid:{display:false},
+          ticks:{font:{size:10},color:'#9aa5b4',callback:function(v){return v>=1e4?(v/1e4).toFixed(0)+'万':v>=1e3?(v/1e3).toFixed(0)+'k':v}},
+          title:{display:true,text:'GMV',font:{size:10},color:'#9aa5b4'}
+        }
+      }
+    }
+  });
+}
+
+/* ===== Update Product Pie ===== */
+function updateProductPie(dk){
+  var catOrders;
+  if(dk==='all'){
+    catOrders={};for(var c in DATA.by_cat)catOrders[c]=DATA.by_cat[c].orders;
+  }else{
+    catOrders=DATA.by_cat_date[dk]||{};
+  }
+  var items=Object.keys(catOrders).map(function(k){return{cat:k,orders:catOrders[k]}})
+    .filter(function(x){return x.orders>0}).sort(function(a,b){return b.orders-a.orders});
+
+  destroyChart('pie');
+  var ctx=document.getElementById('chartProductPie').getContext('2d');
+  charts.pie=new Chart(ctx,{
+    type:'doughnut',
+    data:{
+      labels:items.map(function(x){return x.cat}),
+      datasets:[{
+        data:items.map(function(x){return x.orders}),
+        backgroundColor:C.slice(0,items.length),
+        borderColor:'#fff',borderWidth:2,hoverBorderWidth:3
+      }]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{
+          position:'right',
+          labels:{padding:14,usePointStyle:true,pointStyleWidth:8,font:{size:11},color:'#6b7a8d'}
+        },
+        tooltip:{
+          backgroundColor:'rgba(44,62,80,0.92)',padding:10,
+          callbacks:{
+            label:function(ctx){
+              var total=ctx.dataset.data.reduce(function(a,b){return a+b},0);
+              return ctx.label+': '+ctx.parsed.toLocaleString('zh-CN')+' 单 ('+(ctx.parsed/total*100).toFixed(1)+'%)';
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+/* ===== Update Room Bar Chart ===== */
+function updateRoomChart(dk){
+  var roomOrders;
+  if(dk==='all'){
+    roomOrders={};for(var r in DATA.by_room)roomOrders[r]=DATA.by_room[r].orders;
+  }else{
+    roomOrders=DATA.by_room_date[dk]||{};
+  }
+  var items=Object.keys(roomOrders).map(function(k){return{room:k,orders:roomOrders[k]}})
+    .filter(function(x){return x.orders>0}).sort(function(a,b){return b.orders-a.orders});
+
+  destroyChart('room');
+  var ctx=document.getElementById('chartRoom').getContext('2d');
+  charts.room=new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:items.map(function(x){return x.room}),
+      datasets:[{
+        label:'订单量',data:items.map(function(x){return x.orders}),
+        backgroundColor:items.map(function(_,i){return C[i%C.length]}),
+        borderRadius:6,borderSkipped:false
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:'rgba(44,62,80,0.92)',padding:10,
+          callbacks:{
+            label:function(ctx){
+              var item=items[ctx.dataIndex];
+              var rev=dk==='all'?(DATA.by_room[item.room]||{}).revenue||0:0;
+              return '订单: '+item.orders.toLocaleString('zh-CN')+(rev?' | GMV: '+fmtMoney(rev):'');
+            }
+          }
+        }
+      },
+      scales:{
+        x:{grid:{color:'#f0f1f5'},ticks:{font:{size:10},color:'#9aa5b4',callback:function(v){return v>=1e3?(v/1e3).toFixed(0)+'k':v}}},
+        y:{grid:{display:false},ticks:{font:{size:10},color:'#6b7a8d'}}
+      }
+    }
+  });
+}
+
+/* ===== Update Product Table ===== */
+function updateProductTable(dk){
+  var catOrders, catRev;
+  if(dk==='all'){
+    catOrders={};catRev={};
+    for(var c in DATA.by_cat){catOrders[c]=DATA.by_cat[c].orders;catRev[c]=DATA.by_cat[c].revenue}
+  }else{
+    catOrders=DATA.by_cat_date[dk]||{};
+    // Estimate per-date revenue proportionally
+    var dd=DATA.by_date[dk];var ratio=dd?dd.revenue/DATA.all.revenue:0;
+    catRev={};
+    for(var cc in catOrders){catRev[cc]=Math.round((DATA.by_cat[cc]?DATA.by_cat[cc].revenue:0)*ratio)}
+  }
+  var items=Object.keys(catOrders).map(function(k){return{cat:k,orders:catOrders[k],revenue:catRev[k]||0}})
+    .filter(function(x){return x.orders>0}).sort(function(a,b){return b.orders-a.orders});
+  var total=items.reduce(function(s,x){return s+x.orders},0);
+  var max=items.length>0?items[0].orders:1;
+
+  var html='';
+  items.forEach(function(item,i){
+    var pct=(item.orders/total*100).toFixed(1);
+    var avg=item.orders>0?Math.round(item.revenue/item.orders):0;
+    var rc=i===0?'r1':i===1?'r2':i===2?'r3':'';
+    html+='<tr>'+
+      '<td><span class="rank '+rc+'">'+(i+1)+'</span></td>'+
+      '<td><strong>'+item.cat+'</strong></td>'+
+      '<td><div class="bar-wrap"><span style="font-size:.76rem;min-width:40px">'+pct+'%</span><div class="bar-bg"><div class="bar-fg" style="width:'+(item.orders/max*100)+'%;background:'+C[i%C.length]+'"></div></div></div></td>'+
+      '<td class="num">'+item.orders.toLocaleString('zh-CN')+'</td>'+
+      '<td class="num">'+fmtMoney(item.revenue)+'</td>'+
+      '<td class="num">¥'+avg+'</td>'+
+      '</tr>';
+  });
+  document.querySelector('#productTable tbody').innerHTML=html;
+}
+
+/* ===== Update Room Cards ===== */
+function updateRoomCards(dk){
+  var roomOrders, roomRev;
+  if(dk==='all'){
+    roomOrders={};roomRev={};
+    for(var r in DATA.by_room){roomOrders[r]=DATA.by_room[r].orders;roomRev[r]=DATA.by_room[r].revenue}
+  }else{
+    roomOrders=DATA.by_room_date[dk]||{};
+    var dd=DATA.by_date[dk];var ratio=dd?dd.revenue/DATA.all.revenue:0;
+    roomRev={};
+    for(var rr in roomOrders){roomRev[rr]=Math.round((DATA.by_room[rr]?DATA.by_room[rr].revenue:0)*ratio)}
+  }
+  var items=Object.keys(roomOrders).map(function(k){return{room:k,orders:roomOrders[k],revenue:roomRev[k]||0}})
+    .filter(function(x){return x.orders>0}).sort(function(a,b){return b.orders-a.orders});
+  var total=items.reduce(function(s,x){return s+x.orders},0);
+
+  // Classify rooms: official Xiaomi rooms have "小米官方"/"小米智能"/"小米数码" in name
+  function isOurs(name){
+    return name.indexOf('小米手表官方')>=0||name.indexOf('小米官方手环')>=0||
+           name.indexOf('小米官方手表')>=0||name.indexOf('小米智能穿戴')>=0||
+           name.indexOf('小米数码')>=0||name.indexOf('小米手环')>=0;
+  }
+
+  var html='';
+  items.forEach(function(item,i){
+    var pct=total>0?(item.orders/total*100).toFixed(1):'0';
+    var avg=item.orders>0?Math.round(item.revenue/item.orders):0;
+    var ours=isOurs(item.room);
+    html+='<div class="room-card">'+
+      '<div class="room-name">'+
+        (ours?'🟡 ':'⚪ ')+item.room+
+        '<span class="room-tag '+(ours?'ours':'comp')+'">'+(ours?'我方':'竞对')+'</span>'+
+      '</div>'+
+      '<div class="room-stat"><span class="slabel">订单量</span><span class="svalue">'+item.orders.toLocaleString('zh-CN')+'</span></div>'+
+      '<div class="room-stat"><span class="slabel">GMV</span><span class="svalue">'+fmtMoney(item.revenue)+'</span></div>'+
+      '<div class="room-stat"><span class="slabel">占比</span><span class="svalue">'+pct+'%</span></div>'+
+      '<div class="room-stat"><span class="slabel">均价</span><span class="svalue">¥'+avg+'</span></div>'+
+    '</div>';
+  });
+  document.getElementById('roomCards').innerHTML=html||'<div style="text-align:center;color:#9aa5b4;padding:24px">该日期暂无直播间明细数据</div>';
+}
+
+/* ===== Date Tab Click Handler ===== */
+document.getElementById('dateTabs').addEventListener('click',function(e){
+  var btn=e.target.closest('.date-tab');
+  if(!btn)return;
+  this.querySelectorAll('.date-tab').forEach(function(b){b.classList.remove('active')});
+  btn.classList.add('active');
+  currentDate=btn.dataset.date;
+  refreshAll();
+});
+
+/* ===== Refresh All ===== */
+function refreshAll(){
+  updateKPI(currentDate);
+  updateHourly(currentDate);
+  updateProductPie(currentDate);
+  updateRoomChart(currentDate);
+  updateProductTable(currentDate);
+  updateRoomCards(currentDate);
+}
+
+/* ===== Init ===== */
+document.addEventListener('DOMContentLoaded',function(){
+  try{refreshAll()}catch(e){console.error('Dashboard error:',e)}
+});
+
+/* ===== Responsive chart resize ===== */
+var resizeTimer;
+window.addEventListener('resize',function(){
+  clearTimeout(resizeTimer);
+  resizeTimer=setTimeout(function(){
+    for(var k in charts){if(charts[k]&&charts[k].resize)charts[k].resize()}
+  },200);
+});
+</script>
 </body>
 </html>
