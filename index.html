@@ -5,195 +5,114 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>小米手环竞对分析平台</title>
 <style>
-  /* ===== DESIGN TOKENS — AMOLED Command Center ===== */
+  /* ===== DESIGN TOKENS ===== */
   :root {
-    --bg-deep:      #06090f;
-    --bg-mid:       #0c1119;
-    --surface:      #131a24;
-    --surface-hover:#1b2433;
-    --border:       #1e293b;
-    --border-hover: #2e3d55;
-    --text:         #e8ecf2;
-    --text-secondary:#8896aa;
-    --text-muted:   #4a5568;
-    --radius:       16px;
-    --radius-sm:    10px;
+    --bg:           #f5f6f8;
+    --surface:      #ffffff;
+    --text:         #1a1d28;
+    --text-secondary:#6b7185;
+    --text-muted:   #9ca1b0;
+    --border:       #e9ebf0;
+    --shadow-sm:    0 1px 2px rgba(0,0,0,.03), 0 1px 3px rgba(0,0,0,.04);
+    --shadow-md:    0 4px 12px rgba(0,0,0,.04), 0 2px 4px rgba(0,0,0,.03);
+    --shadow-lg:    0 12px 32px rgba(0,0,0,.07), 0 4px 8px rgba(0,0,0,.04);
+    --radius:       18px;
+    --radius-sm:    12px;
     --transition:   0.28s cubic-bezier(0.4, 0, 0.2, 1);
 
-    /* Card accents — saturated against dark bg */
+    /* Card accents */
     --clr-sales:      #ff6b35;
-    --clr-violations: #ff4949;
-    --clr-strategy:   #f0a500;
-    --clr-video:      #4da6ff;
-    --clr-hourly:     #a78bfa;
-    --clr-gsv:        #22d3c5;
-    --clr-upgrade:    #f472a6;
+    --clr-violations: #ef4444;
+    --clr-strategy:   #f59e0b;
+    --clr-video:      #3b82f6;
+    --clr-hourly:     #8b5cf6;
+    --clr-gsv:        #0891b2;
+    --clr-upgrade:    #ec4899;
 
-    --clr-sales-bg:      rgba(255,107,53,.10);
-    --clr-violations-bg: rgba(255,73,73,.10);
-    --clr-strategy-bg:   rgba(240,165,0,.10);
-    --clr-video-bg:      rgba(77,166,255,.10);
-    --clr-hourly-bg:     rgba(167,139,250,.10);
-    --clr-gsv-bg:        rgba(34,211,197,.10);
-    --clr-upgrade-bg:    rgba(244,114,166,.10);
-
-    --clr-sales-glow:      0 0 20px rgba(255,107,53,.15);
-    --clr-violations-glow: 0 0 20px rgba(255,73,73,.15);
-    --clr-strategy-glow:   0 0 20px rgba(240,165,0,.15);
-    --clr-video-glow:      0 0 20px rgba(77,166,255,.15);
-    --clr-hourly-glow:     0 0 20px rgba(167,139,250,.15);
-    --clr-gsv-glow:        0 0 20px rgba(34,211,197,.15);
-    --clr-upgrade-glow:    0 0 20px rgba(244,114,166,.15);
+    --clr-sales-bg:      #fff8f5;
+    --clr-violations-bg: #fef5f5;
+    --clr-strategy-bg:   #fffcf5;
+    --clr-video-bg:      #f5f9ff;
+    --clr-hourly-bg:     #f8f5ff;
+    --clr-gsv-bg:        #f5fcfd;
+    --clr-upgrade-bg:    #fdf5fa;
   }
 
-  /* ===== RESET & BASE ===== */
   *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-    background: var(--bg-deep);
+    background: var(--bg);
     color: var(--text);
     min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Subtle radial gradient — depth without noise */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 60% 50% at 50% 0%, rgba(255,107,53,.04) 0%, transparent 100%),
-      radial-gradient(ellipse 40% 60% at 100% 80%, rgba(77,166,255,.03) 0%, transparent 100%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* ===== CONTAINER ===== */
   .container {
     width: 100%;
-    max-width: 980px;
-    padding: 40px 28px 48px;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* ===== SIGNATURE: ECG Signal Wave ===== */
-  .signal-line {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0;
-    height: 32px;
-    margin-bottom: 10px;
-    opacity: .35;
-  }
-  .signal-line svg {
-    width: 180px;
-    height: 28px;
-  }
-  .signal-line .wave-path {
-    stroke: #4da6ff;
-    stroke-width: 1.2;
-    fill: none;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-    stroke-dasharray: 300;
-    stroke-dashoffset: 300;
-    animation: draw-wave 3s ease-in-out infinite;
-  }
-  @keyframes draw-wave {
-    0%   { stroke-dashoffset: 300; }
-    45%  { stroke-dashoffset: 0; }
-    70%  { stroke-dashoffset: 0; }
-    100% { stroke-dashoffset: -300; }
+    max-width: 960px;
+    padding: 48px 28px 52px;
   }
 
   /* ===== HEADER ===== */
   .header {
     text-align: center;
-    margin-bottom: 48px;
-    position: relative;
+    margin-bottom: 44px;
   }
 
   .header .eyebrow {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    font-size: .72em;
+    gap: 7px;
+    font-size: .75em;
     font-weight: 600;
-    letter-spacing: .08em;
-    text-transform: uppercase;
+    letter-spacing: .06em;
     color: var(--text-muted);
-    margin-bottom: 14px;
-    padding: 4px 14px;
-    border: 1px solid rgba(255,255,255,.06);
-    border-radius: 20px;
-    background: rgba(255,255,255,.02);
+    margin-bottom: 16px;
   }
 
   .header .eyebrow .live-dot {
-    width: 7px;
-    height: 7px;
+    width: 7px; height: 7px;
     border-radius: 50%;
     background: #22c55e;
-    box-shadow: 0 0 8px rgba(34,197,94,.6);
+    box-shadow: 0 0 6px rgba(34,197,94,.35);
     animation: pulse-dot 2s ease-in-out infinite;
   }
 
   @keyframes pulse-dot {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50%      { opacity: .4; transform: scale(1.8); }
+    50%      { opacity: .4; transform: scale(1.7); }
   }
 
   .header h1 {
-    font-size: 2.3em;
+    font-size: 2.1em;
     font-weight: 800;
-    letter-spacing: -.025em;
-    line-height: 1.2;
-    margin-bottom: 6px;
+    letter-spacing: -.02em;
+    line-height: 1.25;
     color: var(--text);
   }
 
   .header h1 .accent {
-    background: linear-gradient(135deg, #ff6b35 0%, #f0a500 50%, #ff6b35 100%);
-    background-size: 200% 100%;
+    background: linear-gradient(135deg, #ff6b35 0%, #f59e0b 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    animation: shimmer 4s ease-in-out infinite;
   }
 
-  @keyframes shimmer {
-    0%, 100% { background-position: 0% 50%; }
-    50%      { background-position: 100% 50%; }
+  .header .divider {
+    width: 40px; height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #ff6b35, #f59e0b);
+    margin: 14px auto;
   }
 
-  .header .hero-stat {
-    display: inline-flex;
-    align-items: center;
-    gap: 18px;
-    margin-top: 8px;
-    padding: 8px 20px;
-    border-radius: 24px;
-    background: rgba(255,255,255,.03);
-    border: 1px solid rgba(255,255,255,.06);
-    font-size: .82em;
+  .header .subtitle {
     color: var(--text-secondary);
-  }
-  .header .hero-stat strong {
-    color: var(--text);
-    font-weight: 700;
-  }
-  .header .hero-stat .sep {
-    width: 1px;
-    height: 14px;
-    background: var(--border);
-    border-radius: 1px;
+    font-size: .9em;
+    line-height: 1.6;
   }
 
   /* ===== CARDS GRID ===== */
@@ -214,14 +133,14 @@
   .card {
     background: var(--surface);
     border-radius: var(--radius);
-    padding: 26px 24px 22px;
+    padding: 28px 24px 22px;
     text-decoration: none;
+    box-shadow: var(--shadow-sm);
     border: 1px solid var(--border);
     transition:
       transform var(--transition),
       box-shadow var(--transition),
-      border-color var(--transition),
-      background var(--transition);
+      border-color var(--transition);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -231,7 +150,7 @@
     cursor: pointer;
 
     opacity: 0;
-    transform: translateY(18px);
+    transform: translateY(16px);
     animation: card-enter .5s ease-out forwards;
   }
 
@@ -247,30 +166,29 @@
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Subtle left-edge accent bar */
+  /* Top accent stripe */
   .card::before {
     content: '';
     position: absolute;
-    left: 0; top: 16px; bottom: 16px;
-    width: 3px;
-    border-radius: 0 2px 2px 0;
-    transition: all .35s ease;
-    opacity: .5;
+    top: 0; left: 14px; right: 14px;
+    height: 3px;
+    border-radius: 0 0 3px 3px;
+    opacity: 0;
+    transition: opacity .3s ease, left .3s ease, right .3s ease;
   }
 
   .card:hover::before {
-    top: 0; bottom: 0;
-    border-radius: 0;
     opacity: 1;
+    left: 0; right: 0;
+    border-radius: 0;
   }
 
   .card:hover {
     transform: translateY(-4px);
-    background: var(--surface-hover);
-    border-color: var(--border-hover);
+    box-shadow: var(--shadow-lg);
+    border-color: transparent;
   }
 
-  /* Accent assignments */
   .card.sales::before      { background: var(--clr-sales); }
   .card.violations::before { background: var(--clr-violations); }
   .card.strategy::before   { background: var(--clr-strategy); }
@@ -279,42 +197,20 @@
   .card.gsv::before        { background: var(--clr-gsv); }
   .card.upgrade::before    { background: var(--clr-upgrade); }
 
-  .card.sales:hover      { box-shadow: var(--clr-sales-glow), 0 4px 24px rgba(0,0,0,.4); }
-  .card.violations:hover { box-shadow: var(--clr-violations-glow), 0 4px 24px rgba(0,0,0,.4); }
-  .card.strategy:hover   { box-shadow: var(--clr-strategy-glow), 0 4px 24px rgba(0,0,0,.4); }
-  .card.video:hover      { box-shadow: var(--clr-video-glow), 0 4px 24px rgba(0,0,0,.4); }
-  .card.hourly:hover     { box-shadow: var(--clr-hourly-glow), 0 4px 24px rgba(0,0,0,.4); }
-  .card.gsv:hover        { box-shadow: var(--clr-gsv-glow), 0 4px 24px rgba(0,0,0,.4); }
-  .card.upgrade:hover    { box-shadow: var(--clr-upgrade-glow), 0 4px 24px rgba(0,0,0,.4); }
-
-  /* ===== ICON CONTAINER ===== */
+  /* ===== ICON ===== */
   .card .icon-wrap {
-    width: 52px;
-    height: 52px;
+    width: 48px; height: 48px;
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.45em;
+    font-size: 1.4em;
     margin-bottom: 16px;
-    transition: transform var(--transition), box-shadow var(--transition);
+    transition: transform var(--transition);
     flex-shrink: 0;
-    position: relative;
   }
 
-  /* Subtle inner glow ring */
-  .card .icon-wrap::after {
-    content: '';
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    border: 1px solid transparent;
-    transition: border-color var(--transition);
-  }
-
-  .card:hover .icon-wrap {
-    transform: scale(1.06);
-  }
+  .card:hover .icon-wrap { transform: scale(1.07); }
 
   .card.sales .icon-wrap      { background: var(--clr-sales-bg); }
   .card.violations .icon-wrap { background: var(--clr-violations-bg); }
@@ -324,22 +220,13 @@
   .card.gsv .icon-wrap        { background: var(--clr-gsv-bg); }
   .card.upgrade .icon-wrap    { background: var(--clr-upgrade-bg); }
 
-  .card.sales:hover .icon-wrap      { box-shadow: 0 0 18px rgba(255,107,53,.20); }
-  .card.violations:hover .icon-wrap { box-shadow: 0 0 18px rgba(255,73,73,.20); }
-  .card.strategy:hover .icon-wrap   { box-shadow: 0 0 18px rgba(240,165,0,.20); }
-  .card.video:hover .icon-wrap      { box-shadow: 0 0 18px rgba(77,166,255,.20); }
-  .card.hourly:hover .icon-wrap     { box-shadow: 0 0 18px rgba(167,139,250,.20); }
-  .card.gsv:hover .icon-wrap        { box-shadow: 0 0 18px rgba(34,211,197,.20); }
-  .card.upgrade:hover .icon-wrap    { box-shadow: 0 0 18px rgba(244,114,166,.20); }
-
-  /* ===== CARD TYPOGRAPHY ===== */
+  /* ===== TYPOGRAPHY ===== */
   .card h2 {
     font-size: 1.05em;
     font-weight: 700;
     color: var(--text);
     margin-bottom: 5px;
     letter-spacing: -.01em;
-    line-height: 1.3;
     transition: color var(--transition);
   }
 
@@ -353,7 +240,7 @@
 
   .card p {
     color: var(--text-secondary);
-    font-size: .82em;
+    font-size: .83em;
     line-height: 1.55;
     margin-bottom: 14px;
     flex: 1;
@@ -365,39 +252,31 @@
     align-items: center;
     gap: 4px;
     padding: 3px 10px;
-    border-radius: 16px;
+    border-radius: 14px;
     font-size: .68em;
     font-weight: 600;
     letter-spacing: .04em;
     text-transform: uppercase;
     transition: all var(--transition);
-    border: 1px solid transparent;
   }
 
-  .card.sales .badge      { background: var(--clr-sales-bg); color: var(--clr-sales); border-color: rgba(255,107,53,.15); }
-  .card.violations .badge { background: var(--clr-violations-bg); color: var(--clr-violations); border-color: rgba(255,73,73,.15); }
-  .card.strategy .badge   { background: var(--clr-strategy-bg); color: var(--clr-strategy); border-color: rgba(240,165,0,.15); }
-  .card.video .badge      { background: var(--clr-video-bg); color: var(--clr-video); border-color: rgba(77,166,255,.15); }
-  .card.hourly .badge     { background: var(--clr-hourly-bg); color: var(--clr-hourly); border-color: rgba(167,139,250,.15); }
-  .card.gsv .badge        { background: var(--clr-gsv-bg); color: var(--clr-gsv); border-color: rgba(34,211,197,.15); }
-  .card.upgrade .badge    { background: var(--clr-upgrade-bg); color: var(--clr-upgrade); border-color: rgba(244,114,166,.15); }
+  .card.sales .badge      { background: var(--clr-sales-bg); color: var(--clr-sales); }
+  .card.violations .badge { background: var(--clr-violations-bg); color: var(--clr-violations); }
+  .card.strategy .badge   { background: var(--clr-strategy-bg); color: var(--clr-strategy); }
+  .card.video .badge      { background: var(--clr-video-bg); color: var(--clr-video); }
+  .card.hourly .badge     { background: var(--clr-hourly-bg); color: var(--clr-hourly); }
+  .card.gsv .badge        { background: var(--clr-gsv-bg); color: var(--clr-gsv); }
+  .card.upgrade .badge    { background: var(--clr-upgrade-bg); color: var(--clr-upgrade); }
 
-  .card:hover .badge {
-    filter: brightness(1.15);
-    transform: translateY(-1px);
-  }
+  .card:hover .badge { transform: translateY(-1px); }
 
   /* ===== FOOTER ===== */
   .footer {
     text-align: center;
-    margin-top: 52px;
+    margin-top: 48px;
     color: var(--text-muted);
     font-size: .76em;
-    letter-spacing: .03em;
-  }
-
-  .footer span {
-    color: #2d3748;
+    letter-spacing: .02em;
   }
 
   /* ===== RESPONSIVE ===== */
@@ -415,36 +294,23 @@
     .cards > a:nth-child(7) {
       grid-column: span 1 !important;
     }
-    .header h1 { font-size: 1.7em; }
+    .header h1 { font-size: 1.65em; }
     .card { padding: 22px 18px 18px; }
-    .signal-line svg { width: 120px; }
   }
 
   @media (max-width: 480px) {
-    .cards {
-      grid-template-columns: 1fr !important;
-    }
-    .cards > a {
-      grid-column: span 1 !important;
-    }
-    .header h1 { font-size: 1.4em; }
-    .header { margin-bottom: 32px; }
-    .container { padding: 24px 14px 32px; }
+    .cards { grid-template-columns: 1fr !important; }
+    .cards > a { grid-column: span 1 !important; }
+    .header h1 { font-size: 1.35em; }
+    .header { margin-bottom: 30px; }
+    .container { padding: 24px 14px 30px; }
   }
 
-  /* ===== REDUCED MOTION ===== */
   @media (prefers-reduced-motion: reduce) {
-    .card {
-      animation: none !important;
-      opacity: 1 !important;
-      transform: none !important;
-    }
+    .card { animation: none !important; opacity: 1 !important; transform: none !important; }
     .live-dot { animation: none !important; }
-    .signal-line .wave-path { animation: none !important; stroke-dashoffset: 0; }
-    .header h1 .accent { animation: none !important; }
   }
 
-  /* ===== KEYBOARD FOCUS ===== */
   .card:focus-visible {
     outline: 2px solid var(--clr-sales);
     outline-offset: 3px;
@@ -458,26 +324,13 @@
 
 <div class="container">
 
-  <!-- ECG Signal Wave — signature element -->
-  <div class="signal-line" aria-hidden="true">
-    <svg viewBox="0 0 180 28" xmlns="http://www.w3.org/2000/svg">
-      <path class="wave-path"
-        d="M0,14 L30,14 L35,14 L38,6 L41,22 L44,14 L50,14 L80,14 L85,14 L88,4 L91,24 L94,14 L100,14 L130,14 L135,14 L138,8 L141,20 L144,14 L150,14 L180,14" />
-    </svg>
-  </div>
-
   <div class="header">
     <div class="eyebrow">
-      <span class="live-dot"></span> 系统监控中 · 数据实时更新
+      <span class="live-dot"></span> 系统在线 · 数据实时更新
     </div>
     <h1>小米手环<span class="accent">竞对分析</span>平台</h1>
-    <div class="hero-stat" id="heroStat">
-      <span>📊 多模块</span>
-      <span class="sep"></span>
-      <span>🔍 竞对追踪</span>
-      <span class="sep"></span>
-      <span>⚡ 实时看板</span>
-    </div>
+    <div class="divider"></div>
+    <p class="subtitle">多模块数据看板 · 竞对实时追踪 · 每日自动更新</p>
   </div>
 
   <div class="cards">
@@ -532,29 +385,9 @@
   </div>
 
   <div class="footer">
-    数据来源：巨量广告 · 抖音直播订单 <span>|</span> 报告由系统自动生成
+    数据来源：巨量广告 · 抖音直播订单 <span style="color:#d0d4dd">|</span> 报告由系统自动生成
   </div>
 
 </div>
-
-<!-- Dynamic hero stats from latest data -->
-<script>
-(async function(){
-  try {
-    const r = await fetch('sales_analysis/history.json');
-    if (!r.ok) return;
-    const history = await r.json();
-    if (!history.length) return;
-    const latest = history[history.length - 1];
-    const stat = document.getElementById('heroStat');
-    stat.innerHTML =
-      '<span>📅 <strong>' + latest.date + '</strong></span>' +
-      '<span class="sep"></span>' +
-      '<span>📦 <strong>' + latest.total_orders.toLocaleString() + '</strong> 单</span>' +
-      '<span class="sep"></span>' +
-      '<span>🏪 <strong>' + Object.keys(latest.rooms).length + '</strong> 间直播间</span>';
-  } catch(e) { /* keep default text */ }
-})();
-</script>
 </body>
 </html>
