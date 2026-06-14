@@ -621,8 +621,8 @@ function openSalesDate(date, el) {
 
   document.getElementById('overview').classList.add('hidden');
   var iframe = document.getElementById('iframePanel');
-  iframe.src = 'sales_analysis/index.html#' + date;
   iframe.classList.add('show');
+  iframe.src = 'sales_analysis/index.html#' + date;
   document.getElementById('breadcrumb').innerHTML = '首页 / <span>销量分析</span> / ' + date;
 }
 
