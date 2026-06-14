@@ -600,10 +600,7 @@ function goHome() {
     cards[2].querySelector('.stat-sub').textContent = '我方 ' + ourRooms + ' 间 · 竞对 ' + (Object.keys(latest.rooms).length - ourRooms) + ' 间';
     cards[3].querySelector('.stat-value').textContent = history.length + ' 天';
     cards[3].querySelector('.stat-sub').textContent = history[0].date + ' ~ ' + latest.date;
-  } catch(e) {
-    document.getElementById('statsRow').innerHTML =
-      '<div class="stat-card" style="grid-column:1/-1;text-align:center;color:#9ca1b0;padding:32px;">数据加载失败，请确认 history.json 可访问</div>';
-  }
+  } catch(e) { /* file:// protocol — skip */ }
 })();
 </script>
 </body>
