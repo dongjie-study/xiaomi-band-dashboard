@@ -283,6 +283,89 @@
     margin-top: 4px;
   }
 
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .module-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 24px 22px 20px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+  .module-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.08);
+    border-color: transparent;
+  }
+
+  .module-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 12px; bottom: 12px;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    transition: all .3s ease;
+  }
+  .module-card:hover::before { top: 0; bottom: 0; border-radius: 0; }
+
+  .module-card.sales::before      { background: var(--clr-sales); }
+  .module-card.violations::before { background: var(--clr-violations); }
+  .module-card.strategy::before   { background: var(--clr-strategy); }
+  .module-card.video::before      { background: var(--clr-video); }
+  .module-card.hourly::before     { background: var(--clr-hourly); }
+  .module-card.gsv::before        { background: var(--clr-gsv); }
+  .module-card.upgrade::before    { background: var(--clr-upgrade); }
+
+  .module-card .mod-icon { font-size: 1.5em; margin-bottom: 12px; }
+
+  .module-card h3 {
+    font-size: .95em;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    transition: color var(--transition);
+  }
+  .module-card.sales:hover h3      { color: var(--clr-sales); }
+  .module-card.violations:hover h3 { color: var(--clr-violations); }
+  .module-card.strategy:hover h3   { color: var(--clr-strategy); }
+  .module-card.video:hover h3      { color: var(--clr-video); }
+  .module-card.hourly:hover h3     { color: var(--clr-hourly); }
+  .module-card.gsv:hover h3        { color: var(--clr-gsv); }
+  .module-card.upgrade:hover h3    { color: var(--clr-upgrade); }
+
+  .module-card p {
+    font-size: .78em;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    flex: 1;
+    margin-bottom: 12px;
+  }
+
+  .module-card .mod-tag {
+    font-size: .66em;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    align-self: flex-start;
+    padding: 2px 8px;
+    border-radius: 10px;
+  }
+  .module-card.sales .mod-tag      { background: #fff8f5; color: var(--clr-sales); }
+  .module-card.violations .mod-tag { background: #fef5f5; color: var(--clr-violations); }
+  .module-card.strategy .mod-tag   { background: #fffcf5; color: var(--clr-strategy); }
+  .module-card.video .mod-tag      { background: #f5f9ff; color: var(--clr-video); }
+  .module-card.hourly .mod-tag     { background: #f8f5ff; color: var(--clr-hourly); }
+  .module-card.gsv .mod-tag        { background: #f5fcfd; color: var(--clr-gsv); }
+  .module-card.upgrade .mod-tag    { background: #fdf5fa; color: var(--clr-upgrade); }
 
   /* Iframe panel */
   .iframe-panel {
@@ -295,6 +378,7 @@
 
   /* ===== RESPONSIVE ===== */
   @media (max-width: 900px) {
+    .module-grid { grid-template-columns: repeat(2, 1fr); }
     .stats-row { grid-template-columns: repeat(2, 1fr); }
   }
 
@@ -312,6 +396,7 @@
     .main { margin-left: 56px; }
     .topbar { padding: 0 14px; }
     .overview { padding: 20px 14px 24px; }
+    .module-grid { grid-template-columns: 1fr; }
     .stats-row { grid-template-columns: 1fr 1fr; }
     :root { --sidebar-w: 56px; }
   }
@@ -398,6 +483,50 @@
         <div class="stat-card"><div class="stat-label">历史天数</div><div class="stat-value">--</div><div class="stat-sub">加载中...</div></div>
       </div>
 
+      <div class="module-grid">
+        <div class="module-card sales" data-module="sales" onclick="openModule(this)">
+          <div class="mod-icon">📈</div>
+          <h3>穿戴直播间销量分析</h3>
+          <p>每日订单追踪、竞对直播间对比、小时分布、产品结构分析</p>
+          <span class="mod-tag">Live Sales</span>
+        </div>
+        <div class="module-card violations" data-module="violations" onclick="openModule(this)">
+          <div class="mod-icon">⚠️</div>
+          <h3>违规情况分析</h3>
+          <p>小米系5个直播间违规判罚追踪、原因分布、处罚升级路径</p>
+          <span class="mod-tag">Violations</span>
+        </div>
+        <div class="module-card strategy" data-module="strategy" onclick="openModule(this)">
+          <div class="mod-icon">🗺️</div>
+          <h3>全域营销战略</h3>
+          <p>10Pro全域营销总纲：iPhone市场、千川抖加投放、许昌活动、游戏视频</p>
+          <span class="mod-tag">Playbook</span>
+        </div>
+        <div class="module-card video" data-module="video" onclick="openModule(this)">
+          <div class="mod-icon">🎬</div>
+          <h3>千川视频分析</h3>
+          <p>千川视频素材核心指标：消耗/成交/ROI/CTR，我司与竞对(良米)数据对比</p>
+          <span class="mod-tag">Video Analytics</span>
+        </div>
+        <div class="module-card hourly" data-module="hourly" onclick="openModule(this)">
+          <div class="mod-icon">⏰</div>
+          <h3>直播间小时级出单分析</h3>
+          <p>拖入订单Excel，自动识别列名生成小时级报告：分品类热力图、环比趋势</p>
+          <span class="mod-tag">Hourly</span>
+        </div>
+        <div class="module-card gsv" data-module="gsv" onclick="openModule(this)">
+          <div class="mod-icon">🛠️</div>
+          <h3>主播业绩工具</h3>
+          <p>拖入订单Excel，自动按达人+日期汇总，一键生成场次表与主播业绩</p>
+          <span class="mod-tag">Performance</span>
+        </div>
+        <div class="module-card upgrade" data-module="upgrade" onclick="openModule(this)">
+          <div class="mod-icon">🚀</div>
+          <h3>视频提升方案</h3>
+          <p>基于千川数据+抖音热点的视频策略：四大提升方向、6套文案模板</p>
+          <span class="mod-tag">Strategy</span>
+        </div>
+      </div>
     </div>
 
     <!-- Iframe panel -->
@@ -453,17 +582,28 @@ function goHome() {
   document.getElementById('moduleTitle').classList.remove('show');
 }
 
-// Overview stats — hardcoded from latest data
-(function(){
-  var cards = document.querySelectorAll('.stat-card');
-  cards[0].querySelector('.stat-value').textContent = '2,621 单';
-  cards[0].querySelector('.stat-sub').textContent = '2026-06-14';
-  cards[1].querySelector('.stat-value').textContent = '¥ 94.4 万';
-  cards[1].querySelector('.stat-sub').textContent = '均价 ¥360';
-  cards[2].querySelector('.stat-value').textContent = '10 间';
-  cards[2].querySelector('.stat-sub').textContent = '我方 4 间 · 竞对 6 间';
-  cards[3].querySelector('.stat-value').textContent = '14 天';
-  cards[3].querySelector('.stat-sub').textContent = '2026-06-01 ~ 2026-06-14';
+// Load overview stats
+(async function(){
+  try {
+    var r = await fetch('sales_analysis/history.json');
+    if (!r.ok) return;
+    var history = await r.json();
+    if (!history.length) return;
+    var latest = history[history.length - 1];
+    var cards = document.querySelectorAll('.stat-card');
+    cards[0].querySelector('.stat-value').textContent = latest.total_orders.toLocaleString() + ' 单';
+    cards[0].querySelector('.stat-sub').textContent = latest.date;
+    cards[1].querySelector('.stat-value').textContent = '¥ ' + (latest.total_revenue / 10000).toFixed(1) + ' 万';
+    cards[1].querySelector('.stat-sub').textContent = '均价 ¥' + Math.round(latest.avg_price);
+    cards[2].querySelector('.stat-value').textContent = Object.keys(latest.rooms).length + ' 间';
+    var ourRooms = Object.values(latest.rooms).filter(function(r){ return r.type === '我方'; }).length;
+    cards[2].querySelector('.stat-sub').textContent = '我方 ' + ourRooms + ' 间 · 竞对 ' + (Object.keys(latest.rooms).length - ourRooms) + ' 间';
+    cards[3].querySelector('.stat-value').textContent = history.length + ' 天';
+    cards[3].querySelector('.stat-sub').textContent = history[0].date + ' ~ ' + latest.date;
+  } catch(e) {
+    document.getElementById('statsRow').innerHTML =
+      '<div class="stat-card" style="grid-column:1/-1;text-align:center;color:#9ca1b0;padding:32px;">数据加载失败，请确认 history.json 可访问</div>';
+  }
 })();
 </script>
 </body>
