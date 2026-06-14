@@ -138,7 +138,7 @@
   .cards > a:nth-child(4) { grid-column: span 2; }
   .cards > a:nth-child(5) { grid-column: span 2; }
   .cards > a:nth-child(6) { grid-column: span 2; }
-	  .cards > a:nth-child(7) { grid-column: span 6; }
+	  .cards > a:nth-child(7) { grid-column: 3 / span 2; }
 
   /* ===== CARD ===== */
   .card {
@@ -314,7 +314,8 @@
     .cards > a:nth-child(3),
     .cards > a:nth-child(4),
     .cards > a:nth-child(5),
-    .cards > a:nth-child(6) {
+    .cards > a:nth-child(6),
+    .cards > a:nth-child(7) {
       grid-column: span 1 !important;
     }
     .header h1 { font-size: 1.7em; }
