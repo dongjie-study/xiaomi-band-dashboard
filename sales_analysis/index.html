@@ -863,6 +863,10 @@ renderAll(d, prev);
 renderDateSelector();
 renderRoomSelector(d);
 renderDailySummary();
+// Iframe: read hash for date navigation
+if(location.hash){var hd=location.hash.substring(1);if(HISTORY.some(function(h){return h.date===hd})){switchDate(hd);}}
+// Iframe: hide standalone nav
+if(window.top!==window.self){document.getElementById('backLink').style.display='none';document.querySelector('.controls').style.display='none';}
 </script>
 </body>
 </html>
