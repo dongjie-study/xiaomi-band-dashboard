@@ -478,7 +478,33 @@ def update(filepath, our_filepath=None):
     from build_html import main as build_html
     build_html()
 
+    # Generate stats_data.js for root index.html overview
+    _write_stats_js(history)
+
     return today, history
+
+
+def _write_stats_js(history):
+    """Write stats_data.js so root index.html can load overview stats via <script> tag."""
+    latest = history[-1]
+    rooms = latest.get('rooms', {})
+    our_rooms = sum(1 for r in rooms.values() if r.get('type') == '我方')
+    stats = {
+        'date': latest['date'],
+        'orders': latest['total_orders'],
+        'revenue': round(latest['total_revenue'] / 10000, 1),
+        'avg_price': round(latest['avg_price']),
+        'rooms': len(rooms),
+        'our_rooms': our_rooms,
+        'comp_rooms': len(rooms) - our_rooms,
+        'days': len(history),
+        'first_date': history[0]['date'],
+    }
+    js = 'window.__STATS__ = ' + json.dumps(stats, ensure_ascii=False) + ';'
+    path = os.path.join(DATA_DIR, 'stats_data.js')
+    with open(path, 'w', encoding='utf-8') as f:
+        f.write(js)
+    print(f"Stats data: {path}")
 
 
 if __name__ == '__main__':

@@ -1,0 +1,1 @@
+window.__STATS__ = {"date": "2026-06-14", "orders": 2621, "revenue": 94.4, "avg_price": 360, "rooms": 10, "our_rooms": 4, "comp_rooms": 6, "days": 14, "first_date": "2026-06-01"};

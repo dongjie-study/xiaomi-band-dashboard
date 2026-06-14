@@ -534,6 +534,7 @@
   </div>
 </main>
 
+<script src="sales_analysis/stats_data.js"></script>
 <script>
 // Module registry — module cards and sidebar links both use data-module
 var modules = {};
@@ -582,28 +583,20 @@ function goHome() {
   document.getElementById('moduleTitle').classList.remove('show');
 }
 
-// Load overview stats via XHR (works with file:// protocol)
-(function(){
-  try {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'sales_analysis/history.json', false);
-    xhr.send(null);
-    if (xhr.status !== 200 && xhr.status !== 0) return;
-    var history = JSON.parse(xhr.responseText);
-    if (!history.length) return;
-    var latest = history[history.length - 1];
+  // Load overview stats from injected script
+  (function(){
+    var s = window.__STATS__;
+    if (!s) return;
     var cards = document.querySelectorAll('.stat-card');
-    cards[0].querySelector('.stat-value').textContent = latest.total_orders.toLocaleString() + ' 单';
-    cards[0].querySelector('.stat-sub').textContent = latest.date;
-    cards[1].querySelector('.stat-value').textContent = '¥ ' + (latest.total_revenue / 10000).toFixed(1) + ' 万';
-    cards[1].querySelector('.stat-sub').textContent = '均价 ¥' + Math.round(latest.avg_price);
-    cards[2].querySelector('.stat-value').textContent = Object.keys(latest.rooms).length + ' 间';
-    var ourRooms = Object.values(latest.rooms).filter(function(r){ return r.type === '我方'; }).length;
-    cards[2].querySelector('.stat-sub').textContent = '我方 ' + ourRooms + ' 间 · 竞对 ' + (Object.keys(latest.rooms).length - ourRooms) + ' 间';
-    cards[3].querySelector('.stat-value').textContent = history.length + ' 天';
-    cards[3].querySelector('.stat-sub').textContent = history[0].date + ' ~ ' + latest.date;
-  } catch(e) { /* skip */ }
-})();
+    cards[0].querySelector('.stat-value').textContent = s.orders.toLocaleString() + ' 单';
+    cards[0].querySelector('.stat-sub').textContent = s.date;
+    cards[1].querySelector('.stat-value').textContent = '¥ ' + s.revenue + ' 万';
+    cards[1].querySelector('.stat-sub').textContent = '均价 ¥' + s.avg_price;
+    cards[2].querySelector('.stat-value').textContent = s.rooms + ' 间';
+    cards[2].querySelector('.stat-sub').textContent = '我方 ' + s.our_rooms + ' 间 · 竞对 ' + s.comp_rooms + ' 间';
+    cards[3].querySelector('.stat-value').textContent = s.days + ' 天';
+    cards[3].querySelector('.stat-sub').textContent = s.first_date + ' ~ ' + s.date;
+  })();
 </script>
 </body>
 </html>
