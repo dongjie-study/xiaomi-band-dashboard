@@ -582,12 +582,14 @@ function goHome() {
   document.getElementById('moduleTitle').classList.remove('show');
 }
 
-// Load overview stats
-(async function(){
+// Load overview stats via XHR (works with file:// protocol)
+(function(){
   try {
-    var r = await fetch('sales_analysis/history.json');
-    if (!r.ok) return;
-    var history = await r.json();
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'sales_analysis/history.json', false);
+    xhr.send(null);
+    if (xhr.status !== 200 && xhr.status !== 0) return;
+    var history = JSON.parse(xhr.responseText);
     if (!history.length) return;
     var latest = history[history.length - 1];
     var cards = document.querySelectorAll('.stat-card');
@@ -600,7 +602,7 @@ function goHome() {
     cards[2].querySelector('.stat-sub').textContent = '我方 ' + ourRooms + ' 间 · 竞对 ' + (Object.keys(latest.rooms).length - ourRooms) + ' 间';
     cards[3].querySelector('.stat-value').textContent = history.length + ' 天';
     cards[3].querySelector('.stat-sub').textContent = history[0].date + ' ~ ' + latest.date;
-  } catch(e) { /* file:// protocol — skip */ }
+  } catch(e) { /* skip */ }
 })();
 </script>
 </body>
