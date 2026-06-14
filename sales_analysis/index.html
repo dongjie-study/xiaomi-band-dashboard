@@ -868,7 +868,7 @@ function hashNav(){if(location.hash){var hd=location.hash.substring(1);if(HISTOR
 hashNav();
 window.addEventListener('hashchange', hashNav);
 // Iframe: hide standalone nav
-if(window.top!==window.self){document.getElementById('backLink').style.display='none';document.querySelector('.controls').style.display='none';}
+if(window.top!==window.self){document.getElementById('backLink').style.display='none';document.getElementById('dateSelector').style.display='none';}
 </script>
 </body>
 </html>
