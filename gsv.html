@@ -391,7 +391,7 @@ table td.drag-target {
     <h1>
       <span class="icon">📊</span> 主播业绩工具
     </h1>
-    <a href="index.html" class="back-nav">← 返回导航</a>
+    <a id="backLink" href="index.html" class="back-nav">← 返回导航</a><script>if(window.top!==window.self)document.getElementById("backLink").style.display="none";</script>
   </div>
   <div class="header-actions">
     <button class="btn btn-warning btn-sm" onclick="downloadFullTemplate()" title="下载完整模版（含订单数据+场次表+主播业绩三个Sheet）">
