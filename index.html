@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>小米手环竞对分析平台</title>
+<title>分析平台</title>
 <style>
   :root {
     --sidebar-w: 240px;
@@ -550,7 +550,7 @@
     <div class="logo">
       <div class="logo-icon">⌚</div>
       <div class="logo-text">
-        小米手环<br><small>竞对分析平台</small>
+        分析平台<br><small>数据指挥中心</small>
       </div>
     </div>
   </div>
@@ -559,31 +559,31 @@
     <div class="nav-section">数据看板</div>
     <a data-module="sales" data-title="穿戴直播间销量分析" data-url="sales_analysis/index.html" onclick="toggleSalesSub(this)" class="sales">
       <span class="nav-dot"></span> 销量分析
-      <span class="badge-nav" style="background:rgba(255,107,53,.15);color:#ff6b35;">HOT</span>
-      <span class="sub-arrow" style="margin-left:auto;font-size:.7em;transition:transform .2s;">▸</span>
+      <span class="badge-nav">HOT</span>
+      <span class="sub-arrow">▸</span>
     </a>
     <div class="sub-menu" id="salesSubMenu" style="display:none;"></div>
-    <a data-module="hourly" data-title="直播间小时级出单分析" data-url="小时分析/index.html" onclick="openModule(this)">
-      <span class="nav-dot"></span> 小时级出单
-    </a>
-
-    <div class="nav-section">竞争情报</div>
     <a data-module="violations" data-title="违规情况分析" data-url="违规情况/report.html" onclick="openModule(this)">
-      <span class="nav-dot"></span> 违规追踪
+      <span class="nav-dot"></span> 违规分析
     </a>
     <a data-module="video" data-title="千川视频分析" data-url="核心指标分析/核心指标报告.html" onclick="openModule(this)">
       <span class="nav-dot"></span> 千川视频分析
     </a>
+    <a data-module="hourly" data-title="直播间小时级出单分析" data-url="小时分析/index.html" onclick="openModule(this)">
+      <span class="nav-dot"></span> 小时数据分析
+    </a>
 
-    <div class="nav-section">运营工具</div>
+    <div class="nav-section">竞争方案</div>
     <a data-module="strategy" data-title="全域营销战略" data-url="strategy.html" onclick="openModule(this)">
       <span class="nav-dot"></span> 营销战略
     </a>
-    <a data-module="gsv" data-title="主播业绩工具" data-url="gsv.html" onclick="openModule(this)">
-      <span class="nav-dot"></span> 主播业绩
-    </a>
     <a data-module="upgrade" data-title="视频提升方案" data-url="视频提升方案_可视化.html" onclick="openModule(this)">
       <span class="nav-dot"></span> 视频提升方案
+    </a>
+
+    <div class="nav-section">运营工具</div>
+    <a data-module="gsv" data-title="主播业绩工具" data-url="gsv.html" onclick="openModule(this)">
+      <span class="nav-dot"></span> 主播业绩工具
     </a>
   </nav>
 
@@ -621,9 +621,21 @@
         </div>
         <div class="module-card violations" data-module="violations" onclick="openModule(this)">
           <div class="mod-icon">⚠️</div>
-          <h3>违规情况分析</h3>
-          <p>小米系5个直播间违规判罚追踪、原因分布、处罚升级路径</p>
+          <h3>违规分析</h3>
+          <p>小米系直播间违规判罚追踪、原因分布、处罚升级路径</p>
           <span class="mod-tag">Violations</span>
+        </div>
+        <div class="module-card video" data-module="video" onclick="openModule(this)">
+          <div class="mod-icon">🎬</div>
+          <h3>千川视频分析</h3>
+          <p>千川视频素材核心指标：消耗/成交/ROI/CTR，竞对数据对比与深度洞察</p>
+          <span class="mod-tag">Video Analytics</span>
+        </div>
+        <div class="module-card hourly" data-module="hourly" onclick="openModule(this)">
+          <div class="mod-icon">⏰</div>
+          <h3>小时数据分析</h3>
+          <p>拖入订单Excel，自动识别列名生成小时级报告：分品类热力图、环比趋势</p>
+          <span class="mod-tag">Hourly</span>
         </div>
         <div class="module-card strategy" data-module="strategy" onclick="openModule(this)">
           <div class="mod-icon">🗺️</div>
@@ -631,29 +643,17 @@
           <p>10Pro全域营销总纲：iPhone市场、千川抖加投放、许昌活动、游戏视频</p>
           <span class="mod-tag">Playbook</span>
         </div>
-        <div class="module-card video" data-module="video" onclick="openModule(this)">
-          <div class="mod-icon">🎬</div>
-          <h3>千川视频分析</h3>
-          <p>千川视频素材核心指标：消耗/成交/ROI/CTR，我司与竞对(良米)数据对比</p>
-          <span class="mod-tag">Video Analytics</span>
-        </div>
-        <div class="module-card hourly" data-module="hourly" onclick="openModule(this)">
-          <div class="mod-icon">⏰</div>
-          <h3>直播间小时级出单分析</h3>
-          <p>拖入订单Excel，自动识别列名生成小时级报告：分品类热力图、环比趋势</p>
-          <span class="mod-tag">Hourly</span>
+        <div class="module-card upgrade" data-module="upgrade" onclick="openModule(this)">
+          <div class="mod-icon">🚀</div>
+          <h3>视频提升方案</h3>
+          <p>基于千川数据+抖音热点的视频策略：四大提升方向、6套文案模板</p>
+          <span class="mod-tag">Strategy</span>
         </div>
         <div class="module-card gsv" data-module="gsv" onclick="openModule(this)">
           <div class="mod-icon">🛠️</div>
           <h3>主播业绩工具</h3>
           <p>拖入订单Excel，自动按达人+日期汇总，一键生成场次表与主播业绩</p>
           <span class="mod-tag">Performance</span>
-        </div>
-        <div class="module-card upgrade" data-module="upgrade" onclick="openModule(this)">
-          <div class="mod-icon">🚀</div>
-          <h3>视频提升方案</h3>
-          <p>基于千川数据+抖音热点的视频策略：四大提升方向、6套文案模板</p>
-          <span class="mod-tag">Strategy</span>
         </div>
       </div>
     </div>
