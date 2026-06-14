@@ -29,202 +29,204 @@
 html { scroll-behavior: smooth; }
 body {
   font-family: -apple-system, "Microsoft YaHei", "PingFang SC", sans-serif;
-  background: var(--bg); color: var(--text); line-height: 1.7;
+  background: var(--bg); color: var(--text); line-height: 1.6;
 }
 body::before {
   content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background-image: radial-gradient(circle, rgba(148,163,184,.12) 1px, transparent 1px);
-  background-size: 24px 24px;
+  background-image: radial-gradient(circle, rgba(148,163,184,.10) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 
-/* ===== NAV ===== */
+/* NAV */
 .nav-bar {
-  display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
-  padding: 14px 20px; background: rgba(255,255,255,.88);
-  backdrop-filter: blur(12px); border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+  padding: 10px 16px; background: rgba(255,255,255,.9);
+  backdrop-filter: blur(14px); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,.03);
 }
 .nav-btn {
-  padding: 9px 20px; border-radius: 22px; border: 1.5px solid #dde1e6;
-  background: #fff; color: #555; font-size: 13px; cursor: pointer;
+  padding: 7px 18px; border-radius: 20px; border: 1.5px solid #dde1e6;
+  background: #fff; color: #555; font-size: 12.5px; cursor: pointer;
   text-decoration: none; transition: all var(--transition); font-family: inherit; font-weight: 500;
-  white-space: nowrap;
 }
-.nav-btn:hover { border-color: var(--blue); color: var(--blue); background: #eff6ff; transform: translateY(-1px); }
-.nav-btn.active { background: linear-gradient(135deg, var(--mi-orange), #ff8c42); color: #fff; border-color: transparent; font-weight: 600; box-shadow: 0 2px 8px rgba(255,105,0,.25); }
+.nav-btn:hover { border-color: var(--mi-orange); color: var(--mi-orange); background: #fff7ed; }
+.nav-btn.active { background: linear-gradient(135deg, var(--mi-orange), #ff8c42); color: #fff; border-color: transparent; font-weight: 600; box-shadow: 0 2px 8px rgba(255,105,0,.2); }
 
-/* ===== HEADER ===== */
+/* HEADER */
 .header {
   position: relative; z-index: 1;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
-  color: white; padding: 56px 20px 40px; text-align: center;
-  box-shadow: 0 4px 30px rgba(15,52,96,.2);
+  color: white; padding: 36px 20px 30px; text-align: center;
+  box-shadow: 0 4px 24px rgba(15,52,96,.15);
 }
-.header h1 { font-size: 38px; font-weight: 800; letter-spacing: -.02em; }
+.header h1 { font-size: 32px; font-weight: 800; letter-spacing: -.02em; }
 .header h1 .mi { color: var(--mi-orange); }
-.header p { font-size: 16px; opacity: 0.85; margin-top: 8px; font-weight: 400; }
-.header .badge-row { margin-top: 16px; display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; }
+.header p { font-size: 14px; opacity: 0.8; margin-top: 6px; }
+.header .badge-row { margin-top: 12px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
 .header .badge {
-  padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600;
-  letter-spacing: .04em;
+  padding: 4px 14px; border-radius: 16px; font-size: 11px; font-weight: 600; letter-spacing: .03em;
 }
-.badge.danger { background: rgba(255,71,87,.2); color: #ff8a95; }
-.badge.success { background: rgba(29,168,92,.2); color: #5ddf8a; }
-.badge.warn { background: rgba(255,105,0,.2); color: #ffa366; }
+.badge.danger { background: rgba(255,71,87,.18); color: #ff8a95; }
+.badge.success { background: rgba(29,168,92,.18); color: #5ddf8a; }
+.badge.warn { background: rgba(255,105,0,.18); color: #ffa366; }
 
-/* ===== KPI ROW ===== */
+/* KPI */
 .kpi-row {
-  display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px;
-  max-width: 1500px; margin: -28px auto 0; padding: 0 20px;
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: 10px;
+  max-width: 1400px; margin: -22px auto 0; padding: 0 18px;
   position: relative; z-index: 10;
 }
 .kpi-card {
-  background: var(--surface); border-radius: var(--radius);
-  padding: 18px 10px; text-align: center;
+  background: var(--surface); border-radius: 12px;
+  padding: 14px 8px; text-align: center;
   box-shadow: var(--shadow-md); border: 1px solid var(--border);
   transition: transform var(--transition), box-shadow var(--transition);
 }
-.kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-.kpi-card .values { font-size: 18px; font-weight: 800; line-height: 1.5; }
-.kpi-card .label { font-size: 11px; color: var(--sub); margin-top: 4px; font-weight: 500; letter-spacing: .03em; }
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.kpi-card .values { font-size: 15px; font-weight: 800; line-height: 1.4; }
+.kpi-card .label { font-size: 10px; color: var(--sub); margin-top: 3px; font-weight: 500; letter-spacing: .02em; }
 .ours { color: #1E90FF; }
 .theirs { color: #FF6B35; }
-.tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; margin-left: 4px; font-weight: 700; }
+.tag { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: 9px; margin-left: 3px; font-weight: 700; }
 .tag-up { background: #fff3e0; color: #e65100; }
 .tag-down { background: #e8f5e9; color: #2e7d32; }
 
-/* ===== CONTAINER ===== */
-.container { max-width: 1400px; margin: 36px auto; padding: 0 20px; position: relative; z-index: 1; }
+/* CONTAINER */
+.container { max-width: 1300px; margin: 28px auto; padding: 0 18px; position: relative; z-index: 1; }
 
-/* ===== SECTION ===== */
+/* SECTION */
 .section {
   background: var(--surface); border-radius: var(--radius);
-  padding: 32px; margin-bottom: 24px;
+  padding: 24px 28px; margin-bottom: 18px;
   box-shadow: var(--shadow-sm); border: 1px solid var(--border);
-  scroll-margin-top: 80px;
+  scroll-margin-top: 70px;
   transition: box-shadow var(--transition);
 }
 .section:hover { box-shadow: var(--shadow-md); }
 .section h2 {
-  font-size: 22px; font-weight: 700; margin-bottom: 20px;
-  padding-bottom: 14px; border-bottom: 2px solid #f0f0f0; position: relative;
+  font-size: 18px; font-weight: 700; margin-bottom: 16px;
+  padding-bottom: 10px; border-bottom: 2px solid #f0f0f0; position: relative;
+  display: flex; align-items: center; gap: 8px;
 }
-.section h2::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 48px; height: 3px; background: var(--mi-orange); border-radius: 2px; }
-.section h3 { font-size: 17px; font-weight: 700; margin: 24px 0 14px; color: #333; }
+.section h2::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 42px; height: 3px; background: var(--mi-orange); border-radius: 2px; }
+.section h3 { font-size: 15px; font-weight: 700; margin: 20px 0 10px; color: #333; }
 .section h3:first-of-type { margin-top: 0; }
 
-.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
-.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 14px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 12px; }
+.grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; }
 
-.chart-box { height: 420px; }
-.chart-box-sm { height: 320px; }
-.chart-box-lg { height: 500px; }
+.chart-box { height: 280px; }
+.chart-box-sm { height: 220px; }
+.chart-box-md { height: 340px; }
 
-/* ===== INSIGHT CARDS ===== */
-.insight-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+/* INSIGHT */
+.insight-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
 .insight {
-  padding: 20px 24px; border-radius: 0 12px 12px 0; font-size: 14px; line-height: 1.9;
+  padding: 16px 20px; border-radius: 0 10px 10px 0; font-size: 13px; line-height: 1.8;
   box-shadow: var(--shadow-sm);
 }
-.insight strong { display: block; margin-bottom: 4px; font-size: 15px; }
+.insight strong { display: block; margin-bottom: 2px; font-size: 14px; }
 .insight.good { background: #e8f5e9; border-left: 4px solid #2e7d32; }
 .insight.warn { background: #fff3e0; border-left: 4px solid #e65100; }
 .insight.info { background: #e3f2fd; border-left: 4px solid #1565c0; }
 
-/* ===== DIRECTION CARDS ===== */
+/* DIRECTION */
 .dir-card {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 24px;
-  box-shadow: var(--shadow-sm);
-  transition: all var(--transition);
+  border-radius: var(--radius); padding: 20px;
+  box-shadow: var(--shadow-sm); transition: all var(--transition);
   position: relative; overflow: hidden;
 }
-.dir-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+.dir-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
 .dir-card .dir-num {
-  font-size: 56px; font-weight: 900; opacity: .1;
-  position: absolute; top: -10px; right: 16px; line-height: 1;
+  font-size: 52px; font-weight: 900; opacity: .08;
+  position: absolute; top: -8px; right: 14px; line-height: 1;
 }
-.dir-card .dir-icon { font-size: 32px; margin-bottom: 12px; }
-.dir-card h4 { font-size: 18px; margin-bottom: 8px; position: relative; z-index: 1; }
-.dir-card p { font-size: 13px; color: #555; line-height: 1.8; position: relative; z-index: 1; }
+.dir-card .dir-icon { font-size: 28px; margin-bottom: 10px; }
+.dir-card h4 { font-size: 16px; margin-bottom: 6px; position: relative; z-index: 1; }
+.dir-card p { font-size: 12.5px; color: #555; line-height: 1.7; position: relative; z-index: 1; }
 .dir-card .dir-tag {
-  display: inline-block; padding: 4px 12px; border-radius: 14px;
-  font-size: 11px; font-weight: 600; margin-top: 12px; position: relative; z-index: 1;
+  display: inline-block; padding: 3px 10px; border-radius: 12px;
+  font-size: 10.5px; font-weight: 600; margin-top: 10px; position: relative; z-index: 1;
 }
+.dir-card .dir-sub { font-size: 10.5px; color: var(--sub); margin-top: 4px; }
 .dir-card.d1 { border-top: 3px solid var(--blue); }
 .dir-card.d2 { border-top: 3px solid var(--red); }
 .dir-card.d3 { border-top: 3px solid var(--purple); }
 .dir-card.d4 { border-top: 3px solid var(--green); }
 
-/* ===== COPY TEMPLATES ===== */
+/* TEMPLATE */
 .template-card {
   background: #fafbfc; border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 20px;
+  border-radius: var(--radius); padding: 16px;
   transition: all var(--transition);
 }
 .template-card:hover { box-shadow: var(--shadow-md); background: #fff; }
 .template-card .t-label {
-  display: inline-block; padding: 3px 12px; border-radius: 12px;
-  font-size: 11px; font-weight: 700; margin-bottom: 10px; letter-spacing: 1px;
+  display: inline-block; padding: 2px 10px; border-radius: 10px;
+  font-size: 10px; font-weight: 700; margin-bottom: 8px; letter-spacing: .5px;
 }
-.template-card .t-title { font-weight: 700; font-size: 15px; margin-bottom: 8px; }
-.template-card .t-content { font-size: 12px; color: #555; line-height: 1.9; white-space: pre-line; background: #fff; padding: 12px; border-radius: 8px; border: 1px dashed #e0e0e0; }
+.template-card .t-title { font-weight: 700; font-size: 13px; margin-bottom: 6px; }
+.template-card .t-content { font-size: 11.5px; color: #555; line-height: 1.8; white-space: pre-line; background: #fff; padding: 10px; border-radius: 8px; border: 1px dashed #e0e0e0; max-height: 220px; overflow-y: auto; }
+.template-card .t-meta { font-size: 10px; color: var(--sub); margin-top: 6px; }
 
-/* ===== SOP TABLE ===== */
-table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th { background: #f8f9fc; text-align: left; padding: 12px 16px; font-size: 12px; color: var(--sub); font-weight: 600; border-bottom: 2px solid var(--border); letter-spacing: .03em; }
-td { padding: 11px 16px; font-size: 13px; border-bottom: 1px solid #f0f2f5; }
-tbody tr { transition: background var(--transition); }
+/* TABLE */
+table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+th { background: #f8f9fc; text-align: left; padding: 10px 14px; font-size: 11px; color: var(--sub); font-weight: 600; border-bottom: 2px solid var(--border); }
+td { padding: 9px 14px; font-size: 12.5px; border-bottom: 1px solid #f0f2f5; }
 tbody tr:hover td { background: #f8fafc; }
-td:first-child, th:first-child { border-radius: 2px; }
 
-/* ===== TIMELINE ===== */
-.tl { position: relative; padding: 10px 0; }
-.tl::before { content: ''; position: absolute; left: 24px; top: 0; bottom: 0; width: 3px; background: linear-gradient(to bottom, var(--blue), var(--purple), var(--green), var(--mi-orange)); border-radius: 2px; }
-.tl-item { display: flex; gap: 18px; margin-bottom: 20px; position: relative; }
+/* TIMELINE */
+.tl { position: relative; padding: 6px 0; }
+.tl::before { content: ''; position: absolute; left: 21px; top: 0; bottom: 0; width: 2.5px; background: linear-gradient(to bottom, var(--cyan), var(--blue), var(--mi-orange), var(--green)); border-radius: 2px; }
+.tl-item { display: flex; gap: 16px; margin-bottom: 16px; position: relative; }
 .tl-dot {
-  width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+  width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
-  font-size: 18px; font-weight: 700; z-index: 1; color: #fff;
-  box-shadow: 0 2px 12px rgba(0,0,0,.15);
+  font-size: 16px; font-weight: 700; z-index: 1; color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
 }
-.tl-body { padding-top: 6px; }
-.tl-body h5 { font-size: 15px; margin-bottom: 4px; }
-.tl-body p { font-size: 13px; color: var(--sub); line-height: 1.6; }
+.tl-body { padding-top: 4px; }
+.tl-body h5 { font-size: 14px; margin-bottom: 2px; }
+.tl-body p { font-size: 12px; color: var(--sub); line-height: 1.5; }
 
-/* ===== CALENDAR ===== */
-.cal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+/* CALENDAR */
+.cal-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 .cal-item {
   background: #fafbfc; border: 1px solid var(--border); border-radius: 10px;
-  padding: 14px; text-align: center; font-size: 12px; transition: all var(--transition);
+  padding: 12px; text-align: center; font-size: 11.5px; transition: all var(--transition);
 }
 .cal-item:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-.cal-item .cal-date { font-weight: 800; font-size: 14px; color: var(--mi-orange); margin-bottom: 4px; }
+.cal-item .cal-date { font-weight: 800; font-size: 13px; color: var(--mi-orange); margin-bottom: 2px; }
 .cal-item .cal-event { color: #333; font-weight: 600; margin-bottom: 2px; }
-.cal-item .cal-action { color: var(--sub); font-size: 11px; }
+.cal-item .cal-action { color: var(--sub); font-size: 10.5px; }
 
-/* ===== CONCLUSION ===== */
-.conclusion {
-  background: linear-gradient(135deg, rgba(255,105,0,.04), rgba(30,144,255,.03), rgba(29,168,92,.03));
-  border: 2px solid var(--border); border-radius: 18px; padding: 36px;
-  text-align: center;
-}
-.conclusion h2 { border: none; display: inline-block; font-size: 26px; }
-.conclusion h2::after { display: none; }
-
-/* ===== FLOW ===== */
-.flow { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0; padding: 20px 0; }
+/* FLOW */
+.flow { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 0; padding: 14px 0; }
 .flow-node {
   background: var(--surface); border: 1px solid var(--border);
-  border-radius: 12px; padding: 14px 20px; text-align: center;
-  font-size: 13px; min-width: 100px; box-shadow: var(--shadow-sm);
+  border-radius: 10px; padding: 10px 16px; text-align: center;
+  font-size: 12px; min-width: 88px; box-shadow: var(--shadow-sm);
 }
-.flow-node strong { display: block; font-size: 15px; }
-.flow-node span { font-size: 11px; color: var(--sub); }
-.flow-arrow { margin: 0 16px; color: var(--mi-orange); font-size: 1.4em; font-weight: bold; }
+.flow-node strong { display: block; font-size: 13px; }
+.flow-node span { font-size: 10.5px; color: var(--sub); }
+.flow-arrow { margin: 0 12px; color: var(--mi-orange); font-size: 1.2em; font-weight: bold; }
 
-/* ===== RESPONSIVE ===== */
+/* SIGNAL CARDS */
+.signal-card { padding: 12px; border-radius: 10px; text-align: center; }
+.signal-card .s-icon { font-size: 22px; margin-bottom: 4px; }
+.signal-card .s-title { font-weight: 700; font-size: 12px; }
+.signal-card .s-desc { font-size: 10.5px; color: var(--sub); margin-top: 2px; }
+
+/* HIGHLIGHT BOX */
+.hl-box {
+  padding: 12px 18px; border-radius: 10px; font-size: 13px; line-height: 1.8;
+}
+.hl-orange { background: #fdf8f3; border-left: 3px solid var(--mi-orange); }
+
+/* RESPONSIVE */
 @media (max-width: 1100px) {
   .kpi-row { grid-template-columns: repeat(4, 1fr); }
   .grid-2, .insight-row { grid-template-columns: 1fr; }
@@ -233,11 +235,11 @@ td:first-child, th:first-child { border-radius: 2px; }
 }
 @media (max-width: 700px) {
   .kpi-row { grid-template-columns: 1fr 1fr; }
-  .header h1 { font-size: 26px; }
-  .section { padding: 20px 14px; }
+  .header h1 { font-size: 24px; }
+  .section { padding: 18px 14px; }
   .grid-4 { grid-template-columns: 1fr; }
   .flow { flex-direction: column; }
-  .flow-arrow { transform: rotate(90deg); margin: 4px 0; }
+  .flow-arrow { transform: rotate(90deg); margin: 2px 0; }
 }
 </style>
 </head>
@@ -245,17 +247,13 @@ td:first-child, th:first-child { border-radius: 2px; }
 <script>
 (function(){
 var K='mi_band_auth_v1';
-if(!localStorage.getItem(K)){
-window.location.href='index.html';
-return;
-}
+if(!localStorage.getItem(K)){ window.location.href='index.html'; return; }
 document.body.style.display='';
 })();
 </script>
 
-<!-- ===== NAV ===== -->
 <nav class="nav-bar">
-  <a href="hub.html" style="display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:22px;border:1.5px solid #ddd;background:#fff;color:#666;font-size:13px;cursor:pointer;text-decoration:none;transition:all .2s;font-family:inherit;margin-right:6px;" onmouseover="this.style.borderColor='#ff6900';this.style.color='#ff6900'" onmouseout="this.style.borderColor='#ddd';this.style.color='#666'">← 返回导航</a>
+  <a href="hub.html" style="display:inline-flex;align-items:center;gap:5px;padding:7px 16px;border-radius:20px;border:1.5px solid #ddd;background:#fff;color:#666;font-size:12.5px;cursor:pointer;text-decoration:none;transition:all .2s;font-family:inherit;margin-right:4px;" onmouseover="this.style.borderColor='#ff6900';this.style.color='#ff6900'" onmouseout="this.style.borderColor='#ddd';this.style.color='#666'">← 返回导航</a>
   <a class="nav-btn active" href="#diagnosis">📊 数据诊断</a>
   <a class="nav-btn" href="#directions">🎯 四大方向</a>
   <a class="nav-btn" href="#templates">📝 文案模板</a>
@@ -263,10 +261,9 @@ document.body.style.display='';
   <a class="nav-btn" href="#plan">📅 热点日历</a>
 </nav>
 
-<!-- ===== HEADER ===== -->
 <header class="header">
   <h1>小米手环/手表 · <span class="mi">视频提升方案</span></h1>
-  <p>基于千川视频数据诊断 × 抖音2026年6月热点趋势 · 好实现 · 坚持就有效果</p>
+  <p>千川视频数据诊断 × 抖音2026年6月热点趋势 · 好实现 · 坚持就有效果</p>
   <div class="badge-row">
     <span class="badge danger">🎯 质高量少是核心矛盾</span>
     <span class="badge success">📈 CTR 7.23% 领先竞对66%</span>
@@ -274,222 +271,120 @@ document.body.style.display='';
   </div>
 </header>
 
-<!-- ===== KPI ROW ===== -->
 <div class="kpi-row" id="diagnosis">
-  <div class="kpi-card">
-    <div class="values"><span class="ours">1,880</span><br><span class="theirs">2,566</span></div>
-    <div class="label">视频数 <span class="tag tag-up">竞对+36%</span></div>
-  </div>
-  <div class="kpi-card">
-    <div class="values"><span class="ours">¥5.8万</span><br><span class="theirs">¥9.6万</span></div>
-    <div class="label">消耗 <span class="tag tag-up">竞对+64%</span></div>
-  </div>
-  <div class="kpi-card">
-    <div class="values"><span class="ours">200万</span><br><span class="theirs">807万</span></div>
-    <div class="label">播放量 <span class="tag tag-up">竞对+302%</span></div>
-  </div>
-  <div class="kpi-card">
-    <div class="values"><span class="ours">¥87.6万</span><br><span class="theirs">¥141.4万</span></div>
-    <div class="label">成交 <span class="tag tag-up">竞对+61%</span></div>
-  </div>
-  <div class="kpi-card" style="border:2px solid rgba(46,125,50,.3);">
-    <div class="values"><span class="ours" style="font-size:24px;">15.05</span><br><span class="theirs">14.77</span></div>
-    <div class="label">ROI <span class="tag tag-down">我司领先 ✅</span></div>
-  </div>
-  <div class="kpi-card" style="border:2px solid rgba(46,125,50,.3);">
-    <div class="values"><span class="ours" style="font-size:24px;">7.23%</span><br><span class="theirs">4.36%</span></div>
-    <div class="label">CTR <span class="tag tag-down">我司+66% ✅</span></div>
-  </div>
-  <div class="kpi-card" style="border:2px solid rgba(46,125,50,.3);">
-    <div class="values"><span class="ours" style="font-size:24px;">1.55%</span><br><span class="theirs">1.03%</span></div>
-    <div class="label">CVR <span class="tag tag-down">我司+50% ✅</span></div>
-  </div>
-  <div class="kpi-card">
-    <div class="values"><span class="ours">2,249</span><br><span class="theirs">3,708</span></div>
-    <div class="label">订单 <span class="tag tag-up">竞对+65%</span></div>
-  </div>
+  <div class="kpi-card"><div class="values"><span class="ours">1,880</span><br><span class="theirs">2,566</span></div><div class="label">视频数 <span class="tag tag-up">竞对+36%</span></div></div>
+  <div class="kpi-card"><div class="values"><span class="ours">¥5.8万</span><br><span class="theirs">¥9.6万</span></div><div class="label">消耗 <span class="tag tag-up">竞对+64%</span></div></div>
+  <div class="kpi-card"><div class="values"><span class="ours">200万</span><br><span class="theirs">807万</span></div><div class="label">播放量 <span class="tag tag-up">竞对+302%</span></div></div>
+  <div class="kpi-card"><div class="values"><span class="ours">¥87.6万</span><br><span class="theirs">¥141.4万</span></div><div class="label">成交 <span class="tag tag-up">竞对+61%</span></div></div>
+  <div class="kpi-card" style="border:2px solid rgba(46,125,50,.25);"><div class="values"><span class="ours" style="font-size:20px;">15.05</span><br><span class="theirs">14.77</span></div><div class="label">ROI <span class="tag tag-down">我司领先 ✅</span></div></div>
+  <div class="kpi-card" style="border:2px solid rgba(46,125,50,.25);"><div class="values"><span class="ours" style="font-size:20px;">7.23%</span><br><span class="theirs">4.36%</span></div><div class="label">CTR <span class="tag tag-down">我司+66% ✅</span></div></div>
+  <div class="kpi-card" style="border:2px solid rgba(46,125,50,.25);"><div class="values"><span class="ours" style="font-size:20px;">1.55%</span><br><span class="theirs">1.03%</span></div><div class="label">CVR <span class="tag tag-down">我司+50% ✅</span></div></div>
+  <div class="kpi-card"><div class="values"><span class="ours">2,249</span><br><span class="theirs">3,708</span></div><div class="label">订单 <span class="tag tag-up">竞对+65%</span></div></div>
 </div>
 
-<!-- ===== MAIN CONTENT ===== -->
 <div class="container">
 
-<!-- ===== 01 数据诊断 ===== -->
+<!-- 01 数据诊断 -->
 <section class="section">
-  <h2>01 数据诊断：我们 vs 竞对 全维度对比</h2>
-
+  <h2>📊 数据诊断：我司 vs 竞对 全维度对比</h2>
   <div class="insight-row">
-    <div class="insight good">
-      <strong>✅ 优势1：内容质量碾压竞对</strong>
-      CTR 7.23% vs 4.36%（高66%）、CVR 1.55% vs 1.03%（高50%）。
-      用户觉得我们的视频更吸引人，直播间转化承接更强。这是核心竞争力。
-    </div>
-    <div class="insight good">
-      <strong>✅ 优势2：ROI持续领先</strong>
-      手环ROI 14.1 vs 12.7、Watch6 ROI 18.9 vs 17.5。两大主力品类ROI全面领先竞对1.4个点。
-    </div>
-    <div class="insight warn">
-      <strong>⚠️ 劣势1：播放量差4倍（200万 vs 807万）</strong>
-      竞对播放效率84.3次/元，我司仅34.5次/元。竞对在出价和获取流量上更激进，好内容没有被足够多人看到。
-    </div>
-    <div class="insight warn">
-      <strong>⚠️ 劣势2：视频数量差36% 消耗差64%</strong>
-      规模也是竞争力。竞对多房间矩阵+多视频覆盖，抢占更多流量入口。
-    </div>
+    <div class="insight good"><strong>✅ CTR 7.23% vs 4.36%（高66%），CVR 1.55% vs 1.03%（高50%）</strong>内容质量碾压竞对，这是核心竞争力。</div>
+    <div class="insight good"><strong>✅ 手环ROI 14.1 vs 12.7，Watch6 ROI 18.9 vs 17.5</strong>两大主力品类ROI全面领先。</div>
+    <div class="insight warn"><strong>⚠️ 播放量差4倍（200万 vs 807万）</strong>竞对播放效率84.3次/元，我司仅34.5次/元。好内容没被足够多人看到。</div>
+    <div class="insight warn"><strong>⚠️ 视频数差36%、消耗差64%</strong>竞对多房间矩阵+多视频覆盖，抢占更多流量入口。</div>
   </div>
-
   <div class="grid-2">
     <div class="chart-box" id="chart-radar"></div>
-    <div class="chart-box" id="chart-product"></div>
+    <div class="chart-box" id="chart-roi-bar"></div>
   </div>
-
-  <div style="background:#fdf8f3;border-left:4px solid var(--mi-orange);padding:16px 20px;border-radius:0 10px 10px 0;margin-top:16px;font-size:14px;">
-    <strong style="color:var(--mi-orange);">🔑 核心诊断：</strong>
-    我们的<strong>内容质量是竞对的1.5-1.7倍</strong>，但<strong>播放量只有竞对的1/4</strong>。不是方向有问题，是<strong>数量和分发跟不上质量</strong>。正确策略：不改变内容方向，而是把对的事情多做3倍。
+  <div class="hl-box hl-orange" style="margin-top:12px;">
+    <strong style="color:var(--mi-orange);">🔑 核心诊断：</strong>内容质量是竞对的<strong>1.5-1.7倍</strong>，但播放量只有竞对的<strong>1/4</strong>。不是方向有问题，是<strong>数量和分发跟不上质量</strong>。正确策略：不改变内容方向，而是把对的事情多做3倍。
   </div>
 </section>
 
-<!-- ===== 02 四大提升方向 ===== -->
+<!-- 02 四大方向 -->
 <section class="section" id="directions">
-  <h2>02 四大提升方向 —— 坚持就有效果</h2>
-  <p style="color:var(--sub);margin-bottom:20px;">每个方向都是低成本、可立刻落地的。核心逻辑：不改变内容方向，只放大产能和分发效率。</p>
-
-  <div class="grid-2" style="margin-bottom:20px;">
+  <h2>🎯 四大提升方向 —— 坚持就有效果</h2>
+  <div class="grid-2" style="margin-bottom:12px;">
     <div class="dir-card d1">
       <div class="dir-num">01</div>
       <div class="dir-icon">🎬</div>
       <h4 style="color:var(--blue);">爆款素材矩阵化</h4>
-      <p>每款产品按「4场景×2风格」拍8条。<br>
-      同一场景多角度收音，一次拍摄产出3-5条。<br>
-      从每周10条 → <strong>每周30-40条</strong></p>
+      <p>每款产品按「4场景×2风格」拍8条。同一场景多角度收音，一次拍摄产出3-5条。从每周10条 → <strong>每周30-40条</strong></p>
       <span class="dir-tag" style="background:rgba(30,144,255,.1);color:var(--blue);">产量翻3倍</span>
-      <p style="font-size:11px;color:var(--sub);margin-top:6px;">
-      🏃 健身房 / 📱 iPhone搭配 / 😴 睡眠监测 / 🚪 NFC门禁<br>
-      🎮 游戏模式 / 🔋 21天续航 / 🎁 送礼 / 🛒 618限时
-      </p>
+      <div class="dir-sub">🏃 健身房 / 📱 iPhone搭配 / 😴 睡眠监测 / 🚪 NFC门禁 / 🎮 游戏模式 / 🔋 续航 / 🎁 送礼 / 🛒 618限时</div>
     </div>
-
     <div class="dir-card d2">
       <div class="dir-num">02</div>
       <div class="dir-icon">🔥</div>
       <h4 style="color:var(--red);">每条视频绑热点标签</h4>
-      <p>不发"裸视频"。每条必绑<strong>3-5个热点标签</strong>。<br>
-      #AI穿戴好物（32亿播放！官方流量扶持）<br>
-      #618好物节 #智能手表推荐 #运动手环评测</p>
+      <p>不发"裸视频"。每条必绑<strong>3-5个热点标签</strong>。#AI穿戴好物（32亿播放！官方流量扶持）、#618好物节、#智能手表推荐</p>
       <span class="dir-tag" style="background:rgba(255,71,87,.1);color:var(--red);">搜索曝光+161%</span>
-      <p style="font-size:11px;color:var(--sub);margin-top:6px;">
-      公式：视频主题 + 热点场景 + 产品功能 + 行动号召
-      </p>
+      <div class="dir-sub">公式：视频主题 + 热点场景 + 产品功能 + 行动号召</div>
     </div>
-
     <div class="dir-card d3">
       <div class="dir-num">03</div>
       <div class="dir-icon">🤖</div>
       <h4 style="color:var(--purple);">AIGC放大产能</h4>
-      <p>阶段1：用即创/剪映AI把1条爆款变5条变体<br>
-      阶段2：AIGC做功能演示动画（心率/睡眠/运动）<br>
-      阶段3：建立3套模板，日产15-20条</p>
+      <p>阶段1：用即创/剪映AI把1条爆款变5条变体。阶段2：AIGC做功能演示动画。阶段3：建立3套模板日产15-20条</p>
       <span class="dir-tag" style="background:rgba(124,111,247,.1);color:var(--purple);">几乎零成本 · 产能翻3倍</span>
-      <p style="font-size:11px;color:var(--sub);margin-top:6px;">
-      🛠️ 即创（官方免费） / 剪映AI / Midjourney赛博朋克渲染
-      </p>
+      <div class="dir-sub">🛠️ 即创（官方免费） / 剪映AI / 赛博朋克风格渲染</div>
     </div>
-
     <div class="dir-card d4">
       <div class="dir-num">04</div>
       <div class="dir-icon">📈</div>
       <h4 style="color:var(--green);">投放正循环加速</h4>
-      <p>抖加100元测素材 → 互动率>5%的加投<br>
-      → 自然量占比>60%的做千川挂车版<br>
-      → ROI>1.3持续放量 → 系统反推自然流量</p>
+      <p>抖加100元测素材→互动率>5%加投→自然量>60%做千川挂车→ROI>1.3持续放量→系统反推自然流量</p>
       <span class="dir-tag" style="background:rgba(29,168,92,.1);color:var(--green);">播放量目标翻倍</span>
-      <p style="font-size:11px;color:var(--sub);margin-top:6px;">
-      🔄 四步循环：测 → 加 → 收割 → 轮换，每2周一个周期
-      </p>
+      <div class="dir-sub">🔄 四步循环：测 → 加 → 收割 → 轮换，每2周一个周期</div>
     </div>
   </div>
-
-  <!-- Flow diagram -->
   <div class="flow">
-    <div class="flow-node" style="border-left:3px solid var(--blue);">
-      <strong>矩阵化量产</strong><span>周产30-40条</span>
-    </div>
+    <div class="flow-node" style="border-left:3px solid var(--blue);"><strong>矩阵化量产</strong><span>周产30-40条</span></div>
     <span class="flow-arrow">→</span>
-    <div class="flow-node" style="border-left:3px solid var(--red);">
-      <strong>绑热点分发</strong><span>每条3-5个标签</span>
-    </div>
+    <div class="flow-node" style="border-left:3px solid var(--red);"><strong>绑热点分发</strong><span>每条3-5标签</span></div>
     <span class="flow-arrow">→</span>
-    <div class="flow-node" style="border-left:3px solid var(--purple);">
-      <strong>AIGC变体</strong><span>1条变5条</span>
-    </div>
+    <div class="flow-node" style="border-left:3px solid var(--purple);"><strong>AIGC变体</strong><span>1条变5条</span></div>
     <span class="flow-arrow">→</span>
-    <div class="flow-node" style="border-left:3px solid var(--green);">
-      <strong>投放收割</strong><span>抖加→千川正循环</span>
-    </div>
+    <div class="flow-node" style="border-left:3px solid var(--green);"><strong>投放收割</strong><span>抖加→千川正循环</span></div>
   </div>
 </section>
 
-<!-- ===== 03 产品线对比 ===== -->
+<!-- 03 产品线 + 标题分析 -->
 <section class="section">
-  <h2>03 产品线效率分析：手表是最大增长杠杆</h2>
+  <h2>📈 产品线效率 & 爆款标题特征</h2>
   <div class="grid-2">
-    <div class="chart-box" id="chart-roi-bar"></div>
-    <div style="padding:10px;">
-      <table>
-        <tr><th>产品线</th><th>消耗</th><th>成交</th><th>ROI</th><th>播放量</th><th>策略</th></tr>
-        <tr><td>小米手环</td><td>¥27,434</td><td>¥386,066</td><td><b>14.1</b></td><td>88.2万</td><td>加大场景化素材</td></tr>
-        <tr style="background:#f0faf3;"><td>红米Watch6</td><td>¥13,754</td><td>¥259,876</td><td><b style="color:var(--green);">18.9</b></td><td>74.6万</td><td><b>主力加码 🚀</b></td></tr>
-        <tr><td>AIGC集合</td><td>¥9,927</td><td>¥133,399</td><td><b>13.4</b></td><td>15.3万</td><td>效率提升空间大</td></tr>
-        <tr><td>耳机</td><td>¥3,202</td><td>¥49,141</td><td><b>15.3</b></td><td>13.3万</td><td>稳住</td></tr>
-        <tr><td>其他/通用</td><td>¥3,921</td><td>¥47,772</td><td><b>12.2</b></td><td>9.3万</td><td>降低占比</td></tr>
+    <div>
+      <div class="chart-box-sm" id="chart-product"></div>
+      <table style="margin-top:4px;">
+        <tr><th>产品线</th><th>消耗</th><th>成交</th><th>ROI</th><th>策略</th></tr>
+        <tr><td>小米手环</td><td>¥27,434</td><td>¥386,066</td><td>14.1</td><td>加大场景化素材</td></tr>
+        <tr style="background:#f0faf3;"><td>红米Watch6</td><td>¥13,754</td><td>¥259,876</td><td><b style="color:var(--green);">18.9</b></td><td><b>主力加码 🚀</b></td></tr>
+        <tr><td>AIGC集合</td><td>¥9,927</td><td>¥133,399</td><td>13.4</td><td>效率提升空间大</td></tr>
       </table>
-      <div style="background:#f0faf3;padding:14px;border-radius:10px;margin-top:14px;font-size:13px;">
-        <strong style="color:var(--green);">💡 关键发现：</strong><br>
-        Watch6消耗仅占23.6%，但ROI（18.9）远超手环（14.1）。<br>
-        <strong>每多投¥1000到Watch6，多赚¥4800。</strong><br>
-        建议：Watch6视频占比从25%提升到35-40%。
+      <div style="background:#f0faf3;padding:10px 14px;border-radius:8px;margin-top:8px;font-size:12px;">
+        <strong style="color:var(--green);">💡 Watch6消耗仅23.6%，ROI 18.9远超手环14.1。</strong>每多投¥1000到Watch6，多赚¥4800。建议Watch6视频占比从25%→40%。
+      </div>
+    </div>
+    <div>
+      <div class="chart-box-sm" id="chart-wordcloud"></div>
+      <div class="grid-4" style="margin-top:8px;">
+        <div style="background:#f0f4ff;padding:8px;border-radius:8px;text-align:center;font-size:11px;"><strong>🎯 促销利益词</strong><br><span style="color:var(--sub);">放券/福利/好价</span></div>
+        <div style="background:#fff3e0;padding:8px;border-radius:8px;text-align:center;font-size:11px;"><strong>🏷️ 3-5个#话题</strong><br><span style="color:var(--sub);">产品+场景+平台</span></div>
+        <div style="background:#e8f5e9;padding:8px;border-radius:8px;text-align:center;font-size:11px;"><strong>⚡ 钩子词前置</strong><br><span style="color:var(--sub);">开头3秒抓注意力</span></div>
+        <div style="background:#fce4ec;padding:8px;border-radius:8px;text-align:center;font-size:11px;"><strong>📊 场景+产品词</strong><br><span style="color:var(--sub);">手环/手表/数码</span></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ===== 04 内容效率分析 ===== -->
-<section class="section">
-  <h2>04 TOP视频标题特征分析</h2>
-  <p style="color:var(--sub);margin-bottom:16px;">拆解ROI>15的爆款视频标题，提取共同特征 → 指导下一条爆款</p>
-  <div class="chart-box-sm" id="chart-wordcloud"></div>
-  <div class="grid-4" style="margin-top:16px;">
-    <div style="background:#f0f4ff;padding:14px;border-radius:10px;text-align:center;">
-      <div style="font-size:28px;">🎯</div>
-      <div style="font-weight:700;font-size:14px;">促销利益词</div>
-      <div style="font-size:11px;color:var(--sub);">放券/福利/好价/优惠/活动</div>
-    </div>
-    <div style="background:#fff3e0;padding:14px;border-radius:10px;text-align:center;">
-      <div style="font-size:28px;">🏷️</div>
-      <div style="font-weight:700;font-size:14px;">3-5个#话题</div>
-      <div style="font-size:11px;color:var(--sub);">产品词+场景词+平台标签</div>
-    </div>
-    <div style="background:#e8f5e9;padding:14px;border-radius:10px;text-align:center;">
-      <div style="font-size:28px;">⚡</div>
-      <div style="font-weight:700;font-size:14px;">钩子词前置</div>
-      <div style="font-size:11px;color:var(--sub);">开头3秒抓注意力</div>
-    </div>
-    <div style="background:#fce4ec;padding:14px;border-radius:10px;text-align:center;">
-      <div style="font-size:28px;">📊</div>
-      <div style="font-weight:700;font-size:14px;">场景词+产品词</div>
-      <div style="font-size:11px;color:var(--sub);">手环/手表/数码/智能穿戴</div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 05 文案模板 ===== -->
+<!-- 04 文案模板 -->
 <section class="section" id="templates">
-  <h2>05 视频文案模板 —— 直接套用</h2>
-  <p style="color:var(--sub);margin-bottom:20px;">6套模板覆盖主要场景：测评 / 平替 / 开箱 / 挑战 / 情感 / 促销</p>
-
+  <h2>📝 视频文案模板 —— 直接套用</h2>
   <div class="grid-3">
     <div class="template-card">
       <span class="t-label" style="background:rgba(30,144,255,.12);color:var(--blue);">模板A · 场景测评</span>
-      <div class="t-title">适合：跑步/健身/游泳场景</div>
+      <div class="t-title">适合：跑步/健身/游泳</div>
       <div class="t-content">跑了30分钟，心率最高148，平均135
 这个数据跟我用专业心率带测的几乎一模一样
 关键是，它才399啊朋友们
@@ -498,9 +393,8 @@ document.body.style.display='';
 #AI穿戴好物 这个价位真的找不到第二个
 左下角，618国补到手价更香
 #小米手环10Pro #运动手环评测 #618好物节</div>
-      <div style="font-size:11px;color:var(--sub);margin-top:6px;">🎯 预期CTR: 5-8% | 目标人群: 运动用户</div>
+      <div class="t-meta">🎯 预期CTR: 5-8% | 目标人群: 运动用户</div>
     </div>
-
     <div class="template-card">
       <span class="t-label" style="background:rgba(255,71,87,.12);color:var(--red);">模板B · iPhone平替</span>
       <div class="t-title">适合：苹果生态用户拉新</div>
@@ -513,9 +407,8 @@ document.body.style.display='';
 #AI穿戴好物 苹果用户看过来
 左下角有618好价，国补再省一笔
 #小米手环 #苹果生态 #性价比</div>
-      <div style="font-size:11px;color:var(--sub);margin-top:6px;">🎯 预期CTR: 6-10% | 目标人群: iPhone用户</div>
+      <div class="t-meta">🎯 预期CTR: 6-10% | 目标人群: iPhone用户</div>
     </div>
-
     <div class="template-card">
       <span class="t-label" style="background:rgba(124,111,247,.12);color:var(--purple);">模板C · 沉浸开箱</span>
       <div class="t-title">适合：新品/高颜值产品</div>
@@ -526,9 +419,8 @@ document.body.style.display='';
 表盘市场随便换，今天是商务风明天是运动风
 我不说价格，评论区猜一下？
 #数码开箱 #红米Watch6 #智能手表推荐</div>
-      <div style="font-size:11px;color:var(--sub);margin-top:6px;">🎯 预期互动率: >5% | 目标: 引发评论</div>
+      <div class="t-meta">🎯 预期互动率: >5% | 目标: 引发评论</div>
     </div>
-
     <div class="template-card">
       <span class="t-label" style="background:rgba(29,168,92,.12);color:var(--green);">模板D · 对比挑战</span>
       <div class="t-title">适合：突出续航等核心卖点</div>
@@ -541,9 +433,8 @@ document.body.style.display='';
 不用每天充电的穿戴设备，用过的都回不去了
 #AI穿戴好物 #续航挑战 #小米手环10Pro
 左下角618好价</div>
-      <div style="font-size:11px;color:var(--sub);margin-top:6px;">🎯 预期完播率: >35% | 悬念驱动</div>
+      <div class="t-meta">🎯 预期完播率: >35% | 悬念驱动</div>
     </div>
-
     <div class="template-card">
       <span class="t-label" style="background:rgba(200,150,12,.12);color:var(--gold);">模板E · 情感共鸣</span>
       <div class="t-title">适合：父亲节/送礼场景</div>
@@ -556,9 +447,8 @@ document.body.style.display='';
 一份看得见的健康，更能陪他很久
 左下角给爸爸也带一块吧
 #父亲节礼物 #小米手环 #送健康</div>
-      <div style="font-size:11px;color:var(--sub);margin-top:6px;">🎯 预期转化率: >2% | 情感驱动决策</div>
+      <div class="t-meta">🎯 预期转化率: >2% | 情感驱动决策</div>
     </div>
-
     <div class="template-card">
       <span class="t-label" style="background:rgba(255,105,0,.12);color:var(--mi-orange);">模板F · 618冲刺</span>
       <div class="t-title">适合：6/16-6/18 大促冲刺</div>
@@ -570,200 +460,104 @@ document.body.style.display='';
 库存不多了，左下角赶紧看一眼
 错过这次等双11
 #618好物节 #小米手环 #国补 #限时优惠</div>
-      <div style="font-size:11px;color:var(--sub);margin-top:6px;">🎯 紧迫型文案 | 适合大促节点</div>
+      <div class="t-meta">🎯 紧迫型文案 | 适合大促节点</div>
     </div>
   </div>
 </section>
 
-<!-- ===== 06 每日SOP ===== -->
+<!-- 05 执行SOP -->
 <section class="section" id="sop">
-  <h2>06 执行SOP —— 每天做什么</h2>
-
+  <h2>⚡ 执行SOP —— 每天做什么</h2>
   <h3>📋 每日标准流程</h3>
   <table>
-    <tr><th style="width:8%;">时段</th><th style="width:20%;">动作</th><th style="width:10%;">数量目标</th><th style="width:12%;">负责人</th><th>要点</th></tr>
-    <tr><td>🌅 上午</td><td>复盘昨日数据，筛选高ROI素材重新加投</td><td>筛选TOP10</td><td>运营</td><td>ROI>15的直接追加预算</td></tr>
-    <tr><td>🌅 上午</td><td>发布新素材（按矩阵轮换）</td><td>3-5条</td><td>内容</td><td>每条绑3-5个热点标签</td></tr>
-    <tr><td>☀️ 中午</td><td>AIGC生成素材变体</td><td>10-15条</td><td>内容</td><td>用即创/剪映AI批量产出</td></tr>
-    <tr><td>☀️ 下午</td><td>千川计划调优（关低ROI，加高ROI）</td><td>—</td><td>投放</td><td>ROI<0.8持续2天即关停</td></tr>
-    <tr><td>🌤️ 下午</td><td>拍摄新素材</td><td>1-2组场景</td><td>拍摄</td><td>一次拍摄多角度产出</td></tr>
-    <tr><td>🌙 晚上</td><td>抖加测试今天新素材</td><td>3-5条×100元</td><td>投放</td><td>不看ROI，只看互动率</td></tr>
+    <tr><th style="width:7%;">时段</th><th style="width:22%;">动作</th><th style="width:10%;">数量目标</th><th>要点</th></tr>
+    <tr><td>🌅 上午</td><td>复盘昨日数据，筛选高ROI素材</td><td>TOP10</td><td>ROI>15的直接追加预算</td></tr>
+    <tr><td>🌅 上午</td><td>发布新素材（按矩阵轮换）</td><td>3-5条</td><td>每条绑3-5个热点标签</td></tr>
+    <tr><td>☀️ 中午</td><td>AIGC生成素材变体</td><td>10-15条</td><td>用即创/剪映AI批量产出</td></tr>
+    <tr><td>☀️ 下午</td><td>千川计划调优</td><td>—</td><td>ROI<0.8持续2天即关停</td></tr>
+    <tr><td>🌤️ 下午</td><td>拍摄新素材</td><td>1-2组场景</td><td>一次拍摄多角度产出</td></tr>
+    <tr><td>🌙 晚上</td><td>抖加测试今天新素材</td><td>3-5条×100元</td><td>不看ROI，只看互动率</td></tr>
   </table>
 
-  <h3>📊 周度目标</h3>
-  <table style="margin-bottom:16px;">
-    <tr><th>周次</th><th>视频发布量</th><th>千川消耗</th><th>目标播放量</th><th>目标成交</th></tr>
-    <tr style="background:#fff3e0;"><td><b>本周 6/15-6/18</b></td><td><b>20条+</b></td><td><b>¥15,000-20,000</b></td><td><b>100万+</b></td><td><b>¥30万+</b></td></tr>
-    <tr><td>下周 6/19-6/25</td><td>30条+</td><td>¥10,000-15,000</td><td>80万+</td><td>¥20万+</td></tr>
-    <tr><td>7月稳定期</td><td>100条+/月</td><td>¥30,000-50,000/月</td><td>300万+/月</td><td>¥80万+/月</td></tr>
-  </table>
-
-  <h3>🚨 加投信号：出现立即行动</h3>
-  <div class="grid-4">
-    <div style="background:#e8f5e9;padding:14px;border-radius:10px;text-align:center;">
-      <div style="font-size:24px;">🔥</div>
-      <div style="font-weight:700;font-size:13px;">抖加互动率>5%</div>
-      <div style="font-size:11px;color:var(--sub);">立即做千川挂车版<br>预算拉满</div>
-    </div>
-    <div style="background:#e3f2fd;padding:14px;border-radius:10px;text-align:center;">
-      <div style="font-size:24px;">💰</div>
-      <div style="font-weight:700;font-size:13px;">千川ROI>20</div>
-      <div style="font-size:11px;color:var(--sub);">追加预算50%<br>同时做3条变体</div>
-    </div>
-    <div style="background:#fff3e0;padding:14px;border-radius:10px;text-align:center;">
-      <div style="font-size:24px;">📈</div>
-      <div style="font-weight:700;font-size:13px;">话题突然上涨</div>
-      <div style="font-size:11px;color:var(--sub);">当天追加2-3条<br>绑该话题的视频</div>
-    </div>
-    <div style="background:#fce4ec;padding:14px;border-radius:10px;text-align:center;">
-      <div style="font-size:24px;">👀</div>
-      <div style="font-weight:700;font-size:13px;">竞对突然起量</div>
-      <div style="font-size:11px;color:var(--sub);">24小时内<br>出同类内容跟进</div>
+  <h3>📊 周度目标 & 加投信号</h3>
+  <div class="grid-2">
+    <table>
+      <tr><th>周次</th><th>发布量</th><th>消耗</th><th>播放量</th><th>成交</th></tr>
+      <tr style="background:#fff3e0;"><td><b>本周</b></td><td><b>20条+</b></td><td><b>¥1.5-2万</b></td><td><b>100万+</b></td><td><b>¥30万+</b></td></tr>
+      <tr><td>下周</td><td>30条+</td><td>¥1-1.5万</td><td>80万+</td><td>¥20万+</td></tr>
+      <tr><td>7月</td><td>100条+/月</td><td>¥3-5万/月</td><td>300万+/月</td><td>¥80万+/月</td></tr>
+    </table>
+    <div class="grid-2" style="grid-template-columns:1fr 1fr;">
+      <div class="signal-card" style="background:#e8f5e9;"><div class="s-icon">🔥</div><div class="s-title">抖加互动率>5%</div><div class="s-desc">立即做千川挂车版，预算拉满</div></div>
+      <div class="signal-card" style="background:#e3f2fd;"><div class="s-icon">💰</div><div class="s-title">千川ROI>20</div><div class="s-desc">追加预算50%，做3条变体</div></div>
+      <div class="signal-card" style="background:#fff3e0;"><div class="s-icon">📈</div><div class="s-title">话题突然上涨</div><div class="s-desc">当天追加2-3条绑该话题</div></div>
+      <div class="signal-card" style="background:#fce4ec;"><div class="s-icon">👀</div><div class="s-title">竞对突然起量</div><div class="s-desc">24小时内出同类内容跟进</div></div>
     </div>
   </div>
 </section>
 
-<!-- ===== 07 话题日历 ===== -->
+<!-- 06 热点日历 + 投放节奏 -->
 <section class="section" id="plan">
-  <h2>07 抖音热点话题日历 · 6月-7月</h2>
-  <p style="color:var(--sub);margin-bottom:20px;">每个节点都是内容钩子，提前1-2天准备好相关素材</p>
-  <div class="chart-box-sm" id="chart-timeline"></div>
-  <div class="cal-grid" style="margin-top:16px;">
-    <div class="cal-item" style="border-top:3px solid var(--red);">
-      <div class="cal-date">6/15-6/18</div>
-      <div class="cal-event">🔥 618冲刺</div>
-      <div class="cal-action">限时优惠 · 国补倒计时 · 全品类</div>
-    </div>
-    <div class="cal-item" style="border-top:3px solid var(--gold);">
-      <div class="cal-date">6/15 父亲节</div>
-      <div class="cal-event">🎁 送爸爸健康</div>
-      <div class="cal-action">情感向 · 手环10Pro · Watch6</div>
-    </div>
-    <div class="cal-item" style="border-top:3px solid var(--mi-orange);">
-      <div class="cal-date">6/18 决战日</div>
-      <div class="cal-event">⚡ 全天爆发</div>
-      <div class="cal-action">实时战报 · 爆单晒图 · 全品类</div>
-    </div>
-    <div class="cal-item" style="border-top:3px solid var(--cyan);">
-      <div class="cal-date">6/19-6/25</div>
-      <div class="cal-event">🔄 618返场</div>
-      <div class="cal-action">没抢到看这里 · Watch6高客单</div>
-    </div>
-    <div class="cal-item" style="border-top:3px solid var(--purple);">
-      <div class="cal-date">6月下旬</div>
-      <div class="cal-event">🎓 毕业季</div>
-      <div class="cal-action">职场新人装备 · 学生入门首选</div>
-    </div>
-    <div class="cal-item" style="border-top:3px solid var(--green);">
-      <div class="cal-date">6月下旬</div>
-      <div class="cal-event">🏖️ 暑期档</div>
-      <div class="cal-action">户外运动 · 游泳 · 旅行场景</div>
-    </div>
-    <div class="cal-item" style="border-top:3px solid var(--blue);">
-      <div class="cal-date">6月-7月</div>
-      <div class="cal-event">⚽ 世界杯</div>
-      <div class="cal-action">熬夜心率 · 运动激情 · 大屏提醒</div>
-    </div>
-    <div class="cal-item" style="border-top:3px solid var(--mi-orange);">
-      <div class="cal-date">7月暑期</div>
-      <div class="cal-event">✈️ 暑假旅游</div>
-      <div class="cal-action">出行装备 · GPS导航 · 长续航</div>
-    </div>
-  </div>
-</section>
-
-<!-- ===== 08 投放正循环 ===== -->
-<section class="section">
-  <h2>08 投放正循环模型</h2>
-
-  <div class="tl">
-    <div class="tl-item">
-      <div class="tl-dot" style="background:var(--cyan);">1</div>
-      <div class="tl-body">
-        <h5>冷启动 · Day 1-3 <span style="color:var(--cyan);">抖加测素材</span></h5>
-        <p>5-8条新素材同步发，每条投抖加100-200元。不看ROI只看互动率。互动率>5%、完播率>30%的进入下一步。</p>
-      </div>
-    </div>
-    <div class="tl-item">
-      <div class="tl-dot" style="background:var(--cyan);">2</div>
-      <div class="tl-body">
-        <h5>加热期 · Day 3-5 <span style="color:var(--cyan);">抖加追投 + 自然量撬动</span></h5>
-        <p>优质素材追加抖加到500-1000元，同步发布挂车版素材。观察自然流量占比是否上升（目标>60%）。</p>
-      </div>
-    </div>
-    <div class="tl-item">
-      <div class="tl-dot" style="background:var(--mi-orange);">3</div>
-      <div class="tl-body">
-        <h5>收割期 · Day 5-14 <span style="color:var(--mi-orange);">千川精准转化</span></h5>
-        <p>自然量跑起来的素材做挂车版，千川定向"视频互动人群"+"相似人群"。手环ROI>1.3，手表ROI>1.5持续放量。</p>
-      </div>
-    </div>
-    <div class="tl-item">
-      <div class="tl-dot" style="background:var(--mi-orange);">4</div>
-      <div class="tl-body">
-        <h5>迭代期 · Day 14+ <span style="color:var(--mi-orange);">素材轮换 · 稳定跑量</span></h5>
-        <p>千川计划7-14天自然衰退 → 新素材抖加测 → 好的给千川 → 循环。每周保持3-5条新素材进入测试管线。</p>
-      </div>
-    </div>
-  </div>
-
-  <div style="background:linear-gradient(135deg, rgba(255,105,0,.05), rgba(30,144,255,.04));border: 1px solid var(--border);border-radius: 14px;padding: 20px;margin-top: 16px;text-align: center;">
-    <strong style="color:var(--mi-orange);font-size:15px;">💡 最忌讳的错误操作：</strong><br>
-    <span style="font-size:13px;color:#555;">❌ 用千川投软种草（成本高效果差）&nbsp;&nbsp;&nbsp;❌ 用抖加投硬广（限流+转化弱）<br>
-    ✅ 抖加=播种机（种草+测素材+撬自然量）&nbsp;&nbsp;&nbsp;✅ 千川=收割机（精准定向+全链路转化）</span>
-  </div>
-</section>
-
-<!-- ===== 09 避坑清单 ===== -->
-<section class="section">
-  <h2>09 避坑清单 & 核心理念</h2>
+  <h2>📅 热点日历 & 投放正循环</h2>
   <div class="grid-2">
     <div>
-      <table>
-        <tr><th style="background:#ffeaea;">❌ 不要做</th><th style="background:#e8f5e9;">✅ 应该做</th></tr>
-        <tr><td>干念参数、纯口播</td><td>用场景和故事包装功能</td></tr>
-        <tr><td>视频里喊"快来我直播间"</td><td>用内容让用户自己想去看</td></tr>
-        <tr><td>一条视频只用一次</td><td>好素材做变体，分角度反复用</td></tr>
-        <tr><td>不绑热点标签裸发</td><td>每条至少绑3个热点/搜索标签</td></tr>
-        <tr><td>只投千川不投抖加</td><td>抖加测素材→千川收割，前后配合</td></tr>
-        <tr><td>忽视搜索流量</td><td>标题加搜索关键词</td></tr>
-        <tr><td>视频发完就不管</td><td>每天复盘，好的加投差的关停</td></tr>
-        <tr><td>等"完美素材"再发</td><td>先发再优化，数据会告诉你方向</td></tr>
-      </table>
+      <h3>6-7月热点节点</h3>
+      <div class="cal-grid">
+        <div class="cal-item" style="border-top:3px solid var(--red);"><div class="cal-date">6/15-6/18</div><div class="cal-event">🔥 618冲刺</div><div class="cal-action">限时优惠·国补倒计时</div></div>
+        <div class="cal-item" style="border-top:3px solid var(--gold);"><div class="cal-date">6/15 父亲节</div><div class="cal-event">🎁 送爸爸健康</div><div class="cal-action">情感向·手环+Watch6</div></div>
+        <div class="cal-item" style="border-top:3px solid var(--mi-orange);"><div class="cal-date">6/18 决战日</div><div class="cal-event">⚡ 全天爆发</div><div class="cal-action">实时战报·爆单晒图</div></div>
+        <div class="cal-item" style="border-top:3px solid var(--cyan);"><div class="cal-date">6/19-6/25</div><div class="cal-event">🔄 618返场</div><div class="cal-action">Watch6高客单收割</div></div>
+        <div class="cal-item" style="border-top:3px solid var(--purple);"><div class="cal-date">6月下旬</div><div class="cal-event">🎓 毕业季</div><div class="cal-action">职场新人·学生首选</div></div>
+        <div class="cal-item" style="border-top:3px solid var(--green);"><div class="cal-date">6月下旬</div><div class="cal-event">🏖️ 暑期档</div><div class="cal-action">户外运动·游泳</div></div>
+        <div class="cal-item" style="border-top:3px solid var(--blue);"><div class="cal-date">6月-7月</div><div class="cal-event">⚽ 世界杯</div><div class="cal-action">熬夜心率·运动激情</div></div>
+        <div class="cal-item" style="border-top:3px solid var(--mi-orange);"><div class="cal-date">7月暑期</div><div class="cal-event">✈️ 暑假旅游</div><div class="cal-action">GPS导航·长续航</div></div>
+      </div>
     </div>
     <div>
-      <div style="background:#f0f4ff;padding:20px;border-radius:12px;margin-bottom:16px;">
-        <h4 style="color:var(--blue);margin-bottom:8px;">📊 内容配比建议（当前阶段）</h4>
-        <div style="margin:6px 0;display:flex;align-items:center;gap:10px;font-size:13px;">
-          <span style="width:80px;text-align:right;color:var(--blue);font-weight:600;">iPhone生态</span>
-          <span style="flex:1;height:24px;background:rgba(30,144,255,.6);border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:600;font-size:11px;">35%</span>
-        </div>
-        <div style="margin:6px 0;display:flex;align-items:center;gap:10px;font-size:13px;">
-          <span style="width:80px;text-align:right;color:var(--green);font-weight:600;">游戏模式</span>
-          <span style="flex:1;height:24px;background:rgba(29,168,92,.6);border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:600;font-size:11px;">20%</span>
-        </div>
-        <div style="margin:6px 0;display:flex;align-items:center;gap:10px;font-size:13px;">
-          <span style="width:80px;text-align:right;color:var(--red);font-weight:600;">促销/618</span>
-          <span style="flex:1;height:24px;background:rgba(255,71,87,.6);border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:600;font-size:11px;">25%</span>
-        </div>
-        <div style="margin:6px 0;display:flex;align-items:center;gap:10px;font-size:13px;">
-          <span style="width:80px;text-align:right;color:var(--gold);font-weight:600;">数据评测</span>
-          <span style="flex:1;height:24px;background:rgba(200,150,12,.6);border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:600;font-size:11px;">15%</span>
-        </div>
-        <div style="margin:6px 0;display:flex;align-items:center;gap:10px;font-size:13px;">
-          <span style="width:80px;text-align:right;color:var(--sub);font-weight:600;">其他</span>
-          <span style="flex:1;height:24px;background:rgba(150,150,160,.5);border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:600;font-size:11px;">5%</span>
-        </div>
+      <h3>投放四阶段正循环</h3>
+      <div class="tl">
+        <div class="tl-item"><div class="tl-dot" style="background:var(--cyan);">1</div><div class="tl-body"><h5>冷启动 Day1-3 <span style="color:var(--cyan);">抖加测素材</span></h5><p>5-8条素材各投100-200元，看互动率>5%、完播率>30%</p></div></div>
+        <div class="tl-item"><div class="tl-dot" style="background:var(--blue);">2</div><div class="tl-body"><h5>加热期 Day3-5 <span style="color:var(--blue);">抖加追投</span></h5><p>优质素材追加500-1000元，观察自然量占比是否>60%</p></div></div>
+        <div class="tl-item"><div class="tl-dot" style="background:var(--mi-orange);">3</div><div class="tl-body"><h5>收割期 Day5-14 <span style="color:var(--mi-orange);">千川精准转化</span></h5><p>自然量跑起来的做挂车版，定向视频互动+相似人群</p></div></div>
+        <div class="tl-item"><div class="tl-dot" style="background:var(--green);">4</div><div class="tl-body"><h5>迭代期 Day14+ <span style="color:var(--green);">素材轮换稳定跑量</span></h5><p>计划衰退→新素材抖加测→好的给千川→循环</p></div></div>
       </div>
+      <div style="background:linear-gradient(135deg, rgba(255,105,0,.04), rgba(30,144,255,.03));border:1px solid var(--border);border-radius:10px;padding:12px 16px;text-align:center;font-size:12px;">
+        <strong style="color:var(--mi-orange);">💡 最忌讳：</strong>用千川投软种草（成本高）、用抖加投硬广（限流+转化弱）
+      </div>
+    </div>
+  </div>
+</section>
 
-      <div style="background:linear-gradient(135deg, rgba(255,105,0,.05), rgba(30,144,255,.04));padding:20px;border-radius:12px;">
-        <h4 style="color:var(--mi-orange);margin-bottom:8px;">🏁 一句话总结</h4>
-        <p style="font-size:13px;line-height:1.9;">
-          我们CTR<strong style="color:var(--blue);">7.23%</strong>领先竞对<strong style="color:var(--red);">4.36%</strong>近一倍的点击率，说明用户真正想看的是我们的内容。<br><br>
-          核心策略不是改变方向重做，而是<strong style="color:var(--mi-orange);">把对的事情多做3倍</strong>：<br>
-          🔹 多发3倍的视频 → 矩阵化拍摄<br>
-          🔹 多绑3倍的热点 → 每条3-5标签<br>
-          🔹 多用AIGC做3倍的变体 → 1条爆款变5条<br><br>
+<!-- 07 内容配比 + 避坑 -->
+<section class="section">
+  <h2>✅ 避坑清单 & 内容配比</h2>
+  <div class="grid-2">
+    <table>
+      <tr><th style="background:#ffeaea;">❌ 不要做</th><th style="background:#e8f5e9;">✅ 应该做</th></tr>
+      <tr><td>干念参数、纯口播</td><td>用场景和故事包装功能</td></tr>
+      <tr><td>视频里喊"快来我直播间"</td><td>用内容让用户自己想去看</td></tr>
+      <tr><td>一条视频只用一次</td><td>好素材做变体，分角度反复用</td></tr>
+      <tr><td>不绑热点标签裸发</td><td>每条至少绑3个热点/搜索标签</td></tr>
+      <tr><td>只投千川不投抖加</td><td>抖加测素材→千川收割，前后配合</td></tr>
+      <tr><td>忽视搜索流量</td><td>标题加搜索关键词（智能手表推荐等）</td></tr>
+      <tr><td>视频发完就不管</td><td>每天复盘，好的加投差的关停</td></tr>
+      <tr><td>等"完美素材"再发</td><td>先发再优化，数据会告诉你方向</td></tr>
+    </table>
+    <div>
+      <div style="background:#f0f4ff;padding:16px 20px;border-radius:12px;margin-bottom:12px;">
+        <h4 style="color:var(--blue);margin-bottom:10px;font-size:14px;">📊 内容配比建议</h4>
+        <div style="margin:5px 0;display:flex;align-items:center;gap:10px;font-size:12px;"><span style="width:70px;text-align:right;color:var(--blue);font-weight:600;">iPhone生态</span><span style="flex:1;height:22px;background:linear-gradient(90deg,rgba(30,144,255,.7),rgba(30,144,255,.4));border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:600;font-size:11px;">35%</span></div>
+        <div style="margin:5px 0;display:flex;align-items:center;gap:10px;font-size:12px;"><span style="width:70px;text-align:right;color:var(--red);font-weight:600;">促销/618</span><span style="flex:1;height:22px;background:linear-gradient(90deg,rgba(255,71,87,.7),rgba(255,71,87,.4));border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:600;font-size:11px;">25%</span></div>
+        <div style="margin:5px 0;display:flex;align-items:center;gap:10px;font-size:12px;"><span style="width:70px;text-align:right;color:var(--green);font-weight:600;">游戏模式</span><span style="flex:1;height:22px;background:linear-gradient(90deg,rgba(29,168,92,.7),rgba(29,168,92,.4));border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:600;font-size:11px;">20%</span></div>
+        <div style="margin:5px 0;display:flex;align-items:center;gap:10px;font-size:12px;"><span style="width:70px;text-align:right;color:var(--gold);font-weight:600;">数据评测</span><span style="flex:1;height:22px;background:linear-gradient(90deg,rgba(200,150,12,.7),rgba(200,150,12,.4));border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:600;font-size:11px;">15%</span></div>
+        <div style="margin:5px 0;display:flex;align-items:center;gap:10px;font-size:12px;"><span style="width:70px;text-align:right;color:var(--sub);font-weight:600;">其他</span><span style="flex:1;height:22px;background:linear-gradient(90deg,rgba(150,150,160,.6),rgba(150,150,160,.3));border-radius:4px;display:flex;align-items:center;padding:0 8px;color:#fff;font-weight:600;font-size:11px;">5%</span></div>
+      </div>
+      <div style="background:linear-gradient(135deg, rgba(255,105,0,.04), rgba(30,144,255,.03));padding:16px 20px;border-radius:12px;">
+        <h4 style="color:var(--mi-orange);margin-bottom:6px;font-size:14px;">🏁 一句话总结</h4>
+        <p style="font-size:12.5px;line-height:1.8;">
+          CTR <strong style="color:var(--blue);">7.23%</strong> vs 竞对 <strong style="color:var(--red);">4.36%</strong> —— 用户想看的是我们的内容。<br>
+          核心策略：<strong style="color:var(--mi-orange);">把对的事情多做3倍</strong><br>
+          🔹 多发3倍视频 🔹 多绑3倍热点 🔹 AIGC做3倍变体<br>
           <strong style="color:var(--green);">坚持2周，播放量翻倍完全可以实现。</strong>
         </p>
       </div>
@@ -771,191 +565,99 @@ document.body.style.display='';
   </div>
 </section>
 
-</div><!-- /container -->
+</div>
 
-<footer style="text-align:center;color:var(--sub);font-size:12px;padding:30px;position:relative;z-index:1;border-top:1px solid var(--border);margin-top:20px;">
+<footer style="text-align:center;color:var(--sub);font-size:11px;padding:24px;position:relative;z-index:1;border-top:1px solid var(--border);margin-top:12px;">
   小米手环/手表 · 视频提升方案可视化 · 2026年6月 · 基于千川视频数据 + 抖音平台热点趋势
 </footer>
 
-<!-- ===== ECHARTS ===== -->
 <script>
-var oursColor = '#1E90FF';
-var theirsColor = '#FF6B35';
-var greenColor = '#1da85c';
-var miOrange = '#ff6900';
-var purple = '#7c6ff7';
-var gold = '#c8960c';
-var cyan = '#0ea89d';
+var C = { ours: '#1E90FF', theirs: '#FF6B35', green: '#1da85c', orange: '#ff6900', purple: '#7c6ff7', gold: '#c8960c', cyan: '#0ea89d', red: '#FF4757' };
 
-// ===== 雷达图 =====
-(function() {
-  var dom = document.getElementById('chart-radar');
-  if (!dom) return;
-  var chart = echarts.init(dom);
-  var option = {
-    title: { text: '我司 vs 竞对 六维雷达', left: 'center', top: 6, textStyle: { fontSize: 14, fontWeight: 600 } },
+// ===== 1. 雷达图 =====
+(function(){
+  var d = document.getElementById('chart-radar'); if(!d) return;
+  var c = echarts.init(d);
+  c.setOption({
     tooltip: { trigger: 'item' },
-    legend: { bottom: 0, data: ['我司', '竞对(良米)'] },
-    radar: {
-      center: ['50%', '48%'], radius: '62%',
-      axisName: { fontSize: 11 },
+    legend: { bottom: 0, textStyle: { fontSize: 11 } },
+    radar: { center: ['50%','46%'], radius: '58%', axisName: { fontSize: 10 },
       indicator: [
-        { name: '视频ROI', max: 20 },
-        { name: 'CTR(%)', max: 10 },
-        { name: 'CVR(%)', max: 3 },
-        { name: '视频数量', max: 3000 },
-        { name: '播放效率', max: 100 },
-        { name: '成交(万)', max: 150 }
+        { name: 'ROI', max: 20 }, { name: 'CTR(%)', max: 10 }, { name: 'CVR(%)', max: 3 },
+        { name: '视频数', max: 3000 }, { name: '播放效率', max: 100 }, { name: '成交(万)', max: 150 }
       ]
     },
-    series: [{
-      type: 'radar',
+    series: [{ type: 'radar', symbol: 'circle', symbolSize: 4,
       data: [
-        { value: [15.05, 7.23, 1.55, 1880, 34.5, 87.6], name: '我司', lineStyle: { color: oursColor }, areaStyle: { color: 'rgba(30,144,255,0.12)' }, itemStyle: { color: oursColor } },
-        { value: [14.77, 4.36, 1.03, 2566, 84.3, 141.4], name: '竞对(良米)', lineStyle: { color: theirsColor }, areaStyle: { color: 'rgba(255,107,53,0.1)' }, itemStyle: { color: theirsColor } }
+        { value: [15.05,7.23,1.55,1880,34.5,87.6], name: '我司', lineStyle: { color: C.ours, width: 2 }, areaStyle: { color: 'rgba(30,144,255,.1)' }, itemStyle: { color: C.ours } },
+        { value: [14.77,4.36,1.03,2566,84.3,141.4], name: '竞对', lineStyle: { color: C.theirs, width: 2 }, areaStyle: { color: 'rgba(255,107,53,.08)' }, itemStyle: { color: C.theirs } }
       ]
     }]
-  };
-  chart.setOption(option);
-  window.addEventListener('resize', function() { chart.resize(); });
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
 })();
 
-// ===== 产品线ROI柱状图 =====
-(function() {
-  var dom = document.getElementById('chart-product');
-  if (!dom) return;
-  var chart = echarts.init(dom);
-  var option = {
-    title: { text: '产品线ROI对比', left: 'center', top: 6, textStyle: { fontSize: 14, fontWeight: 600 } },
+// ===== 2. 产品线ROI =====
+(function(){
+  var d = document.getElementById('chart-roi-bar'); if(!d) return;
+  var c = echarts.init(d);
+  c.setOption({
     tooltip: { trigger: 'axis' },
-    legend: { top: 32, data: ['我司ROI', '竞对ROI', '我司消耗占比%'] },
-    grid: { left: 16, right: 50, top: 60, bottom: 20 },
-    xAxis: { type: 'category', data: ['小米手环', '红米Watch6', 'AIGC集合', '耳机', '其他/通用'], axisLabel: { fontSize: 11 } },
-    yAxis: [
-      { type: 'value', name: 'ROI', splitLine: { lineStyle: { color: '#eee' } } },
-      { type: 'value', name: '消耗占比%', splitLine: { show: false }, axisLabel: { formatter: '{value}%' } }
-    ],
+    legend: { top: 0, textStyle: { fontSize: 11 }, data: ['我司ROI','竞对ROI'] },
+    grid: { left: 12, right: 12, top: 36, bottom: 20 },
+    xAxis: { type: 'category', data: ['手环','Watch6','AIGC','耳机','其他'], axisLabel: { fontSize: 10 } },
+    yAxis: { type: 'value', name: 'ROI', splitLine: { lineStyle: { color: '#eee', type: 'dashed' } } },
     series: [
-      { name: '我司ROI', type: 'bar', data: [14.1, 18.9, 13.4, 15.3, 12.2], itemStyle: { color: oursColor, borderRadius: [4,4,0,0] }, barWidth: 22, label: { show: true, position: 'top', fontSize: 11, fontWeight: 600 } },
-      { name: '竞对ROI', type: 'bar', data: [12.7, 17.5, 13.9, 19.9, 11.8], itemStyle: { color: theirsColor, borderRadius: [4,4,0,0] }, barWidth: 22 },
-      { name: '我司消耗占比%', type: 'line', yAxisIndex: 1, data: [47.1, 23.6, 17.0, 5.5, 6.7], lineStyle: { color: miOrange, width: 2.5 }, itemStyle: { color: miOrange }, symbol: 'circle', symbolSize: 8 }
+      { name: '我司ROI', type: 'bar', data: [14.1,18.9,13.4,15.3,12.2], itemStyle: { color: C.ours, borderRadius: [4,4,0,0] }, barWidth: 18, label: { show: true, position: 'top', fontSize: 10, fontWeight: 600, color: C.ours } },
+      { name: '竞对ROI', type: 'bar', data: [12.7,17.5,13.9,19.9,11.8], itemStyle: { color: C.theirs, borderRadius: [4,4,0,0] }, barWidth: 18, label: { show: true, position: 'top', fontSize: 10 } }
     ]
-  };
-  chart.setOption(option);
-  window.addEventListener('resize', function() { chart.resize(); });
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
 })();
 
-// ===== ROI分布堆积图 =====
-(function() {
-  var dom = document.getElementById('chart-roi-bar');
-  if (!dom) return;
-  var chart = echarts.init(dom);
-  var option = {
-    title: { text: '产品线消耗 vs 成交 vs ROI', left: 'center', top: 6, textStyle: { fontSize: 14, fontWeight: 600 } },
+// ===== 3. 产品线消耗vs成交 =====
+(function(){
+  var d = document.getElementById('chart-product'); if(!d) return;
+  var c = echarts.init(d);
+  c.setOption({
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    legend: { top: 32, data: ['消耗(¥)', '成交(¥)', 'ROI'] },
-    grid: { left: 16, right: 50, top: 60, bottom: 20 },
-    xAxis: { type: 'category', data: ['小米手环', '红米Watch6', 'AIGC集合', '耳机', '其他'], axisLabel: { fontSize: 11 } },
+    legend: { top: 0, textStyle: { fontSize: 10 }, data: ['消耗','成交','ROI'] },
+    grid: { left: 14, right: 50, top: 32, bottom: 14 },
+    xAxis: { type: 'category', data: ['手环','Watch6','AIGC','耳机','其他'], axisLabel: { fontSize: 10 } },
     yAxis: [
-      { type: 'value', name: '金额(万)', splitLine: { lineStyle: { color: '#eee' } }, axisLabel: { formatter: function(v){ return (v/10000).toFixed(0)+'万'; } } },
-      { type: 'value', name: 'ROI', splitLine: { show: false } }
+      { type: 'value', name: '金额', splitLine: { lineStyle: { color: '#eee', type: 'dashed' } }, axisLabel: { formatter: function(v){ return (v/10000).toFixed(0)+'万'; }, fontSize: 9 } },
+      { type: 'value', name: 'ROI', splitLine: { show: false }, axisLabel: { fontSize: 9 } }
     ],
     series: [
-      { name: '消耗(¥)', type: 'bar', data: [27434, 13754, 9927, 3202, 3921], itemStyle: { color: '#ff8a80', borderRadius: [4,4,0,0] }, barWidth: 20, stack: 'x' },
-      { name: '成交(¥)', type: 'bar', data: [386066, 259876, 133399, 49141, 47772], itemStyle: { color: '#a5d6a7', borderRadius: [4,4,0,0] }, barWidth: 20, stack: 'x' },
-      { name: 'ROI', type: 'line', yAxisIndex: 1, data: [14.1, 18.9, 13.4, 15.3, 12.2], lineStyle: { color: miOrange, width: 3 }, itemStyle: { color: miOrange }, symbol: 'diamond', symbolSize: 12, label: { show: true, fontWeight: 700, fontSize: 12 } }
+      { name: '消耗', type: 'bar', data: [27434,13754,9927,3202,3921], itemStyle: { color: '#ff8a80', borderRadius: [4,4,0,0] }, barWidth: 14, stack: 'x', label: { show: true, position: 'inside', fontSize: 8, color: '#fff', formatter: function(p){ return '¥'+(p.value/10000).toFixed(1)+'万'; } } },
+      { name: '成交', type: 'bar', data: [386066,259876,133399,49141,47772], itemStyle: { color: '#a5d6a7', borderRadius: [4,4,0,0] }, barWidth: 14, stack: 'x', label: { show: true, position: 'inside', fontSize: 8, formatter: function(p){ return '¥'+(p.value/10000).toFixed(0)+'万'; } } },
+      { name: 'ROI', type: 'line', yAxisIndex: 1, data: [14.1,18.9,13.4,15.3,12.2], lineStyle: { color: C.orange, width: 2.5 }, itemStyle: { color: C.orange }, symbol: 'diamond', symbolSize: 10, label: { show: true, fontWeight: 700, fontSize: 11, color: C.orange } }
     ]
-  };
-  chart.setOption(option);
-  window.addEventListener('resize', function() { chart.resize(); });
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
 })();
 
-// ===== 标题词云 =====
-(function() {
-  var dom = document.getElementById('chart-wordcloud');
-  if (!dom) return;
-  var chart = echarts.init(dom);
-  // Using a bar chart to simulate word frequency since we don't have wordcloud extension
+// ===== 4. 标题高频词 =====
+(function(){
+  var d = document.getElementById('chart-wordcloud'); if(!d) return;
+  var c = echarts.init(d);
   var words = [
-    { name: '#红米Watch6', value: 100 },
-    { name: '#小米手环', value: 92 },
-    { name: '#福利', value: 78 },
-    { name: '#618好物节', value: 75 },
-    { name: '#优惠', value: 68 },
-    { name: '#智能手表', value: 65 },
-    { name: '#活动', value: 58 },
-    { name: '#新品', value: 55 },
-    { name: '#数码科技', value: 48 },
-    { name: '#好价', value: 45 },
-    { name: '#放券', value: 40 },
-    { name: '#礼物', value: 35 },
-    { name: '#直播间', value: 32 },
-    { name: '#运动', value: 28 },
-    { name: '#AI穿戴好物', value: 25 }
+    { name: '#红米Watch6', v: 100 }, { name: '#小米手环', v: 92 }, { name: '#福利', v: 78 },
+    { name: '#618好物节', v: 75 }, { name: '#优惠', v: 68 }, { name: '#智能手表', v: 65 },
+    { name: '#活动', v: 58 }, { name: '#新品', v: 55 }, { name: '#数码科技', v: 48 },
+    { name: '#好价', v: 45 }, { name: '#放券', v: 40 }, { name: '#礼物', v: 35 },
+    { name: '#直播间', v: 32 }, { name: '#运动', v: 28 }, { name: '#AI穿戴', v: 25 }
   ];
-  var option = {
-    title: { text: 'TOP爆款视频标题高频词', left: 'center', top: 6, textStyle: { fontSize: 14, fontWeight: 600 } },
+  var palette = ['#FF4757','#FF6B35','#ff6900','#ff8c42','#ffa366','#1E90FF','#4da6ff','#80bfff','#1da85c','#4dbf73','#80d699','#7c6ff7','#a594ff','#c8960c','#d4af37'];
+  c.setOption({
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    grid: { left: 120, right: 40, top: 36, bottom: 10 },
-    xAxis: { type: 'value', name: '出现频次', splitLine: { lineStyle: { color: '#eee' } } },
-    yAxis: { type: 'category', data: words.map(function(w){ return w.name; }).reverse(), axisLabel: { fontSize: 11 }, inverse: true },
-    series: [{
-      type: 'bar', data: words.map(function(w){ return w.value; }).reverse(),
-      itemStyle: {
-        color: function(p) {
-          var colors = ['#FF4757','#FF6B35','#FF6900','#ff8c42','#ffa366','#ffba8a','#1E90FF','#4da6ff','#80bfff','#b3d9ff','#1da85c','#4dbf73','#80d699','#b3e6bf','#d9f2e0'];
-          return colors[p.dataIndex % colors.length];
-        },
-        borderRadius: [0, 4, 4, 0]
-      },
-      barWidth: 18,
-      label: { show: true, position: 'right', fontSize: 10 }
-    }]
-  };
-  chart.setOption(option);
-  window.addEventListener('resize', function() { chart.resize(); });
-})();
-
-// ===== 热点日历时间线 =====
-(function() {
-  var dom = document.getElementById('chart-timeline');
-  if (!dom) return;
-  var chart = echarts.init(dom);
-  var events = [
-    { name: '618冲刺', start: '2026-06-15', end: '2026-06-18', color: '#FF4757' },
-    { name: '父亲节', start: '2026-06-15', end: '2026-06-15', color: '#c8960c' },
-    { name: '618决战', start: '2026-06-18', end: '2026-06-18', color: '#ff6900' },
-    { name: '618返场', start: '2026-06-19', end: '2026-06-25', color: '#0ea89d' },
-    { name: '毕业季', start: '2026-06-22', end: '2026-06-30', color: '#7c6ff7' },
-    { name: '暑期档', start: '2026-06-25', end: '2026-07-10', color: '#1da85c' },
-    { name: '世界杯', start: '2026-06-20', end: '2026-07-15', color: '#1E90FF' },
-    { name: '暑假旅游', start: '2026-07-01', end: '2026-07-20', color: '#ff6900' }
-  ];
-  var categories = ['618冲刺', '父亲节', '618决战', '618返场', '毕业季', '暑期档', '世界杯', '暑假旅游'];
-  var option = {
-    title: { text: '6-7月热点日历时间轴', left: 'center', top: 6, textStyle: { fontSize: 14, fontWeight: 600 } },
-    tooltip: { trigger: 'item', formatter: function(p) { return p.name + '<br/>' + p.value[0] + ' ~ ' + p.value[1]; } },
-    grid: { left: 20, right: 20, top: 40, bottom: 10 },
-    xAxis: { type: 'time', min: '2026-06-13', max: '2026-07-22', axisLabel: { fontSize: 10, formatter: '{MM}-{dd}' } },
-    yAxis: { type: 'category', data: categories.reverse(), axisLabel: { fontSize: 11 } },
-    series: [{
-      type: 'scatter', symbol: 'roundRect',
-      symbolSize: function(val) {
-        var start = new Date(val[0]).getTime();
-        var end = new Date(val[1]).getTime();
-        var days = (end - start) / (1000 * 60 * 60 * 24) + 1;
-        return [days * 28, 22];
-      },
-      data: events.map(function(e, i) {
-        return { name: e.name, value: [e.start, categories.length - 1 - i], itemStyle: { color: e.color } };
-      }),
-      label: { show: true, position: 'inside', fontSize: 10, color: '#fff', fontWeight: 600 }
-    }]
-  };
-  chart.setOption(option);
-  window.addEventListener('resize', function() { chart.resize(); });
+    grid: { left: 110, right: 36, top: 8, bottom: 4 },
+    xAxis: { type: 'value', splitLine: { lineStyle: { color: '#eee', type: 'dashed' } }, axisLabel: { fontSize: 9 } },
+    yAxis: { type: 'category', data: words.map(function(w){ return w.name; }).reverse(), axisLabel: { fontSize: 10 }, inverse: true },
+    series: [{ type: 'bar', data: words.map(function(w, i){ return { value: w.v, itemStyle: { color: palette[i % palette.length], borderRadius: [0,3,3,0] } }; }).reverse(), barWidth: 14, label: { show: true, position: 'right', fontSize: 9 } }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
 })();
 </script>
-
 </body>
 </html>
