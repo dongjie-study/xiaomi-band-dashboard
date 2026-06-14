@@ -5,22 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>小米手环竞对分析平台</title>
 <style>
-  /* ===== DESIGN TOKENS ===== */
+  /* ===== TOKENS ===== */
   :root {
-    --bg:           #f5f6f8;
-    --surface:      #ffffff;
-    --text:         #1a1d28;
-    --text-secondary:#6b7185;
-    --text-muted:   #9ca1b0;
-    --border:       #e9ebf0;
-    --shadow-sm:    0 1px 2px rgba(0,0,0,.03), 0 1px 3px rgba(0,0,0,.04);
-    --shadow-md:    0 4px 12px rgba(0,0,0,.04), 0 2px 4px rgba(0,0,0,.03);
-    --shadow-lg:    0 12px 32px rgba(0,0,0,.07), 0 4px 8px rgba(0,0,0,.04);
-    --radius:       18px;
-    --radius-sm:    12px;
-    --transition:   0.28s cubic-bezier(0.4, 0, 0.2, 1);
+    --sidebar-w: 240px;
+    --bg:        #f0f2f5;
+    --sidebar-bg:#1a1f2b;
+    --sidebar-text:#9ca3b2;
+    --sidebar-active:#ffffff;
+    --surface:   #ffffff;
+    --text:      #1a1d28;
+    --text-secondary:#6b7280;
+    --border:    #e5e7eb;
+    --radius:    12px;
+    --transition:.22s ease;
 
-    /* Card accents */
     --clr-sales:      #ff6b35;
     --clr-violations: #ef4444;
     --clr-strategy:   #f59e0b;
@@ -28,366 +26,514 @@
     --clr-hourly:     #8b5cf6;
     --clr-gsv:        #0891b2;
     --clr-upgrade:    #ec4899;
-
-    --clr-sales-bg:      #fff8f5;
-    --clr-violations-bg: #fef5f5;
-    --clr-strategy-bg:   #fffcf5;
-    --clr-video-bg:      #f5f9ff;
-    --clr-hourly-bg:     #f8f5ff;
-    --clr-gsv-bg:        #f5fcfd;
-    --clr-upgrade-bg:    #fdf5fa;
   }
 
-  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     background: var(--bg);
     color: var(--text);
-    min-height: 100vh;
     display: flex;
-    align-items: center;
-    justify-content: center;
+    min-height: 100vh;
     -webkit-font-smoothing: antialiased;
   }
 
-  .container {
-    width: 100%;
-    max-width: 960px;
-    padding: 48px 28px 52px;
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: var(--sidebar-w);
+    background: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 100;
+    overflow-y: auto;
   }
 
-  /* ===== HEADER ===== */
-  .header {
-    text-align: center;
-    margin-bottom: 44px;
+  .sidebar-brand {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
   }
 
-  .header .eyebrow {
-    display: inline-flex;
+  .sidebar-brand .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sidebar-brand .logo-icon {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, #ff6b35, #f59e0b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1em;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .sidebar-brand .logo-text {
+    font-size: .9em;
+    font-weight: 700;
+    color: #e2e6ec;
+    line-height: 1.3;
+    letter-spacing: -.01em;
+  }
+
+  .sidebar-brand .logo-text small {
+    display: block;
+    font-weight: 400;
+    font-size: .72em;
+    color: #6b7280;
+    letter-spacing: 0;
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: 12px 0;
+  }
+
+  .sidebar-nav .nav-section {
+    padding: 12px 20px 4px;
+    font-size: .65em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: #4b5563;
+  }
+
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    margin: 1px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--sidebar-text);
+    font-size: .87em;
+    font-weight: 500;
+    transition: all var(--transition);
+    position: relative;
+  }
+
+  .sidebar-nav a:hover {
+    background: rgba(255,255,255,.04);
+    color: #d1d5db;
+  }
+
+  .sidebar-nav a.active {
+    background: rgba(255,255,255,.08);
+    color: var(--sidebar-active);
+    font-weight: 600;
+  }
+
+  .sidebar-nav a .nav-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    opacity: .7;
+  }
+
+  .sidebar-nav a.sales .nav-dot      { background: var(--clr-sales); }
+  .sidebar-nav a.violations .nav-dot { background: var(--clr-violations); }
+  .sidebar-nav a.strategy .nav-dot   { background: var(--clr-strategy); }
+  .sidebar-nav a.video .nav-dot      { background: var(--clr-video); }
+  .sidebar-nav a.hourly .nav-dot     { background: var(--clr-hourly); }
+  .sidebar-nav a.gsv .nav-dot        { background: var(--clr-gsv); }
+  .sidebar-nav a.upgrade .nav-dot    { background: var(--clr-upgrade); }
+
+  .sidebar-nav a .badge-nav {
+    margin-left: auto;
+    font-size: .65em;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 600;
+    letter-spacing: .03em;
+  }
+
+  .sidebar-footer {
+    padding: 14px 20px;
+    border-top: 1px solid rgba(255,255,255,.06);
+    font-size: .72em;
+    color: #4b5563;
+    display: flex;
     align-items: center;
     gap: 7px;
-    font-size: .75em;
-    font-weight: 600;
-    letter-spacing: .06em;
-    color: var(--text-muted);
-    margin-bottom: 16px;
   }
 
-  .header .eyebrow .live-dot {
-    width: 7px; height: 7px;
+  .sidebar-footer .live-dot {
+    width: 6px; height: 6px;
     border-radius: 50%;
     background: #22c55e;
-    box-shadow: 0 0 6px rgba(34,197,94,.35);
+    box-shadow: 0 0 5px rgba(34,197,94,.5);
     animation: pulse-dot 2s ease-in-out infinite;
   }
 
   @keyframes pulse-dot {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50%      { opacity: .4; transform: scale(1.7); }
+    50%      { opacity: .4; transform: scale(1.6); }
   }
 
-  .header h1 {
-    font-size: 2.1em;
+  /* ===== MAIN CONTENT ===== */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 32px 36px 40px;
+    min-height: 100vh;
+  }
+
+  .page-header {
+    margin-bottom: 32px;
+  }
+
+  .page-header h1 {
+    font-size: 1.6em;
     font-weight: 800;
     letter-spacing: -.02em;
-    line-height: 1.25;
     color: var(--text);
+    margin-bottom: 4px;
   }
 
-  .header h1 .accent {
-    background: linear-gradient(135deg, #ff6b35 0%, #f59e0b 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .header .divider {
-    width: 40px; height: 3px;
-    border-radius: 2px;
-    background: linear-gradient(90deg, #ff6b35, #f59e0b);
-    margin: 14px auto;
-  }
-
-  .header .subtitle {
+  .page-header .breadcrumb {
+    font-size: .8em;
     color: var(--text-secondary);
-    font-size: .9em;
-    line-height: 1.6;
   }
 
-  /* ===== CARDS GRID ===== */
-  .cards {
+  .page-header .breadcrumb span {
+    color: #ff6b35;
+    font-weight: 600;
+  }
+
+  /* ===== STAT CARDS ===== */
+  .stats-row {
     display: grid;
-    grid-template-columns: repeat(6, 1fr);
-    gap: 18px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
   }
-  .cards > a:nth-child(1) { grid-column: span 2; }
-  .cards > a:nth-child(2) { grid-column: span 2; }
-  .cards > a:nth-child(3) { grid-column: span 2; }
-  .cards > a:nth-child(4) { grid-column: span 2; }
-  .cards > a:nth-child(5) { grid-column: span 2; }
-  .cards > a:nth-child(6) { grid-column: span 2; }
-  .cards > a:nth-child(7) { grid-column: 3 / span 2; }
 
-  /* ===== CARD ===== */
-  .card {
+  .stat-card {
     background: var(--surface);
     border-radius: var(--radius);
-    padding: 28px 24px 22px;
-    text-decoration: none;
-    box-shadow: var(--shadow-sm);
+    padding: 20px 22px;
     border: 1px solid var(--border);
-    transition:
-      transform var(--transition),
-      box-shadow var(--transition),
-      border-color var(--transition);
+    transition: box-shadow var(--transition);
+  }
+
+  .stat-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.06); }
+
+  .stat-card .stat-label {
+    font-size: .72em;
+    color: var(--text-secondary);
+    font-weight: 600;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.8em;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  .stat-card .stat-sub {
+    font-size: .75em;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+
+  /* ===== MODULE GRID ===== */
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  .module-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 24px 22px 20px;
+    border: 1px solid var(--border);
+    text-decoration: none;
+    transition: all var(--transition);
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    text-align: left;
     position: relative;
     overflow: hidden;
-    cursor: pointer;
-
-    opacity: 0;
-    transform: translateY(16px);
-    animation: card-enter .5s ease-out forwards;
   }
 
-  .card:nth-child(1) { animation-delay: .05s; }
-  .card:nth-child(2) { animation-delay: .12s; }
-  .card:nth-child(3) { animation-delay: .19s; }
-  .card:nth-child(4) { animation-delay: .26s; }
-  .card:nth-child(5) { animation-delay: .33s; }
-  .card:nth-child(6) { animation-delay: .40s; }
-  .card:nth-child(7) { animation-delay: .47s; }
-
-  @keyframes card-enter {
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Top accent stripe */
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 14px; right: 14px;
-    height: 3px;
-    border-radius: 0 0 3px 3px;
-    opacity: 0;
-    transition: opacity .3s ease, left .3s ease, right .3s ease;
-  }
-
-  .card:hover::before {
-    opacity: 1;
-    left: 0; right: 0;
-    border-radius: 0;
-  }
-
-  .card:hover {
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-lg);
+  .module-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.08);
     border-color: transparent;
   }
 
-  .card.sales::before      { background: var(--clr-sales); }
-  .card.violations::before { background: var(--clr-violations); }
-  .card.strategy::before   { background: var(--clr-strategy); }
-  .card.video::before      { background: var(--clr-video); }
-  .card.hourly::before     { background: var(--clr-hourly); }
-  .card.gsv::before        { background: var(--clr-gsv); }
-  .card.upgrade::before    { background: var(--clr-upgrade); }
-
-  /* ===== ICON ===== */
-  .card .icon-wrap {
-    width: 48px; height: 48px;
-    border-radius: var(--radius-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.4em;
-    margin-bottom: 16px;
-    transition: transform var(--transition);
-    flex-shrink: 0;
+  /* Left accent stripe */
+  .module-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 12px; bottom: 12px;
+    width: 3px;
+    border-radius: 0 2px 2px 0;
+    transition: all .3s ease;
   }
 
-  .card:hover .icon-wrap { transform: scale(1.07); }
+  .module-card:hover::before { top: 0; bottom: 0; border-radius: 0; }
 
-  .card.sales .icon-wrap      { background: var(--clr-sales-bg); }
-  .card.violations .icon-wrap { background: var(--clr-violations-bg); }
-  .card.strategy .icon-wrap   { background: var(--clr-strategy-bg); }
-  .card.video .icon-wrap      { background: var(--clr-video-bg); }
-  .card.hourly .icon-wrap     { background: var(--clr-hourly-bg); }
-  .card.gsv .icon-wrap        { background: var(--clr-gsv-bg); }
-  .card.upgrade .icon-wrap    { background: var(--clr-upgrade-bg); }
+  .module-card.sales::before      { background: var(--clr-sales); }
+  .module-card.violations::before { background: var(--clr-violations); }
+  .module-card.strategy::before   { background: var(--clr-strategy); }
+  .module-card.video::before      { background: var(--clr-video); }
+  .module-card.hourly::before     { background: var(--clr-hourly); }
+  .module-card.gsv::before        { background: var(--clr-gsv); }
+  .module-card.upgrade::before    { background: var(--clr-upgrade); }
 
-  /* ===== TYPOGRAPHY ===== */
-  .card h2 {
-    font-size: 1.05em;
+  .module-card .mod-icon {
+    font-size: 1.6em;
+    margin-bottom: 12px;
+  }
+
+  .module-card h3 {
+    font-size: .95em;
     font-weight: 700;
     color: var(--text);
-    margin-bottom: 5px;
-    letter-spacing: -.01em;
+    margin-bottom: 4px;
     transition: color var(--transition);
   }
 
-  .card.sales:hover h2      { color: var(--clr-sales); }
-  .card.violations:hover h2 { color: var(--clr-violations); }
-  .card.strategy:hover h2   { color: var(--clr-strategy); }
-  .card.video:hover h2      { color: var(--clr-video); }
-  .card.hourly:hover h2     { color: var(--clr-hourly); }
-  .card.gsv:hover h2        { color: var(--clr-gsv); }
-  .card.upgrade:hover h2    { color: var(--clr-upgrade); }
+  .module-card.sales:hover h3      { color: var(--clr-sales); }
+  .module-card.violations:hover h3 { color: var(--clr-violations); }
+  .module-card.strategy:hover h3   { color: var(--clr-strategy); }
+  .module-card.video:hover h3      { color: var(--clr-video); }
+  .module-card.hourly:hover h3     { color: var(--clr-hourly); }
+  .module-card.gsv:hover h3        { color: var(--clr-gsv); }
+  .module-card.upgrade:hover h3    { color: var(--clr-upgrade); }
 
-  .card p {
+  .module-card p {
+    font-size: .78em;
     color: var(--text-secondary);
-    font-size: .83em;
-    line-height: 1.55;
-    margin-bottom: 14px;
+    line-height: 1.5;
     flex: 1;
+    margin-bottom: 12px;
   }
 
-  /* ===== BADGE ===== */
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 10px;
-    border-radius: 14px;
-    font-size: .68em;
+  .module-card .mod-tag {
+    font-size: .66em;
     font-weight: 600;
     letter-spacing: .04em;
     text-transform: uppercase;
-    transition: all var(--transition);
+    align-self: flex-start;
+    padding: 2px 8px;
+    border-radius: 10px;
   }
 
-  .card.sales .badge      { background: var(--clr-sales-bg); color: var(--clr-sales); }
-  .card.violations .badge { background: var(--clr-violations-bg); color: var(--clr-violations); }
-  .card.strategy .badge   { background: var(--clr-strategy-bg); color: var(--clr-strategy); }
-  .card.video .badge      { background: var(--clr-video-bg); color: var(--clr-video); }
-  .card.hourly .badge     { background: var(--clr-hourly-bg); color: var(--clr-hourly); }
-  .card.gsv .badge        { background: var(--clr-gsv-bg); color: var(--clr-gsv); }
-  .card.upgrade .badge    { background: var(--clr-upgrade-bg); color: var(--clr-upgrade); }
-
-  .card:hover .badge { transform: translateY(-1px); }
-
-  /* ===== FOOTER ===== */
-  .footer {
-    text-align: center;
-    margin-top: 48px;
-    color: var(--text-muted);
-    font-size: .76em;
-    letter-spacing: .02em;
-  }
+  .module-card.sales .mod-tag      { background: #fff8f5; color: var(--clr-sales); }
+  .module-card.violations .mod-tag { background: #fef5f5; color: var(--clr-violations); }
+  .module-card.strategy .mod-tag   { background: #fffcf5; color: var(--clr-strategy); }
+  .module-card.video .mod-tag      { background: #f5f9ff; color: var(--clr-video); }
+  .module-card.hourly .mod-tag     { background: #f8f5ff; color: var(--clr-hourly); }
+  .module-card.gsv .mod-tag        { background: #f5fcfd; color: var(--clr-gsv); }
+  .module-card.upgrade .mod-tag    { background: #fdf5fa; color: var(--clr-upgrade); }
 
   /* ===== RESPONSIVE ===== */
-  @media (max-width: 780px) {
-    .cards {
-      grid-template-columns: repeat(2, 1fr) !important;
-      gap: 14px;
+  @media (max-width: 900px) {
+    .module-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 700px) {
+    .sidebar {
+      width: 56px;
     }
-    .cards > a:nth-child(1),
-    .cards > a:nth-child(2),
-    .cards > a:nth-child(3),
-    .cards > a:nth-child(4),
-    .cards > a:nth-child(5),
-    .cards > a:nth-child(6),
-    .cards > a:nth-child(7) {
-      grid-column: span 1 !important;
-    }
-    .header h1 { font-size: 1.65em; }
-    .card { padding: 22px 18px 18px; }
+    .sidebar .logo-text,
+    .sidebar-nav .nav-section,
+    .sidebar-nav a span:not(.nav-dot),
+    .sidebar-nav a .badge-nav,
+    .sidebar-footer span { display: none; }
+    .sidebar-nav a { justify-content: center; padding: 12px; margin: 1px 8px; }
+    .sidebar-nav a .nav-dot { width: 10px; height: 10px; }
+    .sidebar-brand { padding: 16px 10px; }
+    .sidebar-brand .logo { justify-content: center; }
+    .main { margin-left: 56px; padding: 20px 16px 28px; }
+    .module-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    :root { --sidebar-w: 56px; }
   }
 
   @media (max-width: 480px) {
-    .cards { grid-template-columns: 1fr !important; }
-    .cards > a { grid-column: span 1 !important; }
-    .header h1 { font-size: 1.35em; }
-    .header { margin-bottom: 30px; }
-    .container { padding: 24px 14px 30px; }
+    .stats-row { grid-template-columns: 1fr; }
+    .main { padding: 16px 12px 24px; }
+    .page-header h1 { font-size: 1.3em; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .card { animation: none !important; opacity: 1 !important; transform: none !important; }
     .live-dot { animation: none !important; }
-  }
-
-  .card:focus-visible {
-    outline: 2px solid var(--clr-sales);
-    outline-offset: 3px;
-    border-radius: var(--radius);
   }
 </style>
 </head>
 <body>
 
-<script>localStorage.setItem('mi_band_auth_v1','1');</script>
-
-<div class="container">
-
-  <div class="header">
-    <div class="eyebrow">
-      <span class="live-dot"></span> 系统在线 · 数据实时更新
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="logo">
+      <div class="logo-icon">⌚</div>
+      <div class="logo-text">
+        小米手环<br><small>竞对分析平台</small>
+      </div>
     </div>
-    <h1>小米手环<span class="accent">竞对分析</span>平台</h1>
-    <div class="divider"></div>
-    <p class="subtitle">多模块数据看板 · 竞对实时追踪 · 每日自动更新</p>
   </div>
 
-  <div class="cards">
-    <a href="sales_analysis/index.html" class="card sales">
-      <div class="icon-wrap">📈</div>
-      <h2>穿戴直播间销量分析</h2>
+  <nav class="sidebar-nav">
+    <div class="nav-section">数据看板</div>
+    <a href="sales_analysis/index.html" class="sales">
+      <span class="nav-dot"></span> 销量分析
+      <span class="badge-nav" style="background:rgba(255,107,53,.15);color:#ff6b35;">HOT</span>
+    </a>
+    <a href="小时分析/index.html" class="hourly">
+      <span class="nav-dot"></span> 小时级出单
+    </a>
+
+    <div class="nav-section">竞争情报</div>
+    <a href="违规情况/report.html" class="violations">
+      <span class="nav-dot"></span> 违规追踪
+    </a>
+    <a href="核心指标分析/核心指标报告.html" class="video">
+      <span class="nav-dot"></span> 千川视频分析
+    </a>
+
+    <div class="nav-section">运营工具</div>
+    <a href="strategy.html" class="strategy">
+      <span class="nav-dot"></span> 营销战略
+    </a>
+    <a href="gsv.html" class="gsv">
+      <span class="nav-dot"></span> 主播业绩
+    </a>
+    <a href="视频提升方案_可视化.html" class="upgrade">
+      <span class="nav-dot"></span> 视频提升方案
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <span class="live-dot"></span> <span>系统运行中</span>
+  </div>
+</aside>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="main">
+  <div class="page-header">
+    <div class="breadcrumb">首页 / <span>工作台</span></div>
+    <h1>概览</h1>
+  </div>
+
+  <!-- Stat cards -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card">
+      <div class="stat-label">今日订单</div>
+      <div class="stat-value">--</div>
+      <div class="stat-sub">加载中...</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">今日销售额</div>
+      <div class="stat-value">--</div>
+      <div class="stat-sub">加载中...</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">监控直播间</div>
+      <div class="stat-value">--</div>
+      <div class="stat-sub">加载中...</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">历史天数</div>
+      <div class="stat-value">--</div>
+      <div class="stat-sub">加载中...</div>
+    </div>
+  </div>
+
+  <!-- Module cards -->
+  <div class="module-grid">
+    <a href="sales_analysis/index.html" class="module-card sales">
+      <div class="mod-icon">📈</div>
+      <h3>穿戴直播间销量分析</h3>
       <p>每日订单追踪、竞对直播间对比、小时分布、产品结构分析</p>
-      <span class="badge">LIVE SALES</span>
+      <span class="mod-tag">Live Sales</span>
     </a>
 
-    <a href="违规情况/report.html" class="card violations">
-      <div class="icon-wrap">⚠️</div>
-      <h2>违规情况分析</h2>
+    <a href="违规情况/report.html" class="module-card violations">
+      <div class="mod-icon">⚠️</div>
+      <h3>违规情况分析</h3>
       <p>小米系5个直播间违规判罚追踪、原因分布、处罚升级路径</p>
-      <span class="badge">VIOLATIONS</span>
+      <span class="mod-tag">Violations</span>
     </a>
 
-    <a href="strategy.html" class="card strategy">
-      <div class="icon-wrap">🗺️</div>
-      <h2>全域营销战略</h2>
-      <p>10Pro全域营销总纲：iPhone市场、千川抖加投放、许昌活动、游戏视频四合一作战地图</p>
-      <span class="badge">PLAYBOOK</span>
+    <a href="strategy.html" class="module-card strategy">
+      <div class="mod-icon">🗺️</div>
+      <h3>全域营销战略</h3>
+      <p>10Pro全域营销总纲：iPhone市场、千川抖加投放、许昌活动、游戏视频</p>
+      <span class="mod-tag">Playbook</span>
     </a>
 
-    <a href="核心指标分析/核心指标报告.html" class="card video">
-      <div class="icon-wrap">🎬</div>
-      <h2>千川视频分析</h2>
-      <p>千川视频素材核心指标：消耗/成交/ROI/CTR，我司与竞对(良米)数据对比与深度洞察</p>
-      <span class="badge">VIDEO ANALYTICS</span>
+    <a href="核心指标分析/核心指标报告.html" class="module-card video">
+      <div class="mod-icon">🎬</div>
+      <h3>千川视频分析</h3>
+      <p>千川视频素材核心指标：消耗/成交/ROI/CTR，我司与竞对(良米)数据对比</p>
+      <span class="mod-tag">Video Analytics</span>
     </a>
 
-    <a href="小时分析/index.html" class="card hourly">
-      <div class="icon-wrap">⏰</div>
-      <h2>直播间小时级出单分析</h2>
-      <p>拖入订单Excel表格，自动识别列名并生成小时级分析报告：分品类热力图、直播间对比、环比趋势</p>
-      <span class="badge">HOURLY ANALYTICS</span>
+    <a href="小时分析/index.html" class="module-card hourly">
+      <div class="mod-icon">⏰</div>
+      <h3>直播间小时级出单分析</h3>
+      <p>拖入订单Excel，自动识别列名生成小时级报告：分品类热力图、环比趋势</p>
+      <span class="mod-tag">Hourly</span>
     </a>
 
-    <a href="gsv.html" class="card gsv">
-      <div class="icon-wrap">🛠️</div>
-      <h2>主播业绩工具</h2>
-      <p>拖入订单Excel，自动按达人+日期时段汇总，一键生成场次表与主播业绩，支持自定义导出</p>
-      <span class="badge">PERFORMANCE</span>
+    <a href="gsv.html" class="module-card gsv">
+      <div class="mod-icon">🛠️</div>
+      <h3>主播业绩工具</h3>
+      <p>拖入订单Excel，自动按达人+日期汇总，一键生成场次表与主播业绩</p>
+      <span class="mod-tag">Performance</span>
     </a>
 
-    <a href="视频提升方案_可视化.html" class="card upgrade">
-      <div class="icon-wrap">🚀</div>
-      <h2>视频提升方案</h2>
-      <p>基于千川数据+抖音热点的视频策略：四大提升方向、6套文案模板、投放正循环模型</p>
-      <span class="badge">STRATEGY</span>
+    <a href="视频提升方案_可视化.html" class="module-card upgrade">
+      <div class="mod-icon">🚀</div>
+      <h3>视频提升方案</h3>
+      <p>基于千川数据+抖音热点的视频策略：四大提升方向、6套文案模板</p>
+      <span class="mod-tag">Strategy</span>
     </a>
   </div>
+</main>
 
-  <div class="footer">
-    数据来源：巨量广告 · 抖音直播订单 <span style="color:#d0d4dd">|</span> 报告由系统自动生成
-  </div>
+<script>
+localStorage.setItem('mi_band_auth_v1','1');
 
-</div>
+// Load latest stats
+(async function(){
+  try {
+    const r = await fetch('sales_analysis/history.json');
+    if (!r.ok) return;
+    const history = await r.json();
+    if (!history.length) return;
+    const latest = history[history.length - 1];
+    const cards = document.querySelectorAll('.stat-card');
+    cards[0].querySelector('.stat-value').textContent = latest.total_orders.toLocaleString() + ' 单';
+    cards[0].querySelector('.stat-sub').textContent = latest.date;
+    cards[1].querySelector('.stat-value').textContent = '¥ ' + (latest.total_revenue / 10000).toFixed(1) + ' 万';
+    cards[1].querySelector('.stat-sub').textContent = '均价 ¥' + Math.round(latest.avg_price);
+    cards[2].querySelector('.stat-value').textContent = Object.keys(latest.rooms).length + ' 间';
+    const ourRooms = Object.values(latest.rooms).filter(function(r){ return r.type === '我方'; }).length;
+    cards[2].querySelector('.stat-sub').textContent = '我方 ' + ourRooms + ' 间 · 竞对 ' + (Object.keys(latest.rooms).length - ourRooms) + ' 间';
+    cards[3].querySelector('.stat-value').textContent = history.length + ' 天';
+    cards[3].querySelector('.stat-sub').textContent = history[0].date + ' ~ ' + latest.date;
+  } catch(e) {
+    document.getElementById('statsRow').innerHTML =
+      '<div class="stat-card" style="grid-column:1/-1;text-align:center;color:#9ca1b0;padding:32px;">数据加载失败，请确认 history.json 可访问</div>';
+  }
+})();
+</script>
 </body>
 </html>
