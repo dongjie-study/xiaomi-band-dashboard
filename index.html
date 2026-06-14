@@ -35,6 +35,8 @@
     --clr-hourly-bg:     #f5f3ff;
     --clr-gsv:          #0891b2;
     --clr-gsv-bg:       #ecfeff;
+	    --clr-upgrade:      #ec4899;
+	    --clr-upgrade-bg:   #fdf2f8;
   }
 
   /* ===== RESET & BASE ===== */
@@ -136,6 +138,7 @@
   .cards > a:nth-child(4) { grid-column: span 2; }
   .cards > a:nth-child(5) { grid-column: span 2; }
   .cards > a:nth-child(6) { grid-column: span 2; }
+	  .cards > a:nth-child(7) { grid-column: span 6; }
 
   /* ===== CARD ===== */
   .card {
@@ -169,6 +172,7 @@
   .card:nth-child(4) { animation-delay: .30s; }
   .card:nth-child(5) { animation-delay: .38s; }
   .card:nth-child(6) { animation-delay: .46s; }
+	  .card:nth-child(7) { animation-delay: .54s; }
 
   @keyframes card-enter {
     to { opacity: 1; transform: translateY(0); }
@@ -204,6 +208,7 @@
   .card.video::before      { background: var(--clr-video); }
   .card.hourly::before     { background: var(--clr-hourly); }
   .card.gsv::before         { background: var(--clr-gsv); }
+.card.upgrade::before     { background: var(--clr-upgrade); }
 
   /* ===== ICON CONTAINER ===== */
   .card .icon-wrap {
@@ -229,6 +234,7 @@
   .card.video .icon-wrap      { background: var(--clr-video-bg); }
   .card.hourly .icon-wrap     { background: var(--clr-hourly-bg); }
   .card.gsv .icon-wrap        { background: var(--clr-gsv-bg); }
+	  .card.upgrade .icon-wrap     { background: var(--clr-upgrade-bg); }
 
   /* ===== CARD TYPOGRAPHY ===== */
   .card h2 {
@@ -247,6 +253,7 @@
   .card.video:hover h2      { color: var(--clr-video); }
   .card.hourly:hover h2     { color: var(--clr-hourly); }
   .card.gsv:hover h2        { color: var(--clr-gsv); }
+	  .card.upgrade:hover h2     { color: var(--clr-upgrade); }
 
   .card p {
     color: var(--text-secondary);
@@ -276,6 +283,7 @@
   .card.video .badge      { background: var(--clr-video-bg); color: var(--clr-video); }
   .card.hourly .badge     { background: var(--clr-hourly-bg); color: var(--clr-hourly); }
   .card.gsv .badge        { background: var(--clr-gsv-bg); color: var(--clr-gsv); }
+	  .card.upgrade .badge     { background: var(--clr-upgrade-bg); color: var(--clr-upgrade); }
 
   .card:hover .badge {
     filter: brightness(.95);
@@ -401,6 +409,12 @@
       <h2>主播业绩工具</h2>
       <p>拖入订单Excel，自动按达人+日期时段汇总，一键生成场次表与主播业绩，支持自定义导出</p>
       <span class="badge">PERFORMANCE</span>
+    </a>
+    <a href="视频提升方案_可视化.html" class="card upgrade">
+      <div class="icon-wrap">🚀</div>
+      <h2>视频提升方案</h2>
+      <p>基于千川数据+抖音热点的视频策略：四大提升方向、6套文案模板、投放正循环模型</p>
+      <span class="badge">STRATEGY</span>
     </a>
   </div>
 
