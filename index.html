@@ -145,13 +145,34 @@
   .sidebar-nav a.upgrade .nav-dot    { background: var(--clr-upgrade); }
 
   .sidebar-nav a .badge-nav {
-    margin-left: auto;
     font-size: .65em;
     padding: 2px 7px;
     border-radius: 10px;
     font-weight: 600;
     letter-spacing: .03em;
   }
+
+  .sidebar-nav a .sub-arrow {
+    font-size: .7em;
+    transition: transform .2s;
+  }
+  .sidebar-nav a.expanded .sub-arrow { transform: rotate(90deg); }
+
+  .sub-menu { padding: 0; }
+  .sub-menu a {
+    padding: 6px 20px 6px 48px;
+    margin: 0 10px;
+    font-size: .78em;
+    font-weight: 400;
+    color: #7a8392;
+    display: block;
+    text-decoration: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .sub-menu a:hover { color: #d1d5db; background: rgba(255,255,255,.03); }
+  .sub-menu a.active { color: #fff; background: rgba(255,255,255,.06); font-weight: 600; }
 
   .sidebar-footer {
     padding: 14px 20px;
@@ -196,23 +217,6 @@
     gap: 12px;
     flex-shrink: 0;
   }
-
-  .topbar .back-btn {
-    display: none;
-    align-items: center;
-    gap: 4px;
-    padding: 5px 10px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: #fff;
-    cursor: pointer;
-    font-size: .8em;
-    color: var(--text-secondary);
-    transition: all var(--transition);
-  }
-
-  .topbar .back-btn:hover { background: #f5f6f8; color: var(--text); }
-  .topbar .back-btn.show { display: inline-flex; }
 
   .topbar .breadcrumb {
     font-size: .82em;
@@ -428,10 +432,12 @@
 
   <nav class="sidebar-nav">
     <div class="nav-section">数据看板</div>
-    <a data-module="sales" data-title="穿戴直播间销量分析" data-url="sales_analysis/index.html" onclick="openModule(this)">
+    <a data-module="sales" data-title="穿戴直播间销量分析" data-url="sales_analysis/index.html" onclick="toggleSalesSub(this)" class="sales">
       <span class="nav-dot"></span> 销量分析
       <span class="badge-nav" style="background:rgba(255,107,53,.15);color:#ff6b35;">HOT</span>
+      <span class="sub-arrow" style="margin-left:auto;font-size:.7em;transition:transform .2s;">▸</span>
     </a>
+    <div class="sub-menu" id="salesSubMenu" style="display:none;"></div>
     <a data-module="hourly" data-title="直播间小时级出单分析" data-url="小时分析/index.html" onclick="openModule(this)">
       <span class="nav-dot"></span> 小时级出单
     </a>
@@ -465,9 +471,7 @@
 <main class="main">
   <!-- Top bar -->
   <div class="topbar">
-    <button class="back-btn" id="backBtn" onclick="goHome()">← 返回概览</button>
     <span class="breadcrumb" id="breadcrumb">首页 / <span>工作台</span></span>
-    <span class="module-title" id="moduleTitle"></span>
   </div>
 
   <!-- Content area -->
@@ -549,10 +553,13 @@ function openModule(el) {
   var info = modules[m];
   if (!info || !info.url) return;
 
-  // Update sidebar active
-  document.querySelectorAll('.sidebar-nav a').forEach(function(a) { a.classList.remove('active'); });
-  var sideLink = document.querySelector('.sidebar-nav a[data-module="' + m + '"]');
+  // Clear all active
+  document.querySelectorAll('.sidebar-nav > a, .sub-menu a').forEach(function(a) { a.classList.remove('active'); });
+  var sideLink = document.querySelector('.sidebar-nav > a[data-module="' + m + '"]');
   if (sideLink) sideLink.classList.add('active');
+
+  // Collapse sales sub-menu
+  collapseSalesSub();
 
   // Switch to iframe
   document.getElementById('overview').classList.add('hidden');
@@ -561,26 +568,62 @@ function openModule(el) {
   iframe.classList.add('show');
 
   // Update topbar
-  document.getElementById('backBtn').classList.add('show');
   document.getElementById('breadcrumb').innerHTML = '首页 / <span>' + info.title + '</span>';
-  document.getElementById('moduleTitle').classList.add('show');
-  document.getElementById('moduleTitle').textContent = info.title;
 }
 
 function goHome() {
-  // Clear sidebar active
-  document.querySelectorAll('.sidebar-nav a').forEach(function(a) { a.classList.remove('active'); });
-
-  // Switch to overview
+  document.querySelectorAll('.sidebar-nav > a, .sub-menu a').forEach(function(a) { a.classList.remove('active'); });
+  collapseSalesSub();
   document.getElementById('overview').classList.remove('hidden');
   var iframe = document.getElementById('iframePanel');
   iframe.classList.remove('show');
   iframe.src = 'about:blank';
-
-  // Update topbar
-  document.getElementById('backBtn').classList.remove('show');
   document.getElementById('breadcrumb').innerHTML = '首页 / <span>工作台</span>';
-  document.getElementById('moduleTitle').classList.remove('show');
+}
+
+// Sales sub-menu with date list
+function buildSalesDates() {
+  var s = window.__STATS__;
+  if (!s || !s.dates) return;
+  var menu = document.getElementById('salesSubMenu');
+  var html = '';
+  s.dates.slice().reverse().forEach(function(d) {
+    html += '<a data-date="' + d + '" onclick="openSalesDate(\'' + d + '\', this)">📅 ' + d + '</a>';
+  });
+  menu.innerHTML = html;
+}
+
+function toggleSalesSub(el) {
+  var menu = document.getElementById('salesSubMenu');
+  var expanded = el.classList.contains('expanded');
+  if (expanded) {
+    collapseSalesSub();
+    return;
+  }
+  // Expand
+  if (!menu.children.length) buildSalesDates();
+  menu.style.display = 'block';
+  el.classList.add('expanded');
+}
+
+function collapseSalesSub() {
+  var menu = document.getElementById('salesSubMenu');
+  menu.style.display = 'none';
+  var salesLink = document.querySelector('.sidebar-nav > a[data-module="sales"]');
+  if (salesLink) salesLink.classList.remove('expanded');
+}
+
+function openSalesDate(date, el) {
+  document.querySelectorAll('.sidebar-nav > a, .sub-menu a').forEach(function(a) { a.classList.remove('active'); });
+  var salesLink = document.querySelector('.sidebar-nav > a[data-module="sales"]');
+  if (salesLink) salesLink.classList.add('active');
+  if (el) el.classList.add('active');
+
+  document.getElementById('overview').classList.add('hidden');
+  var iframe = document.getElementById('iframePanel');
+  iframe.src = 'sales_analysis/index.html#' + date;
+  iframe.classList.add('show');
+  document.getElementById('breadcrumb').innerHTML = '首页 / <span>销量分析</span> / ' + date;
 }
 
   // Load overview stats from injected script

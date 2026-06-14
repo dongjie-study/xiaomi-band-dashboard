@@ -116,7 +116,8 @@ document.body.style.display='';
   <h1>小米手环直播间竞对分析仪表盘</h1>
 
   <div class="controls">
-    <a href="../hub.html" class="back-link">← 返回导航页</a>
+    <a href="../hub.html" class="back-link" id="backLink">← 返回导航页</a>
+    <script>if(window.top!==window.self)document.getElementById("backLink").style.display="none";</script>
     <span style="color:#888;margin:0 4px;">|</span>
     <div id="dateSelector"></div>
     <span style="color:#888;margin:0 4px;">|</span>

@@ -499,6 +499,7 @@ def _write_stats_js(history):
         'comp_rooms': len(rooms) - our_rooms,
         'days': len(history),
         'first_date': history[0]['date'],
+        'dates': [d['date'] for d in history],
     }
     js = 'window.__STATS__ = ' + json.dumps(stats, ensure_ascii=False) + ';'
     path = os.path.join(DATA_DIR, 'stats_data.js')
