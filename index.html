@@ -742,7 +742,14 @@ function openSalesDate(date, el) {
   document.getElementById('overview').classList.add('hidden');
   var iframe = document.getElementById('iframePanel');
   iframe.classList.add('show');
-  iframe.src = 'sales_analysis/index.html#' + date;
+
+  var targetUrl = 'sales_analysis/index.html#' + date;
+  if (iframe.src && iframe.src.indexOf('sales_analysis/index.html') !== -1) {
+    // Already on sales page — just change hash to avoid full reload
+    try { iframe.contentWindow.location.hash = '#' + date; } catch(e) { iframe.src = targetUrl; }
+  } else {
+    iframe.src = targetUrl;
+  }
   document.getElementById('breadcrumb').innerHTML = '首页 / <span>销量分析</span> / ' + date;
 }
 

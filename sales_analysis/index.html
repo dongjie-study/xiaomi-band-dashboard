@@ -900,16 +900,25 @@ function renderDailySummary() {
 }
 
 // Init — read date from URL hash (set by root sidebar) or default to latest
-const hashDate = window.location.hash.replace('#', '');
-if (hashDate && HISTORY.some(h => h.date === hashDate)) {
-  currentDate = hashDate;
+function loadDate(date) {
+  const d = HISTORY.find(h => h.date === date);
+  if (!d) return;
+  currentDate = date;
+  const idx = HISTORY.findIndex(h => h.date === date);
+  const prev = idx > 0 ? HISTORY[idx - 1] : null;
+  renderAll(d, prev);
+  renderRoomSelector(d);
+  renderDailySummary();
 }
-const d = HISTORY.find(h => h.date === currentDate) || DATA;
-const idx = HISTORY.findIndex(h => h.date === currentDate);
-const prev = idx > 0 ? HISTORY[idx - 1] : null;
-renderAll(d, prev);
-renderRoomSelector(d);
-renderDailySummary();
+
+const hashDate = window.location.hash.replace('#', '');
+loadDate(hashDate && HISTORY.some(h => h.date === hashDate) ? hashDate : DATA.date);
+
+// Listen for hash changes (root sidebar clicks different date → iframe src hash changes)
+window.addEventListener('hashchange', function() {
+  const h = window.location.hash.replace('#', '');
+  if (h && h !== currentDate) loadDate(h);
+});
 </script>
 </body>
 </html>
