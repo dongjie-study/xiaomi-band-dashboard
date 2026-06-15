@@ -32,6 +32,7 @@
     --clr-hourly:     #8b5cf6;
     --clr-gsv:        #0891b2;
     --clr-upgrade:    #ec4899;
+    --clr-visual:     #10b981;
 
     --clr-sales-bg:      #fff7ed;
     --clr-violations-bg: #fef2f2;
@@ -40,6 +41,7 @@
     --clr-hourly-bg:     #f5f3ff;
     --clr-gsv-bg:        #ecfeff;
     --clr-upgrade-bg:    #fdf2f8;
+    --clr-visual-bg:     #ecfdf5;
   }
 
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -157,6 +159,7 @@
   .sidebar-nav a.hourly::after     { background: var(--clr-hourly); }
   .sidebar-nav a.gsv::after        { background: var(--clr-gsv); }
   .sidebar-nav a.upgrade::after    { background: var(--clr-upgrade); }
+  .sidebar-nav a.visual::after     { background: var(--clr-visual); }
 
   .sidebar-nav a:hover {
     background: var(--sidebar-hover);
@@ -203,6 +206,7 @@
   .sidebar-nav a.hourly .nav-dot     { background: var(--clr-hourly); }
   .sidebar-nav a.gsv .nav-dot        { background: var(--clr-gsv); }
   .sidebar-nav a.upgrade .nav-dot    { background: var(--clr-upgrade); }
+  .sidebar-nav a.visual .nav-dot     { background: var(--clr-visual); }
 
   .sidebar-nav a .badge-nav {
     font-size: .64em;
@@ -435,6 +439,7 @@
   .module-card.hourly .mod-icon     { background: var(--clr-hourly-bg); }
   .module-card.gsv .mod-icon        { background: var(--clr-gsv-bg); }
   .module-card.upgrade .mod-icon    { background: var(--clr-upgrade-bg); }
+  .module-card.visual .mod-icon     { background: var(--clr-visual-bg); }
 
   .module-card h3 {
     font-size: .95em;
@@ -479,6 +484,7 @@
   .module-card.hourly .mod-tag     { background: var(--clr-hourly-bg); color: var(--clr-hourly); }
   .module-card.gsv .mod-tag        { background: var(--clr-gsv-bg); color: var(--clr-gsv); }
   .module-card.upgrade .mod-tag    { background: var(--clr-upgrade-bg); color: var(--clr-upgrade); }
+  .module-card.visual .mod-tag     { background: var(--clr-visual-bg); color: var(--clr-visual); }
 
   .module-card:hover .mod-tag {
     filter: brightness(.97);
@@ -567,6 +573,9 @@
     <a data-module="hourly" data-title="直播间小时级出单分析" data-url="小时分析/index.html" onclick="openModule(this)">
       <span class="nav-dot"></span> 小时数据分析
     </a>
+    <a data-module="visual" data-title="直播间视觉分析" data-url="直播间视觉分析.html" onclick="openModule(this)" class="visual">
+      <span class="nav-dot"></span> 视觉分析
+    </a>
 
     <div class="nav-section">竞争方案</div>
     <a data-module="strategy" data-title="全域营销战略" data-url="strategy.html" onclick="openModule(this)">
@@ -643,6 +652,12 @@
           <h3>视频提升方案</h3>
           <p>基于千川数据+抖音热点的视频策略：四大提升方向、6套文案模板</p>
           <span class="mod-tag">Strategy</span>
+        </div>
+        <div class="module-card visual" data-module="visual" onclick="openModule(this)">
+          <div class="mod-icon">👁️</div>
+          <h3>直播间视觉分析</h3>
+          <p>抖音直播间视觉对比：自家vs竞对画面分析、评分对比、改进建议</p>
+          <span class="mod-tag">Visual</span>
         </div>
         <div class="module-card gsv" data-module="gsv" onclick="openModule(this)">
           <div class="mod-icon">🛠️</div>
