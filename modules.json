@@ -1,0 +1,85 @@
+{
+  "sections": [
+    {
+      "name": "数据看板",
+      "modules": [
+        {
+          "id": "sales",
+          "title": "销量分析",
+          "url": "sales_analysis/index.html",
+          "icon": "📈",
+          "description": "每日订单追踪、竞对直播间对比、小时分布、产品结构分析",
+          "tag": "Live Sales",
+          "badge": "HOT",
+          "hasSubMenu": true
+        },
+        {
+          "id": "violations",
+          "title": "违规分析",
+          "url": "违规情况/report.html",
+          "icon": "⚠️",
+          "description": "小米系直播间违规判罚追踪、原因分布、处罚升级路径",
+          "tag": "Violations"
+        },
+        {
+          "id": "video",
+          "title": "千川视频分析",
+          "url": "核心指标分析/核心指标报告.html",
+          "icon": "🎬",
+          "description": "千川视频素材核心指标：消耗/成交/ROI/CTR，竞对数据对比与深度洞察",
+          "tag": "Video Analytics"
+        },
+        {
+          "id": "hourly",
+          "title": "小时数据分析",
+          "url": "小时分析/index.html",
+          "icon": "⏰",
+          "description": "拖入订单Excel，自动识别列名生成小时级报告：分品类热力图、环比趋势",
+          "tag": "Hourly"
+        },
+        {
+          "id": "visual",
+          "title": "视觉分析",
+          "url": "直播间视觉分析.html",
+          "icon": "👁️",
+          "description": "抖音直播间视觉对比：自家vs竞对画面分析、评分对比、改进建议",
+          "tag": "Visual"
+        }
+      ]
+    },
+    {
+      "name": "竞争方案",
+      "modules": [
+        {
+          "id": "strategy",
+          "title": "营销战略",
+          "url": "strategy.html",
+          "icon": "🗺️",
+          "description": "10Pro全域营销总纲：iPhone市场、千川抖加投放、许昌活动、游戏视频",
+          "tag": "Playbook"
+        },
+        {
+          "id": "upgrade",
+          "title": "视频提升方案",
+          "url": "视频提升方案_可视化.html",
+          "icon": "🚀",
+          "description": "基于千川数据+抖音热点的视频策略：四大提升方向、6套文案模板",
+          "tag": "Strategy"
+        }
+      ]
+    },
+    {
+      "name": "运营工具",
+      "modules": [
+        {
+          "id": "gsv",
+          "title": "主播业绩工具",
+          "url": "gsv.html",
+          "icon": "🛠️",
+          "description": "拖入订单Excel，自动按达人+日期汇总，一键生成场次表与主播业绩",
+          "tag": "Performance"
+        }
+      ]
+    }
+  ]
+}

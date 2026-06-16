@@ -556,39 +556,8 @@
     </div>
   </div>
 
-  <nav class="sidebar-nav">
-    <div class="nav-section">数据看板</div>
-    <a data-module="sales" data-title="穿戴直播间销量分析" data-url="sales_analysis/index.html" onclick="toggleSalesSub(this)" class="sales">
-      <span class="nav-dot"></span> 销量分析
-      <span class="badge-nav">HOT</span>
-      <span class="sub-arrow">▸</span>
-    </a>
-    <div class="sub-menu" id="salesSubMenu" style="display:none;"></div>
-    <a data-module="violations" data-title="违规情况分析" data-url="违规情况/report.html" onclick="openModule(this)">
-      <span class="nav-dot"></span> 违规分析
-    </a>
-    <a data-module="video" data-title="千川视频分析" data-url="核心指标分析/核心指标报告.html" onclick="openModule(this)">
-      <span class="nav-dot"></span> 千川视频分析
-    </a>
-    <a data-module="hourly" data-title="直播间小时级出单分析" data-url="小时分析/index.html" onclick="openModule(this)">
-      <span class="nav-dot"></span> 小时数据分析
-    </a>
-    <a data-module="visual" data-title="直播间视觉分析" data-url="直播间视觉分析.html" onclick="openModule(this)" class="visual">
-      <span class="nav-dot"></span> 视觉分析
-    </a>
-
-    <div class="nav-section">竞争方案</div>
-    <a data-module="strategy" data-title="全域营销战略" data-url="strategy.html" onclick="openModule(this)">
-      <span class="nav-dot"></span> 营销战略
-    </a>
-    <a data-module="upgrade" data-title="视频提升方案" data-url="视频提升方案_可视化.html" onclick="openModule(this)">
-      <span class="nav-dot"></span> 视频提升方案
-    </a>
-
-    <div class="nav-section">运营工具</div>
-    <a data-module="gsv" data-title="主播业绩工具" data-url="gsv.html" onclick="openModule(this)">
-      <span class="nav-dot"></span> 主播业绩工具
-    </a>
+  <nav class="sidebar-nav" id="sidebarNav">
+    <!-- 由 modules.json 动态渲染 -->
   </nav>
 
   <div class="sidebar-footer">
@@ -616,55 +585,8 @@
         <div class="stat-card"><div class="stat-label">历史天数</div><div class="stat-value">--</div><div class="stat-sub">加载中...</div></div>
       </div>
 
-      <div class="module-grid">
-        <div class="module-card sales" data-module="sales" onclick="openModule(this)">
-          <div class="mod-icon">📈</div>
-          <h3>穿戴直播间销量分析</h3>
-          <p>每日订单追踪、竞对直播间对比、小时分布、产品结构分析</p>
-          <span class="mod-tag">Live Sales</span>
-        </div>
-        <div class="module-card violations" data-module="violations" onclick="openModule(this)">
-          <div class="mod-icon">⚠️</div>
-          <h3>违规分析</h3>
-          <p>小米系直播间违规判罚追踪、原因分布、处罚升级路径</p>
-          <span class="mod-tag">Violations</span>
-        </div>
-        <div class="module-card video" data-module="video" onclick="openModule(this)">
-          <div class="mod-icon">🎬</div>
-          <h3>千川视频分析</h3>
-          <p>千川视频素材核心指标：消耗/成交/ROI/CTR，竞对数据对比与深度洞察</p>
-          <span class="mod-tag">Video Analytics</span>
-        </div>
-        <div class="module-card hourly" data-module="hourly" onclick="openModule(this)">
-          <div class="mod-icon">⏰</div>
-          <h3>小时数据分析</h3>
-          <p>拖入订单Excel，自动识别列名生成小时级报告：分品类热力图、环比趋势</p>
-          <span class="mod-tag">Hourly</span>
-        </div>
-        <div class="module-card strategy" data-module="strategy" onclick="openModule(this)">
-          <div class="mod-icon">🗺️</div>
-          <h3>全域营销战略</h3>
-          <p>10Pro全域营销总纲：iPhone市场、千川抖加投放、许昌活动、游戏视频</p>
-          <span class="mod-tag">Playbook</span>
-        </div>
-        <div class="module-card upgrade" data-module="upgrade" onclick="openModule(this)">
-          <div class="mod-icon">🚀</div>
-          <h3>视频提升方案</h3>
-          <p>基于千川数据+抖音热点的视频策略：四大提升方向、6套文案模板</p>
-          <span class="mod-tag">Strategy</span>
-        </div>
-        <div class="module-card visual" data-module="visual" onclick="openModule(this)">
-          <div class="mod-icon">👁️</div>
-          <h3>直播间视觉分析</h3>
-          <p>抖音直播间视觉对比：自家vs竞对画面分析、评分对比、改进建议</p>
-          <span class="mod-tag">Visual</span>
-        </div>
-        <div class="module-card gsv" data-module="gsv" onclick="openModule(this)">
-          <div class="mod-icon">🛠️</div>
-          <h3>主播业绩工具</h3>
-          <p>拖入订单Excel，自动按达人+日期汇总，一键生成场次表与主播业绩</p>
-          <span class="mod-tag">Performance</span>
-        </div>
+      <div class="module-grid" id="moduleGrid">
+        <!-- 由 modules.json 动态渲染 -->
       </div>
     </div>
 
@@ -675,14 +597,77 @@
 
 <script src="sales_analysis/stats_data.js"></script>
 <script>
-// Module registry — module cards and sidebar links both use data-module
-var modules = {};
-document.querySelectorAll('[data-module]').forEach(function(el) {
-  var m = el.dataset.module;
-  if (!modules[m]) modules[m] = {};
-  if (el.dataset.url) { modules[m].url = el.dataset.url; modules[m].title = el.dataset.title; }
-});
+// ============================================================
+// 模块配置 — 从 modules.json 加载，统一管理侧边栏和首页卡片
+// 多人协作：每个人只需在 modules.json 里添加自己的模块即可
+// ============================================================
+var modules = {};   // 全局模块注册表 { id: {url, title} }
+var __MODULE_CONFIG__ = null;
 
+fetch('modules.json')
+  .then(function(r) { return r.json(); })
+  .then(function(config) {
+    __MODULE_CONFIG__ = config;
+    renderSidebar(config);
+    renderModuleCards(config);
+    buildModuleRegistry(config);
+  })
+  .catch(function(e) {
+    console.error('加载 modules.json 失败:', e);
+  });
+
+// ----- 渲染侧边栏 -----
+function renderSidebar(config) {
+  var nav = document.getElementById('sidebarNav');
+  if (!nav) return;
+  var html = '';
+  config.sections.forEach(function(section) {
+    html += '<div class="nav-section">' + section.name + '</div>';
+    section.modules.forEach(function(mod) {
+      var cls = mod.id;
+      if (mod.hasSubMenu) {
+        html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" onclick="toggleSalesSub(this)" class="' + cls + '">';
+        html += '<span class="nav-dot"></span> ' + mod.title;
+        if (mod.badge) html += '<span class="badge-nav">' + mod.badge + '</span>';
+        html += '<span class="sub-arrow">&#x25B8;</span></a>';
+        html += '<div class="sub-menu" id="salesSubMenu" style="display:none;"></div>';
+      } else {
+        html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" onclick="openModule(this)" class="' + cls + '">';
+        html += '<span class="nav-dot"></span> ' + mod.title + '</a>';
+      }
+    });
+  });
+  nav.innerHTML = html;
+}
+
+// ----- 渲染首页模块卡片 -----
+function renderModuleCards(config) {
+  var grid = document.getElementById('moduleGrid');
+  if (!grid) return;
+  var html = '';
+  config.sections.forEach(function(section) {
+    section.modules.forEach(function(mod) {
+      html += '<div class="module-card ' + mod.id + '" data-module="' + mod.id + '" onclick="openModule(this)">';
+      html += '<div class="mod-icon">' + mod.icon + '</div>';
+      html += '<h3>' + mod.title + '</h3>';
+      html += '<p>' + mod.description + '</p>';
+      html += '<span class="mod-tag">' + mod.tag + '</span>';
+      html += '</div>';
+    });
+  });
+  grid.innerHTML = html;
+}
+
+// ----- 构建模块注册表 -----
+function buildModuleRegistry(config) {
+  config.sections.forEach(function(section) {
+    section.modules.forEach(function(mod) {
+      modules[mod.id] = { url: mod.url, title: mod.title };
+    });
+  });
+}
+
+// ----- 打开模块（iframe 加载） -----
 function openModule(el) {
   var m = el.dataset.module;
   var info = modules[m];
@@ -706,6 +691,7 @@ function openModule(el) {
   document.getElementById('breadcrumb').innerHTML = '首页 / <span>' + info.title + '</span>';
 }
 
+// ----- 回到首页 -----
 function goHome() {
   document.querySelectorAll('.sidebar-nav > a, .sub-menu a').forEach(function(a) { a.classList.remove('active'); });
   collapseSalesSub();
@@ -716,26 +702,27 @@ function goHome() {
   document.getElementById('breadcrumb').innerHTML = '首页 / <span>工作台</span>';
 }
 
-// Sales sub-menu with date list
+// ----- 销量日期子菜单 -----
 function buildSalesDates() {
   var s = window.__STATS__;
   if (!s || !s.dates) return;
   var menu = document.getElementById('salesSubMenu');
+  if (!menu) return;
   var html = '';
   s.dates.slice().reverse().forEach(function(d) {
-    html += '<a data-date="' + d + '" onclick="openSalesDate(\'' + d + '\', this)">📅 ' + d + '</a>';
+    html += '<a data-date="' + d + '" onclick="openSalesDate(\'' + d + '\', this)">&#x1F4C5; ' + d + '</a>';
   });
   menu.innerHTML = html;
 }
 
 function toggleSalesSub(el) {
   var menu = document.getElementById('salesSubMenu');
+  if (!menu) return;
   var expanded = el.classList.contains('expanded');
   if (expanded) {
     collapseSalesSub();
     return;
   }
-  // Expand
   if (!menu.children.length) buildSalesDates();
   menu.style.display = 'block';
   el.classList.add('expanded');
@@ -743,7 +730,7 @@ function toggleSalesSub(el) {
 
 function collapseSalesSub() {
   var menu = document.getElementById('salesSubMenu');
-  menu.style.display = 'none';
+  if (menu) menu.style.display = 'none';
   var salesLink = document.querySelector('.sidebar-nav > a[data-module="sales"]');
   if (salesLink) salesLink.classList.remove('expanded');
 }
@@ -760,7 +747,6 @@ function openSalesDate(date, el) {
 
   var targetUrl = 'sales_analysis/index.html#' + date;
   if (iframe.src && iframe.src.indexOf('sales_analysis/index.html') !== -1) {
-    // Already on sales page — just change hash to avoid full reload
     try { iframe.contentWindow.location.hash = '#' + date; } catch(e) { iframe.src = targetUrl; }
   } else {
     iframe.src = targetUrl;
@@ -768,20 +754,20 @@ function openSalesDate(date, el) {
   document.getElementById('breadcrumb').innerHTML = '首页 / <span>销量分析</span> / ' + date;
 }
 
-  // Load overview stats from injected script
-  (function(){
-    var s = window.__STATS__;
-    if (!s) return;
-    var cards = document.querySelectorAll('.stat-card');
-    cards[0].querySelector('.stat-value').textContent = s.orders.toLocaleString() + ' 单';
-    cards[0].querySelector('.stat-sub').textContent = s.date;
-    cards[1].querySelector('.stat-value').textContent = '¥ ' + s.revenue + ' 万';
-    cards[1].querySelector('.stat-sub').textContent = '均价 ¥' + s.avg_price;
-    cards[2].querySelector('.stat-value').textContent = s.rooms + ' 间';
-    cards[2].querySelector('.stat-sub').textContent = '我方 ' + s.our_rooms + ' 间 · 竞对 ' + s.comp_rooms + ' 间';
-    cards[3].querySelector('.stat-value').textContent = s.days + ' 天';
-    cards[3].querySelector('.stat-sub').textContent = s.first_date + ' ~ ' + s.date;
-  })();
+// ----- 加载概览统计数据 -----
+(function(){
+  var s = window.__STATS__;
+  if (!s) return;
+  var cards = document.querySelectorAll('.stat-card');
+  cards[0].querySelector('.stat-value').textContent = s.orders.toLocaleString() + ' 单';
+  cards[0].querySelector('.stat-sub').textContent = s.date;
+  cards[1].querySelector('.stat-value').textContent = '¥ ' + s.revenue + ' 万';
+  cards[1].querySelector('.stat-sub').textContent = '均价 ¥' + s.avg_price;
+  cards[2].querySelector('.stat-value').textContent = s.rooms + ' 间';
+  cards[2].querySelector('.stat-sub').textContent = '我方 ' + s.our_rooms + ' 间 · 竞对 ' + s.comp_rooms + ' 间';
+  cards[3].querySelector('.stat-value').textContent = s.days + ' 天';
+  cards[3].querySelector('.stat-sub').textContent = s.first_date + ' ~ ' + s.date;
+})();
 </script>
 </body>
 </html>
