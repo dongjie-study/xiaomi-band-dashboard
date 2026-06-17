@@ -3,167 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>主播能力分析</title>
+    <title>主播能力分析 - 小米穿戴</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
-        :root {
-            --bg: #f6f7f9;
-            --surface: #ffffff;
-            --text: #111827;
-            --text-secondary: #6b7280;
-            --text-muted: #9ca3af;
-            --border: #afb7c3;
-            --border-light: #bcc3ce;
-            --radius: 12px;
-            --radius-sm: 8px;
-            --shadow-sm: 0 1px 2px rgba(0,0,0,.03);
-            --shadow-md: 0 4px 12px rgba(0,0,0,.05), 0 1px 3px rgba(0,0,0,.04);
-            --clr-accent: #ff6b35;
-            --clr-accent-bg: #fff7ed;
-            --clr-excellent: #52c41a;
-            --clr-good: #1890ff;
-            --clr-average: #faad14;
-            --clr-poor: #ff4d4f;
-            --clr-excellent-bg: #f6ffed;
-            --clr-good-bg: #e6f7ff;
-            --clr-average-bg: #fff7e6;
-            --clr-poor-bg: #fff2f0;
-        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            -webkit-font-smoothing: antialiased;
-        }
-
-        .main { padding: 24px 28px; }
-
-        .header {
+        body { font-family: 'Microsoft YaHei', sans-serif; background: #f0f2f5; }
+        .app { display: flex; height: 100vh; }
+        
+        .sidebar {
+            width: 220px;
+            background: #1a1a2e;
+            color: #fff;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
+            flex-direction: column;
         }
-        .header h1 {
-            font-size: 1.4em;
-            font-weight: 800;
-            letter-spacing: -.02em;
-            color: var(--text);
-        }
-
-        /* Stats row */
-        .stat-row { display: flex; gap: 14px; margin-bottom: 20px; }
-        .stat-item {
-            flex: 1;
-            background: var(--surface);
-            border-radius: var(--radius);
-            padding: 18px 20px;
-            text-align: center;
-            border: 1px solid var(--border);
-            transition: all .25s ease;
-        }
-        .stat-item:hover {
-            box-shadow: var(--shadow-md);
-            border-color: #c8d6e5;
-            transform: translateY(-1px);
-        }
-        .stat-item .num {
-            font-size: 1.6em;
-            font-weight: 800;
-            color: var(--clr-accent);
-            letter-spacing: -.02em;
-        }
-        .stat-item .label {
-            font-size: .72em;
-            color: var(--text-muted);
-            margin-top: 4px;
-            font-weight: 600;
-            letter-spacing: .04em;
-        }
-
-        /* Card */
-        .card {
-            background: var(--surface);
-            border-radius: var(--radius);
+        .sidebar-header {
             padding: 20px;
-            border: 1px solid var(--border);
-            box-shadow: var(--shadow-sm);
-            overflow-y: auto;
-            max-height: calc(100vh - 320px);
+            background: #16213e;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
-
-        /* Toolbar */
-        .toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
-        .toolbar input, .toolbar select {
-            padding: 8px 12px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
+        .sidebar-header h2 { color: #ff6b35; font-size: 16px; }
+        .sidebar-header p { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 3px; }
+        
+        .nav-group { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .nav-title {
+            padding: 14px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        .nav-title:hover { background: rgba(255,255,255,0.05); }
+        .nav-title .arrow { font-size: 10px; transition: transform 0.3s; }
+        .nav-title .arrow.open { transform: rotate(90deg); }
+        .nav-items { display: none; }
+        .nav-items.show { display: block; }
+        .nav-item {
+            padding: 10px 20px 10px 40px;
+            cursor: pointer;
             font-size: 13px;
-            background: #fff;
-            transition: border-color .2s;
+            transition: all 0.2s;
         }
-        .toolbar input:focus, .toolbar select:focus {
-            outline: none;
-            border-color: var(--clr-accent);
-        }
-        .toolbar input { width: 180px; }
-
-        /* Buttons */
-        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 500; transition: all .2s; }
-        .btn-primary { background: var(--clr-accent); color: #fff; }
-        .btn-primary:hover { background: #e55a2b; box-shadow: 0 2px 8px rgba(255,107,53,.25); }
-        .btn-success { background: #52c41a; color: #fff; }
-        .btn-success:hover { background: #45a614; }
-        .btn-danger { background: #ff4d4f; color: #fff; }
-        .btn-danger:hover { background: #e04345; }
-        .btn-default { background: #fff; border: 1px solid #d9d9d9; color: #333; }
-        .btn-default:hover { border-color: var(--clr-accent); color: var(--clr-accent); }
-        .btn-sm { padding: 4px 10px; font-size: 12px; }
-        .btns { display: flex; gap: 5px; }
-
-        /* Table */
+        .nav-item:hover { background: rgba(255,255,255,0.05); }
+        .nav-item.active { background: rgba(255,107,53,0.2); border-left: 3px solid #ff6b35; }
+        
+        .main { flex: 1; padding: 20px; overflow-y: auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .header h1 { font-size: 20px; color: #1a1a2e; }
+        
+        .card { background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 15px; overflow-y: auto; max-height: calc(100vh - 250px); }
+        
+        .toolbar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .toolbar input { padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; width: 200px; }
+        .toolbar input:focus { outline: none; border-color: #ff6b35; }
+        
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th, td { padding: 8px 6px; text-align: left; border-bottom: 1px solid #f0f0f0; }
         th { background: #fafafa; font-weight: 600; white-space: nowrap; position: sticky; top: 0; z-index: 10; }
         td select { width: 100%; padding: 6px 4px; font-size: 12px; }
         tr:hover { background: #fafafa; }
-
-        /* Tags */
-        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
-        .tag-excellent { background: var(--clr-excellent-bg); color: var(--clr-excellent); }
-        .tag-good { background: var(--clr-good-bg); color: var(--clr-good); }
-        .tag-average { background: var(--clr-average-bg); color: var(--clr-average); }
-        .tag-poor { background: var(--clr-poor-bg); color: var(--clr-poor); }
-
-        /* Form */
+        
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; }
+        .tag-excellent { background: #f6ffed; color: #52c41a; }
+        .tag-good { background: #e6f7ff; color: #1890ff; }
+        .tag-average { background: #fff7e6; color: #faad14; }
+        .tag-poor { background: #fff2f0; color: #ff4d4f; }
+        
         select, input, textarea { padding: 8px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; }
-        select:focus, input:focus, textarea:focus { outline: none; border-color: var(--clr-accent); }
+        select:focus, input:focus, textarea:focus { outline: none; border-color: #ff6b35; }
+        
+        .btn { padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; }
+        .btn-primary { background: #ff6b35; color: #fff; }
+        .btn-primary:hover { background: #e55a2b; }
+        .btn-success { background: #52c41a; color: #fff; }
+        .btn-danger { background: #ff4d4f; color: #fff; }
+        .btn-default { background: #fff; border: 1px solid #d9d9d9; color: #333; }
+        .btn-sm { padding: 4px 10px; font-size: 12px; }
+        
+        .btns { display: flex; gap: 5px; }
         .form-row { display: flex; align-items: center; margin-bottom: 12px; }
         .form-label { width: 80px; font-size: 13px; color: #666; }
         .form-row select, .form-row input { flex: 1; }
-
-        /* Modal */
+        
         .modal-mask { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; z-index: 100; }
-        .modal { background: #fff; border-radius: 12px; padding: 24px; width: 420px; box-shadow: 0 12px 28px rgba(0,0,0,.12); }
-        .modal h3 { margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0; font-size: 16px; }
-
-        /* Toast */
-        .toast { position: fixed; top: 20px; right: 20px; padding: 10px 18px; background: #52c41a; color: #fff; border-radius: 8px; font-size: 13px; z-index: 200; box-shadow: 0 4px 12px rgba(82,196,26,.3); }
-
-        /* Tree view */
-        .tree-view { margin-top: 6px; }
+        .modal { background: #fff; border-radius: 8px; padding: 20px; width: 400px; }
+        .modal h3 { margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; }
+        
+        .toast { position: fixed; top: 20px; right: 20px; padding: 10px 16px; background: #52c41a; color: #fff; border-radius: 6px; font-size: 13px; z-index: 200; }
+        
+        .stat-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .stat-item { flex: 1; background: #fff; border-radius: 8px; padding: 15px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .stat-item .num { font-size: 24px; font-weight: bold; color: #ff6b35; }
+        .stat-item .label { font-size: 12px; color: #999; margin-top: 5px; }
+        
+        .tree-view { margin-top: 10px; }
         .tree-group { margin-bottom: 10px; }
-        .tree-header {
-            padding: 10px 15px;
-            background: #f5f5f5;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
+        .tree-header { 
+            padding: 10px 15px; 
+            background: #f5f5f5; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
             gap: 8px;
             font-size: 14px;
-            transition: background .2s;
         }
         .tree-header:hover { background: #e8e8e8; }
         .tree-header.group-leader { background: #fff7e6; border-left: 4px solid #faad14; }
@@ -173,242 +119,259 @@
         .tree-header .leader-name { font-weight: 600; }
         .tree-header .member-count { color: #999; font-size: 12px; }
         .tree-content { margin-left: 20px; }
-        .tree-member {
-            padding: 10px 15px;
-            display: grid;
-            grid-template-columns: 80px repeat(7, 1fr) 80px 150px;
-            align-items: center;
+        .tree-member { 
+            padding: 10px 15px; 
+            display: grid; 
+            grid-template-columns: 80px repeat(8, 1fr) 80px 150px;
+            align-items: center; 
             gap: 8px;
             border-bottom: 1px solid #f0f0f0;
             margin-left: 20px;
             font-size: 12px;
         }
         .tree-member:hover { background: #fafafa; }
-        .tree-member .member-name {
-            font-weight: 600;
+        .tree-member .member-name { 
+            font-weight: 600; 
             font-size: 13px;
             color: #333;
         }
-        .tree-member .ability {
-            color: #666;
+        .tree-member .ability { 
+            color: #666; 
             background: #f5f5f5;
             padding: 4px 8px;
             border-radius: 4px;
             font-size: 11px;
             text-align: center;
         }
-        .tree-member .remark {
-            color: #999;
-            font-size: 11px;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .tree-member .remark { 
+            color: #999; 
+            font-size: 11px; 
+            overflow: hidden; 
+            text-overflow: ellipsis; 
             white-space: nowrap;
         }
     </style>
 </head>
 <body>
     <div id="app">
-        <div class="main">
-            <div class="header">
-                <h1>主播列表</h1>
-                <div class="btns">
-                    <button class="btn btn-primary" @click="showAdd=true">+ 新增主播</button>
-                    <button class="btn btn-success" @click="exportCSV()">导出数据</button>
+        <div class="app">
+            <div class="sidebar">
+                <div class="sidebar-header">
+                    <h2>主播分析系统</h2>
+                    <p>小米穿戴 · 抖音电商</p>
+                </div>
+                
+                <div class="nav-group">
+                    <div class="nav-title" @click="navOpen = !navOpen">
+                        <span>主播管理</span>
+                        <span class="arrow" :class="{ open: navOpen }">▶</span>
+                    </div>
+                    <div class="nav-items" :class="{ show: navOpen }">
+                        <div class="nav-item" :class="{ active: page === 'list' }" @click="page='list'">主播列表</div>
+                    </div>
                 </div>
             </div>
-
-            <div class="stat-row">
-                <div class="stat-item">
-                    <div class="num">{{ list.length }}</div>
-                    <div class="label">主播总数</div>
+            
+            <div class="main">
+                <div class="header">
+                    <h1>{{ pageTitle }}</h1>
+                    <div v-if="page === 'list'" class="btns">
+                        <button class="btn btn-primary" @click="showAdd=true">+ 新增主播</button>
+                        <button class="btn btn-success" @click="exportCSV()">导出数据</button>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="num">{{ excellentCount }}</div>
-                    <div class="label">优秀主播</div>
+                
+                <div class="stat-row">
+                    <div class="stat-item">
+                        <div class="num">{{ list.length }}</div>
+                        <div class="label">主播总数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="num">{{ excellentCount }}</div>
+                        <div class="label">优秀主播</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="num">{{ goodCount }}</div>
+                        <div class="label">良好主播</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="num">{{ poorCount }}</div>
+                        <div class="label">待提升</div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="num">{{ goodCount }}</div>
-                    <div class="label">良好主播</div>
-                </div>
-                <div class="stat-item">
-                    <div class="num">{{ poorCount }}</div>
-                    <div class="label">待提升</div>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="toolbar">
-                    <input v-model="search" placeholder="搜索姓名...">
-                    <select v-model="filterGroup">
-                        <option value="">全部组别</option>
-                        <option value="穿戴组">穿戴组</option>
-                        <option value="耳机组">耳机组</option>
-                        <option value="小葵花组">小葵花组</option>
-                        <option value="智米组">智米组</option>
-                    </select>
-                    <select v-model="filterGroupLeader">
-                        <option value="">全部组长</option>
-                        <option v-for="leader in groupLeaders" :key="leader" :value="leader">{{ leader }}</option>
-                    </select>
-                    <select v-model="filterLevel">
-                        <option value="">全部评级</option>
-                        <option value="excellent">优秀</option>
-                        <option value="good">良好</option>
-                        <option value="average">一般</option>
-                        <option value="poor">待提升</option>
-                    </select>
-                    <button class="btn btn-default" @click="resetFilter">重置筛选</button>
-                </div>
-
-                <!-- Tree view when group leader filter is active -->
-                <div v-if="filterGroupLeader" class="tree-view">
-                    <div v-for="groupLeader in filteredGroupLeaders" :key="groupLeader" class="tree-group">
-                        <div class="tree-header group-leader" @click="toggleGroupLeader(groupLeader)">
-                            <span class="arrow" :class="{ open: expandedGroupLeaders.includes(groupLeader) }">▶</span>
-                            <span class="leader-name">组长：{{ groupLeader }}</span>
-                            <span class="member-count">({{ getGroupLeaderMembers(groupLeader).length }}人)</span>
-                        </div>
-                        <div v-if="expandedGroupLeaders.includes(groupLeader)" class="tree-content">
-                            <div v-for="subLeader in getSubLeadersByGroupLeader(groupLeader)" :key="subLeader" class="tree-subgroup">
-                                <div class="tree-header sub-leader" @click="toggleSubLeader(groupLeader, subLeader)">
-                                    <span class="arrow" :class="{ open: expandedSubLeaders.includes(groupLeader + '-' + subLeader) }">▶</span>
-                                    <span class="leader-name">小组长：{{ subLeader }}</span>
-                                    <span class="member-count">({{ getSubLeaderMembers(groupLeader, subLeader).length }}人)</span>
-                                </div>
-                                <div v-if="expandedSubLeaders.includes(groupLeader + '-' + subLeader)" class="tree-content">
-                                    <div v-for="member in getSubLeaderMembers(groupLeader, subLeader)" :key="member.id" class="tree-member">
-                                        <span class="member-name">{{ member.name }}</span>
-                                        <span class="ability">直播+话术:{{ member.liveAbility }}</span>
-                                        <span class="ability">互动能力:{{ member.fanInteraction }}</span>
-                                        <span class="ability">产品:{{ member.productKnowledge }}</span>
-                                        <span class="ability">客诉应变:{{ member.adaptability }}</span>
-                                        <span class="ability">创意:{{ member.creativity }}</span>
-                                        <span class="ability">协作:{{ member.teamwork }}</span>
-                                        <span class="ability">学习复盘:{{ member.learningAbility }}</span>
-                                        <span class="tag" :class="'tag-' + getOverallLevel(member)">{{ getOverallText(member) }}</span>
-                                        <span class="remark" v-if="member.remark">备注:{{ member.remark }}</span>
+                
+                <div class="card">
+                    <div class="toolbar">
+                        <input v-model="search" placeholder="搜索姓名...">
+                        <select v-model="filterGroup">
+                            <option value="">全部组别</option>
+                            <option value="穿戴组">穿戴组</option>
+                            <option value="耳机组">耳机组</option>
+                            <option value="小葵花组">小葵花组</option>
+                            <option value="智米组">智米组</option>
+                        </select>
+                        <select v-model="filterGroupLeader">
+                            <option value="">全部组长</option>
+                            <option v-for="leader in groupLeaders" :key="leader" :value="leader">{{ leader }}</option>
+                        </select>
+                        <select v-model="filterLevel">
+                            <option value="">全部评级</option>
+                            <option value="excellent">优秀</option>
+                            <option value="good">良好</option>
+                            <option value="average">一般</option>
+                            <option value="poor">待提升</option>
+                        </select>
+                        <button class="btn btn-default" @click="resetFilter">重置筛选</button>
+                    </div>
+                    
+                    <div v-if="filterGroupLeader" class="tree-view">
+                        <div v-for="groupLeader in filteredGroupLeaders" :key="groupLeader" class="tree-group">
+                            <div class="tree-header group-leader" @click="toggleGroupLeader(groupLeader)">
+                                <span class="arrow" :class="{ open: expandedGroupLeaders.includes(groupLeader) }">▶</span>
+                                <span class="leader-name">组长：{{ groupLeader }}</span>
+                                <span class="member-count">({{ getGroupLeaderMembers(groupLeader).length }}人)</span>
+                            </div>
+                            <div v-if="expandedGroupLeaders.includes(groupLeader)" class="tree-content">
+                                <div v-for="subLeader in getSubLeadersByGroupLeader(groupLeader)" :key="subLeader" class="tree-subgroup">
+                                    <div class="tree-header sub-leader" @click="toggleSubLeader(groupLeader, subLeader)">
+                                        <span class="arrow" :class="{ open: expandedSubLeaders.includes(groupLeader + '-' + subLeader) }">▶</span>
+                                        <span class="leader-name">小组长：{{ subLeader }}</span>
+                                        <span class="member-count">({{ getSubLeaderMembers(groupLeader, subLeader).length }}人)</span>
+                                    </div>
+                                    <div v-if="expandedSubLeaders.includes(groupLeader + '-' + subLeader)" class="tree-content">
+                                        <div v-for="member in getSubLeaderMembers(groupLeader, subLeader)" :key="member.id" class="tree-member">
+                                            <span class="member-name">{{ member.name }}</span>
+                                            <span class="ability">入职:{{ getWorkDuration(member.hireDate) }}</span>
+                                            <span class="ability">直播+话术:{{ member.liveAbility }}</span>
+                                            <span class="ability">互动能力:{{ member.fanInteraction }}</span>
+                                            <span class="ability">产品:{{ member.productKnowledge }}</span>
+                                            <span class="ability">客诉应变:{{ member.adaptability }}</span>
+                                            <span class="ability">创意:{{ member.creativity }}</span>
+                                            <span class="ability">协作:{{ member.teamwork }}</span>
+                                            <span class="ability">学习复盘:{{ member.learningAbility }}</span>
+                                            <span class="tag" :class="'tag-' + getOverallLevel(member)">{{ getOverallText(member) }}</span>
+                                            <span class="remark" v-if="member.remark">备注:{{ member.remark }}</span>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            <div v-if="getUngroupedMembers(groupLeader).length > 0" class="tree-subgroup">
-                                <div class="tree-header sub-leader" @click="toggleSubLeader(groupLeader, '组员')">
-                                    <span class="arrow" :class="{ open: expandedSubLeaders.includes(groupLeader + '-组员') }">▶</span>
-                                    <span class="leader-name">组员</span>
-                                    <span class="member-count">({{ getUngroupedMembers(groupLeader).length }}人)</span>
-                                </div>
-                                <div v-if="expandedSubLeaders.includes(groupLeader + '-组员')" class="tree-content">
-                                    <div v-for="member in getUngroupedMembers(groupLeader)" :key="member.id" class="tree-member">
-                                        <span class="member-name">{{ member.name }}</span>
-                                        <span class="ability">直播+话术:{{ member.liveAbility }}</span>
-                                        <span class="ability">互动能力:{{ member.fanInteraction }}</span>
-                                        <span class="ability">产品:{{ member.productKnowledge }}</span>
-                                        <span class="ability">客诉应变:{{ member.adaptability }}</span>
-                                        <span class="ability">创意:{{ member.creativity }}</span>
-                                        <span class="ability">协作:{{ member.teamwork }}</span>
-                                        <span class="ability">学习复盘:{{ member.learningAbility }}</span>
-                                        <span class="tag" :class="'tag-' + getOverallLevel(member)">{{ getOverallText(member) }}</span>
-                                        <span class="remark" v-if="member.remark">备注:{{ member.remark }}</span>
+                                <div v-if="getUngroupedMembers(groupLeader).length > 0" class="tree-subgroup">
+                                    <div class="tree-header sub-leader" @click="toggleSubLeader(groupLeader, '组员')">
+                                        <span class="arrow" :class="{ open: expandedSubLeaders.includes(groupLeader + '-组员') }">▶</span>
+                                        <span class="leader-name">组员</span>
+                                        <span class="member-count">({{ getUngroupedMembers(groupLeader).length }}人)</span>
+                                    </div>
+                                    <div v-if="expandedSubLeaders.includes(groupLeader + '-组员')" class="tree-content">
+                                        <div v-for="member in getUngroupedMembers(groupLeader)" :key="member.id" class="tree-member">
+                                            <span class="member-name">{{ member.name }}</span>
+                                            <span class="ability">入职:{{ getWorkDuration(member.hireDate) }}</span>
+                                            <span class="ability">直播+话术:{{ member.liveAbility }}</span>
+                                            <span class="ability">互动能力:{{ member.fanInteraction }}</span>
+                                            <span class="ability">产品:{{ member.productKnowledge }}</span>
+                                            <span class="ability">客诉应变:{{ member.adaptability }}</span>
+                                            <span class="ability">创意:{{ member.creativity }}</span>
+                                            <span class="ability">协作:{{ member.teamwork }}</span>
+                                            <span class="ability">学习复盘:{{ member.learningAbility }}</span>
+                                            <span class="tag" :class="'tag-' + getOverallLevel(member)">{{ getOverallText(member) }}</span>
+                                            <span class="remark" v-if="member.remark">备注:{{ member.remark }}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    
+                    <table v-else>
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>姓名</th>
+                                <th>组别</th>
+                                <th>组长</th>
+                                <th>入职时间</th>
+                                <th>直播+话术</th>
+                                <th>互动能力</th>
+                                <th>产品</th>
+                                <th>客诉应变</th>
+                                <th>创意</th>
+                                <th>协作</th>
+                                <th>学习复盘</th>
+                                <th>综合</th>
+                                <th>备注</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(s, i) in filtered" :key="s.id">
+                                <td>{{ i + 1 }}</td>
+                                <td>{{ s.name }}</td>
+                                <td>{{ s.group }}</td>
+                                <td>{{ s.groupLeader }}</td>
+                                <td>{{ getWorkDuration(s.hireDate) }}</td>
+                                <td>
+                                    <select v-model="s.liveAbility" @change="save">
+                                        <option value="优">优</option>
+                                        <option value="中">中</option>
+                                        <option value="差">差</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select v-model="s.fanInteraction" @change="save">
+                                        <option value="优">优</option>
+                                        <option value="中">中</option>
+                                        <option value="差">差</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select v-model="s.productKnowledge" @change="save">
+                                        <option value="优">优</option>
+                                        <option value="中">中</option>
+                                        <option value="差">差</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select v-model="s.adaptability" @change="save">
+                                        <option value="优">优</option>
+                                        <option value="中">中</option>
+                                        <option value="差">差</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select v-model="s.creativity" @change="save">
+                                        <option value="优">优</option>
+                                        <option value="中">中</option>
+                                        <option value="差">差</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select v-model="s.teamwork" @change="save">
+                                        <option value="优">优</option>
+                                        <option value="中">中</option>
+                                        <option value="差">差</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select v-model="s.learningAbility" @change="save">
+                                        <option value="优">优</option>
+                                        <option value="中">中</option>
+                                        <option value="差">差</option>
+                                    </select>
+                                </td>
+                                <td><span class="tag" :class="'tag-' + getOverallLevel(s)">{{ getOverallText(s) }}</span></td>
+                                <td><textarea v-model="s.remark" @change="save" style="width:250px;height:60px;padding:6px;font-size:12px;resize:none;" placeholder="备注"></textarea></td>
+                                <td class="btns">
+                                    <button class="btn btn-default btn-sm" @click="edit(s)">编辑</button>
+                                    <button class="btn btn-danger btn-sm" @click="del(s)">删除</button>
+                                    <button class="btn btn-default btn-sm" @click="resetRow(s)">重置</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-
-                <!-- Table view (default) -->
-                <table v-else>
-                    <thead>
-                        <tr>
-                            <th>序号</th>
-                            <th>姓名</th>
-                            <th>组别</th>
-                            <th>组长</th>
-                            <th>小组长</th>
-                            <th>直播+话术</th>
-                            <th>互动能力</th>
-                            <th>产品</th>
-                            <th>客诉应变</th>
-                            <th>创意</th>
-                            <th>协作</th>
-                            <th>学习复盘</th>
-                            <th>综合</th>
-                            <th>备注</th>
-                            <th>操作</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr v-for="(s, i) in filtered" :key="s.id">
-                            <td>{{ i + 1 }}</td>
-                            <td>{{ s.name }}</td>
-                            <td>{{ s.group }}</td>
-                            <td>{{ s.groupLeader }}</td>
-                            <td>{{ s.subLeader }}</td>
-                            <td>
-                                <select v-model="s.liveAbility" @change="save">
-                                    <option value="优">优</option>
-                                    <option value="中">中</option>
-                                    <option value="差">差</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select v-model="s.fanInteraction" @change="save">
-                                    <option value="优">优</option>
-                                    <option value="中">中</option>
-                                    <option value="差">差</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select v-model="s.productKnowledge" @change="save">
-                                    <option value="优">优</option>
-                                    <option value="中">中</option>
-                                    <option value="差">差</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select v-model="s.adaptability" @change="save">
-                                    <option value="优">优</option>
-                                    <option value="中">中</option>
-                                    <option value="差">差</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select v-model="s.creativity" @change="save">
-                                    <option value="优">优</option>
-                                    <option value="中">中</option>
-                                    <option value="差">差</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select v-model="s.teamwork" @change="save">
-                                    <option value="优">优</option>
-                                    <option value="中">中</option>
-                                    <option value="差">差</option>
-                                </select>
-                            </td>
-                            <td>
-                                <select v-model="s.learningAbility" @change="save">
-                                    <option value="优">优</option>
-                                    <option value="中">中</option>
-                                    <option value="差">差</option>
-                                </select>
-                            </td>
-                            <td><span class="tag" :class="'tag-' + getOverallLevel(s)">{{ getOverallText(s) }}</span></td>
-                            <td><textarea v-model="s.remark" @change="save" style="width:250px;height:60px;padding:6px;font-size:12px;resize:none;" placeholder="备注"></textarea></td>
-                            <td class="btns">
-                                <button class="btn btn-default btn-sm" @click="edit(s)">编辑</button>
-                                <button class="btn btn-danger btn-sm" @click="del(s)">删除</button>
-                                <button class="btn btn-default btn-sm" @click="resetRow(s)">重置</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
             </div>
         </div>
-
-        <!-- Toast -->
+        
         <div v-if="toast" class="toast">{{ toast }}</div>
-
-        <!-- Add modal -->
+        
         <div v-if="showAdd" class="modal-mask" @click.self="showAdd=false">
             <div class="modal">
                 <h3>新增主播</h3>
@@ -458,8 +421,7 @@
                 </div>
             </div>
         </div>
-
-        <!-- Edit modal -->
+        
         <div v-if="showEdit" class="modal-mask" @click.self="showEdit=false">
             <div class="modal">
                 <h3>编辑主播</h3>
@@ -513,7 +475,7 @@
 
     <script>
         const { createApp, ref, computed } = Vue;
-
+        
         const KEY = 'streamer_data';
         const DEFAULT = [
             { id: 1, name: '郭孟航', gender: '男', hireDate: '', group: '穿戴组', groupLeader: '周佳会', subLeader: '' },
@@ -556,7 +518,7 @@
             productKnowledge: '中', adaptability: '中', creativity: '中',
             teamwork: '中', learningAbility: '中', remark: ''
         }));
-
+        
         createApp({
             setup() {
                 const list = ref(JSON.parse(localStorage.getItem(KEY)) || DEFAULT);
@@ -572,14 +534,20 @@
                 const filterGroup = ref('');
                 const filterGroupLeader = ref('');
                 const filterLevel = ref('');
+                const page = ref('list');
                 const expandedGroupLeaders = ref([]);
                 const expandedSubLeaders = ref([]);
+                const navOpen = ref(true);
                 const showAdd = ref(false);
                 const showEdit = ref(false);
                 const form = ref({ name: '', gender: '男', hireDate: '', group: '穿戴组', groupLeader: '', subLeader: '' });
                 const editForm = ref({ id: null, name: '', gender: '男', hireDate: '', group: '穿戴组', groupLeader: '', subLeader: '' });
                 const toast = ref('');
-
+                
+                const pageTitle = computed(() => {
+                    return '主播列表';
+                });
+                
                 const groupLeaders = computed(() => {
                     const leaderSet = new Set();
                     list.value.forEach(s => {
@@ -587,12 +555,12 @@
                     });
                     return Array.from(leaderSet).sort();
                 });
-
+                
                 const filteredGroupLeaders = computed(() => {
                     if (!filterGroupLeader.value) return [];
                     return [filterGroupLeader.value];
                 });
-
+                
                 const filtered = computed(() => {
                     let result = list.value;
                     if (filterGroup.value) {
@@ -610,7 +578,7 @@
                     }
                     return result;
                 });
-
+                
                 const getGroupLeaderMembers = (groupLeader) => {
                     let result = list.value.filter(s => s.groupLeader === groupLeader);
                     if (filterLevel.value) {
@@ -618,7 +586,7 @@
                     }
                     return result;
                 };
-
+                
                 const getSubLeadersByGroupLeader = (groupLeader) => {
                     const subLeaderSet = new Set();
                     list.value.forEach(s => {
@@ -628,7 +596,7 @@
                     });
                     return Array.from(subLeaderSet).sort();
                 };
-
+                
                 const getSubLeaderMembers = (groupLeader, subLeader) => {
                     let result = list.value.filter(s => s.groupLeader === groupLeader && s.subLeader === subLeader);
                     if (filterLevel.value) {
@@ -636,7 +604,7 @@
                     }
                     return result;
                 };
-
+                
                 const getUngroupedMembers = (groupLeader) => {
                     let result = list.value.filter(s => s.groupLeader === groupLeader && !s.subLeader);
                     if (filterLevel.value) {
@@ -644,7 +612,7 @@
                     }
                     return result;
                 };
-
+                
                 const toggleGroupLeader = (groupLeader) => {
                     const index = expandedGroupLeaders.value.indexOf(groupLeader);
                     if (index > -1) {
@@ -653,7 +621,7 @@
                         expandedGroupLeaders.value.push(groupLeader);
                     }
                 };
-
+                
                 const toggleSubLeader = (groupLeader, subLeader) => {
                     const key = groupLeader + '-' + subLeader;
                     const index = expandedSubLeaders.value.indexOf(key);
@@ -663,7 +631,7 @@
                         expandedSubLeaders.value.push(key);
                     }
                 };
-
+                
                 const resetFilter = () => {
                     search.value = '';
                     filterGroup.value = '';
@@ -672,20 +640,20 @@
                     expandedGroupLeaders.value = [];
                     expandedSubLeaders.value = [];
                 };
-
+                
                 const excellentCount = computed(() => list.value.filter(s => getOverallLevel(s) === 'excellent').length);
                 const goodCount = computed(() => list.value.filter(s => getOverallLevel(s) === 'good').length);
                 const poorCount = computed(() => list.value.filter(s => getOverallLevel(s) === 'poor').length);
-
+                
                 const save = () => {
                     localStorage.setItem(KEY, JSON.stringify(list.value));
                 };
-
+                
                 const showToast = (msg) => {
                     toast.value = msg;
                     setTimeout(() => toast.value = '', 1500);
                 };
-
+                
                 const add = () => {
                     if (!form.value.name.trim()) return showToast('请输入姓名');
                     const maxId = list.value.reduce((max, s) => Math.max(max, s.id), 0);
@@ -700,14 +668,15 @@
                     save();
                     form.value = { name: '', gender: '男', hireDate: '', group: '穿戴组', groupLeader: '', subLeader: '' };
                     showAdd.value = false;
+                    page.value = 'list';
                     showToast('添加成功');
                 };
-
+                
                 const edit = (s) => {
                     editForm.value = { id: s.id, name: s.name, gender: s.gender, hireDate: s.hireDate, group: s.group, groupLeader: s.groupLeader, subLeader: s.subLeader };
                     showEdit.value = true;
                 };
-
+                
                 const update = () => {
                     const idx = list.value.findIndex(s => s.id === editForm.value.id);
                     if (idx !== -1) {
@@ -722,7 +691,7 @@
                     }
                     showEdit.value = false;
                 };
-
+                
                 const del = (s) => {
                     if (confirm(`确定删除"${s.name}"吗？`)) {
                         list.value = list.value.filter(item => item.id !== s.id);
@@ -730,7 +699,7 @@
                         showToast('删除成功');
                     }
                 };
-
+                
                 const resetRow = (s) => {
                     if (confirm(`确定要重置"${s.name}"的数据吗？`)) {
                         const idx = list.value.findIndex(item => item.id === s.id);
@@ -748,7 +717,7 @@
                         }
                     }
                 };
-
+                
                 const getOverallLevel = (s) => {
                     const scores = [s.liveAbility, s.fanInteraction, s.productKnowledge, s.adaptability, s.creativity, s.teamwork, s.learningAbility];
                     const excellent = scores.filter(v => v === '优').length;
@@ -758,19 +727,46 @@
                     if (excellent >= 3) return 'good';
                     return 'average';
                 };
-
+                
                 const getOverallText = (s) => {
                     return { excellent: '优秀', good: '良好', average: '一般', poor: '待提升' }[getOverallLevel(s)];
                 };
-
+                
+                const getWorkDuration = (hireDate) => {
+                    if (!hireDate) return '-';
+                    const hire = new Date(hireDate);
+                    const now = new Date();
+                    let years = now.getFullYear() - hire.getFullYear();
+                    let months = now.getMonth() - hire.getMonth();
+                    if (months < 0) {
+                        years--;
+                        months += 12;
+                    }
+                    let days = now.getDate() - hire.getDate();
+                    if (days < 0) {
+                        months--;
+                        const lastMonth = new Date(now.getFullYear(), now.getMonth(), 0);
+                        days += lastMonth.getDate();
+                    }
+                    if (months < 0) {
+                        years--;
+                        months += 12;
+                    }
+                    const parts = [];
+                    if (years > 0) parts.push(years + '年');
+                    if (months > 0) parts.push(months + '个月');
+                    if (parts.length === 0) parts.push(days + '天');
+                    return parts.join('');
+                };
+                
                 const exportCSV = () => {
-                    const headers = ['姓名', '性别', '入职日期', '组别', '组长', '小组长', '直播+话术', '互动能力', '产品', '客诉应变', '创意', '协作', '学习复盘', '综合评级', '备注'];
+                    const headers = ['姓名', '性别', '入职日期', '在职时间', '组别', '组长', '直播+话术', '互动能力', '产品', '客诉应变', '创意', '协作', '学习复盘', '综合评级', '备注'];
                     const rows = list.value.map(s => [
-                        s.name, s.gender, s.hireDate || '', s.group, s.groupLeader || '', s.subLeader || '', s.liveAbility, s.fanInteraction,
+                        s.name, s.gender, s.hireDate || '', getWorkDuration(s.hireDate), s.group, s.groupLeader || '', s.liveAbility, s.fanInteraction,
                         s.productKnowledge, s.adaptability, s.creativity, s.teamwork, s.learningAbility,
                         getOverallText(s), s.remark
                     ]);
-                    const csv = '﻿' + [headers, ...rows].map(r => r.join(',')).join('\n');
+                    const csv = '\uFEFF' + [headers, ...rows].map(r => r.join(',')).join('\n');
                     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
                     const link = document.createElement('a');
                     link.href = URL.createObjectURL(blob);
@@ -778,14 +774,14 @@
                     link.click();
                     showToast('导出成功');
                 };
-
+                
                 return {
-                    list, search, filterGroup, filterGroupLeader, filterLevel, showAdd, showEdit, form, editForm, toast,
+                    list, search, filterGroup, filterGroupLeader, filterLevel, page, navOpen, showAdd, showEdit, form, editForm, toast,
                     expandedGroupLeaders, expandedSubLeaders,
-                    filtered, groupLeaders, filteredGroupLeaders, excellentCount, goodCount, poorCount,
+                    pageTitle, filtered, groupLeaders, filteredGroupLeaders, excellentCount, goodCount, poorCount,
                     getGroupLeaderMembers, getSubLeadersByGroupLeader, getSubLeaderMembers, getUngroupedMembers,
                     toggleGroupLeader, toggleSubLeader, resetFilter,
-                    save, add, edit, update, del, resetRow, getOverallLevel, getOverallText, exportCSV
+                    save, add, edit, update, del, resetRow, getOverallLevel, getOverallText, getWorkDuration, exportCSV
                 };
             }
         }).mount('#app');
