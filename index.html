@@ -33,6 +33,7 @@
     --clr-gsv:        #0891b2;
     --clr-upgrade:    #ec4899;
     --clr-visual:     #10b981;
+    --clr-streamer:   #ec4899;
 
     --clr-sales-bg:      #fff7ed;
     --clr-violations-bg: #fef2f2;
@@ -42,6 +43,7 @@
     --clr-gsv-bg:        #ecfeff;
     --clr-upgrade-bg:    #fdf2f8;
     --clr-visual-bg:     #ecfdf5;
+    --clr-streamer-bg:   #fdf2f8;
   }
 
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -160,6 +162,7 @@
   .sidebar-nav a.gsv::after        { background: var(--clr-gsv); }
   .sidebar-nav a.upgrade::after    { background: var(--clr-upgrade); }
   .sidebar-nav a.visual::after     { background: var(--clr-visual); }
+  .sidebar-nav a.streamer::after   { background: var(--clr-streamer); }
 
   .sidebar-nav a:hover {
     background: var(--sidebar-hover);
@@ -207,6 +210,7 @@
   .sidebar-nav a.gsv .nav-dot        { background: var(--clr-gsv); }
   .sidebar-nav a.upgrade .nav-dot    { background: var(--clr-upgrade); }
   .sidebar-nav a.visual .nav-dot     { background: var(--clr-visual); }
+  .sidebar-nav a.streamer .nav-dot   { background: var(--clr-streamer); }
 
   .sidebar-nav a .badge-nav {
     font-size: .64em;
@@ -415,6 +419,7 @@
   .module-card.hourly::before     { background: linear-gradient(90deg, var(--clr-hourly), #c4b5fd); }
   .module-card.gsv::before        { background: linear-gradient(90deg, var(--clr-gsv), #67e8f9); }
   .module-card.upgrade::before    { background: linear-gradient(90deg, var(--clr-upgrade), #f9a8d4); }
+  .module-card.streamer::before   { background: linear-gradient(90deg, var(--clr-streamer), #f9a8d4); }
 
   .module-card .mod-icon {
     width: 46px; height: 46px;
@@ -440,6 +445,7 @@
   .module-card.gsv .mod-icon        { background: var(--clr-gsv-bg); }
   .module-card.upgrade .mod-icon    { background: var(--clr-upgrade-bg); }
   .module-card.visual .mod-icon     { background: var(--clr-visual-bg); }
+  .module-card.streamer .mod-icon   { background: var(--clr-streamer-bg); }
 
   .module-card h3 {
     font-size: .95em;
@@ -457,6 +463,7 @@
   .module-card.hourly:hover h3     { color: var(--clr-hourly); }
   .module-card.gsv:hover h3        { color: var(--clr-gsv); }
   .module-card.upgrade:hover h3    { color: var(--clr-upgrade); }
+  .module-card.streamer:hover h3   { color: var(--clr-streamer); }
 
   .module-card p {
     font-size: .8em;
@@ -485,6 +492,7 @@
   .module-card.gsv .mod-tag        { background: var(--clr-gsv-bg); color: var(--clr-gsv); }
   .module-card.upgrade .mod-tag    { background: var(--clr-upgrade-bg); color: var(--clr-upgrade); }
   .module-card.visual .mod-tag     { background: var(--clr-visual-bg); color: var(--clr-visual); }
+  .module-card.streamer .mod-tag   { background: var(--clr-streamer-bg); color: var(--clr-streamer); }
 
   .module-card:hover .mod-tag {
     filter: brightness(.97);
