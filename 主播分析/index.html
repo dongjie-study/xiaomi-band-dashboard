@@ -8,53 +8,9 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Microsoft YaHei', sans-serif; background: #f0f2f5; }
-        .app { display: flex; height: 100vh; }
+        .main { padding: 20px; }
         
-        .sidebar {
-            width: 220px;
-            background: #1a1a2e;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-        }
-        .sidebar-header {
-            padding: 20px;
-            background: #16213e;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-        .sidebar-header h2 { color: #ff6b35; font-size: 16px; }
-        .sidebar-header p { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 3px; }
-        
-        .nav-group { border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .nav-title {
-            padding: 14px 20px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 14px;
-            font-weight: 500;
-            transition: background 0.2s;
-        }
-        .nav-title:hover { background: rgba(255,255,255,0.05); }
-        .nav-title .arrow { font-size: 10px; transition: transform 0.3s; }
-        .nav-title .arrow.open { transform: rotate(90deg); }
-        .nav-items { display: none; }
-        .nav-items.show { display: block; }
-        .nav-item {
-            padding: 10px 20px 10px 40px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: all 0.2s;
-        }
-        .nav-item:hover { background: rgba(255,255,255,0.05); }
-        .nav-item.active { background: rgba(255,107,53,0.2); border-left: 3px solid #ff6b35; }
-        
-        .main { flex: 1; padding: 20px; overflow-y: auto; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .header h1 { font-size: 20px; color: #1a1a2e; }
-        
-        .card { background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 15px; overflow-y: auto; max-height: calc(100vh - 250px); }
+        .card { background: #fff; border-radius: 8px; padding: 15px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin-bottom: 15px; overflow-y: auto; max-height: calc(100vh - 200px); }
         
         .toolbar { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .toolbar input { padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; width: 200px; }
@@ -154,31 +110,10 @@
 </head>
 <body>
     <div id="app">
-        <div class="app">
-            <div class="sidebar">
-                <div class="sidebar-header">
-                    <h2>主播分析系统</h2>
-                    <p>小米穿戴 · 抖音电商</p>
-                </div>
-                
-                <div class="nav-group">
-                    <div class="nav-title" @click="navOpen = !navOpen">
-                        <span>主播管理</span>
-                        <span class="arrow" :class="{ open: navOpen }">▶</span>
-                    </div>
-                    <div class="nav-items" :class="{ show: navOpen }">
-                        <div class="nav-item" :class="{ active: page === 'list' }" @click="page='list'">主播列表</div>
-                    </div>
-                </div>
-            </div>
-            
             <div class="main">
-                <div class="header">
-                    <h1>{{ pageTitle }}</h1>
-                    <div v-if="page === 'list'" class="btns">
-                        <button class="btn btn-primary" @click="showAdd=true">+ 新增主播</button>
-                        <button class="btn btn-success" @click="exportCSV()">导出数据</button>
-                    </div>
+                <div class="btns" style="margin-bottom:15px;">
+                    <button class="btn btn-primary" @click="showAdd=true">+ 新增主播</button>
+                    <button class="btn btn-success" @click="exportCSV()">导出数据</button>
                 </div>
                 
                 <div class="stat-row">
@@ -368,8 +303,7 @@
                     </table>
                 </div>
             </div>
-        </div>
-        
+
         <div v-if="toast" class="toast">{{ toast }}</div>
         
         <div v-if="showAdd" class="modal-mask" @click.self="showAdd=false">
@@ -534,20 +468,14 @@
                 const filterGroup = ref('');
                 const filterGroupLeader = ref('');
                 const filterLevel = ref('');
-                const page = ref('list');
                 const expandedGroupLeaders = ref([]);
                 const expandedSubLeaders = ref([]);
-                const navOpen = ref(true);
                 const showAdd = ref(false);
                 const showEdit = ref(false);
                 const form = ref({ name: '', gender: '男', hireDate: '', group: '穿戴组', groupLeader: '', subLeader: '' });
                 const editForm = ref({ id: null, name: '', gender: '男', hireDate: '', group: '穿戴组', groupLeader: '', subLeader: '' });
                 const toast = ref('');
-                
-                const pageTitle = computed(() => {
-                    return '主播列表';
-                });
-                
+
                 const groupLeaders = computed(() => {
                     const leaderSet = new Set();
                     list.value.forEach(s => {
@@ -668,7 +596,6 @@
                     save();
                     form.value = { name: '', gender: '男', hireDate: '', group: '穿戴组', groupLeader: '', subLeader: '' };
                     showAdd.value = false;
-                    page.value = 'list';
                     showToast('添加成功');
                 };
                 
@@ -776,9 +703,9 @@
                 };
                 
                 return {
-                    list, search, filterGroup, filterGroupLeader, filterLevel, page, navOpen, showAdd, showEdit, form, editForm, toast,
+                    list, search, filterGroup, filterGroupLeader, filterLevel, showAdd, showEdit, form, editForm, toast,
                     expandedGroupLeaders, expandedSubLeaders,
-                    pageTitle, filtered, groupLeaders, filteredGroupLeaders, excellentCount, goodCount, poorCount,
+                    filtered, groupLeaders, filteredGroupLeaders, excellentCount, goodCount, poorCount,
                     getGroupLeaderMembers, getSubLeadersByGroupLeader, getSubLeaderMembers, getUngroupedMembers,
                     toggleGroupLeader, toggleSubLeader, resetFilter,
                     save, add, edit, update, del, resetRow, getOverallLevel, getOverallText, getWorkDuration, exportCSV
