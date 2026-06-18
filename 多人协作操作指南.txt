@@ -1,0 +1,111 @@
+============================================================
+  小米手环分析平台 - 多人协作操作指南
+  更新日期：2026-06-17
+============================================================
+
+一、新增模块（你加新功能时）
+----------------------------------------------------------
+
+1. 创建你的模块 HTML 文件
+   比如新建目录：用户画像分析/index.html
+
+2. 编辑 modules.json，在对应分类下加一行配置：
+   {
+     "id": "userprofile",
+     "title": "用户画像分析",
+     "url": "用户画像分析/index.html",
+     "icon": "👤",
+     "description": "人群画像、地域分布、消费偏好分析",
+     "tag": "User Profile"
+   }
+
+   ★ 注意：加在数组最后面，避免跟别人的冲突
+
+3. 提交推送：
+   git add .
+   git commit -m "feat: 新增xxx模块"
+   git pull --rebase
+   git push
+
+
+二、每日更新数据（你现在的日常操作）
+----------------------------------------------------------
+
+1. 修改 sales_analysis/stats_data.js
+   - 更新 date、orders、revenue、avg_price 等字段
+   - 在 dates 数组末尾追加新日期
+
+2. 提交推送：
+   git add sales_analysis/stats_data.js
+   git commit -m "feat: 新增x月x日订单数据"
+   git push
+
+
+三、别人推送后，你拉取更新
+----------------------------------------------------------
+
+1. 安全拉取（先看别人改了什么，再决定合不合入）：
+   git fetch                          ← 只下载，不合并
+   git diff main origin/main          ← 查看别人改了啥
+   确认没问题后：
+   git pull                           ← 真正合并
+
+2. 如果 pull 完觉得不合适，退回 pull 之前：
+   git reset --hard HEAD@{1}
+
+
+四、常用 Git 命令速查
+----------------------------------------------------------
+
+git status              查看当前改了哪些文件
+git diff                 查看具体改了什么内容
+git log --oneline       查看最近提交记录
+git reflog               查看所有操作历史（包括已撤销的）
+git pull                 拉取并合并远程更新
+git pull --rebase        拉取并变基（推荐，避免多余合并提交）
+git push                 推送到远程仓库
+git reset --hard xxx    退回到指定版本（谨慎使用）
+
+
+五、邀请别人协作（GitHub 网页端操作）
+----------------------------------------------------------
+
+1. 浏览器打开：
+   https://github.com/dongjie-study/xiaomi-band-dashboard
+
+2. 点顶部 Settings 标签
+
+3. 左边菜单点 Collaborators
+
+4. 点绿色按钮 Add people
+
+5. 输入对方的 GitHub 用户名或邮箱 → Add
+
+6. 对方会收到邀请邮件，点 Accept invitation 即可
+
+   ★ 之后对方就能直接 git push 到你的仓库了
+
+
+六、模块配置说明（modules.json 字段含义）
+----------------------------------------------------------
+
+字段          必填    说明
+----------------------------------------------------------
+id            是      唯一标识，英文，别重名
+title         是      侧边栏显示的名称
+url           是      模块 HTML 文件的路径
+icon          是      首页卡片图标（emoji）
+description   是      首页卡片的描述文字
+tag           是      卡片标签文字（如 Live Sales）
+badge         否      侧边栏角标（如 HOT）
+hasSubMenu    否      是否有子菜单（目前只有销量分析用）
+
+示例：
+{
+  "id": "violations",
+  "title": "违规分析",
+  "url": "违规情况/report.html",
+  "icon": "⚠️",
+  "description": "小米系直播间违规判罚追踪、原因分布、处罚升级路径",
+  "tag": "Violations"
+}
