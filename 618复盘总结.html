@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>618 大促复盘总结 · 小米手环直播间</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #9ca3af;
+  --border: #e8ecf1;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.03);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,.10);
+  --radius: 14px;
+  --radius-sm: 10px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  --clr-ours: #1E90FF;
+  --clr-comp: #FF6B35;
+  --clr-orange: #ff6900;
+  --clr-green: #1da85c;
+  --clr-red: #FF4757;
+  --clr-purple: #7c6ff7;
+  --clr-gold: #c8960c;
+  --clr-cyan: #0ea89d;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(circle, rgba(148,163,184,.10) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* ===== NAV ===== */
+.nav-bar {
+  display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+  padding: 10px 16px; background: rgba(255,255,255,.9);
+  backdrop-filter: blur(14px); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,.03);
+}
+.nav-btn {
+  padding: 7px 18px; border-radius: 20px; border: 1.5px solid #dde1e6;
+  background: #fff; color: #555; font-size: 12.5px; cursor: pointer;
+  text-decoration: none; transition: all var(--transition); font-family: inherit; font-weight: 500;
+}
+.nav-btn:hover { border-color: var(--clr-orange); color: var(--clr-orange); background: #fff7ed; }
+.nav-btn.active { background: linear-gradient(135deg, var(--clr-orange), #ff8c42); color: #fff; border-color: transparent; font-weight: 600; box-shadow: 0 2px 8px rgba(255,105,0,.2); }
+
+/* ===== HERO ===== */
+.hero {
+  position: relative; z-index: 1;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  color: white; padding: 48px 20px 40px; text-align: center;
+  box-shadow: 0 4px 24px rgba(15,52,96,.15);
+}
+.hero h1 { font-size: 38px; font-weight: 800; letter-spacing: -.02em; }
+.hero h1 .mi { color: var(--clr-orange); }
+.hero p { font-size: 15px; opacity: 0.85; margin-top: 8px; max-width: 700px; margin-left: auto; margin-right: auto; }
+.hero .badge-row { margin-top: 16px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.hero .badge {
+  padding: 5px 16px; border-radius: 16px; font-size: 12px; font-weight: 600; letter-spacing: .03em;
+}
+.badge.green { background: rgba(29,168,92,.18); color: #5ddf8a; }
+.badge.warn { background: rgba(255,105,0,.18); color: #ffa366; }
+.badge.info { background: rgba(30,144,255,.18); color: #80c8ff; }
+.badge.purple { background: rgba(124,111,247,.18); color: #b5a8ff; }
+
+/* ===== KPI ROW ===== */
+.kpi-row {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px;
+  max-width: 1400px; margin: -28px auto 0; padding: 0 20px;
+  position: relative; z-index: 10;
+}
+.kpi-card {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 20px 12px; text-align: center;
+  box-shadow: var(--shadow-md); border: 1px solid var(--border);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.kpi-card .kpi-value { font-size: 26px; font-weight: 800; line-height: 1.2; }
+.kpi-card .kpi-label { font-size: 11px; color: var(--text-secondary); margin-top: 6px; font-weight: 500; letter-spacing: .03em; text-transform: uppercase; }
+.kpi-card.highlight { border: 2px solid var(--clr-orange); background: linear-gradient(135deg, #fffdf0 0%, #fff 100%); }
+
+/* ===== CONTAINER ===== */
+.container { max-width: 1400px; margin: 32px auto; padding: 0 20px; position: relative; z-index: 1; }
+
+/* ===== SECTION ===== */
+.section {
+  background: var(--surface); border-radius: var(--radius);
+  padding: 28px 32px; margin-bottom: 20px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+  scroll-margin-top: 70px;
+  transition: box-shadow var(--transition);
+}
+.section:hover { box-shadow: var(--shadow-md); }
+.section h2 {
+  font-size: 20px; font-weight: 700; margin-bottom: 20px;
+  padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; position: relative;
+  display: flex; align-items: center; gap: 10px;
+}
+.section h2::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 48px; height: 3px; background: var(--clr-orange); border-radius: 2px; }
+.section h3 { font-size: 16px; font-weight: 700; margin: 24px 0 12px; color: #333; }
+.section h3:first-of-type { margin-top: 0; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+.chart-box { width: 100%; }
+.chart-box.h240 { height: 240px; }
+.chart-box.h300 { height: 300px; }
+.chart-box.h360 { height: 360px; }
+.chart-box.h400 { height: 400px; }
+
+/* ===== INSIGHT ===== */
+.insight-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 18px; }
+.insight {
+  padding: 18px 22px; border-radius: 0 12px 12px 0; font-size: 13.5px; line-height: 1.8;
+  box-shadow: var(--shadow-sm);
+}
+.insight strong { display: block; margin-bottom: 3px; font-size: 15px; }
+.insight.good { background: #e8f5e9; border-left: 4px solid #2e7d32; }
+.insight.warn { background: #fff3e0; border-left: 4px solid #e65100; }
+.insight.info { background: #e3f2fd; border-left: 4px solid #1565c0; }
+.insight.danger { background: #fef2f2; border-left: 4px solid #dc2626; }
+
+/* ===== TABLE ===== */
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f8f9fc; text-align: left; padding: 12px 16px; font-size: 11px; color: var(--text-secondary); font-weight: 600; border-bottom: 2px solid var(--border); letter-spacing: .03em; text-transform: uppercase; }
+td { padding: 11px 16px; font-size: 13px; border-bottom: 1px solid #f0f2f5; }
+tbody tr { transition: background var(--transition); }
+tbody tr:hover td { background: #f8fafc; }
+tbody tr.highlight-row td { background: #fffdf0; font-weight: 600; }
+
+/* ===== PLAN CARDS ===== */
+.plan-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 22px;
+  box-shadow: var(--shadow-sm); transition: all var(--transition);
+  position: relative; overflow: hidden;
+}
+.plan-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.plan-card .plan-num {
+  font-size: 52px; font-weight: 900; opacity: .06;
+  position: absolute; top: -8px; right: 14px; line-height: 1;
+}
+.plan-card .plan-icon { font-size: 30px; margin-bottom: 10px; }
+.plan-card h4 { font-size: 16px; margin-bottom: 8px; position: relative; z-index: 1; }
+.plan-card p { font-size: 12.5px; color: #555; line-height: 1.7; position: relative; z-index: 1; }
+.plan-card .plan-tag {
+  display: inline-block; padding: 3px 10px; border-radius: 12px;
+  font-size: 10.5px; font-weight: 600; margin-top: 10px; position: relative; z-index: 1;
+}
+.plan-card.p1 { border-top: 3px solid var(--clr-ours); }
+.plan-card.p2 { border-top: 3px solid var(--clr-green); }
+.plan-card.p3 { border-top: 3px solid var(--clr-purple); }
+.plan-card.p4 { border-top: 3px solid var(--clr-red); }
+
+/* ===== TIMELINE ===== */
+.tl { position: relative; padding: 6px 0; }
+.tl::before { content: ''; position: absolute; left: 24px; top: 0; bottom: 0; width: 2.5px; background: linear-gradient(to bottom, var(--clr-cyan), var(--clr-ours), var(--clr-orange), var(--clr-green)); border-radius: 2px; }
+.tl-item { display: flex; gap: 18px; margin-bottom: 18px; position: relative; }
+.tl-dot {
+  width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700; z-index: 1; color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.12);
+}
+.tl-body { padding-top: 6px; }
+.tl-body h5 { font-size: 15px; margin-bottom: 4px; }
+.tl-body p { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; }
+
+/* ===== SCORE BAR ===== */
+.score-bar { margin-bottom: 16px; }
+.score-bar .s-label { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; font-weight: 500; }
+.score-bar .s-track { height: 10px; background: #f1f5f9; border-radius: 10px; overflow: hidden; }
+.score-bar .s-fill {
+  height: 100%; border-radius: 10px;
+  transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+.score-bar .s-fill.ours { background: linear-gradient(90deg, #22c55e, #16a34a); }
+.score-bar .s-fill.comp { background: linear-gradient(90deg, #ef4444, #dc2626); }
+
+/* ===== HIGHLIGHT BOX ===== */
+.hl-box {
+  padding: 16px 22px; border-radius: 12px; font-size: 14px; line-height: 1.9;
+}
+.hl-orange { background: #fdf8f3; border-left: 4px solid var(--clr-orange); }
+.hl-green { background: #f0faf3; border-left: 4px solid var(--clr-green); }
+.hl-blue { background: #eff6ff; border-left: 4px solid var(--clr-ours); }
+
+/* ===== KEY NUMBERS ===== */
+.key-num-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+.key-num {
+  text-align: center; padding: 20px 16px; background: #f8fafc;
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
+  transition: all var(--transition);
+}
+.key-num:hover { background: #fff; box-shadow: var(--shadow-md); }
+.key-num .num { font-size: 32px; font-weight: 800; color: var(--clr-orange); line-height: 1.1; }
+.key-num .desc { font-size: 12px; color: var(--text-secondary); margin-top: 6px; }
+
+/* ===== CONCLUSION ===== */
+.conclusion-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.conclusion-card {
+  padding: 22px; border-radius: var(--radius); text-align: center;
+  border: 1px solid var(--border); transition: all var(--transition);
+}
+.conclusion-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.conclusion-card .c-icon { font-size: 36px; margin-bottom: 8px; }
+.conclusion-card h4 { font-size: 15px; margin-bottom: 6px; }
+.conclusion-card p { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+.conclusion-card.c1 { background: #fffdf0; }
+.conclusion-card.c2 { background: #f0faf3; }
+.conclusion-card.c3 { background: #eff6ff; }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1100px) {
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+  .grid-2, .insight-row { grid-template-columns: 1fr; }
+  .grid-4 { grid-template-columns: 1fr 1fr; }
+  .grid-3 { grid-template-columns: 1fr; }
+  .conclusion-grid { grid-template-columns: 1fr; }
+  .key-num-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 700px) {
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+  .hero h1 { font-size: 26px; }
+  .section { padding: 20px 16px; }
+  .grid-4 { grid-template-columns: 1fr; }
+  .key-num-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body style="display:none">
+<script>
+(function(){
+var K='mi_band_auth_v1';
+if(!localStorage.getItem(K)){ window.location.href='index.html'; return; }
+document.body.style.display='';
+})();
+</script>
+
+<!-- ===== NAV ===== -->
+<nav class="nav-bar" id="navBar">
+  <a class="nav-btn active" href="#summary">📊 总览</a>
+  <a class="nav-btn" href="#sales">📈 销量复盘</a>
+  <a class="nav-btn" href="#video">🎬 视频分析</a>
+  <a class="nav-btn" href="#visual">👁️ 视觉分析</a>
+  <a class="nav-btn" href="#learnings">💡 核心洞察</a>
+  <a class="nav-btn" href="#plan">🚀 后续规划</a>
+</nav>
+
+<!-- ===== HERO ===== -->
+<header class="hero">
+  <h1>小米手环 · <span class="mi">618 大促复盘总结</span></h1>
+  <p>2026年6月1日 — 6月18日 | 18天全周期数据 | 销量分析 + 千川视频 + 直播间视觉，三维深度复盘</p>
+  <div class="badge-row">
+    <span class="badge green">📊 55,159单 · ¥2,145.7万 GMV</span>
+    <span class="badge info">🎬 CTR 7.23% 领先竞对66%</span>
+    <span class="badge warn">⚠️ 竞对占79.2%份额，差距待缩小</span>
+    <span class="badge purple">🚀 Post-618 四大行动方向</span>
+  </div>
+</header>
+
+<!-- ===== KPI ===== -->
+<div class="kpi-row" id="summary">
+  <div class="kpi-card highlight">
+    <div class="kpi-value" style="color:var(--clr-orange);">¥2,145.7<span style="font-size:16px;">万</span></div>
+    <div class="kpi-label">618期间总GMV</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" style="color:#0f172a;">55,159</div>
+    <div class="kpi-label">总订单数</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" style="color:var(--clr-ours);">11,478</div>
+    <div class="kpi-label">我方订单 (占20.8%)</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" style="color:var(--clr-comp);">43,681</div>
+    <div class="kpi-label">竞对订单 (占79.2%)</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" style="color:var(--clr-green);">7,597<span style="font-size:14px;">单</span></div>
+    <div class="kpi-label">6/18峰值日 · ¥310.8万</div>
+  </div>
+</div>
+
+<!-- ===== 01 销量复盘 ===== -->
+<div class="container">
+<section class="section" id="sales">
+  <h2>📈 销量复盘 —— 18天全周期追踪</h2>
+
+  <!-- Key Numbers -->
+  <div class="key-num-grid">
+    <div class="key-num">
+      <div class="num">18<span style="font-size:16px;">天</span></div>
+      <div class="desc">全周期覆盖 6/1-6/18</div>
+    </div>
+    <div class="key-num">
+      <div class="num">¥389</div>
+      <div class="desc">全周期均价</div>
+    </div>
+    <div class="key-num">
+      <div class="num">5:10</div>
+      <div class="desc">我方房间 : 竞对房间</div>
+    </div>
+    <div class="key-num">
+      <div class="num">3.8<span style="font-size:14px;">x</span></div>
+      <div class="desc">竞对订单倍数 (vs 我方)</div>
+    </div>
+  </div>
+
+  <!-- Daily Trend Chart -->
+  <h3>📅 每日销量趋势（我方 vs 竞对）</h3>
+  <div class="insight-row">
+    <div class="insight good"><strong>✅ 618当日爆发力强</strong>6/18单日7,597单（我方1,516单+竞对6,081单），是6/1的1.77倍，大促势能充分释放。</div>
+    <div class="insight good"><strong>✅ 我方增速明显</strong>6/17→6/18我方从828→1,516单（+83%），竞对从3,115→6,081单（+95%），大促最后2天全市场爆发。</div>
+    <div class="insight warn"><strong>⚠️ 6/9-6/10低谷</strong>6/9仅1,797单（我方326单），618中期存在明显疲软期，需考虑中期促活策略。</div>
+    <div class="insight warn"><strong>⚠️ 竞对规模化优势明显</strong>竞对10间直播间贡献79.2%订单，多房间矩阵是核心差距来源。</div>
+  </div>
+  <div class="chart-box h360" id="chart-daily-trend"></div>
+
+  <!-- Our vs Comp Revenue -->
+  <h3>💰 每日营收趋势（我方 vs 竞对）</h3>
+  <div class="chart-box h300" id="chart-daily-revenue"></div>
+
+  <!-- Product Breakdown: Our vs Competitor -->
+  <h3>🏷️ 618产品品类拆解 —— 我方 vs 竞对 逐产品对比</h3>
+
+  <!-- 核心品类：手环+手表 -->
+  <div class="insight-row" style="margin-bottom:8px;">
+    <div class="insight info"><strong>📊 核心发现：REDMI Watch 6是我方第一大单品</strong>我方Watch6占我们总订单的34.6%（3,970单），但我们只抢到全市场Watch6的23.7%。竞对卖了我们3.2倍。</div>
+    <div class="insight warn"><strong>⚠️ 小米手环10 Pro差距最大</strong>全市场16,812单，我方仅12.8%（2,151单）。这是618期间我方份额最低的核心品类——竞对卖了我们的6.8倍。</div>
+  </div>
+
+  <!-- 手环10 vs 手环10Pro vs Watch6 -->
+  <table style="margin-bottom:14px;">
+    <tr>
+      <th style="width:20%;">产品品类</th>
+      <th style="width:10%;background:#eff6ff;">我方订单</th><th style="width:11%;background:#eff6ff;">我方营收</th>
+      <th style="width:10%;background:#fff3e0;">竞对订单</th><th style="width:11%;background:#fff3e0;">竞对营收</th>
+      <th style="width:9%;">总订单</th><th style="width:8%;">总营收</th>
+      <th style="width:7%;background:#f0faf3;">我方占比</th>
+      <th style="width:14%;">差距倍数</th>
+    </tr>
+
+    <!-- 手环10 -->
+    <tr style="border-top:2px solid var(--clr-orange);">
+      <td><b>🔵 小米手环10</b></td>
+      <td style="background:#eff6ff;font-weight:700;">3,934</td>
+      <td style="background:#eff6ff;">¥1,130,339</td>
+      <td style="background:#fff3e0;font-weight:700;">11,893</td>
+      <td style="background:#fff3e0;">¥3,388,267</td>
+      <td><b>15,827</b></td>
+      <td>¥4,518,606</td>
+      <td style="background:#f0faf3;color:var(--clr-green);font-weight:700;">24.9%</td>
+      <td style="color:var(--clr-comp);">竞对×3.0</td>
+    </tr>
+
+    <!-- 手环10Pro -->
+    <tr>
+      <td><b>🔴 小米手环10 Pro</b></td>
+      <td style="background:#eff6ff;font-weight:700;">2,151</td>
+      <td style="background:#eff6ff;">¥853,222</td>
+      <td style="background:#fff3e0;font-weight:700;">14,661</td>
+      <td style="background:#fff3e0;">¥5,785,093</td>
+      <td><b>16,812</b></td>
+      <td>¥6,638,315</td>
+      <td style="background:#fef2f2;color:var(--clr-red);font-weight:700;">12.8%</td>
+      <td style="color:var(--clr-red);">竞对×6.8 ⚠️</td>
+    </tr>
+
+    <!-- Watch 6 -->
+    <tr style="background:#fffdf0;">
+      <td><b>🟠 REDMI Watch 6</b></td>
+      <td style="background:#eff6ff;font-weight:700;">3,970</td>
+      <td style="background:#eff6ff;">¥1,821,614</td>
+      <td style="background:#fff3e0;font-weight:700;">12,758</td>
+      <td style="background:#fff3e0;">¥5,870,003</td>
+      <td><b>16,728</b></td>
+      <td>¥7,691,617</td>
+      <td style="background:#f0faf3;color:var(--clr-green);font-weight:700;">23.7%</td>
+      <td style="color:var(--clr-comp);">竞对×3.2</td>
+    </tr>
+  </table>
+
+  <!-- 二级品类 -->
+  <table style="margin-bottom:14px;">
+    <tr>
+      <th style="width:20%;">产品品类</th>
+      <th style="width:10%;background:#eff6ff;">我方订单</th><th style="width:11%;background:#eff6ff;">我方营收</th>
+      <th style="width:10%;background:#fff3e0;">竞对订单</th><th style="width:11%;background:#fff3e0;">竞对营收</th>
+      <th style="width:9%;">总订单</th><th style="width:8%;">总营收</th>
+      <th style="width:7%;background:#f0faf3;">我方占比</th>
+      <th style="width:14%;">备注</th>
+    </tr>
+    <tr>
+      <td><b>小米手环9 Pro</b></td>
+      <td style="background:#eff6ff;">237</td><td style="background:#eff6ff;">¥69,639</td>
+      <td style="background:#fff3e0;">500</td><td style="background:#fff3e0;">¥145,474</td>
+      <td>737</td><td>¥215,113</td>
+      <td style="color:var(--clr-green);font-weight:600;">32.2%</td>
+      <td>老品占比最高</td>
+    </tr>
+    <tr>
+      <td><b>小米手环10 陶瓷版</b></td>
+      <td style="background:#eff6ff;">59</td><td style="background:#eff6ff;">¥20,755</td>
+      <td style="background:#fff3e0;">140</td><td style="background:#fff3e0;">¥49,283</td>
+      <td>199</td><td>¥70,038</td>
+      <td style="color:var(--clr-green);font-weight:600;">29.6%</td>
+      <td>高客单品类</td>
+    </tr>
+    <tr>
+      <td><b>小米手表 S系列</b></td>
+      <td style="background:#eff6ff;">3</td><td style="background:#eff6ff;">¥3,308</td>
+      <td style="background:#fff3e0;">746</td><td style="background:#fff3e0;">¥694,465</td>
+      <td>749</td><td>¥697,773</td>
+      <td style="color:var(--clr-red);font-weight:600;">0.4%</td>
+      <td style="color:var(--clr-red);">几乎被竞对垄断</td>
+    </tr>
+  </table>
+
+  <!-- 耳机品类汇总 -->
+  <table>
+    <tr>
+      <th style="width:20%;">产品品类</th>
+      <th style="width:10%;background:#eff6ff;">我方订单</th><th style="width:11%;background:#eff6ff;">我方营收</th>
+      <th style="width:10%;background:#fff3e0;">竞对订单</th><th style="width:11%;background:#fff3e0;">竞对营收</th>
+      <th style="width:9%;">总订单</th><th style="width:8%;">总营收</th>
+      <th style="width:7%;background:#f0faf3;">我方占比</th>
+      <th style="width:14%;">备注</th>
+    </tr>
+    <tr>
+      <td><b>🎧 Xiaomi 开放式耳机</b></td>
+      <td style="background:#eff6ff;font-weight:700;">442</td><td style="background:#eff6ff;">¥402,660</td>
+      <td style="background:#fff3e0;">294</td><td style="background:#fff3e0;">¥229,576</td>
+      <td><b>736</b></td><td>¥632,236</td>
+      <td style="background:#f0faf3;color:var(--clr-green);font-weight:700;">60.1%</td>
+      <td style="color:var(--clr-green);">我方优势品类 ✅</td>
+    </tr>
+    <tr>
+      <td>REDMI Buds 8 Pro</td>
+      <td style="background:#eff6ff;">115</td><td style="background:#eff6ff;">¥36,735</td>
+      <td style="background:#fff3e0;">198</td><td style="background:#fff3e0;">¥68,544</td>
+      <td>313</td><td>¥105,279</td>
+      <td style="font-weight:600;">36.7%</td><td></td>
+    </tr>
+    <tr>
+      <td>REDMI Buds 8</td>
+      <td style="background:#eff6ff;">55</td><td style="background:#eff6ff;">¥6,406</td>
+      <td style="background:#fff3e0;">123</td><td style="background:#fff3e0;">¥17,321</td>
+      <td>178</td><td>¥23,727</td>
+      <td style="font-weight:600;">30.9%</td><td></td>
+    </tr>
+    <tr>
+      <td>REDMI Buds 8 活力版</td>
+      <td style="background:#eff6ff;">91</td><td style="background:#eff6ff;">¥7,840</td>
+      <td style="background:#fff3e0;">352</td><td style="background:#fff3e0;">¥27,593</td>
+      <td>443</td><td>¥35,433</td>
+      <td style="font-weight:600;">20.5%</td><td></td>
+    </tr>
+    <tr>
+      <td>REDMI Buds 8 青春版</td>
+      <td style="background:#eff6ff;">38</td><td style="background:#eff6ff;">¥4,627</td>
+      <td style="background:#fff3e0;">766</td><td style="background:#fff3e0;">¥97,472</td>
+      <td>804</td><td>¥102,099</td>
+      <td style="color:var(--clr-red);font-weight:600;">4.7%</td>
+      <td style="color:var(--clr-red);">竞对×20</td>
+    </tr>
+  </table>
+
+  <!-- 总计 -->
+  <div style="margin-top:16px;background:linear-gradient(135deg, #1a1a2e, #16213e);color:#fff;border-radius:var(--radius);padding:20px 28px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+    <div style="text-align:center;">
+      <div style="font-size:11px;opacity:.7;letter-spacing:.05em;">618 总销量</div>
+      <div style="font-size:36px;font-weight:800;">55,159<span style="font-size:16px;opacity:.7;"> 单</span></div>
+      <div style="font-size:13px;opacity:.7;">¥2,145.7万 GMV</div>
+    </div>
+    <div style="text-align:center;font-size:28px;opacity:.3;">|</div>
+    <div style="text-align:center;">
+      <div style="font-size:11px;opacity:.7;letter-spacing:.05em;">我方订单</div>
+      <div style="font-size:36px;font-weight:800;color:var(--clr-ours);">11,478<span style="font-size:16px;opacity:.7;"> 单</span></div>
+      <div style="font-size:13px;opacity:.7;">¥454.7万 · 占比 <b style="color:var(--clr-ours);">20.8%</b></div>
+    </div>
+    <div style="text-align:center;font-size:28px;opacity:.3;">|</div>
+    <div style="text-align:center;">
+      <div style="font-size:11px;opacity:.7;letter-spacing:.05em;">竞对订单</div>
+      <div style="font-size:36px;font-weight:800;color:var(--clr-comp);">43,681<span style="font-size:16px;opacity:.7;"> 单</span></div>
+      <div style="font-size:13px;opacity:.7;">¥1,691.0万 · 占比 <b style="color:var(--clr-comp);">79.2%</b></div>
+    </div>
+    <div style="text-align:center;font-size:28px;opacity:.3;">|</div>
+    <div style="text-align:center;">
+      <div style="font-size:11px;opacity:.7;letter-spacing:.05em;">我方TOP3品类</div>
+      <div style="font-size:14px;font-weight:600;line-height:1.6;">
+        <span style="color:#FF6B35;">Watch6</span> 3,970单 ·
+        <span style="color:var(--clr-ours);">手环10</span> 3,934单 ·
+        <span style="color:var(--clr-red);">10Pro</span> 2,151单
+      </div>
+      <div style="font-size:12px;opacity:.7;">三品类占我方总订单 87.6%</div>
+    </div>
+  </div>
+
+  <!-- Product Pie -->
+  <h3 style="margin-top:20px;">📊 产品结构可视化（全市场 vs 我方）</h3>
+  <div class="grid-2">
+    <div class="chart-box h300" id="chart-product-pie"></div>
+    <div class="chart-box h300" id="chart-our-product-pie"></div>
+  </div>
+
+  <!-- Room Comparison -->
+  <h3>🏪 6/18 直播间成交排行</h3>
+  <div class="grid-2">
+    <div class="chart-box h300" id="chart-rooms-618"></div>
+    <div>
+      <table>
+        <tr><th>排名</th><th>直播间</th><th>类型</th><th>订单</th><th>营收</th></tr>
+        <tr class="highlight-row"><td>1</td><td>小米手环</td><td style="color:var(--clr-comp);">竞对</td><td>1,515</td><td>¥533,548</td></tr>
+        <tr class="highlight-row"><td>2</td><td>小米手表官方直播间</td><td style="color:var(--clr-comp);">竞对</td><td>1,172</td><td>¥511,243</td></tr>
+        <tr class="highlight-row"><td>3</td><td>小米数码旗舰店</td><td style="color:var(--clr-comp);">竞对</td><td>1,065</td><td>¥349,141</td></tr>
+        <tr style="background:#eff6ff;"><td>4</td><td>小米官方手表</td><td style="color:var(--clr-ours);">我方</td><td>791</td><td>¥334,210</td></tr>
+        <tr><td>5</td><td>小米智能穿戴国补号</td><td style="color:var(--clr-comp);">竞对</td><td>757</td><td>¥320,721</td></tr>
+        <tr><td>6</td><td>小米智能穿戴授权号</td><td style="color:var(--clr-comp);">竞对</td><td>564</td><td>¥184,586</td></tr>
+        <tr style="background:#eff6ff;"><td>7</td><td>小米官方手环直播间</td><td style="color:var(--clr-ours);">我方</td><td>409</td><td>¥136,445</td></tr>
+        <tr><td>8</td><td>小米手表</td><td style="color:var(--clr-comp);">竞对</td><td>350</td><td>¥308,092</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="hl-box hl-orange" style="margin-top:16px;">
+    <strong style="color:var(--clr-orange);">🔑 销量核心洞察：</strong>
+    618期间全市场<strong>55,159单 · ¥2,145.7万</strong> GMV。我方5间直播间贡献<strong>11,478单（20.8%）· ¥454.7万（21.2%）</strong>，竞对10间直播间贡献<strong>43,681单（79.2%）· ¥1,691.0万（78.8%）</strong>。
+    我方以一半的房间数拿到约1/5的份额，单房效率（2,296单/间）与竞对（4,368单/间）仍有差距，但视频内容质量（CTR 7.23% vs 4.36%）和ROI（15.05 vs 14.77）超越竞对，说明<strong>内容竞争力>渠道覆盖力</strong>是当前格局。
+  </div>
+</section>
+
+<!-- ===== 02 视频分析 ===== -->
+<section class="section" id="video">
+  <h2>🎬 千川视频分析 —— 内容质量是我们的核心优势</h2>
+
+  <div class="key-num-grid">
+    <div class="key-num">
+      <div class="num" style="color:var(--clr-ours);">1,880</div>
+      <div class="desc">我司有消耗视频数</div>
+    </div>
+    <div class="key-num">
+      <div class="num" style="color:var(--clr-comp);">2,566</div>
+      <div class="desc">竞对有消耗视频数 (+36%)</div>
+    </div>
+    <div class="key-num">
+      <div class="num" style="color:var(--clr-green);">¥15.05</div>
+      <div class="desc">我司ROI (竞对¥14.77)</div>
+    </div>
+    <div class="key-num">
+      <div class="num" style="color:var(--clr-green);">7.23%</div>
+      <div class="desc">我司CTR (竞对4.36% · 领先66%)</div>
+    </div>
+  </div>
+
+  <div class="insight-row">
+    <div class="insight good"><strong>✅ CTR 7.23% vs 竞对 4.36%（高66%）</strong>内容质量是核心壁垒。用户更愿意点击我们的视频，说明内容方向（场景化、真实测评、iPhone生态）完全正确。</div>
+    <div class="insight good"><strong>✅ CVR 1.55% vs 竞对 1.03%（高50%），ROI 15.05 vs 14.77</strong>转化效率和投资回报双领先。每投入¥1元，我司产出¥15.05，竞对¥14.77。</div>
+    <div class="insight warn"><strong>⚠️ 播放量差4倍（200万 vs 807万）</strong>竞对播放效率84.3次/元，我司仅34.5次/元。好内容没被足够多人看到——这是数量×分发的问题。</div>
+    <div class="insight warn"><strong>⚠️ 消耗差64%、视频数差36%</strong>竞对以更多视频+更高消耗抢占流量入口，规模化优势转化为了市场份额优势。</div>
+  </div>
+
+  <!-- Radar Chart -->
+  <h3>📡 全方位能力对比雷达图</h3>
+  <div class="chart-box h360" id="chart-radar"></div>
+
+  <!-- Product ROI -->
+  <h3>📊 产品线 ROI 对比 & 视频效率矩阵</h3>
+  <div class="grid-2">
+    <div class="chart-box h300" id="chart-product-roi"></div>
+    <div class="chart-box h300" id="chart-video-efficiency"></div>
+  </div>
+
+  <div class="hl-box hl-green" style="margin-top:12px;">
+    <strong style="color:var(--clr-green);">💡 千川核心结论：内容质量是最大护城河，数量差距是最大增长空间。</strong>
+    正确策略：<strong>不改变内容方向</strong>（CTR/CVR/ROI全面领先证明方向正确），而是<strong>把对的事情多做3倍</strong>——多发视频、多绑热点、多用AIGC变体。Watch6 ROI 18.9远超手环14.1，建议视频占比从25%提升至40%。
+  </div>
+</section>
+
+<!-- ===== 03 视觉分析 ===== -->
+<section class="section" id="visual">
+  <h2>👁️ 直播间视觉分析 —— 优势在视觉冲击力，短板在信任与价格</h2>
+
+  <h3>📊 六维评分对比（自家 vs 竞对）</h3>
+  <div class="grid-2">
+    <div>
+      <div class="score-bar">
+        <div class="s-label"><span>🎨 视觉冲击力</span><span style="color:var(--clr-green);">自家 85 vs 竞对 75</span></div>
+        <div class="s-track"><div class="s-fill ours" style="width:85%"></div></div>
+        <div class="s-track" style="margin-top:4px"><div class="s-fill comp" style="width:75%"></div></div>
+      </div>
+      <div class="score-bar">
+        <div class="s-label"><span>📋 信息层次感</span><span style="color:var(--clr-red);">自家 70 vs 竞对 85</span></div>
+        <div class="s-track"><div class="s-fill ours" style="width:70%"></div></div>
+        <div class="s-track" style="margin-top:4px"><div class="s-fill comp" style="width:85%"></div></div>
+      </div>
+      <div class="score-bar">
+        <div class="s-label"><span>💰 价格展示</span><span style="color:var(--clr-red);">自家 75 vs 竞对 90</span></div>
+        <div class="s-track"><div class="s-fill ours" style="width:75%"></div></div>
+        <div class="s-track" style="margin-top:4px"><div class="s-fill comp" style="width:90%"></div></div>
+      </div>
+      <div class="score-bar">
+        <div class="s-label"><span>🛡️ 信任背书</span><span style="color:var(--clr-red);">自家 60 vs 竞对 85</span></div>
+        <div class="s-track"><div class="s-fill ours" style="width:60%"></div></div>
+        <div class="s-track" style="margin-top:4px"><div class="s-fill comp" style="width:85%"></div></div>
+      </div>
+      <div class="score-bar">
+        <div class="s-label"><span>📦 产品展示</span><span>自家 80 vs 竞对 80</span></div>
+        <div class="s-track"><div class="s-fill ours" style="width:80%"></div></div>
+        <div class="s-track" style="margin-top:4px"><div class="s-fill comp" style="width:80%"></div></div>
+      </div>
+      <div class="score-bar">
+        <div class="s-label"><span>🎁 赠品策略</span><span style="color:var(--clr-green);">自家 85 vs 竞对 70</span></div>
+        <div class="s-track"><div class="s-fill ours" style="width:85%"></div></div>
+        <div class="s-track" style="margin-top:4px"><div class="s-fill comp" style="width:70%"></div></div>
+      </div>
+    </div>
+    <div>
+      <div class="chart-box h300" id="chart-visual-radar"></div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:16px;">
+    <div class="insight good"><strong>✅ 视觉冲击力领先（85 vs 75）</strong>专业舞台灯光+品牌感布置，观感明显优于竞对。这是差异化优势，应保持并扩大。</div>
+    <div class="insight good"><strong>✅ 赠品策略领先（85 vs 70）</strong>赠品展示和策略优于竞对，能够有效提升用户购买决策。</div>
+    <div class="insight danger"><strong>❌ 信任背书差距最大（60 vs 85）</strong>竞对普遍展示"官方正品/全国联保/七天无理由/运费险"，我们缺少这些信任标识。</div>
+    <div class="insight danger"><strong>❌ 价格展示差距显著（75 vs 90）</strong>竞对采用"原价→到手价"对比展示+国补突出，我们缺少价格锚点和折扣感知。</div>
+  </div>
+
+  <div class="hl-box hl-orange" style="margin-top:12px;">
+    <strong style="color:var(--clr-orange);">🔑 视觉核心结论：</strong>
+    视觉冲击力和赠品策略是我们的优势；<strong>信任背书（60 vs 85）和价格展示（75 vs 90）是最大短板</strong>。竞对通过"国补标识+原价对比+信任标签"三重组合大幅降低用户决策门槛。改进方向明确：补齐信任元素、优化价格展示、保持视觉优势。
+  </div>
+</section>
+
+<!-- ===== 04 核心洞察 ===== -->
+<section class="section" id="learnings">
+  <h2>💡 618 核心洞察 —— 三维数据交叉分析</h2>
+
+  <div class="conclusion-grid">
+    <div class="conclusion-card c1">
+      <div class="c-icon">🏆</div>
+      <h4>内容质量是最大护城河</h4>
+      <p>CTR 7.23%（领先66%）、CVR 1.55%（领先50%）、ROI 15.05（领先2%）。内容竞争力全面超越竞对，用户更信任我们的内容。</p>
+    </div>
+    <div class="conclusion-card c2">
+      <div class="c-icon">📊</div>
+      <h4>数量差距是最大短板</h4>
+      <p>视频数少36%、消耗少64%、播放量差4倍、房间数少50%。竞对的规模化矩阵策略转化为了79.2%的市场份额。</p>
+    </div>
+    <div class="conclusion-card c3">
+      <div class="c-icon">🎯</div>
+      <h4>战略方向：质量×数量双轮驱动</h4>
+      <p>保持内容质量优势的同时，大力提升数量：视频产量翻3倍、AIGC提效、直播间信任元素补齐、价格展示优化。</p>
+    </div>
+  </div>
+
+  <h3 style="margin-top:24px;">📋 三维交叉洞察表</h3>
+  <table>
+    <tr><th>维度</th><th>我方优势</th><th>我方劣势</th><th>竞对优势</th><th>行动方向</th></tr>
+    <tr>
+      <td><b>销量分析</b></td>
+      <td style="color:var(--clr-green);">618当日爆发力强（+83%）、REDMI Watch 6占比35%第一大单品</td>
+      <td style="color:var(--clr-red);">整体份额仅20.8%、房间数只有竞对一半、中期（6/9）存在疲软</td>
+      <td>10间直播间矩阵覆盖、规模化优势、多房间协同抢占流量入口</td>
+      <td>增开直播间？加强中期促活、Watch6继续加大推广</td>
+    </tr>
+    <tr>
+      <td><b>千川视频</b></td>
+      <td style="color:var(--clr-green);">CTR领先66%、CVR领先50%、ROI领先2%</td>
+      <td style="color:var(--clr-red);">视频数少36%、消耗少64%、播放量差4倍</td>
+      <td>多房间矩阵×多视频覆盖、播放效率84.3次/元远超我司34.5次/元</td>
+      <td>视频产量翻3倍、AIGC变体、Watch6 ROI 18.9加大投放</td>
+    </tr>
+    <tr>
+      <td><b>视觉分析</b></td>
+      <td style="color:var(--clr-green);">视觉冲击力85分、赠品策略85分</td>
+      <td style="color:var(--clr-red);">信任背书60分、价格展示75分、信息层次感70分</td>
+      <td>信任标识完善（官方正品/运费险）、国补醒目、价格对比清晰</td>
+      <td>补齐信任元素、优化价格展示、统一品牌视觉</td>
+    </tr>
+  </table>
+
+  <div class="hl-box hl-blue" style="margin-top:16px;">
+    <strong style="color:var(--clr-ours);">🔍 交叉洞察：</strong>
+    三个维度指向同一个结论——<strong>我们的内容质量和用户吸引力超越竞对，但被数量和渠道覆盖所限制</strong>。视频CTR/CVR双高说明用户想看的正是我们的内容，但视频少+房间少导致流量入口不足。视觉信任元素缺失又进一步降低了用户在直播间的决策效率。解决方案是<strong>三个维度协同发力：视频端扩量×直播端补信任×运营端强促活</strong>。
+  </div>
+</section>
+
+<!-- ===== 05 后续规划 ===== -->
+<section class="section" id="plan">
+  <h2>🚀 后续规划 —— Post-618 行动方案</h2>
+
+  <!-- Phase Timeline -->
+  <h3>⏱️ 时间线：6月-7月分阶段计划</h3>
+  <div class="tl">
+    <div class="tl-item">
+      <div class="tl-dot" style="background:var(--clr-red);">1</div>
+      <div class="tl-body">
+        <h5>6/19-6/25 · 618返场收割 <span style="color:var(--clr-red);">🔥 立即执行</span></h5>
+        <p>利用618余热+返场标签，主推Watch6高客单产品。每天发布5-8条返场主题视频，绑"618返场""限时返场"标签。重点维护6/18爆款素材，延续千川投放。</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:var(--clr-orange);">2</div>
+      <div class="tl-body">
+        <h5>6/26-7/10 · 暑期启动 <span style="color:var(--clr-orange);">⚡ 重点推进</span></h5>
+        <p>切换内容方向至暑期场景：户外运动、游泳防水、GPS导航、毕业季送礼。发布30+暑期主题视频。启动AIGC量产流水线：每爆款→5变体→日产15-20条。</p>
+      </div>
+    </div>
+    <div class="tl-item">
+      <div class="tl-dot" style="background:var(--clr-ours);">3</div>
+      <div class="tl-body">
+        <h5>7/11-7/31 · 世界杯借势 <span style="color:var(--clr-ours);">📈 持续运营</span></h5>
+        <p>世界杯期间推出"熬夜心率""运动激情"主题内容。视频产量目标100条+/月。直播间增加信任背书元素（官方正品/运费险/国补标识），优化价格展示策略。</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Four Direction Cards -->
+  <h3>🎯 四大行动方向</h3>
+  <div class="grid-4" style="margin-bottom:16px;">
+    <div class="plan-card p1">
+      <div class="plan-num">01</div>
+      <div class="plan-icon">🎬</div>
+      <h4 style="color:var(--clr-ours);">视频产量翻3倍</h4>
+      <p>每款产品按「4场景×2风格」拍8条。同一场景多角度收音，一次拍摄产出3-5条。从每周10条 → <strong>每周30-40条</strong>。Watch6占比提升至40%。</p>
+      <span class="plan-tag" style="background:rgba(30,144,255,.1);color:var(--clr-ours);">目标：月产100+条</span>
+    </div>
+    <div class="plan-card p2">
+      <div class="plan-num">02</div>
+      <div class="plan-icon">🤖</div>
+      <h4 style="color:var(--clr-green);">AIGC量产体系</h4>
+      <p>阶段1：即创/剪映AI把1条爆款变5条变体。阶段2：AIGC做功能演示动画。阶段3：建立3套模板日产15-20条。几乎零成本产能翻3倍。</p>
+      <span class="plan-tag" style="background:rgba(29,168,92,.1);color:var(--clr-green);">零成本扩量</span>
+    </div>
+    <div class="plan-card p3">
+      <div class="plan-num">03</div>
+      <div class="plan-icon">🛡️</div>
+      <h4 style="color:var(--clr-purple);">补齐信任短板</h4>
+      <p>直播间底部增加"官方正品/全国联保/七天无理由/运费险"标识。价格展示改为"原价→到手价"对比，突出国补15%。增加主播佩戴展示+客服引导。</p>
+      <span class="plan-tag" style="background:rgba(124,111,247,.1);color:var(--clr-purple);">转化率提升</span>
+    </div>
+    <div class="plan-card p4">
+      <div class="plan-num">04</div>
+      <div class="plan-icon">📈</div>
+      <h4 style="color:var(--clr-red);">投放正循环加速</h4>
+      <p>抖加¥100元测素材→互动率>5%加投→自然量>60%做千川挂车→ROI>1.3持续放量。Watch6 ROI 18.9重点加码，每多投¥1000多赚¥4800。</p>
+      <span class="plan-tag" style="background:rgba(255,71,87,.1);color:var(--clr-red);">ROI优先</span>
+    </div>
+  </div>
+
+  <!-- Content Calendar -->
+  <h3>📅 暑期热点内容日历</h3>
+  <div class="grid-2">
+    <div>
+      <table>
+        <tr><th>时间节点</th><th>热点主题</th><th>内容方向</th><th>目标产品</th></tr>
+        <tr style="background:#fffdf0;"><td>6/19-6/25</td><td>🔥 618返场</td><td>限时返场优惠、爆款返场、国补倒计时</td><td>Watch6 · 手环10Pro</td></tr>
+        <tr><td>6月下旬</td><td>🎓 毕业季</td><td>职场新人首选、学生党性价比、送礼推荐</td><td>手环10 · Watch6</td></tr>
+        <tr><td>6月下旬</td><td>🏖️ 暑期档</td><td>户外运动、游泳防水、旅行长续航</td><td>手环10Pro · Watch6</td></tr>
+        <tr><td>6月下旬</td><td>👔 父亲节余热</td><td>送健康、实用科技礼物、中老年友好</td><td>手环10Pro</td></tr>
+        <tr><td>7月全月</td><td>⚽ 世界杯</td><td>熬夜心率监测、运动激情、球迷必备</td><td>手环10Pro · Watch S</td></tr>
+        <tr><td>7月全月</td><td>✈️ 暑期旅游</td><td>GPS导航、长续航、NFC出行</td><td>Watch6 · 手环10Pro</td></tr>
+      </table>
+    </div>
+    <div>
+      <h4 style="font-weight:700;margin-bottom:12px;">📊 投放四阶段正循环</h4>
+      <div class="tl" style="font-size:13px;">
+        <div class="tl-item"><div class="tl-dot" style="background:var(--clr-cyan);width:36px;height:36px;font-size:14px;">1</div><div class="tl-body"><h5 style="font-size:14px;">冷启动 Day1-3</h5><p>抖加测5-8条素材×¥100-200元，看互动率>5%、完播率>30%</p></div></div>
+        <div class="tl-item"><div class="tl-dot" style="background:var(--clr-ours);width:36px;height:36px;font-size:14px;">2</div><div class="tl-body"><h5 style="font-size:14px;">加热期 Day3-5</h5><p>优质素材抖加追加¥500-1000元，观察自然量占比>60%</p></div></div>
+        <div class="tl-item"><div class="tl-dot" style="background:var(--clr-orange);width:36px;height:36px;font-size:14px;">3</div><div class="tl-body"><h5 style="font-size:14px;">收割期 Day5-14</h5><p>千川精准转化，定向视频互动+相似人群</p></div></div>
+        <div class="tl-item"><div class="tl-dot" style="background:var(--clr-green);width:36px;height:36px;font-size:14px;">4</div><div class="tl-body"><h5 style="font-size:14px;">迭代期 Day14+</h5><p>计划衰退→新素材抖加测→好的给千川→循环</p></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Targets -->
+  <h3>🎯 7月核心KPI目标</h3>
+  <div class="key-num-grid">
+    <div class="key-num">
+      <div class="num" style="color:var(--clr-ours);">100+</div>
+      <div class="desc">月产视频数（6月 ~60条）</div>
+    </div>
+    <div class="key-num">
+      <div class="num" style="color:var(--clr-green);">300万+</div>
+      <div class="desc">月度视频播放量（6月 200万）</div>
+    </div>
+    <div class="key-num">
+      <div class="num" style="color:var(--clr-orange);">¥80万+</div>
+      <div class="desc">月度视频成交（6月 ¥87.6万/W1）</div>
+    </div>
+    <div class="key-num">
+      <div class="num" style="color:var(--clr-purple);">25%+</div>
+      <div class="desc">我方市场份额目标（6月 20.8%）</div>
+    </div>
+  </div>
+
+  <div class="hl-box hl-green" style="margin-top:12px;">
+    <strong style="color:var(--clr-green);">🏁 总方针：不改变方向，只放大规模。</strong>
+    内容质量（CTR 7.23% / CVR 1.55% / ROI 15.05）已证明方向正确。接下来就是<strong>把对的事情多做3倍</strong>：
+    视频产量3倍 → 播放量3倍 → 订单量3倍。同时补齐视觉端的信任短板（信任标识+价格锚点），让直播间转化效率也追上内容质量。
+    <strong style="color:var(--clr-orange);">坚持2个月，市场份额从20%→30%完全可以实现。</strong>
+  </div>
+</section>
+</div>
+
+<footer style="text-align:center;color:var(--text-muted);font-size:11px;padding:32px;position:relative;z-index:1;border-top:1px solid var(--border);margin-top:20px;">
+  小米手环直播间 · 618大促复盘总结 · 2026年6月 · 基于销量分析 + 千川视频 + 直播间视觉三维数据
+</footer>
+
+<!-- ===== ECHARTS ===== -->
+<script>
+var C = { ours: '#1E90FF', comp: '#FF6B35', green: '#1da85c', orange: '#ff6900', purple: '#7c6ff7', gold: '#c8960c', cyan: '#0ea89d', red: '#FF4757' };
+
+// ===== 1. Daily Trend (Orders) =====
+(function(){
+  var d = document.getElementById('chart-daily-trend'); if(!d) return;
+  var c = echarts.init(d);
+  var dates = ['6/1','6/2','6/3','6/4','6/5','6/6','6/7','6/8','6/9','6/10','6/11','6/12','6/13','6/14','6/15','6/16','6/17','6/18'];
+  var our = [1026,608,616,487,560,567,525,473,326,641,862,668,409,437,460,469,828,1516];
+  var comp = [3269,1733,1650,2030,1770,2549,2408,1921,1471,2089,2573,2644,2296,2184,2036,1862,3115,6081];
+  var total = [4295,2341,2266,2517,2330,3116,2933,2394,1797,2730,3435,3312,2705,2621,2496,2331,3943,7597];
+
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0, textStyle: { fontSize: 11 }, data: ['我方订单','竞对订单','总订单'] },
+    grid: { left: 12, right: 12, top: 40, bottom: 20 },
+    xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 10 } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#eee', type: 'dashed' } } },
+    series: [
+      { name: '我方订单', type: 'bar', stack: 'orders', data: our, itemStyle: { color: C.ours, borderRadius: [4,4,0,0] }, barWidth: 22, label: { show: true, position: 'inside', fontSize: 9, color: '#fff', formatter: function(p){ return p.value>600 ? p.value : ''; } } },
+      { name: '竞对订单', type: 'bar', stack: 'orders', data: comp, itemStyle: { color: C.comp, borderRadius: [0,0,4,4] }, barWidth: 22 },
+      { name: '总订单', type: 'line', data: total, lineStyle: { color: C.orange, width: 2.5, type: 'dashed' }, itemStyle: { color: C.orange }, symbol: 'circle', symbolSize: 8, label: { show: true, fontSize: 10, fontWeight: 700, color: C.orange, formatter: function(p){ return p.value; } } }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ===== 2. Daily Revenue =====
+(function(){
+  var d = document.getElementById('chart-daily-revenue'); if(!d) return;
+  var c = echarts.init(d);
+  var dates = ['6/1','6/2','6/3','6/4','6/5','6/6','6/7','6/8','6/9','6/10','6/11','6/12','6/13','6/14','6/15','6/16','6/17','6/18'];
+  var ourRevenue = [408367,213571,230725,264013,227074,227235,204088,192011,135523,243869,316343,241549,149109,165488,199604,206500,308380,613797];
+  var compRevenue = [1318846,686776,612386,752705,636945,899074,864322,729252,600650,813033,1008102,940519,813299,778933,852248,805713,1303624,2493719];
+
+  c.setOption({
+    tooltip: { trigger: 'axis', formatter: function(params) { var r = ''; for(var i=0;i<params.length;i++){ r += params[i].seriesName + ': ¥' + (params[i].value/10000).toFixed(1) + '万<br/>'; } return r; } },
+    legend: { top: 0, textStyle: { fontSize: 11 }, data: ['我方营收','竞对营收'] },
+    grid: { left: 12, right: 12, top: 40, bottom: 20 },
+    xAxis: { type: 'category', data: dates, axisLabel: { fontSize: 10 } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#eee', type: 'dashed' } }, axisLabel: { formatter: function(v){ return '¥'+(v/10000).toFixed(0)+'万'; }, fontSize: 9 } },
+    series: [
+      { name: '我方营收', type: 'bar', data: ourRevenue.map(function(v){ return (v/10000).toFixed(1); }), itemStyle: { color: C.ours, borderRadius: [4,4,0,0] }, barWidth: 22, label: { show: true, position: 'top', fontSize: 9, fontWeight: 600, color: C.ours, formatter: function(p){ return p.value>15 ? '¥'+p.value+'万' : ''; } } },
+      { name: '竞对营收', type: 'bar', data: compRevenue.map(function(v){ return (v/10000).toFixed(1); }), itemStyle: { color: C.comp, borderRadius: [4,4,0,0] }, barWidth: 22 }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ===== 3. Product Pie (Total Market) =====
+(function(){
+  var d = document.getElementById('chart-product-pie'); if(!d) return;
+  var c = echarts.init(d);
+  c.setOption({
+    title: { text: '全市场产品结构', left: 'center', top: 8, textStyle: { fontSize: 13, fontWeight: 700 } },
+    tooltip: { trigger: 'item', formatter: '{b}: {c}单 ({d}%)' },
+    legend: { bottom: 0, textStyle: { fontSize: 9 } },
+    series: [{
+      type: 'pie', radius: ['42%','70%'], center: ['50%','46%'],
+      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 3 },
+      label: { show: true, formatter: '{b}\n{d}%', fontSize: 9 },
+      data: [
+        { value: 16728, name: 'REDMI Watch 6', itemStyle: { color: '#FF6B35' } },
+        { value: 16812, name: '小米手环10 Pro', itemStyle: { color: '#1E90FF' } },
+        { value: 15827, name: '小米手环10', itemStyle: { color: '#1da85c' } },
+        { value: 737, name: '小米手环9 Pro', itemStyle: { color: '#ff6900' } },
+        { value: 749, name: '小米手表 S系列', itemStyle: { color: '#7c6ff7' } },
+        { value: 736, name: '开放式耳机', itemStyle: { color: '#c8960c' } },
+        { value: 3570, name: '其他品类', itemStyle: { color: '#cbd5e1' } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ===== 3b. Our Product Pie =====
+(function(){
+  var d = document.getElementById('chart-our-product-pie'); if(!d) return;
+  var c = echarts.init(d);
+  c.setOption({
+    title: { text: '我方产品结构 (11,478单)', left: 'center', top: 8, textStyle: { fontSize: 13, fontWeight: 700, color: C.ours } },
+    tooltip: { trigger: 'item', formatter: '{b}: {c}单 ({d}%)' },
+    legend: { bottom: 0, textStyle: { fontSize: 9 } },
+    series: [{
+      type: 'pie', radius: ['42%','70%'], center: ['50%','46%'],
+      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 3 },
+      label: { show: true, formatter: '{b}\n{d}%', fontSize: 9 },
+      data: [
+        { value: 3970, name: 'REDMI Watch 6', itemStyle: { color: '#FF6B35' } },
+        { value: 3934, name: '小米手环10', itemStyle: { color: '#1da85c' } },
+        { value: 2151, name: '小米手环10 Pro', itemStyle: { color: '#1E90FF' } },
+        { value: 442, name: '开放式耳机', itemStyle: { color: '#c8960c' } },
+        { value: 237, name: '小米手环9 Pro', itemStyle: { color: '#ff6900' } },
+        { value: 744, name: '其他品类', itemStyle: { color: '#cbd5e1' } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ===== 4. Rooms on 6/18 =====
+(function(){
+  var d = document.getElementById('chart-rooms-618'); if(!d) return;
+  var c = echarts.init(d);
+  var rooms = ['小米手环','小米手表官方','小米数码旗舰','小米官方手表','智能穿戴国补','智能穿戴授权','小米官方手环','小米手表'];
+  var orders = [1515,1172,1065,791,757,564,409,350];
+  var types = ['comp','comp','comp','ours','comp','comp','ours','comp'];
+
+  c.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { left: 140, right: 20, top: 8, bottom: 4 },
+    xAxis: { type: 'value', splitLine: { lineStyle: { color: '#eee', type: 'dashed' } } },
+    yAxis: { type: 'category', data: rooms.reverse(), axisLabel: { fontSize: 10 }, inverse: true },
+    series: [{
+      type: 'bar', data: orders.reverse().map(function(v, i){
+        var idx = orders.length - 1 - i;
+        return { value: v, itemStyle: { color: types[idx]==='ours' ? C.ours : C.comp, borderRadius: [0,4,4,0] } };
+      }), barWidth: 16,
+      label: { show: true, position: 'right', fontSize: 10, fontWeight: 600, formatter: '{c}单' }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ===== 5. Radar (Video Full Dimension) =====
+(function(){
+  var d = document.getElementById('chart-radar'); if(!d) return;
+  var c = echarts.init(d);
+  c.setOption({
+    tooltip: { trigger: 'item' },
+    legend: { bottom: 0, textStyle: { fontSize: 11 } },
+    radar: { center: ['50%','46%'], radius: '62%', axisName: { fontSize: 10 },
+      indicator: [
+        { name: 'ROI', max: 20 }, { name: 'CTR(%)', max: 10 }, { name: 'CVR(%)', max: 3 },
+        { name: '视频数', max: 3000 }, { name: '播放效率', max: 100 }, { name: '成交(万)', max: 150 }
+      ]
+    },
+    series: [{
+      type: 'radar', symbol: 'circle', symbolSize: 4,
+      data: [
+        { value: [15.05,7.23,1.55,1880,34.5,87.6], name: '我司', lineStyle: { color: C.ours, width: 2 }, areaStyle: { color: 'rgba(30,144,255,.12)' }, itemStyle: { color: C.ours } },
+        { value: [14.77,4.36,1.03,2566,84.3,141.4], name: '竞对', lineStyle: { color: C.comp, width: 2 }, areaStyle: { color: 'rgba(255,107,53,.08)' }, itemStyle: { color: C.comp } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ===== 6. Product ROI =====
+(function(){
+  var d = document.getElementById('chart-product-roi'); if(!d) return;
+  var c = echarts.init(d);
+  c.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { top: 0, textStyle: { fontSize: 10 }, data: ['我司ROI','竞对ROI'] },
+    grid: { left: 12, right: 12, top: 36, bottom: 20 },
+    xAxis: { type: 'category', data: ['手环','Watch6','AIGC','耳机','其他'], axisLabel: { fontSize: 10 } },
+    yAxis: { type: 'value', name: 'ROI', splitLine: { lineStyle: { color: '#eee', type: 'dashed' } } },
+    series: [
+      { name: '我司ROI', type: 'bar', data: [14.1,18.9,13.4,15.3,12.2], itemStyle: { color: C.ours, borderRadius: [4,4,0,0] }, barWidth: 16, label: { show: true, position: 'top', fontSize: 10, fontWeight: 700, color: C.ours } },
+      { name: '竞对ROI', type: 'bar', data: [12.7,17.5,13.9,19.9,11.8], itemStyle: { color: C.comp, borderRadius: [4,4,0,0] }, barWidth: 16, label: { show: true, position: 'top', fontSize: 10 } }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ===== 7. Video Efficiency Matrix =====
+(function(){
+  var d = document.getElementById('chart-video-efficiency'); if(!d) return;
+  var c = echarts.init(d);
+  c.setOption({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    legend: { top: 0, textStyle: { fontSize: 10 }, data: ['消耗','成交','ROI'] },
+    grid: { left: 14, right: 50, top: 36, bottom: 14 },
+    xAxis: { type: 'category', data: ['手环','Watch6','AIGC','耳机','其他'], axisLabel: { fontSize: 10 } },
+    yAxis: [
+      { type: 'value', name: '金额', splitLine: { lineStyle: { color: '#eee', type: 'dashed' } }, axisLabel: { formatter: function(v){ return (v/10000).toFixed(0)+'万'; }, fontSize: 9 } },
+      { type: 'value', name: 'ROI', splitLine: { show: false }, axisLabel: { fontSize: 9 } }
+    ],
+    series: [
+      { name: '消耗', type: 'bar', data: [27434,13754,9927,3202,3921], itemStyle: { color: '#ff8a80', borderRadius: [4,4,0,0] }, barWidth: 14 },
+      { name: '成交', type: 'bar', data: [386066,259876,133399,49141,47772], itemStyle: { color: '#a5d6a7', borderRadius: [4,4,0,0] }, barWidth: 14 },
+      { name: 'ROI', type: 'line', yAxisIndex: 1, data: [14.1,18.9,13.4,15.3,12.2], lineStyle: { color: C.orange, width: 2.5 }, itemStyle: { color: C.orange }, symbol: 'diamond', symbolSize: 12, label: { show: true, fontWeight: 700, fontSize: 12, color: C.orange } }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ===== 8. Visual Radar =====
+(function(){
+  var d = document.getElementById('chart-visual-radar'); if(!d) return;
+  var c = echarts.init(d);
+  c.setOption({
+    tooltip: { trigger: 'item' },
+    legend: { bottom: 0, textStyle: { fontSize: 10 } },
+    radar: { center: ['50%','46%'], radius: '58%', axisName: { fontSize: 9 },
+      indicator: [
+        { name: '视觉冲击力', max: 100 }, { name: '信息层次感', max: 100 },
+        { name: '价格展示', max: 100 }, { name: '信任背书', max: 100 },
+        { name: '产品展示', max: 100 }, { name: '赠品策略', max: 100 }
+      ]
+    },
+    series: [{
+      type: 'radar', symbol: 'circle', symbolSize: 4,
+      data: [
+        { value: [85,70,75,60,80,85], name: '我司', lineStyle: { color: C.green, width: 2 }, areaStyle: { color: 'rgba(29,168,92,.12)' }, itemStyle: { color: C.green } },
+        { value: [75,85,90,85,80,70], name: '竞对', lineStyle: { color: C.red, width: 2 }, areaStyle: { color: 'rgba(255,71,87,.08)' }, itemStyle: { color: C.red } }
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// ===== Nav Active =====
+(function(){
+  var navs = document.querySelectorAll('.nav-btn');
+  var sections = [];
+  navs.forEach(function(n){
+    var href = n.getAttribute('href');
+    if(href && href.startsWith('#')){
+      var sec = document.querySelector(href);
+      if(sec) sections.push({ el: sec, nav: n });
+    }
+  });
+  function onScroll(){
+    var scrollY = window.scrollY + 120;
+    var active = null;
+    sections.forEach(function(s){
+      if(s.el.offsetTop <= scrollY) active = s;
+    });
+    navs.forEach(function(n){ n.classList.remove('active'); });
+    if(active) active.nav.classList.add('active');
+  }
+  window.addEventListener('scroll', onScroll);
+  // Click to scroll
+  navs.forEach(function(n){
+    n.addEventListener('click', function(e){
+      var href = n.getAttribute('href');
+      if(href && href.startsWith('#')){
+        e.preventDefault();
+        var target = document.querySelector(href);
+        if(target) target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
