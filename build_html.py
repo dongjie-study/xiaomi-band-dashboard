@@ -12,6 +12,9 @@ def fmt_wan(n):
 def fmt_yuan(n):
     return f"¥{n:,.0f}"
 
+def fmt_gsv(n):
+    return f"¥{n:,.0f}"
+
 def diff_str(d):
     if d > 0: return f'我方+{fmt(d)}'
     elif d < 0: return f'竞对+{fmt(abs(d))}'
@@ -29,11 +32,11 @@ jixie = teams['机械空间']
 zongxun = teams['综训']
 
 total_orders = D['total_orders']
-total_gmv_wan = D['total_gmv_wan']
+total_gsv_wan = D['total_gsv_wan']
 live_orders = D['live_orders']
 card_orders = D['card_orders']
-live_gmv_wan = D['live_gmv_wan']
-card_gmv_wan = D['card_gmv_wan']
+live_gsv_wan = D['live_gsv_wan']
+card_gsv_wan = D['card_gsv_wan']
 
 key_prods = ['小米手环10', 'REDMI Watch 6', '小米手环10 Pro', '小米手环9 Pro',
              '小米手环10 陶瓷版', '小米手表 S系列', 'Xiaomi 开放式耳机',
@@ -48,10 +51,10 @@ daily_our = json.dumps(D['daily_我方_orders'])
 daily_liangmi = json.dumps(D['daily_良米_orders'])
 daily_jixie = json.dumps(D['daily_机械空间_orders'])
 daily_zongxun = json.dumps(D['daily_综训_orders'])
-daily_our_r = json.dumps(D['daily_我方_gmv_wan'])
-daily_liangmi_r = json.dumps(D['daily_良米_gmv_wan'])
-daily_jixie_r = json.dumps(D['daily_机械空间_gmv_wan'])
-daily_zongxun_r = json.dumps(D['daily_综训_gmv_wan'])
+daily_our_r = json.dumps(D['daily_我方_gsv_wan'])
+daily_liangmi_r = json.dumps(D['daily_良米_gsv_wan'])
+daily_jixie_r = json.dumps(D['daily_机械空间_gsv_wan'])
+daily_zongxun_r = json.dumps(D['daily_综训_gsv_wan'])
 
 # Product comparison tables
 def prod_table_rows(prods, show_channel=False):
@@ -81,11 +84,11 @@ def prod_table_rows(prods, show_channel=False):
         row = {}
         row['name'] = p
         row['our_orders'] = fmt(d['our'])
-        row['our_gmv'] = fmt_yuan(d['our_gmv'])
+        row['our_gsv'] = fmt_yuan(d['our_gsv'])
         row['comp_orders'] = fmt(d['comp'])
-        row['comp_gmv'] = fmt_yuan(d['comp_gmv'])
+        row['comp_gsv'] = fmt_yuan(d['comp_gsv'])
         row['total_orders'] = fmt(d['total'])
-        row['total_gmv'] = fmt_yuan(d['total_gmv'])
+        row['total_gsv'] = fmt_yuan(d['total_gsv'])
         row['share'] = f'{share}%'
         row['share_color'] = share_color
         row['diff'] = fmt(diff) if diff >= 0 else f'{diff:,}'
@@ -319,7 +322,7 @@ tr:hover {{ background: #fafbfc; }}
   <h1>🏆 <span class="mi">618</span> 大促复盘总结</h1>
   <p>5/15-6/18 · 35天全周期 · 直播间+商品卡全渠道数据 · 四大团队竞争格局</p>
   <div class="badge-row">
-    <span class="badge green">📊 {fmt(total_orders)}单 · ¥{total_gmv_wan}万</span>
+    <span class="badge green">📊 {fmt(total_orders)}单 · ¥{total_gsv_wan}万</span>
     <span class="badge info">📡 直播间{fmt(live_orders)}单</span>
     <span class="badge card">🛒 商品卡{fmt(card_orders)}单</span>
     <span class="badge warn">🏪 {our['rooms']}间我方 vs {liangmi['rooms']}间良米</span>
@@ -332,8 +335,8 @@ tr:hover {{ background: #fafbfc; }}
     <div class="kpi-label">618 总销量</div>
   </div>
   <div class="kpi-card">
-    <div class="kpi-value" style="color:var(--clr-green);">¥{total_gmv_wan}万</div>
-    <div class="kpi-label">618 总GMV</div>
+    <div class="kpi-value" style="color:var(--clr-green);">¥{total_gsv_wan}万</div>
+    <div class="kpi-label">618 总GSV</div>
   </div>
   <div class="kpi-card ours">
     <div class="kpi-value" style="color:var(--clr-ours);">{our['pct']}%</div>
@@ -363,13 +366,13 @@ tr:hover {{ background: #fafbfc; }}
     <div>
       <h3>🏪 四大团队销量分布</h3>
       <table>
-        <tr><th>团队</th><th>总订单</th><th>直播间</th><th>商品卡</th><th>GMV</th><th>占比</th><th>直播间数</th></tr>
+        <tr><th>团队</th><th>总订单</th><th>直播间</th><th>商品卡</th><th>GSV</th><th>占比</th><th>直播间数</th></tr>
         <tr style="background:#eff6ff;">
           <td style="color:var(--clr-ours);font-weight:700;">🔵 我方</td>
           <td style="font-weight:700;">{fmt(our['orders'])}</td>
           <td>{fmt(our['直播间_orders'])}</td>
           <td>{fmt(our['商品卡_orders'])}</td>
-          <td>{fmt_wan(our['gmv_wan'])}</td>
+          <td>{fmt_wan(our['gsv_wan'])}</td>
           <td style="color:var(--clr-ours);font-weight:700;">{our['pct']}%</td>
           <td>{our['rooms']}间 ({fmt(our['avg_per_room'])}单/间)</td>
         </tr>
@@ -378,7 +381,7 @@ tr:hover {{ background: #fafbfc; }}
           <td style="font-weight:700;">{fmt(liangmi['orders'])}</td>
           <td>{fmt(liangmi['直播间_orders'])}</td>
           <td>{fmt(liangmi['商品卡_orders'])}</td>
-          <td>{fmt_wan(liangmi['gmv_wan'])}</td>
+          <td>{fmt_wan(liangmi['gsv_wan'])}</td>
           <td style="color:var(--clr-comp);font-weight:700;">{liangmi['pct']}%</td>
           <td>{liangmi['rooms']}间 ({fmt(liangmi['avg_per_room'])}单/间)</td>
         </tr>
@@ -387,7 +390,7 @@ tr:hover {{ background: #fafbfc; }}
           <td>{fmt(jixie['orders'])}</td>
           <td>{fmt(jixie['直播间_orders'])}</td>
           <td>{fmt(jixie['商品卡_orders'])}</td>
-          <td>{fmt_wan(jixie['gmv_wan'])}</td>
+          <td>{fmt_wan(jixie['gsv_wan'])}</td>
           <td>{jixie['pct']}%</td>
           <td>{jixie['rooms']}间 ({fmt(jixie['avg_per_room'])}单/间)</td>
         </tr>
@@ -396,7 +399,7 @@ tr:hover {{ background: #fafbfc; }}
           <td>{fmt(zongxun['orders'])}</td>
           <td>{fmt(zongxun['直播间_orders'])}</td>
           <td>{fmt(zongxun['商品卡_orders'])}</td>
-          <td>{fmt_wan(zongxun['gmv_wan'])}</td>
+          <td>{fmt_wan(zongxun['gsv_wan'])}</td>
           <td>{zongxun['pct']}%</td>
           <td>{zongxun['rooms']}间</td>
         </tr>
@@ -405,29 +408,29 @@ tr:hover {{ background: #fafbfc; }}
     <div>
       <h3>📈 渠道结构对比</h3>
       <table>
-        <tr><th>渠道</th><th>订单</th><th>GMV</th><th>我方订单</th><th>我方GMV</th><th>我方占比</th></tr>
+        <tr><th>渠道</th><th>订单</th><th>GSV</th><th>我方订单</th><th>我方GSV</th><th>我方占比</th></tr>
         <tr>
           <td>📡 直播间</td>
           <td style="font-weight:700;">{fmt(live_orders)}</td>
-          <td>{fmt_wan(live_gmv_wan)}</td>
+          <td>{fmt_wan(live_gsv_wan)}</td>
           <td>{fmt(our['直播间_orders'])}</td>
-          <td>{fmt_wan(teams['我方'].get('直播间_gmv_wan', 0))}</td>
+          <td>{fmt_wan(teams['我方'].get('直播间_gsv_wan', 0))}</td>
           <td style="color:var(--clr-ours);">{round(our['直播间_orders']/live_orders*100, 1)}%</td>
         </tr>
         <tr>
           <td>🛒 商品卡</td>
           <td style="font-weight:700;">{fmt(card_orders)}</td>
-          <td>{fmt_wan(card_gmv_wan)}</td>
+          <td>{fmt_wan(card_gsv_wan)}</td>
           <td>{fmt(our['商品卡_orders'])}</td>
-          <td>{fmt_wan(teams['我方'].get('商品卡_gmv_wan', 0))}</td>
+          <td>{fmt_wan(teams['我方'].get('商品卡_gsv_wan', 0))}</td>
           <td style="color:var(--clr-ours);">{round(our['商品卡_orders']/card_orders*100, 1)}%</td>
         </tr>
         <tr style="background:#f0faf3;">
           <td><b>📊 合计</b></td>
           <td><b>{fmt(total_orders)}</b></td>
-          <td><b>{fmt_wan(total_gmv_wan)}</b></td>
+          <td><b>{fmt_wan(total_gsv_wan)}</b></td>
           <td><b>{fmt(our['orders'])}</b></td>
-          <td><b>{fmt_wan(our['gmv_wan'])}</b></td>
+          <td><b>{fmt_wan(our['gsv_wan'])}</b></td>
           <td style="color:var(--clr-green);font-weight:700;"><b>{our['pct']}%</b></td>
         </tr>
       </table>
@@ -437,7 +440,7 @@ tr:hover {{ background: #fafbfc; }}
   <h3>📈 每日销量趋势（含商品卡）</h3>
   <div class="chart-box h360" id="chart-daily-trend"></div>
 
-  <h3 style="margin-top:16px;">💰 每日营收趋势（万元）</h3>
+  <h3 style="margin-top:16px;">💰 每日GSV趋势（万元）</h3>
   <div class="chart-box h360" id="chart-daily-revenue"></div>
 
   <h3 style="margin-top:16px;">🏪 6/18 直播间成交排行</h3>
@@ -445,7 +448,7 @@ tr:hover {{ background: #fafbfc; }}
     <div class="chart-box h300" id="chart-rooms-618"></div>
     <div>
       <table>
-        <tr><th>排名</th><th>直播间</th><th>团队</th><th>订单</th><th>营收</th></tr>
+        <tr><th>排名</th><th>直播间</th><th>团队</th><th>订单</th><th>GSV</th></tr>
 '''
 
 # Room ranking data
@@ -453,7 +456,7 @@ for i, room in enumerate(D['rooms_618'][:15]):
     team_color = {'我方': 'color:var(--clr-ours);', '良米': 'color:var(--clr-comp);',
                   '机械空间': 'color:var(--clr-purple);', '综训': 'color:var(--clr-red);'}.get(room['team'], '')
     bg = {'我方': '#eff6ff', '良米': '#fff3e0', '机械空间': '#f5f0ff', '综训': '#fef2f2'}.get(room['team'], '')
-    html += f'        <tr style="background:{bg};"><td>{i+1}</td><td>{room["name"]}</td><td style="{team_color}font-weight:700;">{room["team"]}</td><td style="font-weight:600;">{fmt(room["orders"])}</td><td>{room["gmv_fmt"]}</td></tr>\n'
+    html += f'        <tr style="background:{bg};"><td>{i+1}</td><td>{room["name"]}</td><td style="{team_color}font-weight:700;">{room["team"]}</td><td style="font-weight:600;">{fmt(room["orders"])}</td><td>{room["gsv_fmt"]}</td></tr>\n'
 
 html += '''      </table>
     </div>
@@ -470,17 +473,17 @@ for team_label, team_key, color in [('🔵 我方', '我方', 'var(--clr-ours)')
     html += f'''    <div>
       <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:{color};">{team_label} · {len(store_items)}间</div>
       <table style="font-size:11px;">
-        <tr><th>直播间</th><th>订单</th><th>GMV</th></tr>
+        <tr><th>直播间</th><th>订单</th><th>GSV</th></tr>
 '''
     for sn, sv in sorted(store_items, key=lambda x: x[1]['orders'], reverse=True)[:6]:
-        html += f'        <tr><td>{sn}</td><td style="font-weight:600;color:{color};">{fmt(sv["orders"])}</td><td>{fmt_yuan(sv["gmv"])}</td></tr>\n'
+        html += f'        <tr><td>{sn}</td><td style="font-weight:600;color:{color};">{fmt(sv["orders"])}</td><td>{fmt_yuan(sv["gsv"])}</td></tr>\n'
     html += '      </table>\n    </div>\n'
 
 html += '''  </div>
 
   <div class="hl-box hl-orange" style="margin-top:16px;">
     <strong style="color:var(--clr-orange);">🔑 销量核心洞察：</strong>
-    618全周期<strong>''' + fmt(total_orders) + '''单 · ¥''' + str(total_gmv_wan) + '''万</strong>（直播间''' + fmt(live_orders) + ''' + 商品卡''' + fmt(card_orders) + '''），四方格局：<strong style="color:var(--clr-ours);">我方''' + str(our['pct']) + '''%</strong> · <strong style="color:#FF6B35;">良米''' + str(liangmi['pct']) + '''%</strong> · <strong style="color:var(--clr-purple);">机械空间''' + str(jixie['pct']) + '''%</strong> · 综训''' + str(zongxun['pct']) + '''%。
+    618全周期<strong>''' + fmt(total_orders) + '''单 · ¥''' + str(total_gsv_wan) + '''万</strong>（直播间''' + fmt(live_orders) + ''' + 商品卡''' + fmt(card_orders) + '''），四方格局：<strong style="color:var(--clr-ours);">我方''' + str(our['pct']) + '''%</strong> · <strong style="color:#FF6B35;">良米''' + str(liangmi['pct']) + '''%</strong> · <strong style="color:var(--clr-purple);">机械空间''' + str(jixie['pct']) + '''%</strong> · 综训''' + str(zongxun['pct']) + '''%。
     加入商品卡数据后，我方综合份额提升至''' + str(our['pct']) + '''%（直播间''' + str(round(our['直播间_orders']/live_orders*100, 1)) + '''% + 商品卡''' + str(round(our['商品卡_orders']/card_orders*100, 1)) + '''%），与良米差距''' + str(abs(round(our['pct']-liangmi['pct'], 1))) + '''个百分点。
     良米以8间直播间+商品卡矩阵占最大份额；我方商品卡渗透率持续提升是扩大份额的关键路径。
   </div>
@@ -509,9 +512,9 @@ html += f'''    <div class="insight good"><strong>✅ 小米手环10 是我方�
   <table style="margin-bottom:14px;">
     <tr>
       <th style="width:18%;">核心品类</th>
-      <th style="width:9%;background:#eff6ff;">我方订单</th><th style="width:9%;background:#eff6ff;">我方营收</th>
-      <th style="width:9%;background:#fff3e0;">竞对订单</th><th style="width:9%;background:#fff3e0;">竞对营收</th>
-      <th style="width:8%;">总订单</th><th style="width:8%;">总营收</th>
+      <th style="width:9%;background:#eff6ff;">我方订单</th><th style="width:9%;background:#eff6ff;">我方GSV</th>
+      <th style="width:9%;background:#fff3e0;">竞对订单</th><th style="width:9%;background:#fff3e0;">竞对GSV</th>
+      <th style="width:8%;">总订单</th><th style="width:8%;">总GSV</th>
       <th style="width:7%;background:#f0faf3;">我方占比</th>
       <th style="width:9%;background:#fef2f2;">差额（我-竞）</th>
       <th style="width:14%;">备注</th>
@@ -540,11 +543,11 @@ def make_prod_row(p, bg=''):
     return f'''    <tr style="background:{bg};">
       <td><b>{p}</b></td>
       <td style="background:#eff6ff;font-weight:700;">{fmt(d['our'])}</td>
-      <td style="background:#eff6ff;">{fmt_yuan(d['our_gmv'])}</td>
+      <td style="background:#eff6ff;">{fmt_yuan(d['our_gsv'])}</td>
       <td style="background:#fff3e0;font-weight:700;">{fmt(d['comp'])}</td>
-      <td style="background:#fff3e0;">{fmt_yuan(d['comp_gmv'])}</td>
+      <td style="background:#fff3e0;">{fmt_yuan(d['comp_gsv'])}</td>
       <td><b>{fmt(d['total'])}</b></td>
-      <td>{fmt_yuan(d['total_gmv'])}</td>
+      <td>{fmt_yuan(d['total_gsv'])}</td>
       <td style="color:{sc};font-weight:700;font-size:15px;">{share}%</td>
       <td style="color:{diff_color};font-weight:700;">{diff_sign}{fmt(diff)}</td>
       <td style="color:{cc};">{note}</td>
@@ -561,9 +564,9 @@ html += '''  </table>
   <table style="margin-bottom:14px;">
     <tr>
       <th style="width:18%;">二级品类</th>
-      <th style="width:9%;background:#eff6ff;">我方订单</th><th style="width:9%;background:#eff6ff;">我方营收</th>
-      <th style="width:9%;background:#fff3e0;">竞对订单</th><th style="width:9%;background:#fff3e0;">竞对营收</th>
-      <th style="width:8%;">总订单</th><th style="width:8%;">总营收</th>
+      <th style="width:9%;background:#eff6ff;">我方订单</th><th style="width:9%;background:#eff6ff;">我方GSV</th>
+      <th style="width:9%;background:#fff3e0;">竞对订单</th><th style="width:9%;background:#fff3e0;">竞对GSV</th>
+      <th style="width:8%;">总订单</th><th style="width:8%;">总GSV</th>
       <th style="width:7%;background:#f0faf3;">我方占比</th>
       <th style="width:9%;background:#fef2f2;">差额</th>
       <th style="width:14%;">备注</th>
@@ -579,9 +582,9 @@ html += '''  </table>
   <table>
     <tr>
       <th style="width:18%;">耳机品类</th>
-      <th style="width:9%;background:#eff6ff;">我方订单</th><th style="width:9%;background:#eff6ff;">我方营收</th>
-      <th style="width:9%;background:#fff3e0;">竞对订单</th><th style="width:9%;background:#fff3e0;">竞对营收</th>
-      <th style="width:8%;">总订单</th><th style="width:8%;">总营收</th>
+      <th style="width:9%;background:#eff6ff;">我方订单</th><th style="width:9%;background:#eff6ff;">我方GSV</th>
+      <th style="width:9%;background:#fff3e0;">竞对订单</th><th style="width:9%;background:#fff3e0;">竞对GSV</th>
+      <th style="width:8%;">总订单</th><th style="width:8%;">总GSV</th>
       <th style="width:7%;background:#f0faf3;">我方占比</th>
       <th style="width:9%;background:#fef2f2;">差额</th>
       <th style="width:14%;">备注</th>
@@ -598,19 +601,19 @@ html += f'''  </table>
     <div style="text-align:center;">
       <div style="font-size:11px;opacity:.7;letter-spacing:.05em;">📊 618 总销量（全渠道）</div>
       <div style="font-size:40px;font-weight:800;">{fmt(total_orders)}</div>
-      <div style="font-size:13px;opacity:.7;">单 · {fmt_wan(total_gmv_wan)} GMV</div>
+      <div style="font-size:13px;opacity:.7;">单 · {fmt_wan(total_gsv_wan)} GSV</div>
     </div>
     <div style="text-align:center;font-size:30px;opacity:.25;">|</div>
     <div style="text-align:center;">
       <div style="font-size:11px;opacity:.7;letter-spacing:.05em;">🔵 我方订单</div>
       <div style="font-size:40px;font-weight:800;color:var(--clr-ours);">{fmt(our['orders'])}</div>
-      <div style="font-size:13px;opacity:.7;">{fmt_wan(our['gmv_wan'])} · 占比 <b style="color:var(--clr-ours);">{our['pct']}%</b> · 直播+商品卡</div>
+      <div style="font-size:13px;opacity:.7;">{fmt_wan(our['gsv_wan'])} · 占比 <b style="color:var(--clr-ours);">{our['pct']}%</b> · 直播+商品卡</div>
     </div>
     <div style="text-align:center;font-size:30px;opacity:.25;">|</div>
     <div style="text-align:center;">
       <div style="font-size:11px;opacity:.7;letter-spacing:.05em;">🟠 良米</div>
       <div style="font-size:40px;font-weight:800;color:#FF6B35;">{fmt(liangmi['orders'])}</div>
-      <div style="font-size:13px;opacity:.7;">{fmt_wan(liangmi['gmv_wan'])} · 占比 <b style="color:#FF6B35;">{liangmi['pct']}%</b> · 8间+商品卡</div>
+      <div style="font-size:13px;opacity:.7;">{fmt_wan(liangmi['gsv_wan'])} · 占比 <b style="color:#FF6B35;">{liangmi['pct']}%</b> · 8间+商品卡</div>
     </div>
     <div style="text-align:center;font-size:30px;opacity:.25;">|</div>
     <div style="text-align:center;">
@@ -637,7 +640,7 @@ html += f'''  </table>
 
   <div class="hl-box hl-blue" style="margin-bottom:14px;">
     <strong style="color:var(--clr-ours);">📡 直播间数据范围：</strong>
-    仅统计直播间渠道订单，共<strong>{fmt(live_orders)}单 · {fmt_wan(live_gmv_wan)}</strong>。
+    仅统计直播间渠道订单，共<strong>{fmt(live_orders)}单 · {fmt_wan(live_gsv_wan)}</strong>。
     我方直播间{fmt(D['our_live_products'].get('小米手环10', {}).get('orders', 0) if '小米手环10' in D.get('our_live_products', {}) else 0)}单（{round(our['直播间_orders']/live_orders*100, 1)}%），良米直播间{fmt(liangmi['直播间_orders'])}单（{round(liangmi['直播间_orders']/live_orders*100, 1)}%）。
   </div>
 
@@ -728,7 +731,7 @@ html += f'''  </table>
 
   <div class="hl-box hl-green" style="margin-bottom:14px;">
     <strong style="color:var(--clr-green);">🛒 商品卡数据范围：</strong>
-    仅统计商品卡渠道订单（达人昵称列标注），共<strong>{fmt(card_orders)}单 · {fmt_wan(card_gmv_wan)}</strong>。
+    仅统计商品卡渠道订单（达人昵称列标注），共<strong>{fmt(card_orders)}单 · {fmt_wan(card_gsv_wan)}</strong>。
     我司商品卡<strong>{fmt(our['商品卡_orders'])}单</strong>（占商品卡{round(our['商品卡_orders']/card_orders*100, 1)}%），
     良米商品卡<strong>{fmt(liangmi['商品卡_orders'])}单</strong>（占商品卡{round(liangmi['商品卡_orders']/card_orders*100, 1)}%）。
     商品卡差额：{'+' if our['商品卡_orders'] > liangmi['商品卡_orders'] else ''}{fmt(our['商品卡_orders'] - liangmi['商品卡_orders'])}单。
@@ -902,7 +905,7 @@ html += f'''  </table>
     <div class="conclusion-card c4">
       <div class="c-icon">🛒</div>
       <h4>商品卡是新增长极</h4>
-      <p>商品卡{fmt(card_orders)}单（{fmt_wan(card_gmv_wan)}），占全渠道{round(card_orders/total_orders*100, 1)}%。优化商品标题、主图、详情页，提升自然搜索转化率。</p>
+      <p>商品卡{fmt(card_orders)}单（{fmt_wan(card_gsv_wan)}），占全渠道{round(card_orders/total_orders*100, 1)}%。优化商品标题、主图、详情页，提升自然搜索转化率。</p>
     </div>
   </div>
 
@@ -1053,7 +1056,7 @@ var C = {{ ours: '#1E90FF', comp: '#FF6B35', green: '#1da85c', orange: '#ff6900'
   var d = document.getElementById('chart-daily-revenue'); if(!d) return;
   var c = echarts.init(d);
   c.setOption({{
-    title: {{ text: '每日营收趋势（万元）', left: 'center', top: 4, textStyle: {{ fontSize: 12, fontWeight: 600 }} }},
+    title: {{ text: '每日GSV趋势（万元）', left: 'center', top: 4, textStyle: {{ fontSize: 12, fontWeight: 600 }} }},
     tooltip: {{ trigger: 'axis', formatter: function(p){{ var r = p[0].axisValue; for(var i=0;i<p.length;i++){{ r += '<br/>'+p[i].seriesName+': ¥'+p[i].value+'万'; }} return r; }} }},
     legend: {{ top: 28, textStyle: {{ fontSize: 9 }}, data: ['我方','良米','机械空间','综训'] }},
     grid: {{ left: 12, right: 12, top: 60, bottom: 20 }},

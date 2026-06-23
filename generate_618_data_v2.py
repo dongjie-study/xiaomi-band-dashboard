@@ -75,10 +75,10 @@ result = {}
 
 # === OVERALL KPIs ===
 total_orders = len(df)
-total_gmv = df[col_amount].sum()
+total_gsv = df[col_amount].sum()
 result['total_orders'] = int(total_orders)
-result['total_gmv_wan'] = round(total_gmv / 10000, 1)
-result['total_gmv'] = round(total_gmv, 2)
+result['total_gsv_wan'] = round(total_gsv / 10000, 1)
+result['total_gsv'] = round(total_gsv, 2)
 result['period_start'] = '2026-05-15'
 result['period_end'] = '2026-06-18'
 result['total_days'] = 35
@@ -87,9 +87,9 @@ result['total_days'] = 35
 live_df = df[df['channel'] == '直播间']
 card_df = df[df['channel'] == '商品卡']
 result['live_orders'] = int(len(live_df))
-result['live_gmv_wan'] = round(live_df[col_amount].sum() / 10000, 1)
+result['live_gsv_wan'] = round(live_df[col_amount].sum() / 10000, 1)
 result['card_orders'] = int(len(card_df))
-result['card_gmv_wan'] = round(card_df[col_amount].sum() / 10000, 1)
+result['card_gsv_wan'] = round(card_df[col_amount].sum() / 10000, 1)
 
 # === TEAM SUMMARY ===
 teams_order = ['我方', '良米', '机械空间', '综训']
@@ -99,15 +99,15 @@ for team in teams_order:
     n_orders = int(len(tdf))
     teams[team] = {
         'orders': n_orders,
-        'gmv': round(tdf[col_amount].sum(), 2),
-        'gmv_wan': round(tdf[col_amount].sum() / 10000, 1),
+        'gsv': round(tdf[col_amount].sum(), 2),
+        'gsv_wan': round(tdf[col_amount].sum() / 10000, 1),
         'pct': round(n_orders / total_orders * 100, 1),
     }
     # Channel breakdown per team
     for ch in ['直播间', '商品卡']:
         chtdf = tdf[tdf['channel'] == ch]
         teams[team][f'{ch}_orders'] = int(len(chtdf))
-        teams[team][f'{ch}_gmv_wan'] = round(chtdf[col_amount].sum() / 10000, 1)
+        teams[team][f'{ch}_gsv_wan'] = round(chtdf[col_amount].sum() / 10000, 1)
     # Room count (only for livestream)
     if team in ['我方', '良米', '机械空间', '综训']:
         live_team = live_df[live_df['team'] == team]
@@ -117,14 +117,14 @@ for team in teams_order:
 result['teams'] = teams
 
 # === DAILY TREND (full including 商品卡) ===
-ddf_full = df.groupby('date').agg(orders=(col_amount, 'count'), gmv=(col_amount, 'sum'))
+ddf_full = df.groupby('date').agg(orders=(col_amount, 'count'), gsv=(col_amount, 'sum'))
 daily_dates = sorted(df['date'].unique())
 result['dates'] = [str(d) for d in daily_dates]
 result['dates_mmdd'] = [f"{d.month}/{d.day}" for d in daily_dates]
 
 for team in teams_order:
     result[f'daily_{team}_orders'] = []
-    result[f'daily_{team}_gmv_wan'] = []
+    result[f'daily_{team}_gsv_wan'] = []
 
 result['daily_total'] = []
 result['daily_live_orders'] = []
@@ -138,25 +138,25 @@ for date in daily_dates:
     for team in teams_order:
         tdf = ddf[ddf['team'] == team]
         result[f'daily_{team}_orders'].append(int(len(tdf)))
-        result[f'daily_{team}_gmv_wan'].append(round(tdf[col_amount].sum() / 10000, 1))
+        result[f'daily_{team}_gsv_wan'].append(round(tdf[col_amount].sum() / 10000, 1))
 
 # === PRODUCTS BY CHANNEL ===
 # All products
 all_prods = df.groupby('product_cat').agg(
     orders=(col_amount, 'count'),
-    gmv=(col_amount, 'sum')
+    gsv=(col_amount, 'sum')
 ).sort_values('orders', ascending=False)
 
 # By channel: 直播间
 live_prods = live_df.groupby('product_cat').agg(
     orders=(col_amount, 'count'),
-    gmv=(col_amount, 'sum')
+    gsv=(col_amount, 'sum')
 ).sort_values('orders', ascending=False)
 
 # By channel: 商品卡
 card_prods = card_df.groupby('product_cat').agg(
     orders=(col_amount, 'count'),
-    gmv=(col_amount, 'sum')
+    gsv=(col_amount, 'sum')
 ).sort_values('orders', ascending=False)
 
 # Products by team (all channels)
@@ -165,44 +165,44 @@ comp_df = df[df['team'] != '我方']
 
 our_prod = our_df.groupby('product_cat').agg(
     orders=(col_amount, 'count'),
-    gmv=(col_amount, 'sum')
+    gsv=(col_amount, 'sum')
 ).sort_values('orders', ascending=False)
 
 comp_prod = comp_df.groupby('product_cat').agg(
     orders=(col_amount, 'count'),
-    gmv=(col_amount, 'sum')
+    gsv=(col_amount, 'sum')
 ).sort_values('orders', ascending=False)
 
 # By channel x team
 our_live_prod = df[(df['team'] == '我方') & (df['channel'] == '直播间')].groupby('product_cat').agg(
-    orders=(col_amount, 'count'), gmv=(col_amount, 'sum')).sort_values('orders', ascending=False)
+    orders=(col_amount, 'count'), gsv=(col_amount, 'sum')).sort_values('orders', ascending=False)
 our_card_prod = df[(df['team'] == '我方') & (df['channel'] == '商品卡')].groupby('product_cat').agg(
-    orders=(col_amount, 'count'), gmv=(col_amount, 'sum')).sort_values('orders', ascending=False)
+    orders=(col_amount, 'count'), gsv=(col_amount, 'sum')).sort_values('orders', ascending=False)
 comp_live_prod = df[(df['team'] != '我方') & (df['channel'] == '直播间')].groupby('product_cat').agg(
-    orders=(col_amount, 'count'), gmv=(col_amount, 'sum')).sort_values('orders', ascending=False)
+    orders=(col_amount, 'count'), gsv=(col_amount, 'sum')).sort_values('orders', ascending=False)
 comp_card_prod = df[(df['team'] != '我方') & (df['channel'] == '商品卡')].groupby('product_cat').agg(
-    orders=(col_amount, 'count'), gmv=(col_amount, 'sum')).sort_values('orders', ascending=False)
+    orders=(col_amount, 'count'), gsv=(col_amount, 'sum')).sort_values('orders', ascending=False)
 
 # Save channel-level product data
-result['all_products'] = {k: {'orders': int(v['orders']), 'gmv': round(v['gmv'], 2)}
+result['all_products'] = {k: {'orders': int(v['orders']), 'gsv': round(v['gsv'], 2)}
                           for k, v in all_prods.iterrows()}
-result['live_products'] = {k: {'orders': int(v['orders']), 'gmv': round(v['gmv'], 2)}
+result['live_products'] = {k: {'orders': int(v['orders']), 'gsv': round(v['gsv'], 2)}
                            for k, v in live_prods.iterrows()}
-result['card_products'] = {k: {'orders': int(v['orders']), 'gmv': round(v['gmv'], 2)}
+result['card_products'] = {k: {'orders': int(v['orders']), 'gsv': round(v['gsv'], 2)}
                            for k, v in card_prods.iterrows()}
-result['our_products'] = {k: {'orders': int(v['orders']), 'gmv': round(v['gmv'], 2)}
+result['our_products'] = {k: {'orders': int(v['orders']), 'gsv': round(v['gsv'], 2)}
                           for k, v in our_prod.iterrows()}
-result['competitor_products'] = {k: {'orders': int(v['orders']), 'gmv': round(v['gmv'], 2)}
+result['competitor_products'] = {k: {'orders': int(v['orders']), 'gsv': round(v['gsv'], 2)}
                                  for k, v in comp_prod.iterrows()}
 
 # Channel-specific products
-result['our_live_products'] = {k: {'orders': int(v['orders']), 'gmv': round(v['gmv'], 2)}
+result['our_live_products'] = {k: {'orders': int(v['orders']), 'gsv': round(v['gsv'], 2)}
                                for k, v in our_live_prod.iterrows()}
-result['our_card_products'] = {k: {'orders': int(v['orders']), 'gmv': round(v['gmv'], 2)}
+result['our_card_products'] = {k: {'orders': int(v['orders']), 'gsv': round(v['gsv'], 2)}
                                for k, v in our_card_prod.iterrows()}
-result['comp_live_products'] = {k: {'orders': int(v['orders']), 'gmv': round(v['gmv'], 2)}
+result['comp_live_products'] = {k: {'orders': int(v['orders']), 'gsv': round(v['gsv'], 2)}
                                 for k, v in comp_live_prod.iterrows()}
-result['comp_card_products'] = {k: {'orders': int(v['orders']), 'gmv': round(v['gmv'], 2)}
+result['comp_card_products'] = {k: {'orders': int(v['orders']), 'gsv': round(v['gsv'], 2)}
                                 for k, v in comp_card_prod.iterrows()}
 
 # === KEY PRODUCT COMPARISONS (all channels) ===
@@ -212,11 +212,11 @@ key_products = ['小米手环10', 'REDMI Watch 6', '小米手环10 Pro', '小米
 
 for prod in key_products:
     total_p = all_prods.loc[prod, 'orders'] if prod in all_prods.index else 0
-    total_p_gmv = all_prods.loc[prod, 'gmv'] if prod in all_prods.index else 0
+    total_p_gsv = all_prods.loc[prod, 'gsv'] if prod in all_prods.index else 0
     our_p = our_prod.loc[prod, 'orders'] if prod in our_prod.index else 0
-    our_p_gmv = our_prod.loc[prod, 'gmv'] if prod in our_prod.index else 0
+    our_p_gsv = our_prod.loc[prod, 'gsv'] if prod in our_prod.index else 0
     comp_p = comp_prod.loc[prod, 'orders'] if prod in comp_prod.index else 0
-    comp_p_gmv = comp_prod.loc[prod, 'gmv'] if prod in comp_prod.index else 0
+    comp_p_gsv = comp_prod.loc[prod, 'gsv'] if prod in comp_prod.index else 0
     share = round(our_p / total_p * 100, 1) if total_p > 0 else 0
     diff = our_p - comp_p
 
@@ -229,9 +229,9 @@ for prod in key_products:
     comp_card_p = comp_card_prod.loc[prod, 'orders'] if prod in comp_card_prod.index else 0
 
     result[f'prod_{prod}'] = {
-        'total': int(total_p), 'total_gmv': round(total_p_gmv, 2),
-        'our': int(our_p), 'our_gmv': round(our_p_gmv, 2),
-        'comp': int(comp_p), 'comp_gmv': round(comp_p_gmv, 2),
+        'total': int(total_p), 'total_gsv': round(total_p_gsv, 2),
+        'our': int(our_p), 'our_gsv': round(our_p_gsv, 2),
+        'comp': int(comp_p), 'comp_gsv': round(comp_p_gsv, 2),
         'share': share, 'diff': int(diff),
         'live_total': int(live_p), 'card_total': int(card_p),
         'our_live': int(our_live_p), 'our_card': int(our_card_p),
@@ -244,7 +244,7 @@ df_618 = df[df['date'] == date_618]
 live_618 = df_618[df_618['channel'] == '直播间']
 room_618 = live_618.groupby(col_nick).agg(
     orders=(col_amount, 'count'),
-    gmv=(col_amount, 'sum')
+    gsv=(col_amount, 'sum')
 ).sort_values('orders', ascending=False)
 
 result['rooms_618'] = []
@@ -252,8 +252,8 @@ for store, row in room_618.iterrows():
     team = TEAM_MAPPING.get(store, '未分类')
     result['rooms_618'].append({
         'name': store, 'team': team,
-        'orders': int(row['orders']), 'gmv': round(row['gmv'], 2),
-        'gmv_fmt': f"¥{row['gmv']:,.0f}"
+        'orders': int(row['orders']), 'gsv': round(row['gsv'], 2),
+        'gsv_fmt': f"¥{row['gsv']:,.0f}"
     })
 
 # === INSIGHT DATA ===
@@ -308,24 +308,24 @@ result['card_product_pie'] = card_pie
 for team in teams_order:
     live_team = live_df[live_df['team'] == team]
     stores = live_team.groupby(col_nick).agg(
-        orders=(col_amount, 'count'), gmv=(col_amount, 'sum')
+        orders=(col_amount, 'count'), gsv=(col_amount, 'sum')
     ).sort_values('orders', ascending=False)
-    result[f'{team}_store_list'] = {k: {'orders': int(v['orders']), 'gmv': round(v['gmv'], 2)}
+    result[f'{team}_store_list'] = {k: {'orders': int(v['orders']), 'gsv': round(v['gsv'], 2)}
                                     for k, v in stores.iterrows()}
 
 # Output
 with open('618_analysis_data.json', 'w', encoding='utf-8') as f:
     json.dump(result, f, ensure_ascii=False, indent=2)
 
-print(f"Data generated: {total_orders} orders (直播间{result['live_orders']} + 商品卡{result['card_orders']}), ¥{total_gmv:,.0f} (¥{result['total_gmv_wan']}万)")
+print(f"Data generated: {total_orders} orders (直播间{result['live_orders']} + 商品卡{result['card_orders']}), ¥{total_gsv:,.0f} (¥{result['total_gsv_wan']}万)")
 print(f"\nTeam summary:")
 for t in teams_order:
     info = teams[t]
-    print(f"  {t}: {info['orders']}单 ({info['pct']}%) = 直播间{info['直播间_orders']} + 商品卡{info.get('商品卡_orders', 0)}, ¥{info['gmv_wan']}万")
+    print(f"  {t}: {info['orders']}单 ({info['pct']}%) = 直播间{info['直播间_orders']} + 商品卡{info.get('商品卡_orders', 0)}, ¥{info['gsv_wan']}万")
 
 print(f"\nChannel split:")
-print(f"  直播间: {result['live_orders']}单 ¥{result['live_gmv_wan']}万")
-print(f"  商品卡: {result['card_orders']}单 ¥{result['card_gmv_wan']}万")
+print(f"  直播间: {result['live_orders']}单 ¥{result['live_gsv_wan']}万")
+print(f"  商品卡: {result['card_orders']}单 ¥{result['card_gsv_wan']}万")
 
 print(f"\nKey product shares (all channels):")
 for prod in ['小米手环10', 'REDMI Watch 6', '小米手环10 Pro', 'Xiaomi 开放式耳机']:
