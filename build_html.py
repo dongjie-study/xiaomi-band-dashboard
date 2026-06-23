@@ -39,7 +39,7 @@ live_gsv_wan = D['live_gsv_wan']
 card_gsv_wan = D['card_gsv_wan']
 
 key_prods = ['小米手环10', 'REDMI Watch 6', '小米手环10 Pro', '小米手环9 Pro',
-             '小米手环10 陶瓷版', '小米手表 S系列', 'Xiaomi 开放式耳机',
+             '小米手表 S系列', 'Xiaomi 开放式耳机',
              'REDMI Buds 8 Pro', 'REDMI Buds 8', 'REDMI Buds 8 活力版', 'REDMI Buds 8 青春版']
 
 # Build daily chart data
@@ -107,18 +107,18 @@ def prod_table_rows(prods, show_channel=False):
     return rows
 
 core_prods_rows = prod_table_rows(['小米手环10', 'REDMI Watch 6', '小米手环10 Pro'])
-secondary_rows = prod_table_rows(['小米手环9 Pro', '小米手环10 陶瓷版', '小米手表 S系列'])
+secondary_rows = prod_table_rows(['小米手环9 Pro', '小米手表 S系列'])
 headphone_rows = prod_table_rows(['Xiaomi 开放式耳机', 'REDMI Buds 8 Pro', 'REDMI Buds 8', 'REDMI Buds 8 活力版', 'REDMI Buds 8 青春版'])
 all_prod_rows = prod_table_rows(key_prods)
 
 # Live-only product rows
 live_core = prod_table_rows(['小米手环10', 'REDMI Watch 6', '小米手环10 Pro'])
-live_sec = prod_table_rows(['小米手环9 Pro', '小米手环10 陶瓷版', '小米手表 S系列'])
+live_sec = prod_table_rows(['小米手环9 Pro', '小米手表 S系列'])
 live_hp = prod_table_rows(['Xiaomi 开放式耳机', 'REDMI Buds 8 Pro', 'REDMI Buds 8', 'REDMI Buds 8 活力版', 'REDMI Buds 8 青春版'])
 
 # Card-only product rows
 card_core = prod_table_rows(['小米手环10', 'REDMI Watch 6', '小米手环10 Pro'])
-card_sec = prod_table_rows(['小米手环9 Pro', '小米手环10 陶瓷版', '小米手表 S系列'])
+card_sec = prod_table_rows(['小米手环9 Pro', '小米手表 S系列'])
 card_hp = prod_table_rows(['Xiaomi 开放式耳机', 'REDMI Buds 8 Pro', 'REDMI Buds 8', 'REDMI Buds 8 活力版', 'REDMI Buds 8 青春版'])
 
 # ========== Build the HTML ==========
@@ -573,7 +573,7 @@ html += '''  </table>
     </tr>
 '''
 
-for p in ['小米手环9 Pro', '小米手环10 陶瓷版', '小米手表 S系列']:
+for p in ['小米手环9 Pro', '小米手表 S系列']:
     html += make_prod_row(p)
 
 html += '''  </table>
@@ -687,7 +687,7 @@ def make_live_row(p, bg=''):
     </tr>
 '''
 
-for p in ['小米手环10', 'REDMI Watch 6', '小米手环10 Pro', '小米手环9 Pro', '小米手环10 陶瓷版', '小米手表 S系列']:
+for p in ['小米手环10', 'REDMI Watch 6', '小米手环10 Pro', '小米手环9 Pro', '小米手表 S系列']:
     bg = '#f0faf3' if p == '小米手环10' else ('#fffdf0' if p == 'REDMI Watch 6' else '')
     html += make_live_row(p, bg)
 
@@ -780,7 +780,7 @@ def make_card_row(p, bg=''):
     </tr>
 '''
 
-for p in ['小米手环10', 'REDMI Watch 6', '小米手环10 Pro', '小米手环9 Pro', '小米手环10 陶瓷版', '小米手表 S系列']:
+for p in ['小米手环10', 'REDMI Watch 6', '小米手环10 Pro', '小米手环9 Pro', '小米手表 S系列']:
     bg = '#f0faf3' if p == '小米手环10' else ('#fffdf0' if p == 'REDMI Watch 6' else '')
     html += make_card_row(p, bg)
 
@@ -1103,9 +1103,10 @@ var C = {{ ours: '#1E90FF', comp: '#FF6B35', green: '#1da85c', orange: '#ff6900'
     tooltip: {{ trigger: 'item', formatter: '{{b}}: {{c}}单 ({{d}}%)' }},
     legend: {{ bottom: 0, textStyle: {{ fontSize: 9 }} }},
     series: [{{
-      type: 'pie', radius: ['42%','70%'], center: ['50%','46%'],
+      type: 'pie', radius: ['38%','58%'], center: ['50%','43%'],
       itemStyle: {{ borderRadius: 6, borderColor: '#fff', borderWidth: 3 }},
-      label: {{ show: true, formatter: '{{b}}\\n{{d}}%', fontSize: 9 }},
+      label: {{ show: true, formatter: '{{b}}\\n{{d}}%', fontSize: 8, position: 'outside' }},
+      labelLine: {{ length: 12, length2: 8 }},
       data: {json.dumps(D['all_product_pie'][:10])}
     }}]
   }});
@@ -1121,9 +1122,10 @@ var C = {{ ours: '#1E90FF', comp: '#FF6B35', green: '#1da85c', orange: '#ff6900'
     tooltip: {{ trigger: 'item', formatter: '{{b}}: {{c}}单 ({{d}}%)' }},
     legend: {{ bottom: 0, textStyle: {{ fontSize: 9 }} }},
     series: [{{
-      type: 'pie', radius: ['42%','70%'], center: ['50%','46%'],
+      type: 'pie', radius: ['38%','58%'], center: ['50%','43%'],
       itemStyle: {{ borderRadius: 6, borderColor: '#fff', borderWidth: 3 }},
-      label: {{ show: true, formatter: '{{b}}\\n{{d}}%', fontSize: 9 }},
+      label: {{ show: true, formatter: '{{b}}\\n{{d}}%', fontSize: 8, position: 'outside' }},
+      labelLine: {{ length: 12, length2: 8 }},
       data: {json.dumps(D['our_product_pie'][:10])}
     }}]
   }});
@@ -1139,9 +1141,10 @@ var C = {{ ours: '#1E90FF', comp: '#FF6B35', green: '#1da85c', orange: '#ff6900'
     tooltip: {{ trigger: 'item', formatter: '{{b}}: {{c}}单 ({{d}}%)' }},
     legend: {{ bottom: 0, textStyle: {{ fontSize: 9 }} }},
     series: [{{
-      type: 'pie', radius: ['42%','70%'], center: ['50%','46%'],
+      type: 'pie', radius: ['38%','58%'], center: ['50%','43%'],
       itemStyle: {{ borderRadius: 6, borderColor: '#fff', borderWidth: 3 }},
-      label: {{ show: true, formatter: '{{b}}\\n{{d}}%', fontSize: 9 }},
+      label: {{ show: true, formatter: '{{b}}\\n{{d}}%', fontSize: 8, position: 'outside' }},
+      labelLine: {{ length: 12, length2: 8 }},
       data: {json.dumps(D['live_product_pie'][:10])}
     }}]
   }});
@@ -1157,9 +1160,10 @@ var C = {{ ours: '#1E90FF', comp: '#FF6B35', green: '#1da85c', orange: '#ff6900'
     tooltip: {{ trigger: 'item', formatter: '{{b}}: {{c}}单 ({{d}}%)' }},
     legend: {{ bottom: 0, textStyle: {{ fontSize: 9 }} }},
     series: [{{
-      type: 'pie', radius: ['42%','70%'], center: ['50%','46%'],
+      type: 'pie', radius: ['38%','58%'], center: ['50%','43%'],
       itemStyle: {{ borderRadius: 6, borderColor: '#fff', borderWidth: 3 }},
-      label: {{ show: true, formatter: '{{b}}\\n{{d}}%', fontSize: 9 }},
+      label: {{ show: true, formatter: '{{b}}\\n{{d}}%', fontSize: 8, position: 'outside' }},
+      labelLine: {{ length: 12, length2: 8 }},
       data: {json.dumps(D['card_product_pie'][:10])}
     }}]
   }});
@@ -1175,9 +1179,10 @@ var C = {{ ours: '#1E90FF', comp: '#FF6B35', green: '#1da85c', orange: '#ff6900'
     tooltip: {{ trigger: 'item', formatter: '{{b}}: {{c}}单 ({{d}}%)' }},
     legend: {{ bottom: 0, textStyle: {{ fontSize: 9 }} }},
     series: [{{
-      type: 'pie', radius: ['42%','70%'], center: ['50%','46%'],
+      type: 'pie', radius: ['38%','58%'], center: ['50%','43%'],
       itemStyle: {{ borderRadius: 6, borderColor: '#fff', borderWidth: 3 }},
-      label: {{ show: true, formatter: '{{b}}\\n{{d}}%', fontSize: 9 }},
+      label: {{ show: true, formatter: '{{b}}\\n{{d}}%', fontSize: 8, position: 'outside' }},
+      labelLine: {{ length: 12, length2: 8 }},
       data: {json.dumps([{'name': k, 'value': v['orders']} for k, v in D.get('our_live_products', {}).items()][:10])}
     }}]
   }});
@@ -1192,9 +1197,10 @@ var C = {{ ours: '#1E90FF', comp: '#FF6B35', green: '#1da85c', orange: '#ff6900'
     tooltip: {{ trigger: 'item', formatter: '{{b}}: {{c}}单 ({{d}}%)' }},
     legend: {{ bottom: 0, textStyle: {{ fontSize: 9 }} }},
     series: [{{
-      type: 'pie', radius: ['42%','70%'], center: ['50%','46%'],
+      type: 'pie', radius: ['38%','58%'], center: ['50%','43%'],
       itemStyle: {{ borderRadius: 6, borderColor: '#fff', borderWidth: 3 }},
-      label: {{ show: true, formatter: '{{b}}\\n{{d}}%', fontSize: 9 }},
+      label: {{ show: true, formatter: '{{b}}\\n{{d}}%', fontSize: 8, position: 'outside' }},
+      labelLine: {{ length: 12, length2: 8 }},
       data: {json.dumps([{'name': k, 'value': v['orders']} for k, v in D.get('our_card_products', {}).items()][:10])}
     }}]
   }});

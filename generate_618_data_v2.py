@@ -8,15 +8,15 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 TEAM_MAPPING = {
     # 我方直播间
     '小米数码旗舰店': '我方', '小米官方手表': '我方', '小米官方手环直播间': '我方',
-    '小米数码智能旗舰店': '我方', '小米官方耳机直播间': '我方', '小米手环10Pro直播间': '我方',
-    # 良米直播间
+    '小米官方耳机直播间': '我方', '小米手环10Pro直播间': '我方', '小米官旗手表直播间': '我方',
+    # 良米直播间（其他所有未明确分配的直播间默认归良米）
     '小米手环': '良米', '小米手表官方直播间': '良米', '小米手表': '良米',
-    '小米耳机官方直播间': '良米', '小米官方手表直播号': '良米',
-    '小米手表官旗直播间': '良米', '小米手表直播间': '良米', '小米官旗手表直播间': '良米',
+    '小米耳机官方直播间': '良米', '小米手表官旗直播间': '良米', '小米手表直播间': '良米',
+    '小米数码智能旗舰店': '良米', '小米智能手表旗舰店': '良米',
     # 机械空间
     '小米智能穿戴国补号': '机械空间', '小米智能穿戴授权号': '机械空间',
     # 综训
-    '小米智能手表旗舰店': '综训',
+    '小米官方手表直播号': '综训',
     # 商品卡
     '我司商品卡': '我方', '良米商品卡': '良米',
 }
@@ -26,7 +26,7 @@ def classify_product(name):
     if '10Pro' in name or '10 Pro' in name:
         return '小米手环10 Pro'
     if '10 陶瓷' in name or '10陶瓷' in name or '陶瓷白' in name:
-        return '小米手环10 陶瓷版'
+        return '小米手环10'
     if '10系' in name or '10 标准' in name:
         return '小米手环10'
     if '手环10' in name and 'Pro' not in name:
@@ -207,7 +207,7 @@ result['comp_card_products'] = {k: {'orders': int(v['orders']), 'gsv': round(v['
 
 # === KEY PRODUCT COMPARISONS (all channels) ===
 key_products = ['小米手环10', 'REDMI Watch 6', '小米手环10 Pro', '小米手环9 Pro',
-                '小米手环10 陶瓷版', '小米手表 S系列', 'Xiaomi 开放式耳机',
+                '小米手表 S系列', 'Xiaomi 开放式耳机',
                 'REDMI Buds 8 Pro', 'REDMI Buds 8', 'REDMI Buds 8 活力版', 'REDMI Buds 8 青春版']
 
 for prod in key_products:
