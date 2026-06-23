@@ -223,19 +223,28 @@ for prod in key_products:
     # Channel breakdown for this product
     live_p = live_prods.loc[prod, 'orders'] if prod in live_prods.index else 0
     card_p = card_prods.loc[prod, 'orders'] if prod in card_prods.index else 0
+    live_p_gsv = live_prods.loc[prod, 'gsv'] if prod in live_prods.index else 0
+    card_p_gsv = card_prods.loc[prod, 'gsv'] if prod in card_prods.index else 0
     our_live_p = our_live_prod.loc[prod, 'orders'] if prod in our_live_prod.index else 0
+    our_live_gsv = our_live_prod.loc[prod, 'gsv'] if prod in our_live_prod.index else 0
     our_card_p = our_card_prod.loc[prod, 'orders'] if prod in our_card_prod.index else 0
+    our_card_gsv = our_card_prod.loc[prod, 'gsv'] if prod in our_card_prod.index else 0
     comp_live_p = comp_live_prod.loc[prod, 'orders'] if prod in comp_live_prod.index else 0
+    comp_live_gsv = comp_live_prod.loc[prod, 'gsv'] if prod in comp_live_prod.index else 0
     comp_card_p = comp_card_prod.loc[prod, 'orders'] if prod in comp_card_prod.index else 0
+    comp_card_gsv = comp_card_prod.loc[prod, 'gsv'] if prod in comp_card_prod.index else 0
 
     result[f'prod_{prod}'] = {
         'total': int(total_p), 'total_gsv': round(total_p_gsv, 2),
         'our': int(our_p), 'our_gsv': round(our_p_gsv, 2),
         'comp': int(comp_p), 'comp_gsv': round(comp_p_gsv, 2),
         'share': share, 'diff': int(diff),
-        'live_total': int(live_p), 'card_total': int(card_p),
-        'our_live': int(our_live_p), 'our_card': int(our_card_p),
-        'comp_live': int(comp_live_p), 'comp_card': int(comp_card_p),
+        'live_total': int(live_p), 'live_total_gsv': round(live_p_gsv, 2),
+        'card_total': int(card_p), 'card_total_gsv': round(card_p_gsv, 2),
+        'our_live': int(our_live_p), 'our_live_gsv': round(our_live_gsv, 2),
+        'our_card': int(our_card_p), 'our_card_gsv': round(our_card_gsv, 2),
+        'comp_live': int(comp_live_p), 'comp_live_gsv': round(comp_live_gsv, 2),
+        'comp_card': int(comp_card_p), 'comp_card_gsv': round(comp_card_gsv, 2),
     }
 
 # === LIVE ROOM RANKING (6/18) ===

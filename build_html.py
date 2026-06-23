@@ -554,6 +554,59 @@ def make_prod_row(p, bg=''):
     </tr>
 '''
 
+def make_channel_prod_row(p, channel, bg=''):
+    """channel: 'live' or 'card'"""
+    d = D.get(f'prod_{p}', {})
+    if not d: return ''
+    if channel == 'live':
+        our = d.get('our_live', 0)
+        comp = d.get('comp_live', 0)
+        total = d.get('live_total', 0)
+        our_gsv = d.get('our_live_gsv', 0)
+        comp_gsv = d.get('comp_live_gsv', 0)
+        total_gsv = d.get('live_total_gsv', 0)
+        our_label = '我方·直播'
+        comp_label = '竞对·直播'
+    else:
+        our = d.get('our_card', 0)
+        comp = d.get('comp_card', 0)
+        total = d.get('card_total', 0)
+        our_gsv = d.get('our_card_gsv', 0)
+        comp_gsv = d.get('comp_card_gsv', 0)
+        total_gsv = d.get('card_total_gsv', 0)
+        our_label = '我司·商品卡'
+        comp_label = '良米·商品卡'
+    if total == 0: return ''
+    share = round(our / total * 100, 1) if total > 0 else 0
+    diff = our - comp
+    if share >= 50:
+        sc, cc = 'var(--clr-green)', 'var(--clr-green)'
+        note = f'{our_label}领先 ✅'
+    elif share >= 40:
+        sc, cc = 'var(--clr-green)', 'var(--clr-green)'
+        note = f'领先+{fmt(abs(diff))}' if diff > 0 else f'落后{fmt(abs(diff))}'
+    elif share >= 30:
+        sc, cc = 'var(--clr-orange)', 'var(--clr-red)'
+        note = f'落后{fmt(abs(diff))} ⚠️'
+    else:
+        sc, cc = 'var(--clr-red)', 'var(--clr-red)'
+        note = f'{comp_label}×{round(comp/max(our,1), 1)}' if our > 0 else '几乎被垄断'
+    diff_color = 'var(--clr-green)' if diff >= 0 else 'var(--clr-red)'
+    diff_sign = '+' if diff >= 0 else ''
+    return f'''    <tr style="background:{bg};">
+      <td><b>{p}</b></td>
+      <td style="background:#eff6ff;font-weight:700;">{fmt(our)}</td>
+      <td style="background:#eff6ff;">{fmt_yuan(our_gsv)}</td>
+      <td style="background:#fff3e0;font-weight:700;">{fmt(comp)}</td>
+      <td style="background:#fff3e0;">{fmt_yuan(comp_gsv)}</td>
+      <td><b>{fmt(total)}</b></td>
+      <td>{fmt_yuan(total_gsv)}</td>
+      <td style="color:{sc};font-weight:700;font-size:15px;">{share}%</td>
+      <td style="color:{diff_color};font-weight:700;">{diff_sign}{fmt(diff)}</td>
+      <td style="color:{cc};">{note}</td>
+    </tr>
+'''
+
 for p in ['小米手环10', 'REDMI Watch 6', '小米手环10 Pro']:
     bg = {'小米手环10': '#f0faf3', 'REDMI Watch 6': '#fffdf0', '小米手环10 Pro': '#fef2f2'}.get(p, '')
     html += make_prod_row(p, bg)
@@ -634,62 +687,51 @@ html += f'''  </table>
   </div>
 </section>
 
-<!-- ===== 03 直播间细分商品占比 ===== -->
+<!-- ===== 03 直播间品类占比 ===== -->
 <section class="section" id="live-products">
-  <h2>📡 直播间细分商品占比 —— 仅直播间渠道</h2>
+  <h2>📡 直播间品类占比 —— 我方 vs 竞对</h2>
 
   <div class="hl-box hl-blue" style="margin-bottom:14px;">
     <strong style="color:var(--clr-ours);">📡 直播间数据范围：</strong>
-    仅统计直播间渠道订单，共<strong>{fmt(live_orders)}单 · {fmt_wan(live_gsv_wan)}</strong>。
-    我方直播间{fmt(D['our_live_products'].get('小米手环10', {}).get('orders', 0) if '小米手环10' in D.get('our_live_products', {}) else 0)}单（{round(our['直播间_orders']/live_orders*100, 1)}%），良米直播间{fmt(liangmi['直播间_orders'])}单（{round(liangmi['直播间_orders']/live_orders*100, 1)}%）。
+    仅统计直播间渠道，共<strong>{fmt(live_orders)}单 · {fmt_wan(live_gsv_wan)}</strong>。
+    我方直播间<strong>{fmt(our['直播间_orders'])}单（{round(our['直播间_orders']/live_orders*100, 1)}%）</strong>，
+    竞对直播间<strong>{fmt(live_orders - our['直播间_orders'])}单（{round((live_orders-our['直播间_orders'])/live_orders*100, 1)}%）</strong>。
   </div>
 
   <h3>核心品类 · 直播间</h3>
   <table style="margin-bottom:14px;">
     <tr>
       <th style="width:16%;">核心品类</th>
-      <th style="width:9%;background:#eff6ff;">我方·直播</th><th style="width:9%;background:#fff3e0;">竞对·直播</th>
-      <th style="width:8%;">直播总订单</th>
+      <th style="width:9%;background:#eff6ff;">我方·直播</th><th style="width:9%;background:#eff6ff;">我方GSV</th>
+      <th style="width:9%;background:#fff3e0;">竞对·直播</th><th style="width:9%;background:#fff3e0;">竞对GSV</th>
+      <th style="width:8%;">直播总订单</th><th style="width:8%;">直播总GSV</th>
       <th style="width:7%;background:#f0faf3;">我方占比</th>
       <th style="width:9%;background:#fef2f2;">差额</th>
-      <th style="width:12%;">直播间占比</th>
-      <th style="width:12%;">商品卡占比</th>
-      <th style="width:12%;">备注</th>
+      <th style="width:14%;">备注</th>
     </tr>
 '''
 
-def make_live_row(p, bg=''):
-    d = D.get(f'prod_{p}', {})
-    if not d or d['total'] == 0: return ''
-    our_l = d.get('our_live', 0)
-    comp_l = d.get('comp_live', 0)
-    live_t = d.get('live_total', 0)
-    card_t = d.get('card_total', 0)
-    total = d['total']
-    share = round(our_l / live_t * 100, 1) if live_t > 0 else 0
-    diff = our_l - comp_l
-    live_pct = round(live_t / total * 100, 1) if total > 0 else 0
-    card_pct = round(card_t / total * 100, 1) if total > 0 else 0
-    sc = 'var(--clr-green)' if share >= 50 else ('var(--clr-orange)' if share >= 30 else 'var(--clr-red)')
-    dc = 'var(--clr-green)' if diff >= 0 else 'var(--clr-red)'
-    ds = f'+{fmt(diff)}' if diff >= 0 else f'{fmt(diff)}'
-    note = '我方直播优势' if diff > 0 else ('竞对直播优势' if diff < 0 else '持平')
-    return f'''    <tr style="background:{bg};">
-      <td><b>{p}</b></td>
-      <td style="background:#eff6ff;font-weight:700;">{fmt(our_l)}</td>
-      <td style="background:#fff3e0;font-weight:700;">{fmt(comp_l)}</td>
-      <td><b>{fmt(live_t)}</b></td>
-      <td style="color:{sc};font-weight:700;">{share}%</td>
-      <td style="color:{dc};font-weight:700;">{ds}</td>
-      <td>{live_pct}%</td>
-      <td>{card_pct}%</td>
-      <td style="color:{dc};">{note}</td>
+for p in ['小米手环10', 'REDMI Watch 6', '小米手环10 Pro']:
+    bg = {'小米手环10': '#f0faf3', 'REDMI Watch 6': '#fffdf0', '小米手环10 Pro': '#fef2f2'}.get(p, '')
+    html += make_channel_prod_row(p, 'live', bg)
+
+html += '''  </table>
+
+  <h3>二级品类 · 直播间</h3>
+  <table style="margin-bottom:14px;">
+    <tr>
+      <th style="width:16%;">二级品类</th>
+      <th style="width:9%;background:#eff6ff;">我方·直播</th><th style="width:9%;background:#eff6ff;">我方GSV</th>
+      <th style="width:9%;background:#fff3e0;">竞对·直播</th><th style="width:9%;background:#fff3e0;">竞对GSV</th>
+      <th style="width:8%;">直播总订单</th><th style="width:8%;">直播总GSV</th>
+      <th style="width:7%;background:#f0faf3;">我方占比</th>
+      <th style="width:9%;background:#fef2f2;">差额</th>
+      <th style="width:14%;">备注</th>
     </tr>
 '''
 
-for p in ['小米手环10', 'REDMI Watch 6', '小米手环10 Pro', '小米手环9 Pro', '小米手表 S系列']:
-    bg = '#f0faf3' if p == '小米手环10' else ('#fffdf0' if p == 'REDMI Watch 6' else '')
-    html += make_live_row(p, bg)
+for p in ['小米手环9 Pro', '小米手表 S系列']:
+    html += make_channel_prod_row(p, 'live')
 
 html += '''  </table>
 
@@ -697,20 +739,25 @@ html += '''  </table>
   <table>
     <tr>
       <th style="width:16%;">耳机品类</th>
-      <th style="width:9%;background:#eff6ff;">我方·直播</th><th style="width:9%;background:#fff3e0;">竞对·直播</th>
-      <th style="width:8%;">直播总订单</th>
+      <th style="width:9%;background:#eff6ff;">我方·直播</th><th style="width:9%;background:#eff6ff;">我方GSV</th>
+      <th style="width:9%;background:#fff3e0;">竞对·直播</th><th style="width:9%;background:#fff3e0;">竞对GSV</th>
+      <th style="width:8%;">直播总订单</th><th style="width:8%;">直播总GSV</th>
       <th style="width:7%;background:#f0faf3;">我方占比</th>
       <th style="width:9%;background:#fef2f2;">差额</th>
-      <th style="width:12%;">直播间占比</th>
-      <th style="width:12%;">商品卡占比</th>
-      <th style="width:12%;">备注</th>
+      <th style="width:14%;">备注</th>
     </tr>
 '''
 
 for p in ['Xiaomi 开放式耳机', 'REDMI Buds 8 Pro', 'REDMI Buds 8', 'REDMI Buds 8 活力版', 'REDMI Buds 8 青春版']:
-    html += make_live_row(p)
+    html += make_channel_prod_row(p, 'live')
 
 html += f'''  </table>
+
+  <div style="margin-top:18px;background:linear-gradient(135deg, #1a1a2e, #16213e);color:#fff;border-radius:var(--radius);padding:20px 28px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div style="text-align:center;"><div style="font-size:10px;opacity:.7;">📡 直播间总销量</div><div style="font-size:32px;font-weight:800;">{fmt(live_orders)}</div><div style="font-size:12px;opacity:.7;">单 · {fmt_wan(live_gsv_wan)}</div></div>
+    <div style="text-align:center;"><div style="font-size:10px;opacity:.7;">🔵 我方直播</div><div style="font-size:32px;font-weight:800;color:var(--clr-ours);">{fmt(our['直播间_orders'])}</div><div style="font-size:12px;opacity:.7;">占比 {round(our['直播间_orders']/live_orders*100, 1)}%</div></div>
+    <div style="text-align:center;"><div style="font-size:10px;opacity:.7;">🟠 竞对直播</div><div style="font-size:32px;font-weight:800;color:var(--clr-comp);">{fmt(live_orders - our['直播间_orders'])}</div><div style="font-size:12px;opacity:.7;">占比 {round((live_orders-our['直播间_orders'])/live_orders*100, 1)}%</div></div>
+  </div>
 
   <h3 style="margin-top:16px;">📊 直播间产品结构图</h3>
   <div class="grid-2">
@@ -720,69 +767,57 @@ html += f'''  </table>
 
   <div class="hl-box hl-orange" style="margin-top:12px;">
     <strong style="color:var(--clr-orange);">🔑 直播间洞察：</strong>
-    直播间渠道共{fmt(live_orders)}单（占全渠道{round(live_orders/total_orders*100, 1)}%），仍是最主要销售渠道。
-    直播间内我方{fmt(our['直播间_orders'])}单占比{round(our['直播间_orders']/live_orders*100, 1)}%，与良米直播间{fmt(liangmi['直播间_orders'])}单（{round(liangmi['直播间_orders']/live_orders*100, 1)}%）差距{fmt(liangmi['直播间_orders'] - our['直播间_orders'])}单。
+    直播间共{fmt(live_orders)}单（占全渠道{round(live_orders/total_orders*100, 1)}%），是最主要销售渠道。
+    直播间内我方{fmt(our['直播间_orders'])}单占比{round(our['直播间_orders']/live_orders*100, 1)}%，与竞对{fmt(live_orders - our['直播间_orders'])}单差距{fmt(live_orders - 2*our['直播间_orders'])}单。
+    直播间仍是主战场，增加开播时长和直播间数量是提升份额的最直接路径。
   </div>
 </section>
 
-<!-- ===== 04 商品卡细分商品占比 ===== -->
+<!-- ===== 04 商品卡品类占比 ===== -->
 <section class="section" id="card-products">
-  <h2>🛒 商品卡细分商品占比 —— 仅商品卡渠道</h2>
+  <h2>🛒 商品卡品类占比 —— 我司 vs 良米</h2>
 
   <div class="hl-box hl-green" style="margin-bottom:14px;">
     <strong style="color:var(--clr-green);">🛒 商品卡数据范围：</strong>
-    仅统计商品卡渠道订单（达人昵称列标注），共<strong>{fmt(card_orders)}单 · {fmt_wan(card_gsv_wan)}</strong>。
-    我司商品卡<strong>{fmt(our['商品卡_orders'])}单</strong>（占商品卡{round(our['商品卡_orders']/card_orders*100, 1)}%），
-    良米商品卡<strong>{fmt(liangmi['商品卡_orders'])}单</strong>（占商品卡{round(liangmi['商品卡_orders']/card_orders*100, 1)}%）。
-    商品卡差额：{'+' if our['商品卡_orders'] > liangmi['商品卡_orders'] else ''}{fmt(our['商品卡_orders'] - liangmi['商品卡_orders'])}单。
+    仅统计商品卡渠道，共<strong>{fmt(card_orders)}单 · {fmt_wan(card_gsv_wan)}</strong>。
+    我司商品卡<strong>{fmt(our['商品卡_orders'])}单（{round(our['商品卡_orders']/card_orders*100, 1)}%）</strong>，
+    良米商品卡<strong>{fmt(liangmi['商品卡_orders'])}单（{round(liangmi['商品卡_orders']/card_orders*100, 1)}%）</strong>。
   </div>
 
   <h3>核心品类 · 商品卡</h3>
   <table style="margin-bottom:14px;">
     <tr>
       <th style="width:16%;">核心品类</th>
-      <th style="width:9%;background:#eff6ff;">我司·商品卡</th><th style="width:9%;background:#fff3e0;">良米·商品卡</th>
-      <th style="width:8%;">商品卡总订单</th>
-      <th style="width:7%;background:#f0faf3;">我方占比</th>
+      <th style="width:9%;background:#eff6ff;">我司·商品卡</th><th style="width:9%;background:#eff6ff;">我司GSV</th>
+      <th style="width:9%;background:#fff3e0;">良米·商品卡</th><th style="width:9%;background:#fff3e0;">良米GSV</th>
+      <th style="width:8%;">商品卡总订单</th><th style="width:8%;">商品卡总GSV</th>
+      <th style="width:7%;background:#f0faf3;">我司占比</th>
       <th style="width:9%;background:#fef2f2;">差额</th>
-      <th style="width:12%;">直播间占比</th>
-      <th style="width:12%;">商品卡占比</th>
-      <th style="width:12%;">备注</th>
+      <th style="width:14%;">备注</th>
     </tr>
 '''
 
-def make_card_row(p, bg=''):
-    d = D.get(f'prod_{p}', {})
-    if not d or d['total'] == 0: return ''
-    our_c = d.get('our_card', 0)
-    comp_c = d.get('comp_card', 0)
-    live_t = d.get('live_total', 0)
-    card_t = d.get('card_total', 0)
-    total = d['total']
-    share = round(our_c / card_t * 100, 1) if card_t > 0 else 0
-    diff = our_c - comp_c
-    live_pct = round(live_t / total * 100, 1) if total > 0 else 0
-    card_pct = round(card_t / total * 100, 1) if total > 0 else 0
-    sc = 'var(--clr-green)' if share >= 50 else ('var(--clr-orange)' if share >= 30 else 'var(--clr-red)')
-    dc = 'var(--clr-green)' if diff >= 0 else 'var(--clr-red)'
-    ds = f'+{fmt(diff)}' if diff >= 0 else f'{fmt(diff)}'
-    note = '我司商品卡优势' if diff > 0 else ('良米商品卡优势' if diff < 0 else '持平')
-    return f'''    <tr style="background:{bg};">
-      <td><b>{p}</b></td>
-      <td style="background:#eff6ff;font-weight:700;">{fmt(our_c)}</td>
-      <td style="background:#fff3e0;font-weight:700;">{fmt(comp_c)}</td>
-      <td><b>{fmt(card_t)}</b></td>
-      <td style="color:{sc};font-weight:700;">{share}%</td>
-      <td style="color:{dc};font-weight:700;">{ds}</td>
-      <td>{live_pct}%</td>
-      <td>{card_pct}%</td>
-      <td style="color:{dc};">{note}</td>
+for p in ['小米手环10', 'REDMI Watch 6', '小米手环10 Pro']:
+    bg = {'小米手环10': '#f0faf3', 'REDMI Watch 6': '#fffdf0', '小米手环10 Pro': '#fef2f2'}.get(p, '')
+    html += make_channel_prod_row(p, 'card', bg)
+
+html += '''  </table>
+
+  <h3>二级品类 · 商品卡</h3>
+  <table style="margin-bottom:14px;">
+    <tr>
+      <th style="width:16%;">二级品类</th>
+      <th style="width:9%;background:#eff6ff;">我司·商品卡</th><th style="width:9%;background:#eff6ff;">我司GSV</th>
+      <th style="width:9%;background:#fff3e0;">良米·商品卡</th><th style="width:9%;background:#fff3e0;">良米GSV</th>
+      <th style="width:8%;">商品卡总订单</th><th style="width:8%;">商品卡总GSV</th>
+      <th style="width:7%;background:#f0faf3;">我司占比</th>
+      <th style="width:9%;background:#fef2f2;">差额</th>
+      <th style="width:14%;">备注</th>
     </tr>
 '''
 
-for p in ['小米手环10', 'REDMI Watch 6', '小米手环10 Pro', '小米手环9 Pro', '小米手表 S系列']:
-    bg = '#f0faf3' if p == '小米手环10' else ('#fffdf0' if p == 'REDMI Watch 6' else '')
-    html += make_card_row(p, bg)
+for p in ['小米手环9 Pro', '小米手表 S系列']:
+    html += make_channel_prod_row(p, 'card')
 
 html += '''  </table>
 
@@ -790,20 +825,25 @@ html += '''  </table>
   <table>
     <tr>
       <th style="width:16%;">耳机品类</th>
-      <th style="width:9%;background:#eff6ff;">我司·商品卡</th><th style="width:9%;background:#fff3e0;">良米·商品卡</th>
-      <th style="width:8%;">商品卡总订单</th>
-      <th style="width:7%;background:#f0faf3;">我方占比</th>
+      <th style="width:9%;background:#eff6ff;">我司·商品卡</th><th style="width:9%;background:#eff6ff;">我司GSV</th>
+      <th style="width:9%;background:#fff3e0;">良米·商品卡</th><th style="width:9%;background:#fff3e0;">良米GSV</th>
+      <th style="width:8%;">商品卡总订单</th><th style="width:8%;">商品卡总GSV</th>
+      <th style="width:7%;background:#f0faf3;">我司占比</th>
       <th style="width:9%;background:#fef2f2;">差额</th>
-      <th style="width:12%;">直播间占比</th>
-      <th style="width:12%;">商品卡占比</th>
-      <th style="width:12%;">备注</th>
+      <th style="width:14%;">备注</th>
     </tr>
 '''
 
 for p in ['Xiaomi 开放式耳机', 'REDMI Buds 8 Pro', 'REDMI Buds 8', 'REDMI Buds 8 活力版', 'REDMI Buds 8 青春版']:
-    html += make_card_row(p)
+    html += make_channel_prod_row(p, 'card')
 
 html += f'''  </table>
+
+  <div style="margin-top:18px;background:linear-gradient(135deg, #1a1a2e, #16213e);color:#fff;border-radius:var(--radius);padding:20px 28px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+    <div style="text-align:center;"><div style="font-size:10px;opacity:.7;">🛒 商品卡总销量</div><div style="font-size:32px;font-weight:800;">{fmt(card_orders)}</div><div style="font-size:12px;opacity:.7;">单 · {fmt_wan(card_gsv_wan)}</div></div>
+    <div style="text-align:center;"><div style="font-size:10px;opacity:.7;">🔵 我司商品卡</div><div style="font-size:32px;font-weight:800;color:var(--clr-ours);">{fmt(our['商品卡_orders'])}</div><div style="font-size:12px;opacity:.7;">占比 {round(our['商品卡_orders']/card_orders*100, 1)}%</div></div>
+    <div style="text-align:center;"><div style="font-size:10px;opacity:.7;">🟠 良米商品卡</div><div style="font-size:32px;font-weight:800;color:var(--clr-comp);">{fmt(liangmi['商品卡_orders'])}</div><div style="font-size:12px;opacity:.7;">占比 {round(liangmi['商品卡_orders']/card_orders*100, 1)}%</div></div>
+  </div>
 
   <h3 style="margin-top:16px;">📊 商品卡产品结构图</h3>
   <div class="grid-2">
@@ -813,9 +853,9 @@ html += f'''  </table>
 
   <div class="hl-box hl-orange" style="margin-top:12px;">
     <strong style="color:var(--clr-orange);">🔑 商品卡洞察：</strong>
-    商品卡渠道共{fmt(card_orders)}单（占全渠道{round(card_orders/total_orders*100, 1)}%），是重要的增量渠道。
-    {"我司商品卡"+fmt(our['商品卡_orders'])+"单超越良米"+fmt(liangmi['商品卡_orders'])+"单 ✅" if our['商品卡_orders'] > liangmi['商品卡_orders'] else "良米商品卡"+fmt(liangmi['商品卡_orders'])+"单领先我司"+fmt(our['商品卡_orders'])+"单"}。
-    商品卡作为自然流量渠道，优化商品标题和主图是提升商品卡销量的关键。
+    商品卡共{fmt(card_orders)}单（占全渠道{round(card_orders/total_orders*100, 1)}%），是重要的增量渠道。
+    {"我司商品卡"+fmt(our['商品卡_orders'])+"单领先良米"+fmt(liangmi['商品卡_orders'])+"单 ✅" if our['商品卡_orders'] > liangmi['商品卡_orders'] else "良米商品卡"+fmt(liangmi['商品卡_orders'])+"单领先我司"+fmt(our['商品卡_orders'])+"单，差距"+fmt(liangmi['商品卡_orders'] - our['商品卡_orders'])+"单"}。
+    商品卡作为自然流量渠道，优化商品标题、主图和详情页是提升商品卡销量的关键。
   </div>
 </section>
 
