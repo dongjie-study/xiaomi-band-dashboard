@@ -25,13 +25,9 @@ def shorten_product(name):
     name = str(name)
     if '10Pro' in name or '10 Pro' in name:
         return '小米手环10 Pro'
-    elif '10系' in name or ('10 ' in name and 'Pro' not in name and '9' not in name):
+    elif '10' in name and 'Pro' not in name and '9' not in name:
         return '小米手环10'
-    elif '10 标准' in name:
-        return '小米手环10 标准'
-    elif '10 陶瓷' in name or '10陶瓷' in name or '陶瓷白' in name:
-        return '小米手环10 陶瓷版'
-    elif '9 Pro' in name:
+    elif '9 Pro' in name or '9Pro' in name:
         return '小米手环9 Pro'
     elif 'REDMI Watch 6' in name:
         return 'REDMI Watch 6'
