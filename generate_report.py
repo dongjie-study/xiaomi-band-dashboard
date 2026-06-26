@@ -17,15 +17,13 @@ def extract_product(name):
 df['商品名称'] = df['选购商品'].apply(extract_product)
 
 def categorize(name):
-    n = name.lower()
-    if '手环10pro' in n or '手环10 pro' in n or '手环10Pro' in name:
+    n = str(name).lower()
+    if '手环10pro' in n or '手环10 pro' in n or '手环10pro' in n:
         return '手环10 Pro'
     elif '手环10' in n:
         return '手环10'
-    elif '手环9 pro' in n or '手环9Pro' in n:
+    elif '手环9 pro' in n or '手环9pro' in n:
         return '手环9 Pro'
-    elif '手环' in n:
-        return '手环系列'
     elif 'watch s5' in n or 'watch 5' in n:
         return 'Watch S5/5'
     elif 'watch s4' in n:
