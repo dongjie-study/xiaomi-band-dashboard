@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>直播间话术模块 · 小米手环直播间</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
 <style>
 :root {
   --bg: #f0f4f8;
@@ -755,69 +754,66 @@ navBtns.forEach(btn => {
 
 // PDF save function
 function saveAsPDF() {
-  const btn = event.target.closest('button');
-  const origText = btn.innerHTML;
-  btn.innerHTML = '<span class="printer-icon">⏳</span> 生成中...';
-  btn.style.pointerEvents = 'none';
+  var container = document.querySelector('.container');
 
-  // Build a clean render element directly (don't clone off-screen DOM)
-  var renderDiv = document.createElement('div');
-  renderDiv.style.cssText = 'position:fixed;top:0;left:0;width:210mm;height:100vh;z-index:99999;background:#fff;overflow-y:auto;padding:8mm;';
-  renderDiv.innerHTML = document.querySelector('.container').innerHTML;
+  // Build a clean printable HTML document
+  var printHTML = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>小米直播间话术手册</title>';
+  printHTML += '<style>';
+  printHTML += '@page{size:A4;margin:12mm}';
+  printHTML += '*{box-shadow:none!important;box-sizing:border-box}';
+  printHTML += 'body{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;font-size:10pt;line-height:1.6;padding:0}';
+  printHTML += '.section{background:#fff;border:1px solid #ccc;border-radius:4px;padding:8px 14px;margin-bottom:8px;break-inside:avoid}';
+  printHTML += '.section h2{font-size:13pt;border-bottom:1px solid #ccc;margin-bottom:6px;padding-bottom:4px}';
+  printHTML += '.section h2::after{display:none}';
+  printHTML += '.section h3{font-size:11pt;margin:10px 0 4px}';
+  printHTML += '.script-card{background:#f9f9f9;border:1px solid #ddd;border-left:3px solid #ff6900;padding:6px 10px;margin:5px 0;font-size:9pt;break-inside:avoid}';
+  printHTML += '.script-card p{font-size:9pt;line-height:1.5;margin:3px 0}';
+  printHTML += '.script-card .script-tag{display:inline-block;padding:1px 8px;border-radius:10px;font-size:8pt;font-weight:700;margin-bottom:6px}';
+  printHTML += '.script-card .script-tag.warm{background:#fff7ed;color:#c2410c}';
+  printHTML += '.script-card .script-tag.good{background:#f0faf3;color:#15803d}';
+  printHTML += '.script-card .script-tag.purple{background:#f5f3ff;color:#6d28d9}';
+  printHTML += 'table{font-size:8pt;margin:5px 0;border-collapse:collapse;width:100%}';
+  printHTML += 'th{font-size:8pt;padding:5px 4px;background:#eee;border-bottom:2px solid #ccc}';
+  printHTML += 'td{font-size:8pt;padding:4px;border-bottom:1px solid #eee;text-align:center}';
+  printHTML += '.td-left{text-align:left}';
+  printHTML += '.summary-box{background:#fcfcfc;border:1px solid #ddd;border-radius:4px;padding:8px 12px;margin:6px 0;break-inside:avoid}';
+  printHTML += '.summary-box ul li{font-size:9pt;line-height:1.5}';
+  printHTML += '.feat-card{box-shadow:none;border:1px solid #ddd;border-radius:4px;padding:6px 8px;break-inside:avoid}';
+  printHTML += '.feat-card h4{font-size:10pt;margin:0 0 4px}';
+  printHTML += '.feat-card p{font-size:8pt}';
+  printHTML += '.qa-card{background:#fff;border:1px solid #ddd;border-radius:4px;padding:6px 10px;break-inside:avoid}';
+  printHTML += '.qa-card .q{font-weight:700;color:#c2410c;font-size:9pt;margin-bottom:3px}';
+  printHTML += '.qa-card .a{font-size:8pt;line-height:1.5}';
+  printHTML += '.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}';
+  printHTML += '.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}';
+  printHTML += '.highlight{color:#c2410c;font-weight:700}';
+  printHTML += '.up{color:#15803d;font-weight:700}';
+  printHTML += '.new-badge{background:#eee;color:#333;padding:1px 6px;border-radius:8px;font-size:7pt}';
+  printHTML += '.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:7pt;font-weight:600}';
+  printHTML += '.badge.green{background:#f0faf3;color:#15803d}';
+  printHTML += '.badge.warn{background:#fff7ed;color:#c2410c}';
+  printHTML += '.badge.info{background:#eff6ff;color:#1d4ed8}';
+  printHTML += '.badge.purple{background:#f5f3ff;color:#6d28d9}';
+  printHTML += '.badge.cyan{background:#ecfeff;color:#0ea89d}';
+  printHTML += '.badge-row{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}';
+  printHTML += '</style></head><body>';
+  printHTML += '<h1 style="font-size:16pt;text-align:center;margin-bottom:4px;">🎙️ 小米直播间话术手册</h1>';
+  printHTML += '<p style="text-align:center;color:#888;font-size:9pt;margin-top:0;">生成日期: ' + new Date().toLocaleDateString('zh-CN') + '</p>';
+  printHTML += container.innerHTML;
+  printHTML += '</body></html>';
 
-  // Inject print-friendly styles
-  var style = document.createElement('style');
-  style.textContent = [
-    '*{box-shadow:none!important;box-sizing:border-box}',
-    'body{background:#fff!important;font-size:10pt}',
-    '.section{background:#fff;border:1px solid #ccc;border-radius:4px;padding:8px 12px;margin-bottom:8px;break-inside:avoid}',
-    '.section h2{font-size:13pt;border-bottom:1px solid #ccc;margin-bottom:6px;padding-bottom:4px}',
-    '.section h2::after{display:none}',
-    '.section h3{font-size:11pt;margin:8px 0 4px}',
-    '.script-card{background:#f9f9f9;border:1px solid #ddd;border-left-width:3px;padding:6px 10px;margin:4px 0;font-size:9pt;break-inside:avoid}',
-    '.script-card p{font-size:9pt;line-height:1.5;margin:3px 0}',
-    '.script-card .script-tag{font-size:8pt;padding:1px 8px}',
-    'table{font-size:8pt;margin:4px 0;border-collapse:collapse}',
-    'th{font-size:8pt;padding:4px 3px;background:#eee}',
-    'td{font-size:8pt;padding:4px 3px}',
-    '.summary-box{background:#fafafa;border:1px solid #ddd;padding:6px 10px;margin:6px 0;break-inside:avoid}',
-    '.summary-box ul li{font-size:9pt;line-height:1.5}',
-    '.feat-card{box-shadow:none;border:1px solid #ddd;padding:6px 8px;break-inside:avoid}',
-    '.feat-card p{font-size:8pt}',
-    '.qa-card{background:#fff;border:1px solid #ddd;padding:6px 10px;break-inside:avoid}',
-    '.qa-card .q{font-size:9pt}',
-    '.qa-card .a{font-size:8pt}',
-    '.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}',
-    '.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:8px}',
-    '.highlight{color:#000;font-weight:700}',
-    '.up{color:#000;font-weight:700}',
-    '.new-badge{background:#eee;color:#333}'
-  ].join('');
-  renderDiv.appendChild(style);
-  document.body.appendChild(renderDiv);
+  // Open new window and print (browser's "Save as PDF" is the most reliable renderer)
+  var w = window.open('', '_blank', 'width=900,height=700');
+  w.document.write(printHTML);
+  w.document.close();
+  w.focus();
 
-  // Scroll renderDiv to capture all content for html2canvas
-  renderDiv.scrollTop = 0;
-
-  var opt = {
-    margin: [5, 5, 5, 5],
-    filename: '小米直播间话术手册.pdf',
-    image: { type: 'jpeg', quality: 0.95 },
-    html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
-    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+  // Wait for content to render then trigger print
+  w.onload = function() {
+    setTimeout(function() {
+      w.print();
+    }, 400);
   };
-
-  html2pdf().set(opt).from(renderDiv).save().then(function() {
-    document.body.removeChild(renderDiv);
-    btn.innerHTML = origText;
-    btn.style.pointerEvents = '';
-  }).catch(function(err) {
-    document.body.removeChild(renderDiv);
-    btn.innerHTML = origText;
-    btn.style.pointerEvents = '';
-    alert('PDF生成失败，请尝试使用"打印"按钮 → 目标打印机选"另存为PDF"');
-  });
 }
 </script>
 
