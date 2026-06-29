@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>直播间话术模块 · 小米手环直播间</title>
+<style>
+:root {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #9ca3af;
+  --border: #e8ecf1;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.03);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,.10);
+  --radius: 14px;
+  --radius-sm: 10px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --clr-orange: #ff6900;
+  --clr-green: #1da85c;
+  --clr-red: #FF4757;
+  --clr-purple: #7c6ff7;
+  --clr-blue: #3b82f6;
+  --clr-cyan: #0ea89d;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(circle, rgba(148,163,184,.10) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.nav-bar {
+  display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+  padding: 10px 16px; background: rgba(255,255,255,.9);
+  backdrop-filter: blur(14px); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,.03);
+}
+.nav-btn {
+  padding: 7px 18px; border-radius: 20px; border: 1.5px solid #dde1e6;
+  background: #fff; color: #555; font-size: 12.5px; cursor: pointer;
+  text-decoration: none; transition: all var(--transition); font-family: inherit; font-weight: 500;
+}
+.nav-btn:hover { border-color: var(--clr-orange); color: var(--clr-orange); background: #fff7ed; }
+.nav-btn.active { background: linear-gradient(135deg, var(--clr-orange), #ff8c42); color: #fff; border-color: transparent; font-weight: 600; box-shadow: 0 2px 8px rgba(255,105,0,.2); }
+.hero {
+  position: relative; z-index: 1;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  color: white; padding: 48px 20px 40px; text-align: center;
+  box-shadow: 0 4px 24px rgba(15,52,96,.15);
+}
+.hero h1 { font-size: 38px; font-weight: 800; letter-spacing: -.02em; }
+.hero h1 .mi { color: var(--clr-orange); }
+.hero p { font-size: 15px; opacity: 0.85; margin-top: 8px; max-width: 700px; margin-left: auto; margin-right: auto; }
+.hero .badge-row { margin-top: 16px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.hero .badge { padding: 5px 16px; border-radius: 16px; font-size: 12px; font-weight: 600; letter-spacing: .03em; }
+.badge.green { background: rgba(29,168,92,.18); color: #5ddf8a; }
+.badge.warn { background: rgba(255,105,0,.18); color: #ffa366; }
+.badge.info { background: rgba(30,144,255,.18); color: #80c8ff; }
+.badge.purple { background: rgba(124,111,247,.18); color: #b5a8ff; }
+.badge.cyan { background: rgba(14,168,157,.18); color: #5ee0d5; }
+.container { max-width: 1500px; margin: 32px auto; padding: 0 20px; position: relative; z-index: 1; }
+.section {
+  background: var(--surface); border-radius: var(--radius); padding: 28px 32px; margin-bottom: 20px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border); scroll-margin-top: 80px;
+  transition: box-shadow var(--transition);
+}
+.section:hover { box-shadow: var(--shadow-md); }
+.section h2 {
+  font-size: 20px; font-weight: 700; margin-bottom: 20px;
+  padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; position: relative;
+  display: flex; align-items: center; gap: 10px;
+}
+.section h2::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 48px; height: 3px; background: var(--clr-orange); border-radius: 2px; }
+.section h3 { font-size: 16px; font-weight: 700; margin: 24px 0 12px; color: #333; }
+.section h3:first-of-type { margin-top: 0; }
+.section h4 { font-size: 14px; font-weight: 600; margin: 16px 0 8px; color: #555; }
+
+/* Script cards */
+.script-card {
+  background: linear-gradient(135deg, #fcfdfe 0%, #f7f8fa 100%);
+  border: 1.5px solid #e0e3e8; border-radius: var(--radius-sm);
+  padding: 20px 24px; margin: 12px 0;
+  border-left: 4px solid var(--clr-orange);
+  position: relative;
+}
+.script-card.mini { border-left-color: var(--clr-blue); }
+.script-card.full { border-left-color: var(--clr-green); }
+.script-card.comp { border-left-color: var(--clr-purple); }
+.script-card .script-tag {
+  display: inline-block; padding: 2px 12px; border-radius: 12px;
+  font-size: 11px; font-weight: 700; margin-bottom: 10px; letter-spacing: .03em;
+}
+.script-card .script-tag.warm { background: #fff7ed; color: #c2410c; }
+.script-card .script-tag.cool { background: #eff6ff; color: #1d4ed8; }
+.script-card .script-tag.good { background: #f0faf3; color: #15803d; }
+.script-card .script-tag.purple { background: #f5f3ff; color: #6d28d9; }
+.script-card p { font-size: 14px; line-height: 1.8; color: #333; }
+.script-card .highlight { color: var(--clr-orange); font-weight: 600; }
+.script-card .key-point { background: #fefce8; padding: 2px 6px; border-radius: 4px; font-weight: 600; }
+
+/* Feature grid */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+
+/* Comparison tables */
+table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; }
+th { background: #f7f8fa; padding: 10px 8px; text-align: center; font-weight: 600; font-size: 12px; border-bottom: 2px solid #e0e3e8; white-space: nowrap; }
+td { padding: 9px 8px; text-align: center; border-bottom: 1px solid #f0f2f5; }
+tr:hover { background: #fafbfc; }
+.td-left { text-align: left; }
+.up { color: var(--clr-green); font-weight: 600; }
+.new-badge { display: inline-block; background: #fef2f2; color: #dc2626; padding: 1px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; margin-left: 4px; }
+
+/* Feature cards */
+.feat-card {
+  background: var(--surface); border-radius: var(--radius-sm);
+  border: 1px solid var(--border); padding: 18px 16px;
+  transition: all var(--transition); position: relative; overflow: hidden;
+}
+.feat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.feat-card .feat-icon { font-size: 28px; margin-bottom: 8px; }
+.feat-card h4 { font-size: 14px; margin: 0 0 6px; }
+.feat-card p { font-size: 12.5px; color: var(--text-secondary); line-height: 1.6; }
+
+/* QA cards */
+.qa-card {
+  background: #fcfdfe; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: 16px 20px; margin: 10px 0;
+}
+.qa-card .q { font-weight: 700; color: var(--clr-orange); font-size: 14px; margin-bottom: 6px; }
+.qa-card .q::before { content: '🙋 '; }
+.qa-card .a { font-size: 13.5px; color: #444; line-height: 1.7; }
+.qa-card .a::before { content: '💡 '; }
+
+/* Summary box */
+.summary-box {
+  background: linear-gradient(135deg, #fefce8 0%, #fff7ed 100%);
+  border: 1.5px solid #fed7aa; border-radius: var(--radius);
+  padding: 20px 24px; margin: 16px 0;
+}
+.summary-box h4 { color: var(--clr-orange); margin-bottom: 8px; }
+.summary-box ul { padding-left: 20px; }
+.summary-box ul li { font-size: 13.5px; color: #555; line-height: 1.8; }
+
+/* Responsive */
+@media (max-width: 900px) {
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
+  .section { padding: 20px 16px; }
+  .hero h1 { font-size: 28px; }
+}
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <h1>🎙️ 直播间<span class="mi">话术</span>模块</h1>
+  <p>小米手环10 Pro / 红米Watch 6 / 小米Watch 5 / Watch S5 全套销售话术，覆盖大促期、平播期、对比讲解、异议处理</p>
+  <div class="badge-row">
+    <span class="badge warn">📢 核心话术</span>
+    <span class="badge green">📋 对比话术</span>
+    <span class="badge info">🛡️ 异议处理</span>
+    <span class="badge purple">📋 通用模板</span>
+    <span class="badge cyan">📊 产品知识</span>
+  </div>
+</div>
+
+<!-- Sticky Nav -->
+<div class="nav-bar" id="navBar">
+  <a href="#sec-10pro" class="nav-btn active">🔴 手环10 Pro</a>
+  <a href="#sec-watch6" class="nav-btn">⌚ 红米Watch 6</a>
+  <a href="#sec-watch5" class="nav-btn">⌚ 小米Watch 5</a>
+  <a href="#sec-watch5-s5" class="nav-btn">⚖️ Watch5 vs S5</a>
+  <a href="#sec-10pro-vs-watch6" class="nav-btn">⚖️ 10Pro vs Watch6</a>
+  <a href="#sec-template" class="nav-btn">📋 通用话术模板</a>
+  <a href="#sec-faq" class="nav-btn">❓ 常见问题应答</a>
+</div>
+
+<div class="container">
+
+<!-- ==================== 小米手环10 Pro ==================== -->
+<div class="section" id="sec-10pro">
+  <h2>🔴 小米手环10 Pro 核心话术</h2>
+
+  <h3>📢 大促期一分钟话术</h3>
+  <div class="script-card mini">
+    <span class="script-tag warm">⚡ 1分钟 · 快速塑品</span>
+    <p>
+      1.74英寸AMOLED方屏，中框是<span class="highlight">高强铝合金和陶瓷材质</span>，腕带可拆卸，表盘能自定义。所有智能手机都能链接蓝牙使用，一台手环还能<span class="highlight">同时接收双台设备消息</span>（例如小米和苹果），有iPhone生态自动化，能和你的iPhone设备联动。
+    </p>
+    <p style="margin-top:8px;">
+      功能分三个模块：<br>
+      <strong>🫀 健康：</strong>全天候六大健康监测（心率/血氧/睡眠/压力/女性生理期/呼吸放松），喝水久坐提醒，手腕上的健康小管家。<br>
+      <strong>🏃 运动：</strong>150+运动模式，5ATM防水，游泳可监测泳姿。升级<span class="highlight">双频GNSS定位</span>，脱离手机记录运动轨迹、配速、卡路里。<br>
+      <strong>📱 生活智能化：</strong>接收手机端几乎所有消息，离线支付、NFC卡包、米家互联互通、驾驶提醒、一键查找手机、闹钟……
+    </p>
+  </div>
+
+  <h3>📢 平播期3-5分钟话术</h3>
+  <div class="script-card full">
+    <span class="script-tag good">📝 3-5分钟 · 深度塑品</span>
+    <p>
+      小米手环10 Pro是1.74英寸AMOLED方屏手环，大小上很直观。中框是<span class="highlight">高强铝合金材质</span>，要比一般的铝合金材质更坚硬更耐磨。另外的陶瓷版本不光外观好看，手感上会更细腻。高强铝搭配的是TPU材质腕带，陶瓷版搭配氟橡胶材质腕带，上手要更加亲肤透气。腕带都是快拆腕带，可以更换成喜欢的各种材质来搭配。表盘壁纸也可以自定义成喜欢的明星、爱豆、自拍照——又百搭又时尚。
+    </p>
+    <p style="margin-top:8px;">
+      很多米粉问主播iPhone手机能不能用？主播这边统一给大家回复：<span class="highlight">iPhone、华为、OPPO、一加、荣耀……智能手机都可以链接蓝牙使用，并且没有机型限制。</span>而且10 Pro首次接入快捷指令，加入iPhone生态自动化，支持iPhone的「快捷指令」功能，能和你的iPhone设备联动。甚至一台手环可以同时接收双台设备消息和通知（小米和苹果）。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>🫀 健康：</strong>全天候六大健康监测，24小时监测心率/血氧/睡眠/压力等。升级了<span class="highlight">4灯2PD传感器，98.2%高精度心率监测</span>，全新自研心率算法。全新睡眠HRV监测，HRV值越高代表睡眠质量越好。晚上经常熬夜、失眠、睡眠质量不好的米粉非常值得一入，它能生成更全面的睡眠质量监测报告来帮助你改善睡眠质量。<br>
+      <strong>🏃 运动：</strong>夏天想出门跑步锻炼又不想带手机的姐妹——10 Pro升级双频GNSS定位，能脱离手机独立记录运动轨迹/配速/卡路里。内置150+运动模式。新增<span class="highlight">专业骑行模式、运动vlog录制功能</span>，用手环控制手机录制视频，实时运动数据叠加到画面上，运动结束直接得到一段自带数据效果的视频——发朋友圈/抖音特别有氛围感。<br>
+      <strong>📱 生活智能化：</strong>Z轴线性马达（震感更细腻）、全新游戏模式（团战心率监测/复活倒计时提醒）、独立录音功能、离线微信/支付宝碰一碰支付、NFC公交门禁/车钥匙、米家全生态自动化、小爱同学、遥控拍照、一键查找手机……
+    </p>
+  </div>
+
+  <h3>📊 10 Pro vs 9 Pro 升级点话术</h3>
+  <table>
+    <tr><th>维度</th><th>9 Pro</th><th>10 Pro <span class="new-badge">升级</span></th><th>话术要点</th></tr>
+    <tr>
+      <td class="td-left"><strong>机身材质</strong></td>
+      <td>铝合金/纤维聚合物</td>
+      <td class="up">高强铝/陶瓷</td>
+      <td class="td-left">"10 Pro升级高强铝合金/陶瓷中框，比9 Pro更耐用，高强铝版仅21.6g更轻"</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>屏幕亮度</strong></td>
+      <td>1200nits</td>
+      <td class="up">2000nits</td>
+      <td class="td-left">"户外强光下看得更清楚，夏天太阳底下抬腕就能看清"</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>处理器</strong></td>
+      <td>BES2700BP</td>
+      <td class="up">BES2700IMP</td>
+      <td class="td-left">"性能与功耗优化更好，切换界面更流畅"</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>闪存</strong></td>
+      <td>无独立Nor Flash</td>
+      <td class="up">16MB Nor Flash</td>
+      <td class="td-left">"开机更快、系统更稳定、不容易卡死"</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>定位</strong></td>
+      <td>GPS单频</td>
+      <td class="up">全频段GNSS</td>
+      <td class="td-left">"户外跑步、骑行轨迹不会飘，不带手机也能精准记录"</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>心率传感器</strong></td>
+      <td>4灯2PD(旧)</td>
+      <td class="up">4灯2PD(新) 98.2%</td>
+      <td class="td-left">"心率监测准确率更高，运动时心率波动大也能精准捕捉"</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>睡眠监测</strong></td>
+      <td>基础睡眠监测</td>
+      <td class="up">新增HRV监测+改善计划</td>
+      <td class="td-left">"精准HRV监测，一眼看懂睡眠好坏，帮你调理作息"</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>马达</strong></td>
+      <td>转子马达(20种)</td>
+      <td class="up">Z轴线性马达(50种)</td>
+      <td class="td-left">"震感更细腻，消息提醒、闹钟震动都很舒服"</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>支付</strong></td>
+      <td>支付宝/微信二维码</td>
+      <td class="up">+NFC国际支付/碰一下</td>
+      <td class="td-left">"支付宝碰一下支付更方便，NFC公交门禁全支持"</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>游戏模式</strong></td>
+      <td>无</td>
+      <td class="up">全新游戏模式</td>
+      <td class="td-left">"团战心率监测/情绪波动记录/复活倒计时振动提醒，一键分享战报"</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>苹果生态</strong></td>
+      <td>基础兼容</td>
+      <td class="up">双设备消息+快捷指令</td>
+      <td class="td-left">"一台手环同时接iPhone+iPad消息，苹果快捷指令自动化联动"</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>运动vlog</strong></td>
+      <td>无</td>
+      <td class="up">运动vlog录制</td>
+      <td class="td-left">"实时运动数据叠加视频，发朋友圈/抖音自带氛围感"</td>
+    </tr>
+  </table>
+
+  <div class="summary-box">
+    <h4>🔥 10 Pro vs 9 Pro 总结话术</h4>
+    <ul>
+      <li><strong>质感更精致：</strong>高强铝/陶瓷中框，戴出去更像个时尚单品</li>
+      <li><strong>屏幕更亮：</strong>2000nits，颜值更高，用着更省心</li>
+      <li><strong>健康运动更专业：</strong>从日常监测到专业训练都能打</li>
+      <li><strong>细节体验拉满：</strong>Z轴线性马达、苹果生态、NFC支付、游戏模式、运动vlog</li>
+      <li><strong>一句话总结：</strong>"质感越级、健康专业、运动全能、生态兼容、日常实用的全能型手环。不管是苹果还是小米用户，追求高性价比、全功能体验，选它体验感更好。"</li>
+    </ul>
+  </div>
+
+  <h3>📊 10 Pro vs 10 NFC 区别话术</h3>
+  <table>
+    <tr><th>维度</th><th>10 Pro</th><th>10 NFC</th><th>话术要点</th></tr>
+    <tr><td class="td-left"><strong>机身</strong></td><td class="up">1.74" 高强铝/陶瓷 9.7mm</td><td>1.72" 普通铝合金 10.95mm</td><td class="td-left">"Pro更大更直观，更薄更耐用，质感完全不同"</td></tr>
+    <tr><td class="td-left"><strong>屏幕亮度</strong></td><td class="up">2000nits</td><td>1500nits</td><td class="td-left">"Pro户外强光清晰可见，10 NFC户外优势不强"</td></tr>
+    <tr><td class="td-left"><strong>定位</strong></td><td class="up">全频段GNSS</td><td>无独立GNSS</td><td class="td-left">"Pro不带手机也能精准记录轨迹不飘，10 NFC依赖手机定位"</td></tr>
+    <tr><td class="td-left"><strong>闪存</strong></td><td class="up">16MB Nor Flash</td><td>无独立闪存</td><td class="td-left">"Pro开机更快更稳不易卡顿"</td></tr>
+    <tr><td class="td-left"><strong>健康</strong></td><td class="up">4灯2PD+HRV 98.2%</td><td>普通传感器 无HRV</td><td class="td-left">"Pro心率和睡眠监测精度强很多"</td></tr>
+    <tr><td class="td-left"><strong>游戏+运动</strong></td><td class="up">Z轴马达+游戏模式+vlog</td><td>普通马达</td><td class="td-left">"Pro游戏心率监测/复活提醒/运动vlog远超10 NFC"</td></tr>
+    <tr><td class="td-left"><strong>苹果生态</strong></td><td class="up">双设备+快捷指令</td><td>仅单设备</td><td class="td-left">"Pro苹果用户体验好很多"</td></tr>
+  </table>
+
+  <h3>🎯 版本选择话术</h3>
+  <div class="script-card comp">
+    <span class="script-tag purple">💡 三版本选择指导</span>
+    <p>
+      "宝宝，这3个版本咱们该怎么选择？如果说咱们今天<span class="highlight">不卡预算要顶配，咱买陶瓷</span>；<span class="highlight">追求性价比，买NFC</span>，它俩功能一模一样；如果NFC版本这些功能咱们用不到，<span class="highlight">该省省该花花，买标准版本就OK了</span>。宝宝更推荐大家买NFC，为啥？因为它拥有陶瓷版本的所有功能，但是它的价格比陶瓷现在便宜了60块钱，所以买NFC其实性价比更高。"
+    </p>
+  </div>
+</div>
+
+<!-- ==================== 红米Watch 6 ==================== -->
+<div class="section" id="sec-watch6">
+  <h2>⌚ 红米Watch 6 核心话术</h2>
+
+  <h3>📢 塑品话术</h3>
+  <div class="script-card full">
+    <span class="script-tag good">📝 塑品讲解</span>
+    <p>
+      <strong>外观：</strong>2.07英寸AMOLED超大屏，背单词、看时间更直观。搭配<span class="highlight">超强铝合金中框</span>，不仅质感好，还更加抗摔耐造、防滑防刮，日常使用不容易受损。机身厚度仅9.99mm，上手体验感更轻盈。原装腕带采用TPU材质，运动腕带上手不容易脱落，戴着睡觉也没什么束缚感。表盘可随意更换自己喜欢的壁纸（动态/静态/自定义），表带可拆卸轻松更换。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>屏幕：</strong>屏占比高达82%，视网膜级别显示效果。屏幕<span class="highlight">全局亮度2000尼特</span>支持亮度自动调节，室外阳光下跑步清晰度超高，晚上睡觉抬腕看时间不刺眼。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>🫀 健康：</strong>六大健康监测——心率/血氧/睡眠（能精准识别躺在床上睡觉还是玩手机）/压力值/睡眠呼吸停止监测（识别潜在睡眠呼吸暂停风险）/女性健康管理。压力过大或过低时手表会及时震动或响铃提醒。还有呼吸训练功能，小憩助眠或舒缓放松。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>🏃 运动：</strong>150多种运动模式，涵盖室外运动/水上运动/滑雪运动。双L1天线定位更精准，脱离手机也能精准记录。5ATM防护等级，游泳模式支持多种泳姿识别（仰泳/蛙泳），跑步等运动提供专业分析。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>📱 智能功能：</strong>
+      ① <span class="highlight">蓝牙接打电话</span>，出门不用再掏手机；<br>
+      ② <span class="highlight">播放音乐</span>，可下载网易云、喜马拉雅听书（对苹果手机下载第三方软件有一些限制）；<br>
+      ③ <span class="highlight">百度地图导航</span>；<br>
+      ④ <span class="highlight">安卓手机可回复微信</span>（语音回复/快捷回复/表情包回复）；<br>
+      ⑤ NFC刷公交门禁，左右手自由戴；<br>
+      ⑥ 离线微信/支付宝支付；<br>
+      ⑦ OS3.0生态共享，控制米家智能家居；<br>
+      ⑧ 独立录音/手电筒/计算器/闹钟/小游戏。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>🔋 续航：</strong>内置<span class="highlight">550mAh电池</span>，典型模式续航21天左右，重度使用下能持久续航两周。磁吸式快充，充电一小时就可以充满。
+    </p>
+  </div>
+
+  <div class="summary-box">
+    <h4>🔥 Watch 6 一句话总结</h4>
+    <p style="font-size:14px;">"Watch 6性价比超高，自带微信，听语音、语音转文字，包括快捷回复、语音回复更方便。无论是自用还是送家人，尤其是送给关心健康的长辈或是喜欢运动的年轻人，都是非常贴心且实用的选择。现在拍三位数就能拿下这样一款功能全面的智能手表，能以非常亲民的价格享受到旗舰级手表的体验。"</p>
+  </div>
+</div>
+
+<!-- ==================== 小米Watch 5 ==================== -->
+<div class="section" id="sec-watch5">
+  <h2>⌚ 小米Watch 5 核心话术</h2>
+
+  <h3>📢 一分钟话术（快速转化）</h3>
+  <div class="script-card mini">
+    <span class="script-tag warm">⚡ 1分钟 · 快速成交</span>
+    <p>
+      "想买一款性能强、性价比高、又能接电话打电话、下载第三方应用以及回复消息，<span class="highlight">脱离手机可以像手机一样独立社交、独立支付、并且能够独立连Wi-Fi的</span>，直接打开小黄车1号链接购买新款手表小米Watch 5。"
+    </p>
+  </div>
+
+  <h3>📢 三分钟话术（深度塑品）</h3>
+  <div class="script-card full">
+    <span class="script-tag good">📝 3分钟 · 深度塑品</span>
+    <p>
+      米粉们还在纠结选哪一款智能手表吗？今天什么都不用犹豫，抓紧时间去拍一号链接新款手表小米Watch 5。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>外观：</strong>采用<span class="highlight">1.54英寸AMOLED超窄边框大屏幕</span>，盖板采用双面蓝宝石玻璃盖板，硬度仅次于钻石。边框材质是钛合金，表壳硬度使用316L不锈钢，历经36道打磨抛光工艺，触感细腻，上手非常时尚美观。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>🫀 健康：</strong>六大健康检测以外新增：<span class="highlight">①60秒扫描一键获取身体健康报告 ②ECG房颤筛查 ③血压实时监测</span>。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>🏃 运动：</strong>150种运动以外新增<span class="highlight">高频健身房运动场景（计数记重不再麻烦）</span>，同时搭配进阶系列课程和训练动作指导，记录动作组次和重量（例如胸肌塑形或平板卧推）。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>📱 生活：</strong>能够做到<span class="highlight">脱离手机独立联网</span>，独立使用微信和导航，可以像手机一样独立社交独立支付、独立连接Wi-Fi。可下载三方应用，内存可达32GB，支持70+三方应用下载。搭配<span class="highlight">AI大模型小爱（超级小爱）</span>，有问必答。手表丢失也不用担心，有<span class="highlight">离线远程查找</span>，定位可以上传云端。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>🖐️ 手势操控：</strong>通用手势两个（捏两次/搓两次），自定义手势三个（打个响指、手腕向外向内翻腕、快速晃动手腕），特定场景手势（拖拽/握拳）。比如开车时捏两次手指就能接电话，开会时搓两次就能关闹钟，回家时打个响指就能开启观影模式。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>🔋 续航：</strong>双芯组合，兼顾性能和续航，搭配<span class="highlight">930毫安小米金沙江电池</span>，待机情况下可使用18天左右，正常使用一周左右。
+    </p>
+    <p style="margin-top:8px;">
+      "所以说，想要一个性能强功能全且性价比高的手表，抓紧先去买1号链接小米手表Watch 5。"
+    </p>
+  </div>
+
+  <h3>📢 五分钟话术</h3>
+  <div class="script-card comp">
+    <span class="script-tag purple">🕐 5分钟 · 场景化话术</span>
+    <p>
+      <strong>三分钟话术内容 + 在塑品中加入场景话术 = 五分钟话术</strong>
+    </p>
+    <p style="margin-top:8px;">
+      场景化延伸示例：<br>
+      • <strong>开车场景：</strong>"想象一下你正在开车，手机在口袋里，来了一个重要的电话——不用慌，捏两次手指就能接电话，双手不用离开方向盘。"<br>
+      • <strong>开会场景：</strong>"正在开会，闹钟突然响了很尴尬？搓两次手指就关掉了，完全不会打断会议。"<br>
+      • <strong>健身场景：</strong>"在健身房卧推，手机放更衣室了也不怕。Watch 5能记录你的动作组次和重量，还有进阶课程指导。健身房运动计数记重不再麻烦。"<br>
+      • <strong>回家场景：</strong>"下班回家，打个响指——自动开启观影模式，窗帘拉上、灯光调暗、电视打开，全自动化。"<br>
+      • <strong>丢手表场景：</strong>"手表丢了怎么办？离线远程查找功能，定位上传云端，轻松找回。"
+    </p>
+  </div>
+</div>
+
+<!-- ==================== Watch 5 vs S5 ==================== -->
+<div class="section" id="sec-watch5-s5">
+  <h2>⚖️ 小米Watch 5 vs Watch S5 区别话术</h2>
+
+  <div class="summary-box">
+    <h4>🎯 一句话定位</h4>
+    <p style="font-size:14px;">"小米Watch 5是<span class="highlight">全智能旗舰</span>，主打独立App生态和复杂交互；Watch S5是<span class="highlight">长续航运动款</span>，核心是极致续航和专业运动监测——<strong>两者定位完全不同</strong>。"</p>
+  </div>
+
+  <table>
+    <tr><th>维度</th><th>小米Watch 5</th><th>小米Watch S5</th></tr>
+    <tr>
+      <td class="td-left"><strong>系统定位</strong></td>
+      <td>全智能手表 · 骁龙W5 Gen1 + 恒玄BES2800双芯</td>
+      <td>长续航运动手表 · 单芯片恒玄BES2800BP-ZE7</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>App生态</strong></td>
+      <td class="up">可独立运行微信/支付宝等第三方App</td>
+      <td>无独立应用商店，不支持手表下载App</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>通话</strong></td>
+      <td class="up">支持eSIM独立通话</td>
+      <td>不支持eSIM独立通话</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>续航</strong></td>
+      <td>930mAh · 智能模式6天/省电模式18天</td>
+      <td class="up">815mAh金沙江电池 · 蓝牙版21天/eSIM版14天</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>外观</strong></td>
+      <td>47mm · 12.3mm厚 · 56g · 1.54"屏 1500nits</td>
+      <td>46mm · 10.99mm厚 · 46g · 1.48"屏 2500nits</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>盖板</strong></td>
+      <td class="up">双面蓝宝石玻璃</td>
+      <td>不锈钢一体表体</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>健康传感器</strong></td>
+      <td class="up">ECG心电+EMG肌电传感器</td>
+      <td>4灯4PD心率传感器 98.4%（共享）</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>手势操控</strong></td>
+      <td class="up">支持（捏/搓/打响指/翻腕/晃手腕/拖拽）</td>
+      <td>不支持</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>运动功能</strong></td>
+      <td>150+种运动模式</td>
+      <td class="up">150+种 + 专业骑行模式（码表/功率计接入）</td>
+    </tr>
+  </table>
+
+  <div class="script-card comp" style="margin-top:16px;">
+    <span class="script-tag purple">💡 选购指导话术</span>
+    <p>
+      <strong>选小米Watch 5：</strong>"如果你希望手表功能全面，能独立通话、回复消息、单独下载App，像手机一样独立使用——选Watch 5。"<br>
+      <strong>选小米Watch S5：</strong>"如果你是运动爱好者，追求超长续航和专业的运动健康监测，不需要那么复杂的功能——选S5，性价比更高。"
+    </p>
+  </div>
+</div>
+
+<!-- ==================== 10 Pro vs Watch 6 ==================== -->
+<div class="section" id="sec-10pro-vs-watch6">
+  <h2>⚖️ 手环10 Pro vs 红米Watch 6 对比话术</h2>
+
+  <table>
+    <tr><th>维度</th><th>小米手环10 Pro</th><th>红米Watch 6</th></tr>
+    <tr><td class="td-left"><strong>屏幕</strong></td><td>1.74" AMOLED 2000nits</td><td class="up">2.07" AMOLED 2000nits 更大</td></tr>
+    <tr><td class="td-left"><strong>健康</strong></td><td class="up">六大健康监测 + HRV + 4灯2PD</td><td>六大健康监测 + 睡眠呼吸停止监测</td></tr>
+    <tr><td class="td-left"><strong>运动</strong></td><td>150+模式 + AI泳姿 + 运动vlog</td><td>150+模式 + 多种泳姿识别</td></tr>
+    <tr><td class="td-left"><strong>蓝牙通话</strong></td><td>只能挂电话，不能外放</td><td class="up">可蓝牙接打电话、外放</td></tr>
+    <tr><td class="td-left"><strong>音乐</strong></td><td>不支持</td><td class="up">可播放音乐/下载网易云/喜马拉雅</td></tr>
+    <tr><td class="td-left"><strong>导航</strong></td><td>不支持</td><td class="up">百度地图导航</td></tr>
+    <tr><td class="td-left"><strong>微信回复</strong></td><td>仅接收消息</td><td class="up">安卓可语音/快捷/表情包回复</td></tr>
+    <tr><td class="td-left"><strong>三方应用</strong></td><td>小游戏</td><td class="up">网易云/百词斩/喜马拉雅等</td></tr>
+    <tr><td class="td-left"><strong>NFC</strong></td><td class="up">NFC版/陶瓷版支持</td><td>支持</td></tr>
+    <tr><td class="td-left"><strong>电池</strong></td><td>350mAh · 21天</td><td class="up">580mAh · 21天</td></tr>
+    <tr><td class="td-left"><strong>定位</strong></td><td class="up">全频段GNSS</td><td>双L1天线GNSS</td></tr>
+    <tr><td class="td-left"><strong>重量</strong></td><td class="up">21.6g(高强铝) / 28.8g(陶瓷)</td><td>更重（手表形态）</td></tr>
+  </table>
+
+  <div class="script-card comp" style="margin-top:16px;">
+    <span class="script-tag purple">💡 对比总结话术</span>
+    <p>
+      <strong>选红米Watch 6：</strong>"如果你喜欢超大屏，峰值亮度高，看起来大屏显示度好，需要外放声音和手表接打电话、回复消息——你就选红米Watch 6。它比10 Pro多了接打电话、外放音乐、回复微信、导航功能，屏幕更大更直观，可下载的第三方应用更多。再多不到100块左右的价格，功能更多更齐全。"<br><br>
+      <strong>选小米手环10 Pro：</strong>"如果你注重运动健康精准度，连接稳定省心，不喜欢太大，并且用不到那么多功能——那就选小米手环10 Pro。它的健康监测更专业（HRV/4灯2PD），定位更精准（全频段GNSS），而且更轻更薄。"<br><br>
+      <strong>共同点：</strong>"这两款续航都是超过20天的，省去频繁充电烦恼。都能正常连接苹果手机接收各种通知。都有独立的GNSS五星定位，离开手机还能记录运动轨迹。"
+    </p>
+  </div>
+</div>
+
+<!-- ==================== 通用话术模板 ==================== -->
+<div class="section" id="sec-template">
+  <h2>📋 数码直播间通用话术模板</h2>
+
+  <h3>🎯 核心框架：塑品 → 保障 → 促单</h3>
+
+  <div class="script-card full">
+    <span class="script-tag good">📝 完整话术流程</span>
+    <p>
+      <strong>🔹 第一步：讲适配度（打消顾虑）</strong><br>
+      "先给大家讲一下三个版本都能够接收消息，都防水，都有150种运动模式，6大健康管理，都能微信和支付宝离线支付，而且都能下载小游戏……现在跟大家讲一下区别在哪里。讲区别之前我先问大家——在直播间有多少米粉的手机不是小米手机的？不是小米手机的小宝全屏飘小一，主播统一回答大家：宝宝你的手机不管你是OPPO、vivo、华为、魅族、一加，只要你是智能手机，只要手机上面有蓝牙，咱们米10都能够正常连接正常使用。宝宝小米怎么连苹果安卓就怎么连，大家放心去带。"
+    </p>
+    <p style="margin-top:12px;">
+      <strong>🔹 第二步：讲共同功能（建立价值）</strong><br>
+      "注意听主播接下来讲的功能是三个版本他们都有的功能：①表带表链可以随心更换（月牙形状卡扣一摁就自动弹开）②表盘壁纸自定义DIY（8张照片当表盘壁纸）③150种运动模式+6大健康管理 ④查看天气/日历/闹钟 ⑤微信和支付宝<span class="highlight">离线支付（脱离手机、脱离蓝牙照样付钱）</span>⑥小游戏（脱离手机也能原地大小玩）⑦同步微信步数 ⑧接收手机各种APP消息。"
+    </p>
+    <p style="margin-top:12px;">
+      <strong>🔹 第三步：演示核心功能（建立信任）</strong><br>
+      "所有宝宝，大家要不要看我如何接收消息、如何接收来电提醒？要看的小宝全屏飘小一……给大家发一个消息：祝直播间的所有小宝心想事成吧！看到了吗，是谁发的、发的什么内容，他是可以具体接收的。再来打一个电话——假如说遇上不想接电话怎么办？咱直接在手环上进行挂断，手环上挂掉了手机上也就自动挂掉了。"
+    </p>
+    <p style="margin-top:12px;">
+      <strong>🔹 第四步：讲版本区别（引导选择）</strong><br>
+      "NFC比标准版本多了哪些功能？NFC能刷公交、刷地铁、刷门禁、有小爱同学、有支付宝碰一碰功能——这些标准版本没有，只有陶瓷和NFC才有。陶瓷版本是顶配自带NFC，和NFC功能完全一样，区别只在外观——一个是陶瓷中框，一个是金属中框。"
+    </p>
+    <p style="margin-top:12px;">
+      <strong>🔹 第五步：版本推荐（推高客单价）</strong><br>
+      "不卡预算要顶配买陶瓷，追求性价比买NFC（功能一模一样但价格比陶瓷便宜60块），NFC功能用不到该省省该花花买标准版。更推荐NFC——因为它拥有陶瓷版本的所有功能，价格更低，性价比更高。"
+    </p>
+    <p style="margin-top:12px;">
+      <strong>🔹 第六步：售后保障（消除疑虑）</strong><br>
+      "我们是官方直播间，7天无理由，7天之内激活之后不满意能退。有一年质保全国联保，一年之内有任何质量问题你去就近线下小米门店免费维修。现在拍下的所有米粉全部能给大家发顺丰和京东，不出意外今天不到明天到。"
+    </p>
+    <p style="margin-top:12px;">
+      <strong>🔹 第七步：续航+库存逼单</strong><br>
+      "典型续航模式20天不需要充电，重度使用8天，续航能力优秀本秀。目前任何地方都没有NFC粉色，现在大家都断货——银色和基础版本马上也要断货了，想要的小宝抓紧去拍。"
+    </p>
+  </div>
+
+  <h3>🔑 话术关键技巧</h3>
+  <div class="grid-3">
+    <div class="feat-card">
+      <div class="feat-icon">🔄</div>
+      <h4>互动确认</h4>
+      <p>通过"全屏飘小一"等方式让观众互动，确认需求后再推进话术。"要看是不是？那就来吧姐妹们"</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">📱</div>
+      <h4>适配度先行</h4>
+      <p>在所有话术之前先打消"非小米手机能不能用"的顾虑——这是最高频的问题</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">⚡</div>
+      <h4>限时紧迫感</h4>
+      <p>"任何地方都没有XX颜色""马上也要断货了""今天不到明天到"——制造稀缺和紧迫</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🎯</div>
+      <h4>精准推品</h4>
+      <p>按预算分层推荐：不差钱→陶瓷，追求性价比→NFC，节约→标准版。推NFC的性价比逻辑最有说服力</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">🛡️</div>
+      <h4>售后锁单</h4>
+      <p>官方直播间+7天无理由+1年质保+顺丰京东——四重保障降低决策门槛</p>
+    </div>
+    <div class="feat-card">
+      <div class="feat-icon">💬</div>
+      <h4>场景化描述</h4>
+      <p>"开车时""开会时""健身时""回家时"——把功能融入用户真实生活场景</p>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 常见问题应答 ==================== -->
+<div class="section" id="sec-faq">
+  <h2>❓ 常见问题应答库</h2>
+
+  <div class="qa-card">
+    <div class="q">苹果手机能不能用？</div>
+    <div class="a">可以用！iPhone、华为、OPPO、vivo、一加、荣耀……只要是智能手机，只要有蓝牙，都能正常连接正常使用，没有机型限制。宝宝小米怎么连苹果安卓就怎么连，大家放心去带。另外10 Pro首次接入苹果快捷指令，能和你的iPhone设备联动。</div>
+  </div>
+
+  <div class="qa-card">
+    <div class="q">和9 Pro有什么区别？值得升级吗？</div>
+    <div class="a">10 Pro在10个方面做了升级：①高强铝/陶瓷中框更轻更耐用 ②屏幕2000nits更亮 ③处理器升级更流畅 ④新增16MB闪存系统更稳 ⑤全频段GNSS定位更准 ⑥4灯2PD传感器心率更精准+HRV睡眠监测 ⑦Z轴线性马达震感更细腻 ⑧新增NFC国际支付/碰一下 ⑨全新游戏模式+运动vlog ⑩苹果双设备消息+快捷指令。如果你手上的9 Pro用得很顺手可以再用一阵，但是想要一步到位、用个两三年不落后，10 Pro就是你的优选。</div>
+  </div>
+
+  <div class="qa-card">
+    <div class="q">续航怎么样？多久充一次电？</div>
+    <div class="a">10 Pro内置350mAh电池，典型续航21天，重度使用（全天健康监测+消息推送+AOD）也能撑8天。短期出行或出门旅行不用带充电器也没关系。Watch 6是550mAh电池续航21天，Watch 5是930mAh金沙江电池待机18天/正常使用一周。</div>
+  </div>
+
+  <div class="qa-card">
+    <div class="q">能不能接打电话？能不能回微信？</div>
+    <div class="a">10 Pro能接收来电提醒、能挂电话，但不能外放声音接听。能接收微信消息但不能回复。如果需要蓝牙接打电话+回复微信，建议选红米Watch 6（安卓可语音/快捷/表情包回复微信）或小米Watch 5（eSIM独立通话+独立微信）。</div>
+  </div>
+
+  <div class="qa-card">
+    <div class="q">洗澡/游泳能戴吗？</div>
+    <div class="a">10 Pro和Watch 6都是5ATM防水等级，游泳可以戴，还能识别泳姿。但是不建议洗热水澡戴（水蒸气可能影响密封），也不建议海水潜水。</div>
+  </div>
+
+  <div class="qa-card">
+    <div class="q">NFC版和标准版怎么选？</div>
+    <div class="a">NFC多了刷公交、刷地铁、刷门禁、小爱同学、支付宝碰一碰支付功能。如果日常需要坐公交地铁、小区门禁刷卡——买NFC；用不到这些功能——标准版足够。更推荐NFC，它和顶配陶瓷功能完全一样，性价比最高。</div>
+  </div>
+
+  <div class="qa-card">
+    <div class="q">手环/手表丢了怎么办？</div>
+    <div class="a">10 Pro和Watch 6都有一键查找功能，在手机上通过小米运动健康App可以让手环震动响铃。Watch 5还有离线远程查找功能，定位可以上传云端，即使手表离线也能通过其他小米设备协助定位。</div>
+  </div>
+
+  <div class="qa-card">
+    <div class="q">能不能用GPS记录跑步轨迹？</div>
+    <div class="a">10 Pro支持全频段GNSS，可以脱离手机独立记录运动轨迹、配速、卡路里，轨迹不飘。Watch 6有双L1天线定位也能独立记录。普通10 NFC没有独立定位，必须依赖手机GPS。</div>
+  </div>
+
+  <div class="qa-card">
+    <div class="q">售后怎么保障？</div>
+    <div class="a">官方直播间，7天无理由退换（激活后也能退），一年全国联保。一年内任何质量问题去就近小米门店免费维修。现在拍下发顺丰/京东，今天拍明天到。</div>
+  </div>
+
+  <div class="qa-card">
+    <div class="q">送长辈/送礼物合适吗？</div>
+    <div class="a">非常合适！健康监测功能（心率/血氧/睡眠/压力）对长辈特别实用，睡眠呼吸停止监测（Watch 6）能识别潜在的睡眠呼吸暂停风险。操作简单、续航长、价格亲民，送健康非常贴心。Watch 6和10 Pro都是很好的送礼选择。</div>
+  </div>
+</div>
+
+</div><!-- .container -->
+
+<script>
+// Sticky nav active state
+const sections = document.querySelectorAll('.section');
+const navBtns = document.querySelectorAll('.nav-btn');
+
+function updateActiveNav() {
+  let current = '';
+  sections.forEach(s => {
+    const top = s.getBoundingClientRect().top;
+    if (top < 200) current = s.id;
+  });
+  navBtns.forEach(btn => {
+    const href = btn.getAttribute('href').replace('#', '');
+    btn.classList.toggle('active', href === current);
+  });
+}
+
+window.addEventListener('scroll', updateActiveNav, { passive: true });
+
+// Smooth scroll for nav
+navBtns.forEach(btn => {
+  btn.addEventListener('click', e => {
+    e.preventDefault();
+    const id = btn.getAttribute('href').replace('#', '');
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+
+</body>
+</html>
