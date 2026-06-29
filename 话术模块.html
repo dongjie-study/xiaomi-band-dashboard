@@ -761,7 +761,8 @@ function saveAsPDF() {
   printHTML += '<style>';
   printHTML += '@page{size:A4;margin:12mm}';
   printHTML += '*{box-shadow:none!important;box-sizing:border-box}';
-  printHTML += 'body{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;font-size:10pt;line-height:1.6;padding:0}';
+  printHTML += 'body{background:#fff;color:#111;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;font-size:10pt;line-height:1.6;padding:0;margin:0}';
+  printHTML += '.container{max-width:100%;padding:8mm}';
   printHTML += '.section{background:#fff;border:1px solid #ccc;border-radius:4px;padding:8px 14px;margin-bottom:8px;break-inside:avoid}';
   printHTML += '.section h2{font-size:13pt;border-bottom:1px solid #ccc;margin-bottom:6px;padding-bottom:4px}';
   printHTML += '.section h2::after{display:none}';
@@ -797,22 +798,39 @@ function saveAsPDF() {
   printHTML += '.badge.cyan{background:#ecfeff;color:#0ea89d}';
   printHTML += '.badge-row{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}';
   printHTML += '</style></head><body>';
+  printHTML += '<div class="container">';
   printHTML += '<h1 style="font-size:16pt;text-align:center;margin-bottom:4px;">🎙️ 小米直播间话术手册</h1>';
   printHTML += '<p style="text-align:center;color:#888;font-size:9pt;margin-top:0;">生成日期: ' + new Date().toLocaleDateString('zh-CN') + '</p>';
   printHTML += container.innerHTML;
-  printHTML += '</body></html>';
+  printHTML += '</div></body></html>';
 
-  // Open new window and print (browser's "Save as PDF" is the most reliable renderer)
-  var w = window.open('', '_blank', 'width=900,height=700');
-  w.document.write(printHTML);
-  w.document.close();
-  w.focus();
+  // Use Blob URL for reliable loading
+  var blob = new Blob([printHTML], { type: 'text/html;charset=utf-8' });
+  var url = URL.createObjectURL(blob);
 
-  // Wait for content to render then trigger print
-  w.onload = function() {
+  var iframe = document.createElement('iframe');
+  iframe.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;z-index:99999;border:none;background:#fff;';
+  iframe.src = url;
+  document.body.appendChild(iframe);
+
+  iframe.onload = function() {
+    // Give a moment for layout to settle
     setTimeout(function() {
-      w.print();
-    }, 400);
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      // Clean up after print dialog closes
+      iframe.contentWindow.onafterprint = function() {
+        document.body.removeChild(iframe);
+        URL.revokeObjectURL(url);
+      };
+      // Fallback cleanup after 60s
+      setTimeout(function() {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+          URL.revokeObjectURL(url);
+        }
+      }, 60000);
+    }, 300);
   };
 }
 </script>
