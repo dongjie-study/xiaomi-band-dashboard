@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>四月份订单复盘总结 · 小米手环直播间（含商品卡）</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --text: #0f172a;
+  --text-secondary: #64748b;
+  --text-muted: #9ca3af;
+  --border: #e8ecf1;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.03);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,.10);
+  --radius: 14px;
+  --radius-sm: 10px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --clr-ours: #1E90FF;
+  --clr-comp: #FF6B35;
+  --clr-orange: #ff6900;
+  --clr-green: #1da85c;
+  --clr-red: #FF4757;
+  --clr-purple: #7c6ff7;
+  --clr-gold: #c8960c;
+  --clr-cyan: #0ea89d;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(circle, rgba(148,163,184,.10) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.nav-bar {
+  display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+  padding: 10px 16px; background: rgba(255,255,255,.9);
+  backdrop-filter: blur(14px); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,.03);
+}
+.nav-btn {
+  padding: 7px 18px; border-radius: 20px; border: 1.5px solid #dde1e6;
+  background: #fff; color: #555; font-size: 12.5px; cursor: pointer;
+  text-decoration: none; transition: all var(--transition); font-family: inherit; font-weight: 500;
+}
+.nav-btn:hover { border-color: var(--clr-orange); color: var(--clr-orange); background: #fff7ed; }
+.nav-btn.active { background: linear-gradient(135deg, var(--clr-orange), #ff8c42); color: #fff; border-color: transparent; font-weight: 600; box-shadow: 0 2px 8px rgba(255,105,0,.2); }
+.hero {
+  position: relative; z-index: 1;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  color: white; padding: 48px 20px 40px; text-align: center;
+  box-shadow: 0 4px 24px rgba(15,52,96,.15);
+}
+.hero h1 { font-size: 38px; font-weight: 800; letter-spacing: -.02em; }
+.hero h1 .mi { color: var(--clr-orange); }
+.hero p { font-size: 15px; opacity: 0.85; margin-top: 8px; max-width: 700px; margin-left: auto; margin-right: auto; }
+.hero .badge-row { margin-top: 16px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.hero .badge { padding: 5px 16px; border-radius: 16px; font-size: 12px; font-weight: 600; letter-spacing: .03em; }
+.badge.green { background: rgba(29,168,92,.18); color: #5ddf8a; }
+.badge.warn { background: rgba(255,105,0,.18); color: #ffa366; }
+.badge.info { background: rgba(30,144,255,.18); color: #80c8ff; }
+.badge.purple { background: rgba(124,111,247,.18); color: #b5a8ff; }
+.badge.card { background: rgba(200,150,12,.18); color: #e8c840; }
+.kpi-row {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;
+  max-width: 1500px; margin: -28px auto 0; padding: 0 20px; position: relative; z-index: 10;
+}
+.kpi-card {
+  background: var(--surface); border-radius: var(--radius); padding: 18px 10px; text-align: center;
+  box-shadow: var(--shadow-md); border: 1px solid var(--border);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.kpi-card .kpi-value { font-size: 26px; font-weight: 800; line-height: 1.2; }
+.kpi-card .kpi-label { font-size: 11px; color: var(--text-secondary); margin-top: 6px; font-weight: 500; letter-spacing: .03em; text-transform: uppercase; }
+.kpi-card.highlight { border: 2px solid var(--clr-orange); background: linear-gradient(135deg, #fffdf0 0%, #fff 100%); }
+.kpi-card.ours { border-left: 4px solid var(--clr-ours); }
+.kpi-card.comp { border-left: 4px solid var(--clr-comp); }
+.container { max-width: 1500px; margin: 32px auto; padding: 0 20px; position: relative; z-index: 1; }
+.section {
+  background: var(--surface); border-radius: var(--radius); padding: 28px 32px; margin-bottom: 20px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border); scroll-margin-top: 70px;
+  transition: box-shadow var(--transition);
+}
+.section:hover { box-shadow: var(--shadow-md); }
+.section h2 {
+  font-size: 20px; font-weight: 700; margin-bottom: 20px;
+  padding-bottom: 12px; border-bottom: 2px solid #f0f0f0; position: relative;
+  display: flex; align-items: center; gap: 10px;
+}
+.section h2::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 48px; height: 3px; background: var(--clr-orange); border-radius: 2px; }
+.section h3 { font-size: 16px; font-weight: 700; margin: 24px 0 12px; color: #333; }
+.section h3:first-of-type { margin-top: 0; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+.chart-box { background: #fcfdfe; border-radius: var(--radius-sm); border: 1px solid var(--border); padding: 16px; overflow: hidden; }
+.chart-box.h250 { height: 270px; }
+.chart-box.h300 { height: 340px; }
+.chart-box.h360 { height: 400px; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f7f8fa; padding: 10px 8px; text-align: center; font-weight: 600; font-size: 12px; border-bottom: 2px solid #e0e3e8; white-space: nowrap; }
+td { padding: 9px 8px; text-align: center; border-bottom: 1px solid #f0f2f5; }
+tr:hover { background: #fafbfc; }
+.insight-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+.insight { padding: 12px 16px; border-radius: var(--radius-sm); font-size: 12.5px; line-height: 1.6; border-left: 4px solid; }
+.insight.good { border-color: var(--clr-green); background: #f0faf3; }
+.insight.warn { border-color: var(--clr-orange); background: #fffdf0; }
+.insight.info { border-color: var(--clr-ours); background: #eff6ff; }
+.insight.danger { border-color: var(--clr-red); background: #fef2f2; }
+.hl-box { padding: 14px 20px; border-radius: var(--radius-sm); font-size: 13px; line-height: 1.6; }
+.hl-box.hl-blue { background: #eff6ff; border: 1px solid #bfdbfe; }
+.hl-box.hl-green { background: #f0faf3; border: 1px solid #bbf7d0; }
+.hl-box.hl-orange { background: #fffdf0; border: 1px solid #fed7aa; }
+.key-num-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 12px 0; }
+.key-num {
+  background: linear-gradient(135deg, #fcfdfe 0%, #f7f8fa 100%);
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
+  padding: 16px 12px; text-align: center;
+}
+.key-num .num { font-size: 28px; font-weight: 800; }
+.key-num .desc { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
+.conclusion-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 12px 0; }
+.conclusion-card { padding: 22px; border-radius: var(--radius); text-align: center; border: 1px solid var(--border); transition: all var(--transition); }
+.conclusion-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.conclusion-card .c-icon { font-size: 36px; margin-bottom: 8px; }
+.conclusion-card h4 { font-size: 15px; margin-bottom: 6px; }
+.conclusion-card p { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+.conclusion-card.c1 { background: #fffdf0; }
+.conclusion-card.c2 { background: #f0faf3; }
+.conclusion-card.c3 { background: #eff6ff; }
+.conclusion-card.c4 { background: #fef2f2; }
+.plan-card {
+  background: var(--surface); border-radius: var(--radius); padding: 24px 18px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border);
+  position: relative; overflow: hidden; transition: all var(--transition);
+}
+.plan-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.plan-card .plan-num { font-size: 52px; font-weight: 900; opacity: .06; position: absolute; top: -8px; right: 14px; line-height: 1; }
+.plan-card .plan-icon { font-size: 30px; margin-bottom: 10px; }
+.plan-card h4 { font-size: 16px; margin-bottom: 8px; position: relative; z-index: 1; }
+.plan-card p { font-size: 12.5px; color: #555; line-height: 1.7; position: relative; z-index: 1; }
+.plan-card .plan-tag { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 10.5px; font-weight: 600; margin-top: 10px; position: relative; z-index: 1; }
+.plan-card.p1 { border-top: 3px solid var(--clr-ours); }
+.plan-card.p2 { border-top: 3px solid var(--clr-green); }
+.plan-card.p3 { border-top: 3px solid var(--clr-purple); }
+.plan-card.p4 { border-top: 3px solid var(--clr-red); }
+
+@media (max-width: 1100px) {
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .grid-2, .grid-3, .grid-4, .insight-row, .conclusion-grid, .key-num-grid { grid-template-columns: 1fr; }
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+  .section { padding: 20px 16px; }
+  .hero h1 { font-size: 24px; }
+  table { font-size: 10px; }
+  th, td { padding: 5px 3px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="nav-bar">
+  <a class="nav-btn" href="#sales">📊 销量总览</a>
+  <a class="nav-btn" href="#rooms">🏪 直播间矩阵</a>
+  <a class="nav-btn" href="#products">🏷️ 品类结构</a>
+  <a class="nav-btn" href="#competitor">⚔️ 竞对分析</a>
+  <a class="nav-btn" href="#trend">📈 四月vs618趋势</a>
+  <a class="nav-btn" href="#plan">🚀 改进建议</a>
+</nav>
+
+<div class="hero">
+  <h1>📋 <span class="mi">四月份</span> 订单复盘总结</h1>
+  <p>4/1-4/30 · 30天全周期 · 直播间+商品卡全渠道数据 · 三大团队竞争格局</p>
+  <div class="badge-row">
+    <span class="badge green">📊 95,007单 · ¥3224.7万</span>
+    <span class="badge info">📡 直播间79,465单</span>
+    <span class="badge card">🛒 商品卡15,542单</span>
+    <span class="badge warn">🏪 4间我方 vs 7间良米</span>
+  </div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi-card highlight">
+    <div class="kpi-value" style="color:var(--clr-ours);">95,007</div>
+    <div class="kpi-label">四月 总销量</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" style="color:var(--clr-green);">¥3224.7万</div>
+    <div class="kpi-label">四月 总GSV</div>
+  </div>
+  <div class="kpi-card ours">
+    <div class="kpi-value" style="color:var(--clr-ours);">29.8%</div>
+    <div class="kpi-label">我方综合份额 (28,321单)</div>
+  </div>
+  <div class="kpi-card comp">
+    <div class="kpi-value" style="color:var(--clr-comp);">50.1%</div>
+    <div class="kpi-label">良米份额 (47,583单)</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" style="color:var(--clr-ours);">79,465 / 15,542</div>
+    <div class="kpi-label">直播间 / 商品卡 销量</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" style="color:var(--clr-green);">-19,262</div>
+    <div class="kpi-label">我方 vs 良米 差额</div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ===== 01 销量总览 ===== -->
+<section class="section" id="sales">
+  <h2>📊 四月全渠道销量总览 —— 直播间 + 商品卡</h2>
+
+  <div class="grid-2" style="margin-bottom:12px;">
+    <div>
+      <h3>🏪 三大团队销量分布</h3>
+      <table>
+        <tr><th>团队</th><th>总订单</th><th>直播间</th><th>商品卡</th><th>GSV</th><th>占比</th><th>直播间数</th></tr>
+        <tr style="background:#eff6ff;">
+          <td style="color:var(--clr-ours);font-weight:700;">🔵 我方</td>
+          <td style="font-weight:700;">28,321</td>
+          <td>20,888</td>
+          <td>7,433</td>
+          <td>¥903.1万</td>
+          <td style="color:var(--clr-ours);font-weight:700;">29.8%</td>
+          <td>4间 (5,222单/间)</td>
+        </tr>
+        <tr style="background:#fff3e0;">
+          <td style="color:var(--clr-comp);font-weight:700;">🟠 良米</td>
+          <td style="font-weight:700;">47,583</td>
+          <td>39,474</td>
+          <td>8,109</td>
+          <td>¥1,721.0万</td>
+          <td style="color:var(--clr-comp);font-weight:700;">50.1%</td>
+          <td>7间 (5,639单/间)</td>
+        </tr>
+        <tr style="background:#f5f0ff;">
+          <td style="color:var(--clr-purple);font-weight:700;">🟣 机械空间</td>
+          <td>19,018</td>
+          <td>19,018</td>
+          <td>0</td>
+          <td>¥598.8万</td>
+          <td>20.0%</td>
+          <td>2间 (9,509单/间)</td>
+        </tr>
+      </table>
+    </div>
+    <div>
+      <h3>📈 渠道结构对比</h3>
+      <table>
+        <tr><th>渠道</th><th>订单</th><th>GSV</th><th>我方订单</th><th>我方GSV</th><th>我方占比</th></tr>
+        <tr>
+          <td>📡 直播间</td>
+          <td style="font-weight:700;">79,465</td>
+          <td>¥2,672.1万</td>
+          <td>20,888</td>
+          <td>¥645.4万</td>
+          <td style="color:var(--clr-ours);">26.3%</td>
+        </tr>
+        <tr>
+          <td>🛒 商品卡</td>
+          <td style="font-weight:700;">15,542</td>
+          <td>¥552.5万</td>
+          <td>7,433</td>
+          <td>¥257.7万</td>
+          <td style="color:var(--clr-ours);">47.8%</td>
+        </tr>
+        <tr style="background:#f0faf3;">
+          <td><b>📊 合计</b></td>
+          <td><b>95,007</b></td>
+          <td><b>¥3,224.7万</b></td>
+          <td><b>28,321</b></td>
+          <td><b>¥903.1万</b></td>
+          <td style="color:var(--clr-green);font-weight:700;"><b>29.8%</b></td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <h3>📈 每日销量趋势（含商品卡）</h3>
+  <div class="chart-box h360" id="chart-daily-trend"></div>
+
+  <div class="hl-box hl-orange" style="margin-top:16px;">
+    <strong style="color:var(--clr-orange);">🔑 销量核心洞察：</strong>
+    四月全周期<strong>95,007单 · ¥3,224.7万</strong>（直播间79,465 + 商品卡15,542），三方格局：<strong style="color:var(--clr-ours);">我方29.8%</strong> · <strong style="color:#FF6B35;">良米50.1%</strong> · <strong style="color:var(--clr-purple);">机械空间20.0%</strong>。
+    商品卡渠道我方占比47.8%（7,433单），高于直播间份额26.3%，说明商品卡运营有基础。
+    良米以7间直播间+商品卡矩阵占最大份额；我方直播间数量不足（4间 vs 7间）是份额差距的主因。
+  </div>
+</section>
+
+<!-- ===== 02 直播间矩阵 ===== -->
+<section class="section" id="rooms">
+  <h2>🏪 直播间矩阵 —— 我方 vs 竞对</h2>
+
+  <h3>🏪 各团队直播间明细（全周期）</h3>
+  <div class="grid-3">
+    <div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--clr-ours);">🔵 我方 · 4间</div>
+      <table style="font-size:11px;">
+        <tr><th>直播间</th><th>订单</th><th>GSV</th><th>客单价</th></tr>
+        <tr><td>小米官方手环直播间</td><td style="font-weight:600;color:var(--clr-ours);">9,492</td><td>¥282.0万</td><td>¥297</td></tr>
+        <tr><td>小米数码旗舰店</td><td style="font-weight:600;color:var(--clr-ours);">8,708</td><td>¥266.0万</td><td>¥305</td></tr>
+        <tr><td>小米官方手表</td><td style="font-weight:600;color:var(--clr-ours);">1,794</td><td>¥76.7万</td><td>¥428</td></tr>
+        <tr><td>小米官方耳机直播间</td><td style="font-weight:600;color:var(--clr-ours);">894</td><td>¥20.6万</td><td>¥231</td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--clr-comp);">🟠 良米 · 7间</div>
+      <table style="font-size:11px;">
+        <tr><th>直播间</th><th>订单</th><th>GSV</th><th>客单价</th></tr>
+        <tr><td>小米手环</td><td style="font-weight:600;color:var(--clr-comp);">10,797</td><td>¥324.3万</td><td>¥300</td></tr>
+        <tr><td>小米手表官方直播间</td><td style="font-weight:600;color:var(--clr-comp);">8,137</td><td>¥422.4万</td><td>¥519</td></tr>
+        <tr><td>小米耳机官方直播间</td><td style="font-weight:600;color:var(--clr-comp);">8,590</td><td>¥185.5万</td><td>¥216</td></tr>
+        <tr><td>小米数码智能旗舰店</td><td style="font-weight:600;color:var(--clr-comp);">7,607</td><td>¥228.9万</td><td>¥301</td></tr>
+        <tr><td>小米手表直播间</td><td style="font-weight:600;color:var(--clr-comp);">1,935</td><td>¥53.0万</td><td>¥274</td></tr>
+        <tr><td>小米手表</td><td style="font-weight:600;color:var(--clr-comp);">1,640</td><td>¥164.5万</td><td>¥1,003</td></tr>
+        <tr><td>小米智能手表旗舰店</td><td style="font-weight:600;color:var(--clr-comp);">768</td><td>¥47.7万</td><td>¥621</td></tr>
+      </table>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--clr-purple);">🟣 机械空间 · 2间</div>
+      <table style="font-size:11px;">
+        <tr><th>直播间</th><th>订单</th><th>GSV</th><th>客单价</th></tr>
+        <tr><td>小米智能穿戴授权号</td><td style="font-weight:600;color:var(--clr-purple);">15,541</td><td>¥450.9万</td><td>¥290</td></tr>
+        <tr><td>小米智能穿戴国补号</td><td style="font-weight:600;color:var(--clr-purple);">3,477</td><td>¥147.9万</td><td>¥425</td></tr>
+      </table>
+      <div style="margin-top:12px;">
+        <div style="font-size:12px;font-weight:700;margin-bottom:6px;color:var(--clr-gold);">🛒 商品卡</div>
+        <table style="font-size:11px;">
+          <tr><th>渠道</th><th>订单</th><th>GSV</th></tr>
+          <tr><td style="color:var(--clr-ours);">我司商品卡</td><td style="font-weight:600;">7,433</td><td>¥257.7万</td></tr>
+          <tr><td style="color:var(--clr-comp);">良米商品卡</td><td style="font-weight:600;">8,109</td><td>¥294.8万</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:16px;">📊 直播间成交排行</h3>
+  <div class="chart-box h300" id="chart-rooms-ranking"></div>
+
+  <div class="hl-box hl-blue" style="margin-top:12px;">
+    <strong style="color:var(--clr-ours);">🔑 直播间洞察：</strong>
+    我方4间直播间合计20,888单，良米7间合计39,474单。我方单间产出5,222单 vs 良米5,639单，效率接近但入口少。
+    手环主号（9,492单）和数码旗舰店（8,708单）贡献87%，手表号（1,794单）和耳机号（894单）体量极小。
+    四月尚未开设10Pro专属号和官旗手表号（618期间新增）。
+  </div>
+</section>
+
+<!-- ===== 03 品类结构 ===== -->
+<section class="section" id="products">
+  <h2>🏷️ 品类结构分析 —— 直播间+商品卡全渠道</h2>
+
+  <div class="insight-row" style="margin-bottom:8px;">
+    <div class="insight good"><strong>✅ 小米手环10是我方王牌品类（47.6%份额）</strong>我方16,147单，竞对17,763单，差距1,616单。全渠道最大单品（38,513单）。</div>
+    <div class="insight good"><strong>✅ 小米手环9 Pro我方基本持平（49.0%份额）</strong>我方7,515单 vs 竞对7,835单，差距仅320单。</div>
+    <div class="insight warn"><strong>⚠️ REDMI Watch 6差距最大</strong>全市场11,562单，我方仅19.6%（2,266单）。竞对9,296单是我方的<strong>4.1倍</strong>，差额7,030单。</div>
+    <div class="insight danger"><strong>❌ 耳机品类严重落后</strong>REDMI Buds 8青春版我方仅346单（5.9%），竞对5,500单。耳机号产出差距近10倍。</div>
+  </div>
+
+  <h3>📊 核心品类对比（全渠道）</h3>
+  <table style="margin-bottom:14px;">
+    <tr>
+      <th style="width:18%;">核心品类</th>
+      <th style="width:9%;background:#eff6ff;">我方订单</th><th style="width:9%;background:#eff6ff;">我方GSV</th>
+      <th style="width:9%;background:#fff3e0;">竞对订单</th><th style="width:9%;background:#fff3e0;">竞对GSV</th>
+      <th style="width:8%;">总订单</th><th style="width:8%;">总GSV</th>
+      <th style="width:7%;background:#f0faf3;">我方占比</th>
+      <th style="width:9%;background:#fef2f2;">差额（我-竞）</th>
+      <th style="width:14%;">备注</th>
+    </tr>
+    <tr style="background:#f0faf3;">
+      <td><b>小米手环10</b></td>
+      <td style="background:#eff6ff;font-weight:700;">16,147</td>
+      <td style="background:#eff6ff;">¥475.9万</td>
+      <td style="background:#fff3e0;font-weight:700;">17,763</td>
+      <td style="background:#fff3e0;">¥517.2万</td>
+      <td><b>33,910</b></td>
+      <td>¥993.1万</td>
+      <td style="color:var(--clr-green);font-weight:700;font-size:15px;">47.6%</td>
+      <td style="color:var(--clr-red);font-weight:700;">-1,616</td>
+      <td style="color:var(--clr-green);">基本持平</td>
+    </tr>
+    <tr style="background:#fffdf0;">
+      <td><b>REDMI Watch 6</b></td>
+      <td style="background:#eff6ff;font-weight:700;">2,266</td>
+      <td style="background:#eff6ff;">¥121.5万</td>
+      <td style="background:#fff3e0;font-weight:700;">9,296</td>
+      <td style="background:#fff3e0;">¥509.7万</td>
+      <td><b>11,562</b></td>
+      <td>¥631.2万</td>
+      <td style="color:var(--clr-red);font-weight:700;font-size:15px;">19.6%</td>
+      <td style="color:var(--clr-red);font-weight:700;">-7,030</td>
+      <td style="color:var(--clr-red);">竞对×4.1</td>
+    </tr>
+  </table>
+
+  <h3>二级品类</h3>
+  <table style="margin-bottom:14px;">
+    <tr>
+      <th style="width:18%;">二级品类</th>
+      <th style="width:9%;background:#eff6ff;">我方订单</th><th style="width:9%;background:#eff6ff;">我方GSV</th>
+      <th style="width:9%;background:#fff3e0;">竞对订单</th><th style="width:9%;background:#fff3e0;">竞对GSV</th>
+      <th style="width:8%;">总订单</th>
+      <th style="width:7%;background:#f0faf3;">我方占比</th>
+      <th style="width:9%;background:#fef2f2;">差额</th>
+      <th style="width:14%;">备注</th>
+    </tr>
+    <tr>
+      <td><b>小米手环9 Pro</b></td>
+      <td style="background:#eff6ff;font-weight:700;">7,515</td>
+      <td style="background:#eff6ff;">¥218.4万</td>
+      <td style="background:#fff3e0;font-weight:700;">7,835</td>
+      <td style="background:#fff3e0;">¥226.9万</td>
+      <td><b>15,350</b></td>
+      <td style="color:var(--clr-green);font-weight:700;font-size:15px;">49.0%</td>
+      <td style="color:var(--clr-red);font-weight:700;">-320</td>
+      <td style="color:var(--clr-green);">基本持平</td>
+    </tr>
+    <tr>
+      <td><b>小米手表S5</b></td>
+      <td style="background:#eff6ff;font-weight:700;">281</td>
+      <td style="background:#eff6ff;">¥32.3万</td>
+      <td style="background:#fff3e0;font-weight:700;">1,576</td>
+      <td style="background:#fff3e0;">¥186.6万</td>
+      <td><b>1,857</b></td>
+      <td style="color:var(--clr-red);font-weight:700;font-size:15px;">15.1%</td>
+      <td style="color:var(--clr-red);font-weight:700;">-1,295</td>
+      <td style="color:var(--clr-red);">竞对×5.6</td>
+    </tr>
+  </table>
+
+  <h3>耳机品类</h3>
+  <table style="margin-bottom:14px;">
+    <tr>
+      <th style="width:18%;">耳机品类</th>
+      <th style="width:9%;background:#eff6ff;">我方订单</th>
+      <th style="width:9%;background:#fff3e0;">竞对订单</th>
+      <th style="width:8%;">总订单</th>
+      <th style="width:7%;background:#f0faf3;">我方占比</th>
+      <th style="width:9%;background:#fef2f2;">差额</th>
+      <th style="width:14%;">备注</th>
+    </tr>
+    <tr>
+      <td><b>REDMI Buds 8 青春版</b></td>
+      <td style="background:#eff6ff;font-weight:700;">346</td>
+      <td style="background:#fff3e0;font-weight:700;">5,500</td>
+      <td><b>5,846</b></td>
+      <td style="color:var(--clr-red);font-weight:700;font-size:15px;">5.9%</td>
+      <td style="color:var(--clr-red);font-weight:700;">-5,154</td>
+      <td style="color:var(--clr-red);">竞对×15.9</td>
+    </tr>
+    <tr>
+      <td><b>REDMI Buds 8 Pro</b></td>
+      <td style="background:#eff6ff;font-weight:700;">510</td>
+      <td style="background:#fff3e0;font-weight:700;">2,922</td>
+      <td><b>3,432</b></td>
+      <td style="color:var(--clr-red);font-weight:700;font-size:15px;">14.9%</td>
+      <td style="color:var(--clr-red);font-weight:700;">-2,412</td>
+      <td style="color:var(--clr-red);">竞对×5.7</td>
+    </tr>
+  </table>
+
+  <!-- 总数汇总 -->
+  <div style="margin-top:18px;background:linear-gradient(135deg, #1a1a2e, #16213e);color:#fff;border-radius:var(--radius);padding:24px 32px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px;">
+    <div style="text-align:center;">
+      <div style="font-size:11px;opacity:.7;letter-spacing:.05em;">📊 四月总销量（全渠道）</div>
+      <div style="font-size:40px;font-weight:800;">95,007</div>
+      <div style="font-size:13px;opacity:.7;">单 · ¥3,224.7万 GSV</div>
+    </div>
+    <div style="text-align:center;font-size:30px;opacity:.25;">|</div>
+    <div style="text-align:center;">
+      <div style="font-size:11px;opacity:.7;letter-spacing:.05em;">🔵 我方订单</div>
+      <div style="font-size:40px;font-weight:800;color:var(--clr-ours);">28,321</div>
+      <div style="font-size:13px;opacity:.7;">¥903.1万 · 占比 <b style="color:var(--clr-ours);">29.8%</b> · 直播+商品卡</div>
+    </div>
+    <div style="text-align:center;font-size:30px;opacity:.25;">|</div>
+    <div style="text-align:center;">
+      <div style="font-size:11px;opacity:.7;letter-spacing:.05em;">🟠 良米</div>
+      <div style="font-size:40px;font-weight:800;color:#FF6B35;">47,583</div>
+      <div style="font-size:13px;opacity:.7;">¥1,721.0万 · 占比 <b style="color:#FF6B35;">50.1%</b> · 7间+商品卡</div>
+    </div>
+    <div style="text-align:center;font-size:30px;opacity:.25;">|</div>
+    <div style="text-align:center;">
+      <div style="font-size:11px;opacity:.7;letter-spacing:.05em;">🏆 我方TOP2品类</div>
+      <div style="font-size:14px;font-weight:600;line-height:1.7;">
+        <span style="color:#1da85c;">手环10</span> 16,147单(47.6%) ·
+        <span style="color:var(--clr-ours);">手环9Pro</span> 7,515单(49.0%)
+      </div>
+      <div style="font-size:12px;opacity:.7;">两品类占我方总订单 83.5%</div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:20px;">📊 全渠道产品结构可视化</h3>
+  <div class="grid-2">
+    <div class="chart-box h300" id="chart-product-pie"></div>
+    <div class="chart-box h300" id="chart-our-product-pie"></div>
+  </div>
+</section>
+
+<!-- ===== 04 竞对分析 ===== -->
+<section class="section" id="competitor">
+  <h2>⚔️ 竞对分析 —— 良米 & 机械空间</h2>
+
+  <h3>📊 良米直播间结构</h3>
+  <div class="grid-2" style="margin-bottom:16px;">
+    <div class="chart-box h300" id="chart-liangmi-pie"></div>
+    <div>
+      <table>
+        <tr><th>良米直播间</th><th>订单</th><th>GSV</th><th>客单价</th><th>定位</th></tr>
+        <tr><td>小米手环</td><td style="font-weight:700;">10,797</td><td>¥324.3万</td><td>¥300</td><td>手环主号</td></tr>
+        <tr><td>小米手表官方直播间</td><td style="font-weight:700;">8,137</td><td>¥422.4万</td><td>¥519</td><td>手表主号</td></tr>
+        <tr><td>小米耳机官方直播间</td><td style="font-weight:700;">8,590</td><td>¥185.5万</td><td>¥216</td><td>耳机专属</td></tr>
+        <tr><td>小米数码智能旗舰店</td><td style="font-weight:700;">7,607</td><td>¥228.9万</td><td>¥301</td><td>综合旗舰</td></tr>
+        <tr><td>小米手表直播间</td><td>1,935</td><td>¥53.0万</td><td>¥274</td><td>手表辅助</td></tr>
+        <tr><td>小米手表</td><td>1,640</td><td>¥164.5万</td><td>¥1,003</td><td>高端手表</td></tr>
+        <tr><td>小米智能手表旗舰店</td><td>768</td><td>¥47.7万</td><td>¥621</td><td>手表旗舰</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="insight-row">
+    <div class="insight warn"><strong>⚠️ 良米Watch 6重仓投入</strong>良米Watch 6贡献9,296单、509.7万GSV，是其第二大品类。我方仅2,266单，差距7,030单。</div>
+    <div class="insight warn"><strong>⚠️ 良米耳机号产出惊人</strong>小米耳机官方直播间8,590单，是其第三大号。我方耳机号仅894单，差距近10倍。</div>
+    <div class="insight info"><strong>📊 机械空间极致效率</strong>仅2个号做到9,509单/号产出，全场最高。"国补号"客单价425元远高于其他号。</div>
+    <div class="insight info"><strong>📊 客单价差异</strong>良米361元 vs 我方309元，说明良米高客单价产品（手表、耳机Pro）占比更高。</div>
+  </div>
+
+  <div class="hl-box hl-orange" style="margin-top:12px;">
+    <strong style="color:var(--clr-orange);">🔑 竞对核心洞察：</strong>
+    良米以7间直播间矩阵+高客单价策略占据50.1%份额。Watch 6（9,296单）和耳机号（8,590单）是其核心优势。
+    机械空间以极致效率（9,509单/号）和国补概念（客单价425元）占据20.0%。
+    我方需要：① 扩大直播间矩阵 ② 重点攻坚Watch 6 ③ 提升客单价。
+  </div>
+</section>
+
+<!-- ===== 05 四月vs618趋势 ===== -->
+<section class="section" id="trend">
+  <h2>📈 四月 vs 618 趋势对比</h2>
+
+  <h3>📊 核心指标变化</h3>
+  <table style="margin-bottom:16px;">
+    <tr>
+      <th>指标</th>
+      <th style="background:#eff6ff;">四月</th>
+      <th style="background:#fff3e0;">618全周期</th>
+      <th>变化</th>
+      <th>趋势</th>
+    </tr>
+    <tr>
+      <td><b>我方直播间数</b></td>
+      <td>4个</td>
+      <td>6个</td>
+      <td style="color:var(--clr-green);font-weight:700;">+2个</td>
+      <td>新增10Pro号、官旗手表号</td>
+    </tr>
+    <tr>
+      <td><b>我方全渠道订单</b></td>
+      <td>28,321单</td>
+      <td>56,124单</td>
+      <td style="color:var(--clr-green);font-weight:700;">+98.2%</td>
+      <td>翻倍增长</td>
+    </tr>
+    <tr>
+      <td><b>我方全渠道GSV</b></td>
+      <td>¥903.1万</td>
+      <td>¥1,964.4万</td>
+      <td style="color:var(--clr-green);font-weight:700;">+117.5%</td>
+      <td>GSV增速高于订单增速</td>
+    </tr>
+    <tr>
+      <td><b>我方日均订单</b></td>
+      <td>944单</td>
+      <td>1,604单</td>
+      <td style="color:var(--clr-green);font-weight:700;">+70.0%</td>
+      <td>日均产出提升</td>
+    </tr>
+    <tr>
+      <td><b>良米全渠道订单</b></td>
+      <td>47,583单</td>
+      <td>85,834单</td>
+      <td>+80.4%</td>
+      <td>—</td>
+    </tr>
+    <tr style="background:#f0faf3;">
+      <td><b>我方份额</b></td>
+      <td style="font-weight:700;">29.8%</td>
+      <td style="font-weight:700;">33.9%</td>
+      <td style="color:var(--clr-green);font-weight:700;">+4.1pp</td>
+      <td>份额提升</td>
+    </tr>
+    <tr>
+      <td><b>Watch 6份额</b></td>
+      <td>19.6%</td>
+      <td>29.8%</td>
+      <td style="color:var(--clr-green);font-weight:700;">+10.2pp</td>
+      <td>短板改善</td>
+    </tr>
+    <tr>
+      <td><b>手环10份额</b></td>
+      <td>47.6%</td>
+      <td>47.4%</td>
+      <td>-0.2pp</td>
+      <td>基本盘稳固</td>
+    </tr>
+  </table>
+
+  <div class="chart-box h360" id="chart-trend-compare"></div>
+
+  <div class="hl-box hl-green" style="margin-top:12px;">
+    <strong style="color:var(--clr-green);">🔑 趋势核心洞察：</strong>
+    四月→618，我方增速（+98.2%）高于竞对（+80.4%），份额从29.8%提升至33.9%（+4.1pp）。
+    Watch 6份额从19.6%提升至29.8%（+10.2pp），短板有所改善但仍是最大差距。
+    手环10份额基本持平（47.6%→47.4%），基本盘稳固。
+    新增10Pro号和官旗手表号后，整体产出提升明显，证明直播间扩展策略有效。
+  </div>
+</section>
+
+<!-- ===== 06 改进建议 ===== -->
+<section class="section" id="plan">
+  <h2>🚀 改进建议 —— 基于四月数据分析</h2>
+
+  <div class="conclusion-grid">
+    <div class="conclusion-card c1">
+      <div class="c-icon">🏪</div>
+      <h4>扩大直播间矩阵</h4>
+      <p>四月仅4个直播间，竞对7个。618期间新增至6个已证明有效。目标：8-10个差异化直播间，覆盖手环/手表/耳机/综合。</p>
+    </div>
+    <div class="conclusion-card c2">
+      <div class="c-icon">⌚</div>
+      <h4>攻坚Watch 6</h4>
+      <p>四月Watch 6份额仅19.6%（差距7,030单），是最大短板。618已改善至29.8%，目标继续提升至40%+。需增加专属投放和直播间资源。</p>
+    </div>
+    <div class="conclusion-card c3">
+      <div class="c-icon">🎧</div>
+      <h4>耳机号整改与重新定位</h4>
+      <p>四月耳机号仅894单，竞对8,590单（差距10倍）。需整改合规问题后重新定位，聚焦核心SKU（开放式耳机+Buds 8系列）。</p>
+    </div>
+    <div class="conclusion-card c4">
+      <div class="c-icon">🛒</div>
+      <h4>商品卡精细化运营</h4>
+      <p>商品卡我方占比47.8%（高于直播间26.3%），说明货架电商有基础。优化标题、主图、详情页，目标商品卡月销翻倍。</p>
+    </div>
+  </div>
+
+  <h3>🎯 四大行动方向</h3>
+  <div class="grid-4" style="margin-bottom:16px;">
+    <div class="plan-card p1">
+      <div class="plan-num">01</div><div class="plan-icon">🏪</div>
+      <h4 style="color:var(--clr-ours);">直播间矩阵扩展</h4>
+      <p>新增手表专属直播间1-2个，探索"手环+手表"混合直播间。参考良米布局差异化定位。目标：8-10个直播间覆盖全品类。</p>
+      <span class="plan-tag" style="background:rgba(30,144,255,.1);color:var(--clr-ours);">目标：+4间</span>
+    </div>
+    <div class="plan-card p2">
+      <div class="plan-num">02</div><div class="plan-icon">⌚</div>
+      <h4 style="color:var(--clr-green);">Watch 6重点攻坚</h4>
+      <p>Watch 6千川投放预算提升50%+。直播间增加Watch 6专属话术和展示。商品卡优化Watch 6标题和主图。目标：份额从29.8%→40%+。</p>
+      <span class="plan-tag" style="background:rgba(29,168,92,.1);color:var(--clr-green);">份额目标：40%+</span>
+    </div>
+    <div class="plan-card p3">
+      <div class="plan-num">03</div><div class="plan-icon">🎧</div>
+      <h4 style="color:var(--clr-purple);">耳机号合规整改</h4>
+      <p>立即整改耳机直播间违规问题。重新定位内容策略，聚焦开放式耳机（份额50.4%优势品）+Buds 8青春版（引流款）+Buds 8 Pro（利润款）。</p>
+      <span class="plan-tag" style="background:rgba(124,111,247,.1);color:var(--clr-purple);">紧急整改</span>
+    </div>
+    <div class="plan-card p4">
+      <div class="plan-num">04</div><div class="plan-icon">🛒</div>
+      <h4 style="color:var(--clr-red);">商品卡精细化运营</h4>
+      <p>建立商品卡专属运营，优化搜索关键词覆盖手环/Watch/耳机长尾词。主图统一品牌调性+突出国补。目标商品卡月销翻倍。</p>
+      <span class="plan-tag" style="background:rgba(255,71,87,.1);color:var(--clr-red);">自然流量增长</span>
+    </div>
+  </div>
+
+  <div class="hl-box hl-green" style="margin-top:12px;">
+    <strong style="color:var(--clr-green);">🏁 总方针：扩大矩阵×补齐短板×深耕商品卡。</strong>
+    四月→618已证明策略有效（份额29.8%→33.9%，+4.1pp）。下一步核心是：
+    <strong>① 扩大直播间矩阵（4→8-10间）</strong> ×
+    <strong>② 攻坚Watch 6（份额19.6%→40%+）</strong> ×
+    <strong>③ 耳机号合规整改后重新定位</strong> ×
+    <strong>④ 商品卡精细化运营</strong>。
+    <strong style="color:var(--clr-orange);">坚持执行，全渠道份额从29.8%→40%+完全可以实现。</strong>
+  </div>
+</section>
+</div>
+
+<footer style="text-align:center;color:var(--text-muted);font-size:11px;padding:32px;position:relative;z-index:1;border-top:1px solid var(--border);margin-top:20px;">
+  小米手环直播间 · 四月份订单复盘总结 · 2026年4月 · 30天全周期 · 直播间+商品卡全渠道 · 我方4间 vs 良米7间 vs 机械空间2间 · 数据驱动</footer>
+
+<script>
+var C = { ours: '#1E90FF', comp: '#FF6B35', green: '#1da85c', orange: '#ff6900', purple: '#7c6ff7', gold: '#c8960c', cyan: '#0ea89d', red: '#FF4757' };
+
+// Daily trend
+(function(){
+  var d = document.getElementById('chart-daily-trend'); if(!d) return;
+  var c = echarts.init(d);
+  c.setOption({
+    title: { text: '每日总销量趋势（含商品卡）', left: 'center', top: 4, textStyle: { fontSize: 12, fontWeight: 600 } },
+    tooltip: { trigger: 'axis' },
+    legend: { top: 28, textStyle: { fontSize: 9 }, data: ['我方','良米','机械空间','总订单','商品卡'] },
+    grid: { left: 12, right: 12, top: 60, bottom: 20 },
+    xAxis: { type: 'category', data: ["4/1","4/2","4/3","4/4","4/5","4/6","4/7","4/8","4/9","4/10","4/11","4/12","4/13","4/14","4/15","4/16","4/17","4/18","4/19","4/20","4/21","4/22","4/23","4/24","4/25","4/26","4/27","4/28","4/29","4/30"], axisLabel: { fontSize: 7, rotate: 45 } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#eee', type: 'dashed' } } },
+    series: [
+      { name: '我方', type: 'bar', stack: 'teams', data: [525,535,568,556,434,448,430,413,733,745,574,248,454,406,540,791,1169,1034,929,999,1102,670,704,675,894,923,691,811,1059,828], itemStyle: { color: C.ours }, barWidth: '60%', label: { show: true, position: 'inside', fontSize: 7, color: '#fff', formatter: function(p){ return p.value>500 ? p.value : ''; } } },
+      { name: '良米', type: 'bar', stack: 'teams', data: [1837,1578,1497,1743,919,1532,872,685,1165,1283,980,577,1092,807,864,1028,1466,1211,979,939,849,1124,1054,995,1139,1310,1103,854,1008,1184], itemStyle: { color: '#FF6B35' }, barWidth: 22 },
+      { name: '机械空间', type: 'bar', stack: 'teams', data: [968,911,848,1063,742,933,632,653,732,964,632,548,750,553,691,719,1061,987,835,807,710,790,895,736,1001,1178,841,759,855,1109], itemStyle: { color: C.purple }, barWidth: 22 },
+      { name: '总订单', type: 'line', data: [4105,3710,3722,4283,2519,3719,2353,2026,2954,3744,2688,1537,2704,2189,2523,2892,4706,4110,3293,3220,3239,3163,3145,2702,3375,3773,3039,2841,3238,3495], lineStyle: { color: C.orange, width: 2.5 }, itemStyle: { color: C.orange }, symbol: 'circle', symbolSize: 6, label: { show: true, fontSize: 9, fontWeight: 700, color: C.orange } },
+      { name: '商品卡', type: 'line', data: [775,686,809,921,424,806,419,275,324,752,502,164,408,423,428,354,1010,878,550,475,578,579,492,296,341,362,404,417,316,374], lineStyle: { color: C.gold, width: 2, type: 'dashed' }, itemStyle: { color: C.gold }, symbol: 'diamond', symbolSize: 8, label: { show: true, fontSize: 8, fontWeight: 600, color: C.gold } }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// Rooms ranking
+(function(){
+  var d = document.getElementById('chart-rooms-ranking'); if(!d) return;
+  var c = echarts.init(d);
+  var rooms = ["小米智能手表旗舰店","小米手表","小米手表直播间","小米官方耳机直播间","小米智能穿戴国补号","小米官方手表","小米数码智能旗舰店","小米耳机官方直播间","小米数码旗舰店","小米官方手环直播间","小米手表官方直播间","小米手环","小米智能穿戴授权号"];
+  var orders = [768,1640,1935,894,3477,1794,7607,8590,8708,9492,8137,10797,15541];
+  var teams = ["良米","良米","良米","我方","机械空间","我方","良米","良米","我方","我方","良米","良米","机械空间"];
+  c.setOption({
+    title: { text: '四月直播间成交排行（全周期）', left: 'center', top: 4, textStyle: { fontSize: 12, fontWeight: 600 } },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { left: 140, right: 20, top: 30, bottom: 4 },
+    xAxis: { type: 'value', splitLine: { lineStyle: { color: '#eee', type: 'dashed' } } },
+    yAxis: { type: 'category', data: rooms, axisLabel: { fontSize: 9 }, inverse: true },
+    series: [{
+      type: 'bar', data: orders.map(function(v, i){
+        var color = teams[i]==='我方' ? C.ours : teams[i]==='良米' ? C.comp : C.purple;
+        return { value: v, itemStyle: { color: color, borderRadius: [0,4,4,0] } };
+      }), barWidth: 16,
+      label: { show: true, position: 'right', fontSize: 9, fontWeight: 600, formatter: '{c}单' }
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// All product pie
+(function(){
+  var d = document.getElementById('chart-product-pie'); if(!d) return;
+  var c = echarts.init(d);
+  c.setOption({
+    title: { text: '全渠道产品结构（95,007单）', left: 'center', top: 8, textStyle: { fontSize: 12, fontWeight: 700 } },
+    tooltip: { trigger: 'item', formatter: '{b}: {c}单 ({d}%)' },
+    legend: { bottom: 0, textStyle: { fontSize: 9 } },
+    series: [{
+      type: 'pie', radius: ['38%','58%'], center: ['50%','43%'],
+      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 3 },
+      label: { show: true, formatter: '{b}\n{d}%', fontSize: 8, position: 'outside' },
+      labelLine: { length: 12, length2: 8 },
+      data: [
+        {name: "小米手环10", value: 38513},
+        {name: "小米手环9 Pro", value: 17172},
+        {name: "REDMI Watch 6", value: 10797},
+        {name: "REDMI Buds 8 青春版", value: 4909},
+        {name: "REDMI Buds 8 Pro", value: 3089},
+        {name: "小米手表S5", value: 1592},
+        {name: "REDMI Buds 8 活力版", value: 888},
+        {name: "REDMI Buds 8", value: 533},
+        {name: "其他", value: 6514}
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// Our product pie
+(function(){
+  var d = document.getElementById('chart-our-product-pie'); if(!d) return;
+  var c = echarts.init(d);
+  c.setOption({
+    title: { text: '我方产品结构（28,321单·全渠道）', left: 'center', top: 8, textStyle: { fontSize: 12, fontWeight: 700, color: C.ours } },
+    tooltip: { trigger: 'item', formatter: '{b}: {c}单 ({d}%)' },
+    legend: { bottom: 0, textStyle: { fontSize: 9 } },
+    series: [{
+      type: 'pie', radius: ['38%','58%'], center: ['50%','43%'],
+      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 3 },
+      label: { show: true, formatter: '{b}\n{d}%', fontSize: 8, position: 'outside' },
+      labelLine: { length: 12, length2: 8 },
+      data: [
+        {name: "小米手环10", value: 16147},
+        {name: "小米手环9 Pro", value: 7515},
+        {name: "REDMI Watch 6", value: 2266},
+        {name: "REDMI Buds 8 Pro", value: 510},
+        {name: "REDMI Buds 8 青春版", value: 346},
+        {name: "小米手表S5", value: 281},
+        {name: "其他", value: 1256}
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// Liangmi pie
+(function(){
+  var d = document.getElementById('chart-liangmi-pie'); if(!d) return;
+  var c = echarts.init(d);
+  c.setOption({
+    title: { text: '良米直播间结构（39,474单）', left: 'center', top: 8, textStyle: { fontSize: 12, fontWeight: 700, color: C.comp } },
+    tooltip: { trigger: 'item', formatter: '{b}: {c}单 ({d}%)' },
+    legend: { bottom: 0, textStyle: { fontSize: 9 } },
+    series: [{
+      type: 'pie', radius: ['38%','58%'], center: ['50%','43%'],
+      itemStyle: { borderRadius: 6, borderColor: '#fff', borderWidth: 3 },
+      label: { show: true, formatter: '{b}\n{d}%', fontSize: 8, position: 'outside' },
+      labelLine: { length: 12, length2: 8 },
+      data: [
+        {name: "小米手环", value: 10797},
+        {name: "小米手表官方直播间", value: 8137},
+        {name: "小米耳机官方直播间", value: 8590},
+        {name: "小米数码智能旗舰店", value: 7607},
+        {name: "小米手表直播间", value: 1935},
+        {name: "小米手表", value: 1640},
+        {name: "小米智能手表旗舰店", value: 768}
+      ]
+    }]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// Trend compare
+(function(){
+  var d = document.getElementById('chart-trend-compare'); if(!d) return;
+  var c = echarts.init(d);
+  c.setOption({
+    title: { text: '四月 vs 618 核心指标对比', left: 'center', top: 4, textStyle: { fontSize: 12, fontWeight: 600 } },
+    tooltip: { trigger: 'axis' },
+    legend: { top: 28, textStyle: { fontSize: 10 }, data: ['四月','618全周期'] },
+    grid: { left: 12, right: 12, top: 60, bottom: 20 },
+    xAxis: { type: 'category', data: ['我方订单','我方GSV(万)','良米订单','我方份额%','Watch6份额%','手环10份额%'], axisLabel: { fontSize: 10 } },
+    yAxis: { type: 'value', splitLine: { lineStyle: { color: '#eee', type: 'dashed' } } },
+    series: [
+      { name: '四月', type: 'bar', data: [28321,903.1,47583,29.8,19.6,47.6], itemStyle: { color: C.ours, borderRadius: [4,4,0,0] }, barWidth: 20, label: { show: true, position: 'top', fontSize: 10, fontWeight: 700, color: C.ours } },
+      { name: '618全周期', type: 'bar', data: [56124,1964.4,85834,33.9,29.8,47.4], itemStyle: { color: C.comp, borderRadius: [4,4,0,0] }, barWidth: 20, label: { show: true, position: 'top', fontSize: 10, fontWeight: 700, color: C.comp } }
+    ]
+  });
+  window.addEventListener('resize', function(){ c.resize(); });
+})();
+
+// Nav scroll spy
+(function(){
+  var navs = document.querySelectorAll('.nav-btn');
+  var sections = [];
+  navs.forEach(function(n){
+    var href = n.getAttribute('href');
+    if(href && href.startsWith('#')){
+      var sec = document.querySelector(href);
+      if(sec) sections.push({ el: sec, nav: n });
+    }
+  });
+  function onScroll(){
+    var scrollY = window.scrollY + 120;
+    var active = null;
+    sections.forEach(function(s){ if(s.el.offsetTop <= scrollY) active = s; });
+    navs.forEach(function(n){ n.classList.remove('active'); });
+    if(active) active.nav.classList.add('active');
+  }
+  window.addEventListener('scroll', onScroll);
+  navs.forEach(function(n){
+    n.addEventListener('click', function(e){
+      var href = n.getAttribute('href');
+      if(href && href.startsWith('#')){
+        e.preventDefault();
+        var target = document.querySelector(href);
+        if(target) target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
