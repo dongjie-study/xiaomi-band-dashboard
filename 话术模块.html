@@ -153,7 +153,6 @@ tr:hover { background: #fafbfc; }
 
 /* Print button */
 .print-btn {
-  position: fixed; bottom: 28px; right: 28px; z-index: 200;
   display: flex; align-items: center; gap: 10px;
   padding: 14px 24px; border-radius: 28px;
   background: linear-gradient(135deg, #1a1a2e, #0f3460);
@@ -162,6 +161,7 @@ tr:hover { background: #fafbfc; }
   box-shadow: 0 6px 24px rgba(15,52,96,.35);
   transition: all var(--transition);
   letter-spacing: .02em;
+  white-space: nowrap;
 }
 .print-btn:hover {
   transform: translateY(-2px);
