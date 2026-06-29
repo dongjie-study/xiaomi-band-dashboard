@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>直播间话术模块 · 小米手环直播间</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
 <style>
 :root {
   --bg: #f0f4f8;
@@ -714,10 +715,15 @@ tr:hover { background: #fafbfc; }
 
 </div><!-- .container -->
 
-<!-- Floating Print Button -->
-<button class="print-btn" onclick="window.print()" title="打印话术手册">
-  <span class="printer-icon">🖨️</span> 打印话术手册
-</button>
+<!-- Floating Action Buttons -->
+<div style="position:fixed;bottom:28px;right:28px;z-index:200;display:flex;gap:12px;">
+  <button class="print-btn" onclick="saveAsPDF()" title="一键保存为PDF文件，方便发送分享">
+    <span class="printer-icon">📥</span> 保存为PDF
+  </button>
+  <button class="print-btn" onclick="window.print()" title="直接连接打印机打印">
+    <span class="printer-icon">🖨️</span> 打印
+  </button>
+</div>
 
 <script>
 // Sticky nav active state
@@ -746,6 +752,80 @@ navBtns.forEach(btn => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
   });
 });
+
+// PDF save function
+function saveAsPDF() {
+  const btn = event.target.closest('button');
+  const origText = btn.innerHTML;
+  btn.innerHTML = '<span class="printer-icon">⏳</span> 生成中...';
+  btn.style.pointerEvents = 'none';
+
+  // Clone the container for PDF rendering
+  const container = document.querySelector('.container');
+  const clone = container.cloneNode(true);
+  clone.style.maxWidth = '100%';
+  clone.style.margin = '0';
+  clone.style.padding = '10px';
+
+  // Apply print-friendly styles to clone
+  const styleEl = document.createElement('style');
+  styleEl.textContent = `
+    * { box-shadow: none !important; }
+    body { background: #fff !important; }
+    .section { background: #fff; border: 1px solid #ccc; border-radius: 4px; padding: 10px 14px; margin-bottom: 8px; break-inside: avoid; box-shadow: none !important; }
+    .section h2 { font-size: 14pt; border-bottom: 1px solid #ccc; margin-bottom: 8px; padding-bottom: 4px; }
+    .section h2::after { display: none; }
+    .section h3 { font-size: 11pt; margin: 10px 0 4px; }
+    .script-card { background: #f9f9f9; border: 1px solid #ddd; border-left-width: 3px; padding: 8px 12px; margin: 6px 0; font-size: 9pt; break-inside: avoid; }
+    .script-card p { font-size: 9pt; line-height: 1.5; margin: 4px 0; }
+    .script-card .script-tag { font-size: 8pt; padding: 1px 8px; }
+    table { font-size: 8pt; margin: 6px 0; }
+    th { font-size: 8pt; padding: 4px 3px; background: #eee; }
+    td { font-size: 8pt; padding: 4px 3px; }
+    .summary-box { background: #fafafa; border: 1px solid #ddd; padding: 8px 12px; margin: 8px 0; break-inside: avoid; }
+    .summary-box ul li { font-size: 9pt; line-height: 1.5; }
+    .feat-card { box-shadow: none; border: 1px solid #ddd; padding: 8px 10px; break-inside: avoid; }
+    .feat-card p { font-size: 8pt; }
+    .qa-card { background: #fff; border: 1px solid #ddd; padding: 8px 12px; break-inside: avoid; }
+    .qa-card .q { font-size: 9pt; }
+    .qa-card .a { font-size: 8pt; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+    .highlight { color: #000; font-weight: 700; }
+    .up { color: #000; font-weight: 700; }
+    .new-badge { background: #eee; color: #333; }
+  `;
+  clone.insertBefore(styleEl, clone.firstChild);
+
+  // Create hidden wrapper
+  const wrapper = document.createElement('div');
+  wrapper.style.position = 'absolute';
+  wrapper.style.left = '-9999px';
+  wrapper.style.top = '0';
+  wrapper.style.width = '210mm';
+  wrapper.style.background = '#fff';
+  wrapper.appendChild(clone);
+  document.body.appendChild(wrapper);
+
+  const opt = {
+    margin: [8, 8, 8, 8],
+    filename: '小米直播间话术手册.pdf',
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+  };
+
+  html2pdf().set(opt).from(wrapper).save().then(function() {
+    document.body.removeChild(wrapper);
+    btn.innerHTML = origText;
+    btn.style.pointerEvents = '';
+  }).catch(function() {
+    document.body.removeChild(wrapper);
+    btn.innerHTML = origText;
+    btn.style.pointerEvents = '';
+    alert('PDF生成失败，请尝试使用"打印"按钮 → 目标打印机选"另存为PDF"');
+  });
+}
 </script>
 
 </body>
