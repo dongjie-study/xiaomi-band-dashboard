@@ -14,12 +14,24 @@ from datetime import datetime
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(DATA_DIR, 'history.json')
 
-# Our rooms — everything else is competitor
-OUR_ROOMS = {
-    '小米数码旗舰店', '小米官方手表', '小米官方手环直播间',
-    '小米官方耳机直播间', '小米手环10Pro直播间',
-    '小米手表官方直播间', '小米官方手表直播号',
+# Team classification
+TEAM_MAP = {
+    # 我司
+    '小米官方手表': '我司', '小米官方手环直播间': '我司', '小米数码旗舰店': '我司',
+    '小米官方耳机直播间': '我司', '小米手环10Pro直播间': '我司', '小米官旗手表直播间': '我司',
+    # 机械空间
+    '小米智能穿戴国补号': '机械空间', '小米智能穿戴授权号': '机械空间',
+    # 纵横
+    '小米官方手表直播号': '纵横',
 }
+# Everything else → 良米
+
+def classify_room(room_name):
+    return TEAM_MAP.get(room_name, '良米')
+
+# Teams we want to highlight
+OUR_TEAM = '我司'
+ALL_TEAMS = ['我司', '机械空间', '纵横', '良米']
 
 
 def shorten_product(name):
@@ -123,8 +135,8 @@ def load_and_clean(filepath):
     df['hour'] = df['time'].dt.hour
     df['product_short'] = df['product'].apply(shorten_product)
     df['room'] = df['room'].astype(str).str.strip()
-    # Always classify by room name
-    df['type'] = df['room'].apply(lambda r: '我方' if r in OUR_ROOMS else '竞对')
+    # Classify by room name into teams
+    df['type'] = df['room'].apply(classify_room)
     return df
 
 
@@ -165,16 +177,19 @@ def summarize_day(df):
     for room_name, room_df in df.groupby('room'):
         rsum = summarize_room(room_df)
         types = room_df['type'].value_counts()
-        rsum['type'] = '我方' if '我方' in types.index else types.index[0]
+        rsum['type'] = classify_room(room_name)
         rooms[room_name] = rsum
 
-    # Identify our rooms
-    our_rooms = [r for r, info in rooms.items() if info['type'] == '我方']
-    comp_rooms = [r for r, info in rooms.items() if info['type'] == '竞对']
+    # Identify rooms by team
+    our_rooms = [r for r, info in rooms.items() if info['type'] == '我司']
+    jixie_rooms = [r for r, info in rooms.items() if info['type'] == '机械空间']
+    zongheng_rooms = [r for r, info in rooms.items() if info['type'] == '纵横']
+    liangmi_rooms = [r for r, info in rooms.items() if info['type'] == '良米']
+    comp_rooms = jixie_rooms + zongheng_rooms + liangmi_rooms
 
     # Type-level aggregates
     type_summary = {}
-    for t in ['我方', '竞对']:
+    for t in ALL_TEAMS:
         tdf = df[df['type'] == t]
         if len(tdf) > 0:
             type_summary[t] = {
@@ -230,6 +245,9 @@ def summarize_day(df):
         'products': all_products,
         'rooms': rooms,
         'our_rooms': our_rooms,
+        'jixie_rooms': jixie_rooms,
+        'zongheng_rooms': zongheng_rooms,
+        'liangmi_rooms': liangmi_rooms,
         'comp_rooms': comp_rooms,
         'type_summary': type_summary,
         '_hourly_stats': hourly_stats
@@ -259,64 +277,45 @@ def print_comparison(today, yesterday=None):
     comp_rooms = today.get('comp_rooms', [])
     rooms = today.get('rooms', {})
 
-    # ===== 我方 vs 竞对 总览 =====
-    if '我方' in type_summary and '竞对' in type_summary:
-        o = type_summary['我方']
-        c = type_summary['竞对']
-        total = today['total_orders']
-        o_pct = o['orders'] / total * 100
-        c_pct = c['orders'] / total * 100
-        order_gap = c['orders'] - o['orders']
-        rev_gap = c['revenue'] - o['revenue']
-        price_gap = c['avg_price'] - o['avg_price']
+    # ===== 团队总览 =====
+    team_colors = {'我司': '★', '机械空间': '◆', '纵横': '▲', '良米': '·'}
+    print(f"\n  【四队总览】")
+    print(f"    {'':<15s} {'订单':>8s} {'占比':>8s} {'销售额':>14s} {'均价':>10s} {'直播间':>8s}")
+    print(f"    {'-'*65}")
+    total = today['total_orders']
+    for t in ALL_TEAMS:
+        if t in type_summary:
+            ts = type_summary[t]
+            pct = ts['orders'] / total * 100
+            marker = team_colors.get(t, ' ')
+            print(f"    {marker} {t:<13s} {ts['orders']:>8} {pct:>7.1f}%  "
+                  f"RMB {ts['revenue']:>10,.0f}  RMB {ts['avg_price']:>6.0f}  {ts['rooms']:>6}")
 
-        print(f"\n  【我方 vs 竞对 总览】")
-        print(f"    {'':<15s} {'订单':>8s} {'占比':>8s} {'销售额':>14s} {'均价':>10s} {'直播间':>8s}")
-        print(f"    {'-'*65}")
-        print(f"    {'★ 我方':<15s} {o['orders']:>8} {o_pct:>7.1f}%  "
-              f"RMB {o['revenue']:>10,.0f}  RMB {o['avg_price']:>6.0f}  {o['rooms']:>6}")
-        print(f"    {'竞对合计':<15s} {c['orders']:>8} {c_pct:>7.1f}%  "
-              f"RMB {c['revenue']:>10,.0f}  RMB {c['avg_price']:>6.0f}  {c['rooms']:>6}")
-        print(f"    {'-'*65}")
-        gap_word = '落后' if order_gap > 0 else '领先'
-        print(f"    {'差距':<15s} {abs(order_gap):>8} 单    "
-              f"RMB {abs(rev_gap):>10,.0f}     "
-              f"RMB {abs(price_gap):>6.0f}")
-        print(f"    我方订单量为竞对的 {o['orders']/c['orders']*100:.1f}%")
-        if price_gap > 0:
-            print(f"    我方均价低于竞对 RMB {price_gap:.0f}，需关注定价策略")
-
-    # ===== 逐房间对比 =====
+    # ===== 房间明细 =====
     if len(rooms) > 1:
-        print(f"\n  【各直播间明细对比】")
-        header = f"    {'直播间':<22s} {'类型':>4s} {'订单':>6s} {'占比':>7s} {'销售额':>12s} {'均价':>8s} {'SKU':>5s}"
+        print(f"\n  【各直播间明细】")
+        header = f"    {'直播间':<22s} {'团队':>6s} {'订单':>6s} {'占比':>7s} {'销售额':>12s} {'均价':>8s} {'SKU':>5s}"
         print(header)
         print(f"    {'-'*70}")
         total_orders = today['total_orders']
         sorted_rooms = sorted(rooms.items(), key=lambda x: x[1]['orders'], reverse=True)
         for name, info in sorted_rooms:
             pct = info['orders'] / total_orders * 100
-            rtype = info.get('type', '竞对')
-            marker = '★' if rtype == '我方' else ' '
+            rtype = info.get('type', '良米')
+            marker = team_colors.get(rtype, ' ')
             sku_count = len(info['products'])
-            print(f"  {marker} {name:<22s} {rtype:>4s} {info['orders']:>6} {pct:>6.1f}% "
+            print(f"  {marker} {name:<22s} {rtype:>6s} {info['orders']:>6} {pct:>6.1f}% "
                   f"RMB {info['revenue']:>10,.0f} RMB {info['avg_price']:>6.0f} {sku_count:>5}")
 
-        # ===== 我方 vs 竞对 逐个对比 =====
-        print(f"\n  【我方各房间 vs 竞对同类型房间 差距分析】")
-
-        # Find counterpart comparisons: our rooms vs similar competitor rooms
-        # Match by category: 手环 vs 手环, 手表 vs 手表, 旗舰店 vs 旗舰店
+    # ===== 我司 vs 其他团队对比 =====
+    if our_rooms and comp_rooms:
+        print(f"\n  【我司房间 vs 对标房间】")
         counterpart_keywords = [
-            ('手环', '手环'),
-            ('手表', '手表'),
-            ('旗舰店', '旗舰店'),
+            ('手环', '手环'), ('手表', '手表'), ('旗舰店', '旗舰店'),
         ]
-
         matched_comps = set()
         for our_name in our_rooms:
             our_info = rooms[our_name]
-            # Find best competitor match
             best_match = None
             for kw_our, kw_comp in counterpart_keywords:
                 if kw_our in our_name:
@@ -326,57 +325,25 @@ def print_comparison(today, yesterday=None):
                             break
                     if best_match:
                         break
-
             if best_match:
                 matched_comps.add(best_match)
                 comp_info = rooms[best_match]
                 o_gap = our_info['orders'] - comp_info['orders']
-                r_gap = our_info['revenue'] - comp_info['revenue']
-                p_gap = our_info['avg_price'] - comp_info['avg_price']
                 ratio = our_info['orders'] / comp_info['orders'] * 100 if comp_info['orders'] else 0
-
                 status = '领先' if o_gap > 0 else '落后'
                 print(f"    {our_name} vs {best_match}:")
-                print(f"      订单: {our_info['orders']} vs {comp_info['orders']} → "
-                      f"{status} {abs(o_gap)} 单 (我方为对手的 {ratio:.1f}%)")
-                print(f"      均价: RMB {our_info['avg_price']:.0f} vs RMB {comp_info['avg_price']:.0f} → "
-                      f"差距 RMB {p_gap:+.0f}")
-                print(f"      销售额: RMB {our_info['revenue']:,.0f} vs RMB {comp_info['revenue']:,.0f} → "
-                      f"差距 RMB {r_gap:+,.0f}")
+                print(f"      订单: {our_info['orders']} vs {comp_info['orders']} → {status} {abs(o_gap)}单 ({ratio:.1f}%)")
+                print(f"      均价: RMB {our_info['avg_price']:.0f} vs RMB {comp_info['avg_price']:.0f}")
             else:
-                print(f"    {our_name}: 未找到直接对标的竞对直播间")
-
-        # Unmatched competitor rooms
-        for comp_name in comp_rooms:
-            if comp_name not in matched_comps:
-                comp_info = rooms[comp_name]
-                print(f"    {comp_name} (竞对): {comp_info['orders']} 单, "
-                      f"无直接对应的我方直播间")
-
-    # ===== 产品重叠分析 =====
-    our_prod_sets = [set(rooms[r]['products'].keys()) for r in our_rooms]
-    comp_prod_sets = [set(rooms[r]['products'].keys()) for r in comp_rooms]
-    if our_prod_sets and comp_prod_sets:
-        all_ours = set().union(*our_prod_sets) if our_prod_sets else set()
-        all_comps = set().union(*comp_prod_sets) if comp_prod_sets else set()
-        shared = all_ours & all_comps
-        only_ours = all_ours - all_comps
-        only_comps = all_comps - all_ours
-
-        print(f"\n  【产品线重叠分析】")
-        print(f"    共同产品 ({len(shared)}): {', '.join(sorted(shared)) if shared else '无'}")
-        if only_ours:
-            print(f"    我方独有 ({len(only_ours)}): {', '.join(sorted(only_ours))}")
-        if only_comps:
-            print(f"    竞对独有 ({len(only_comps)}): {', '.join(sorted(only_comps))}")
+                print(f"    {our_name}: 无对标房间")
 
     # ===== 热销产品 =====
-    print(f"\n  【热销产品 (全部汇总)】")
-    sorted_prods = sorted(today['products'].items(), key=lambda x: x[1]['orders'], reverse=True)
+    print(f"\n  【热销产品 TOP8】")
+    sorted_prods = sorted(today['products'].items(), key=lambda x: x[1]['revenue'], reverse=True)
     for i, (name, info) in enumerate(sorted_prods[:8]):
         pct = info['orders'] / today['total_orders'] * 100
         print(f"    {i+1}. {name:<25s}  订单: {info['orders']:>4} ({pct:>5.1f}%)  "
-              f"销售额: RMB {info['revenue']:>10,.2f}  均价: RMB {info['avg_price']:.0f}")
+              f"销售额: RMB {info['revenue']:>10,.0f}  均价: RMB {info['avg_price']:.0f}")
 
     # ===== 高峰时段 =====
     print(f"\n  【出单高峰时段】")
@@ -388,25 +355,16 @@ def print_comparison(today, yesterday=None):
                   f"销售额: RMB {stats['revenue']:>10,.2f}")
 
     # ===== 总结 =====
-    if '我方' in type_summary and '竞对' in type_summary:
-        o = type_summary['我方']
-        c = type_summary['竞对']
+    if '我司' in type_summary:
+        o = type_summary['我司']
+        other_orders = sum(type_summary[t]['orders'] for t in ['机械空间','纵横','良米'] if t in type_summary)
         print(f"\n  【总结】")
-        if o['orders'] < c['orders']:
-            print(f"    我方在订单量上落后竞对 {c['orders'] - o['orders']} 单，"
-                  f"我方仅占整体 {o['orders']/today['total_orders']*100:.1f}% 份额")
-        if o['avg_price'] < c['avg_price']:
-            print(f"    我方均价 (RMB {o['avg_price']:.0f}) 低于竞对 (RMB {c['avg_price']:.0f})，"
-                  f"需评估是否提价或优化产品结构")
-        else:
-            print(f"    我方均价 (RMB {o['avg_price']:.0f}) 高于竞对 (RMB {c['avg_price']:.0f})，"
-                  f"定价端有优势")
-
-        # Best/worst performing our room
-        our_sorted = sorted([(r, rooms[r]) for r in our_rooms], key=lambda x: x[1]['orders'], reverse=True)
-        print(f"    我方表现最好: {our_sorted[0][0]} ({our_sorted[0][1]['orders']} 单)")
-        print(f"    我方表现最弱: {our_sorted[-1][0]} ({our_sorted[-1][1]['orders']} 单)")
-
+        print(f"    我司 {o['orders']} 单 ({o['orders']/today['total_orders']*100:.1f}%), "
+              f"均价 RMB {o['avg_price']:.0f}, 销售额 RMB {o['revenue']:,.0f}")
+        our_sorted = sorted([(r, rooms[r]) for r in our_rooms], key=lambda x: x[1]['revenue'], reverse=True)
+        if our_sorted:
+            print(f"    最佳(销售额): {our_sorted[0][0]} (RMB {our_sorted[0][1]['revenue']:,.0f})")
+            print(f"    最弱(销售额): {our_sorted[-1][0]} (RMB {our_sorted[-1][1]['revenue']:,.0f})")
     print()
     print("=" * 70)
 
@@ -425,12 +383,16 @@ def update(filepath, our_filepath=None):
         dup = set(df1['room'].unique()) & set(df2['room'].unique())
         if dup:
             print(f"Rooms in both sources (summed): {', '.join(sorted(dup))}")
-        n_our_rooms = len([r for r in df['room'].unique() if r in OUR_ROOMS])
-        n_comp_rooms = df['room'].nunique() - n_our_rooms
-        n_our_orders = len(df[df['type'] == '我方'])
-        n_comp_orders = len(df[df['type'] == '竞对'])
-        print(f"Combined: {len(df)} orders ({n_our_orders} ours + {n_comp_orders} comp), "
-              f"{df['room'].nunique()} rooms ({n_our_rooms} ours + {n_comp_rooms} comp)")
+        n_our_rooms = len([r for r in df['room'].unique() if classify_room(r) == '我司'])
+        n_jixie = len([r for r in df['room'].unique() if classify_room(r) == '机械空间'])
+        n_zongheng = len([r for r in df['room'].unique() if classify_room(r) == '纵横'])
+        n_liangmi = len([r for r in df['room'].unique() if classify_room(r) == '良米'])
+        n_our_orders = len(df[df['type'] == '我司'])
+        n_jixie_orders = len(df[df['type'] == '机械空间'])
+        n_zongheng_orders = len(df[df['type'] == '纵横'])
+        n_liangmi_orders = len(df[df['type'] == '良米'])
+        print(f"Combined: {len(df)} orders, {df['room'].nunique()} rooms")
+        print(f"  我司: {n_our_orders}单/{n_our_rooms}室 | 机械空间: {n_jixie_orders}单/{n_jixie}室 | 纵横: {n_zongheng_orders}单/{n_zongheng}室 | 良米: {n_liangmi_orders}单/{n_liangmi}室")
     else:
         print(f"Loading: {filepath}")
         df = load_and_clean(filepath)
@@ -485,7 +447,11 @@ def _write_stats_js(history):
     """Write stats_data.js so root index.html can load overview stats via <script> tag."""
     latest = history[-1]
     rooms = latest.get('rooms', {})
-    our_rooms = sum(1 for r in rooms.values() if r.get('type') == '我方')
+    our_rooms = sum(1 for r in rooms.values() if r.get('type') == '我司')
+    team_counts = {}
+    for r in rooms.values():
+        t = r.get('type', '良米')
+        team_counts[t] = team_counts.get(t, 0) + 1
     stats = {
         'date': latest['date'],
         'orders': latest['total_orders'],
@@ -494,6 +460,7 @@ def _write_stats_js(history):
         'rooms': len(rooms),
         'our_rooms': our_rooms,
         'comp_rooms': len(rooms) - our_rooms,
+        'team_counts': team_counts,
         'days': len(history),
         'first_date': history[0]['date'],
         'dates': [d['date'] for d in history],
