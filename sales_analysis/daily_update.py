@@ -18,6 +18,7 @@ HISTORY_FILE = os.path.join(DATA_DIR, 'history.json')
 OUR_ROOMS = {
     '小米数码旗舰店', '小米官方手表', '小米官方手环直播间',
     '小米官方耳机直播间', '小米手环10Pro直播间',
+    '小米手表官方直播间', '小米官方手表直播号',
 }
 
 
