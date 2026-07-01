@@ -383,14 +383,70 @@ function formatChange(current, previous) {
   return `<span class="change ${cls}">${sign}${diff.toLocaleString()} (${sign}${pct}%)</span>`;
 }
 
-// 产品归类：保留主要产品名，仅合并配件类小项
+// 产品归类：清洗标签，提取核心品名，合并同品不同链接
 function groupProduct(name) {
-  // 充电配件合并
-  if (/充电|Type-C|数据线/.test(name)) return '充电/配件';
-  // 插线板合并
-  if (/插线板|插座/.test(name)) return '插线板';
-  // 其余全部保留原名（手环10/10Pro、Watch S4/S5、各代Buds等各自独立）
-  return name;
+  // 1. 去除【...】标签和多余空格
+  var clean = name.replace(/【[^】]*】/g, '').replace(/\s+/g, ' ').trim();
+  // 2. 去除末尾的 "-默认-(xxx)" 等后缀
+  clean = clean.replace(/-.*$/, '').trim();
+  // 3. 处理分隔符（/、-等），取第一部分核心品名
+  // 4. 统一大小写
+  clean = clean.replace(/XIaomI/i, 'Xiaomi').replace(/XIaomi/i, 'Xiaomi');
+
+  // 小米手环10 Pro（必须在10之前判断）
+  if (/手环\s*10\s*Pro|手环10Pro/i.test(clean)) return '小米手环10 Pro';
+  // 小米手环10 陶瓷版等变体 → 统一为 小米手环10
+  if (/手环\s*10/.test(clean)) return '小米手环10';
+  // 小米手环9 Pro
+  if (/手环\s*9\s*Pro|手环9Pro/i.test(clean)) return '小米手环9 Pro';
+  // 其他手环
+  if (/手环|Band/i.test(clean)) return '其他手环';
+
+  // Xiaomi Watch S5
+  if (/Watch\s*S\s*5|WatchS5/i.test(clean)) return 'Xiaomi Watch S5';
+  // Xiaomi Watch S4
+  if (/Watch\s*S\s*4|WatchS4/i.test(clean)) return 'Xiaomi Watch S4';
+  // Xiaomi Watch S（不带数字）
+  if (/Watch\s*S[^0-9]/i.test(clean) || /Watch\s*S$/i.test(clean)) return 'Xiaomi Watch S';
+  // Xiaomi Watch 5（不带S）
+  if (/Watch\s*5/i.test(clean)) return 'Xiaomi Watch 5';
+  // REDMI Watch 6
+  if (/REDMI\s*Watch\s*6|Watch\s*6/i.test(clean)) return 'REDMI Watch 6';
+  // 其他手表
+  if (/手表|Watch/i.test(clean) && !/REDMI/.test(clean)) return '其他手表';
+
+  // REDMI Buds 8 Pro（必须在Buds 8之前）
+  if (/Buds\s*8\s*Pro/i.test(clean)) return 'REDMI Buds 8 Pro';
+  // REDMI Buds 8 活力版
+  if (/Buds\s*8.*活力/i.test(clean)) return 'REDMI Buds 8 活力版';
+  // REDMI Buds 8 青春版
+  if (/Buds\s*8.*青春/i.test(clean)) return 'REDMI Buds 8 青春版';
+  // REDMI Buds 8（不含Pro/活力/青春）
+  if (/Buds\s*8/i.test(clean)) return 'REDMI Buds 8';
+  // REDMI Buds 7S
+  if (/Buds\s*7\s*S/i.test(clean)) return 'REDMI Buds 7S';
+  // REDMI Buds 6 活力版
+  if (/Buds\s*6.*活力/i.test(clean)) return 'REDMI Buds 6 活力版';
+  // Xiaomi Buds 6
+  if (/Xiaomi\s*Buds\s*6/i.test(clean)) return 'Xiaomi Buds 6';
+  // 开放式耳机
+  if (/开放式|骨传导|耳夹/i.test(clean)) return '开放式/骨传导耳机';
+  // 其他耳机
+  if (/耳机|Buds|Air/i.test(clean)) return '其他耳机';
+
+  // AI眼镜
+  if (/眼镜|AI/i.test(clean) && !/手表|手环|耳机/i.test(clean)) return '小米AI眼镜';
+  // 充电配件
+  if (/充电|Type-C|数据线/i.test(clean)) return '充电/配件';
+  // 插线板
+  if (/插线板|插座/i.test(clean)) return '插线板';
+  // Tag
+  if (/Tag|定位|追踪/i.test(clean)) return 'Xiaomi Tag';
+  // 水浸
+  if (/水浸/i.test(clean)) return '小米水浸卫士';
+
+  // 未匹配的保留清理后的名称
+  return clean || name;
 }
 
 let charts = {};
