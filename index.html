@@ -633,20 +633,12 @@ function renderSidebar(config) {
     html += '<div class="nav-section">' + section.name + '</div>';
     section.modules.forEach(function(mod) {
       var cls = mod.id;
-      if (mod.hasSubMenu && mod.subModules) {
-        var subMenuId = 'subMenu_' + mod.id;
-        html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + (mod.url || '') + '" onclick="toggleSubMenu(this, \'' + subMenuId + '\')" class="' + cls + '">';
+      if (mod.hasSubMenu) {
+        html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" onclick="toggleSalesSub(this)" class="' + cls + '">';
         html += '<span class="nav-dot"></span> ' + mod.title;
         if (mod.badge) html += '<span class="badge-nav">' + mod.badge + '</span>';
         html += '<span class="sub-arrow">&#x25B8;</span></a>';
-        html += '<div class="sub-menu" id="' + subMenuId + '" style="display:none;">';
-        mod.subModules.forEach(function(sub) {
-          html += '<a data-module="' + sub.id + '" data-title="' + sub.title + '" data-url="' + sub.url + '" data-parent="' + mod.id + '" onclick="openSubModule(this)">';
-          html += '📅 ' + sub.title;
-          if (sub.badge) html += ' <span class="badge-nav">' + sub.badge + '</span>';
-          html += '</a>';
-        });
-        html += '</div>';
+        html += '<div class="sub-menu" id="salesSubMenu" style="display:none;"></div>';
       } else {
         html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" onclick="openModule(this)" class="' + cls + '">';
         html += '<span class="nav-dot"></span> ' + mod.title + '</a>';
@@ -679,11 +671,6 @@ function buildModuleRegistry(config) {
   config.sections.forEach(function(section) {
     section.modules.forEach(function(mod) {
       modules[mod.id] = { url: mod.url, title: mod.title };
-      if (mod.subModules) {
-        mod.subModules.forEach(function(sub) {
-          modules[sub.id] = { url: sub.url, title: sub.title };
-        });
-      }
     });
   });
 }
@@ -699,8 +686,8 @@ function openModule(el) {
   var sideLink = document.querySelector('.sidebar-nav > a[data-module="' + m + '"]');
   if (sideLink) sideLink.classList.add('active');
 
-  // Collapse all sub-menus
-  collapseAllSubs();
+  // Collapse sales sub-menu
+  collapseSalesSub();
 
   // Switch to iframe
   document.getElementById('overview').classList.add('hidden');
@@ -715,7 +702,7 @@ function openModule(el) {
 // ----- 回到首页 -----
 function goHome() {
   document.querySelectorAll('.sidebar-nav > a, .sub-menu a').forEach(function(a) { a.classList.remove('active'); });
-  collapseAllSubs();
+  collapseSalesSub();
   document.getElementById('overview').classList.remove('hidden');
   var iframe = document.getElementById('iframePanel');
   iframe.classList.remove('show');
@@ -723,47 +710,56 @@ function goHome() {
   document.getElementById('breadcrumb').innerHTML = '首页 / <span>工作台</span>';
 }
 
-// ----- 通用子菜单 -----
-function toggleSubMenu(el, subMenuId) {
-  var menu = document.getElementById(subMenuId);
+// ----- 销量日期子菜单 -----
+function buildSalesDates() {
+  var s = window.__STATS__;
+  if (!s || !s.dates) return;
+  var menu = document.getElementById('salesSubMenu');
+  if (!menu) return;
+  var html = '';
+  s.dates.slice().reverse().forEach(function(d) {
+    html += '<a data-date="' + d + '" onclick="openSalesDate(\'' + d + '\', this)">&#x1F4C5; ' + d + '</a>';
+  });
+  menu.innerHTML = html;
+}
+
+function toggleSalesSub(el) {
+  var menu = document.getElementById('salesSubMenu');
   if (!menu) return;
   var expanded = el.classList.contains('expanded');
   if (expanded) {
-    menu.style.display = 'none';
-    el.classList.remove('expanded');
+    collapseSalesSub();
     return;
   }
-  // Close all other sub-menus
-  collapseAllSubs();
+  if (!menu.children.length) buildSalesDates();
   menu.style.display = 'block';
   el.classList.add('expanded');
 }
 
-function collapseAllSubs() {
-  document.querySelectorAll('.sub-menu').forEach(function(m) { m.style.display = 'none'; });
-  document.querySelectorAll('.sidebar-nav > a.expanded').forEach(function(a) { a.classList.remove('expanded'); });
+function collapseSalesSub() {
+  var menu = document.getElementById('salesSubMenu');
+  if (menu) menu.style.display = 'none';
+  var salesLink = document.querySelector('.sidebar-nav > a[data-module="sales"]');
+  if (salesLink) salesLink.classList.remove('expanded');
 }
 
-function openSubModule(el) {
-  var url = el.dataset.url;
-  var title = el.dataset.title;
-  var parentId = el.dataset.parent;
-  if (!url) return;
-
-  // Clear all active
+function openSalesDate(date, el) {
   document.querySelectorAll('.sidebar-nav > a, .sub-menu a').forEach(function(a) { a.classList.remove('active'); });
-  var parentLink = document.querySelector('.sidebar-nav > a[data-module="' + parentId + '"]');
-  if (parentLink) parentLink.classList.add('active');
-  el.classList.add('active');
+  var salesLink = document.querySelector('.sidebar-nav > a[data-module="sales"]');
+  if (salesLink) salesLink.classList.add('active');
+  if (el) el.classList.add('active');
 
-  // Switch to iframe
   document.getElementById('overview').classList.add('hidden');
   var iframe = document.getElementById('iframePanel');
-  iframe.src = url;
   iframe.classList.add('show');
 
-  // Update breadcrumb
-  document.getElementById('breadcrumb').innerHTML = '首页 / <span>销售分析</span> / ' + title;
+  var targetUrl = 'sales_analysis/index.html#' + date;
+  if (iframe.src && iframe.src.indexOf('sales_analysis/index.html') !== -1) {
+    try { iframe.contentWindow.location.hash = '#' + date; } catch(e) { iframe.src = targetUrl; }
+  } else {
+    iframe.src = targetUrl;
+  }
+  document.getElementById('breadcrumb').innerHTML = '首页 / <span>销量分析</span> / ' + date;
 }
 
 // ----- 加载概览统计数据 -----
