@@ -150,6 +150,10 @@
   .daily-table .best-day { background: #f0fdf4; }
   .daily-table .worst-day { background: #fff5f5; }
 
+  /* Tab buttons for product-room and room-detail */
+  .tab-prodroom, .tab-roomdet { font-family: inherit; }
+  .tab-prodroom:hover, .tab-roomdet:hover { opacity: 0.85; }
+
   /* ===== RESPONSIVE ===== */
   @media (max-width: 900px) {
     .kpi-row { grid-template-columns: repeat(2, 1fr); }
@@ -255,6 +259,20 @@ return;
   <div class="hourly-breakdown">
     <h2>逐小时产品粒度分析</h2>
     <div class="hour-cards" id="hourCards"></div>
+  </div>
+
+  <!-- ===== 商品品类 × 直播间 分小时出单对比 ===== -->
+  <div class="chart-card full-width" id="prodRoomSection" style="margin:16px 0;">
+    <h2>商品品类 × 直播间 分小时出单对比</h2>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;" id="prodRoomTabs"></div>
+    <div id="prodRoomPanels"></div>
+  </div>
+
+  <!-- ===== 各直播间详细数据 -- 分小时分品类 + 环比 ===== -->
+  <div class="chart-card full-width" id="roomDetailSection" style="margin:16px 0;">
+    <h2>各直播间详细数据 — 分小时分品类 + 环比</h2>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;" id="roomDetailTabs"></div>
+    <div id="roomDetailPanels"></div>
   </div>
 
   <!-- 每日数据总结分析模块 -->
@@ -639,6 +657,8 @@ function renderAll(d, prev) {
   renderRoomCards(d);
   renderRoomHourlyOverlay(d);
   renderHourlyBreakdown(data);
+  renderProdRoomHourly(d);
+  renderRoomDetailHourly(d);
   renderDailySummary();
 }
 
@@ -915,6 +935,213 @@ function renderDailyInsights() {
   document.getElementById('dailyInsights').innerHTML =
     '<h3>关键洞察</h3>' +
     lines.map(function(l) { return '<div class="insight-line ' + l.cls + '">' + l.text + '</div>'; }).join('');
+}
+
+// ===== 商品品类 × 直播间 分小时出单对比 =====
+function renderProdRoomHourly(d) {
+  const section = document.getElementById('prodRoomSection');
+  const rooms = d.rooms || {};
+  const roomNames = Object.keys(rooms).sort((a,b) => rooms[b].orders - rooms[a].orders);
+  if (roomNames.length <= 1) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  // Collect all product categories across all rooms
+  const prodSet = {};
+  roomNames.forEach(rn => {
+    const prods = rooms[rn].products || {};
+    Object.keys(prods).forEach(p => { prodSet[p] = (prodSet[p]||0) + prods[p].orders; });
+  });
+  const prodOrder = Object.entries(prodSet).sort((a,b) => b[1]-a[1]).map(e => e[0]);
+
+  // Build tabs
+  let tabsHtml = '', panelsHtml = '';
+  prodOrder.forEach((prod, i) => {
+    tabsHtml += `<button class="tab-prodroom ${i===0?'active':''}" onclick="switchProdRoomTab(${i})" style="padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;border:1px solid #dde1e6;background:${i===0?'#4ECDC4':'#fff'};color:${i===0?'#fff':'#64748b'};font-weight:500;transition:all .2s">${prod}</button>`;
+
+    // Build table
+    panelsHtml += `<div class="prodroom-panel" id="prodroom-panel-${i}" style="display:${i===0?'block':'none'}">`;
+    panelsHtml += '<div style="overflow-x:auto;max-height:520px;overflow-y:auto;border-radius:8px;border:1px solid #e8ecf1">';
+    panelsHtml += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+    panelsHtml += '<thead><tr style="position:sticky;top:0;z-index:2"><th style="position:sticky;left:0;background:#f8f9fc;z-index:3;text-align:left;padding:8px 12px">小时</th>';
+    roomNames.forEach(rn => {
+      panelsHtml += `<th style="background:#f8f9fc;padding:6px 10px;text-align:center;font-size:11px">${rn}</th>`;
+    });
+    panelsHtml += '<th style="background:#fffde0;padding:6px 10px;text-align:center">合计</th></tr></thead><tbody>';
+
+    for (let h = 0; h < 24; h++) {
+      panelsHtml += `<tr><td style="position:sticky;left:0;background:#fff;font-weight:600;padding:6px 12px;z-index:1">${h}:00</td>`;
+      let rowTotal = 0;
+      roomNames.forEach(rn => {
+        const hd = (rooms[rn]._hourly_stats || {})[String(h)] || {};
+        const pp = (hd.products || {})[prod] || {};
+        const c = pp.orders || 0;
+        rowTotal += c;
+        panelsHtml += c > 0
+          ? `<td style="text-align:center;font-weight:700;color:#4ECDC4;padding:5px">${c}</td>`
+          : '<td style="text-align:center;color:#ddd;padding:5px">-</td>';
+      });
+      panelsHtml += `<td style="text-align:center;background:#fffde0;font-weight:700">${rowTotal || '-'}</td></tr>`;
+    }
+
+    // Totals row
+    panelsHtml += '<tr style="background:#f8fafc;font-weight:700"><td style="position:sticky;left:0;background:#f8fafc;font-weight:700;padding:8px 12px">合计</td>';
+    roomNames.forEach(rn => {
+      const c = (rooms[rn].products || {})[prod];
+      panelsHtml += `<td style="text-align:center;padding:6px">${c ? c.orders : '-'}</td>`;
+    });
+    panelsHtml += `<td style="text-align:center;background:#fffde0">${prodSet[prod]}</td></tr>`;
+    panelsHtml += '</tbody></table></div></div>';
+  });
+
+  document.getElementById('prodRoomTabs').innerHTML = tabsHtml;
+  document.getElementById('prodRoomPanels').innerHTML = panelsHtml;
+}
+
+function switchProdRoomTab(idx) {
+  document.querySelectorAll('.tab-prodroom').forEach((t, i) => {
+    t.classList.toggle('active', i === idx);
+    t.style.background = i === idx ? '#4ECDC4' : '#fff';
+    t.style.color = i === idx ? '#fff' : '#64748b';
+  });
+  document.querySelectorAll('.prodroom-panel').forEach((p, i) => {
+    p.style.display = i === idx ? 'block' : 'none';
+  });
+}
+
+// ===== 各直播间详细数据 -- 分小时分品类 + 环比 =====
+function renderRoomDetailHourly(d) {
+  const section = document.getElementById('roomDetailSection');
+  const rooms = d.rooms || {};
+  const roomNames = Object.keys(rooms).sort((a,b) => rooms[b].orders - rooms[a].orders);
+  if (roomNames.length === 0) { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  // Build product order from all rooms
+  const prodSet = {};
+  roomNames.forEach(rn => {
+    Object.keys(rooms[rn].products || {}).forEach(p => {
+      prodSet[p] = (prodSet[p]||0) + rooms[rn].products[p].orders;
+    });
+  });
+  const prodOrder = Object.entries(prodSet).sort((a,b) => b[1]-a[1]).map(e => e[0]);
+
+  // Yesterday data for DoD
+  let yesterdayRooms = {};
+  if (HISTORY.length > 1) {
+    const prev = HISTORY[HISTORY.length - 2];
+    yesterdayRooms = prev.rooms || {};
+  }
+
+  let tabsHtml = '', panelsHtml = '';
+  roomNames.forEach((rn, i) => {
+    const room = rooms[rn];
+    const yestRoom = yesterdayRooms[rn] || {};
+    const yestHourly = yestRoom._hourly_stats || {};
+
+    tabsHtml += `<button class="tab-roomdet ${i===0?'active':''}" onclick="switchRoomDetailTab(${i})" style="padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;border:1px solid #dde1e6;background:${i===0?'#667eea':'#fff'};color:${i===0?'#fff':'#64748b'};font-weight:500;transition:all .2s">${rn} (${room.orders}单)</button>`;
+
+    // Summary cards
+    const activeHours = Object.keys(room._hourly_stats || {}).length;
+    const yestOrders = yestRoom.orders || 0;
+    const dodPct = yestOrders > 0 ? ((room.orders - yestOrders) / yestOrders * 100).toFixed(1) : null;
+
+    panelsHtml += `<div class="roomdet-panel" id="roomdet-panel-${i}" style="display:${i===0?'block':'none'}">`;
+    panelsHtml += '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">';
+    panelsHtml += `<div style="flex:1;min-width:100px;background:#f5f3ff;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:800;color:#667eea">${room.orders}</div><div style="font-size:11px;color:#64748b">总订单</div></div>`;
+    panelsHtml += `<div style="flex:1;min-width:100px;background:#fff8f0;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:800;color:#f0a050">¥${Math.round(room.revenue).toLocaleString()}</div><div style="font-size:11px;color:#64748b">销售额</div></div>`;
+    panelsHtml += `<div style="flex:1;min-width:100px;background:#f0fdf6;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:800;color:#50b080">¥${Math.round(room.avg_price)}</div><div style="font-size:11px;color:#64748b">均价</div></div>`;
+    panelsHtml += `<div style="flex:1;min-width:100px;background:#eff6ff;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:800;color:#3b82f6">${Object.keys(room.products).length}</div><div style="font-size:11px;color:#64748b">品类数</div></div>`;
+    panelsHtml += `<div style="flex:1;min-width:100px;background:#fef3c7;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:800;color:#d97706">${activeHours}</div><div style="font-size:11px;color:#64748b">活跃小时</div></div>`;
+    if (dodPct !== null) {
+      const dodColor = parseFloat(dodPct) >= 0 ? '#e74c3c' : '#27ae60';
+      const arrow = parseFloat(dodPct) >= 0 ? '↑' : '↓';
+      panelsHtml += `<div style="flex:1;min-width:100px;background:#fdf2f8;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:800;color:${dodColor}">${arrow}${dodPct}%</div><div style="font-size:11px;color:#64748b">环比前日</div></div>`;
+    }
+    panelsHtml += '</div>';
+
+    // Hourly table
+    panelsHtml += '<div style="overflow-x:auto;max-height:500px;overflow-y:auto;border-radius:8px;border:1px solid #e8ecf1">';
+    panelsHtml += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
+    panelsHtml += '<thead><tr style="position:sticky;top:0;z-index:2"><th style="position:sticky;left:0;background:#f8f9fc;z-index:3;text-align:left;padding:8px 12px">小时</th>';
+    prodOrder.forEach(p => {
+      panelsHtml += `<th style="background:#f8f9fc;padding:6px 8px;text-align:center;font-size:11px">${p}</th>`;
+    });
+    panelsHtml += '<th style="background:#f0f4ff;padding:6px 8px;text-align:center">合计</th><th style="background:#fff8f0;padding:6px 8px;text-align:center">销售额</th><th style="background:#f0fff0;padding:6px 8px;text-align:center">环比</th></tr></thead><tbody>';
+
+    let prevRowTotal = null;
+    for (let h = 0; h < 24; h++) {
+      const hd = (room._hourly_stats || {})[String(h)] || {};
+      const hprods = hd.products || {};
+      const rowOrders = hd.orders || 0;
+      const rowRev = hd.revenue || 0;
+
+      if (rowOrders === 0) continue; // Skip empty hours
+
+      panelsHtml += `<tr><td style="position:sticky;left:0;background:#fff;font-weight:600;padding:6px 12px">${h}:00</td>`;
+      prodOrder.forEach(p => {
+        const c = (hprods[p] || {}).orders || 0;
+        panelsHtml += c > 0
+          ? `<td style="text-align:center;font-weight:600;color:#667eea;padding:5px">${c}</td>`
+          : '<td style="text-align:center;color:#ddd;padding:5px">-</td>';
+      });
+      panelsHtml += `<td style="text-align:center;background:#f0f4ff;font-weight:700">${rowOrders}</td>`;
+      panelsHtml += `<td style="text-align:center;background:#fff8f0;font-weight:600">¥${Math.round(rowRev).toLocaleString()}</td>`;
+
+      // DoD comparison
+      const yestHd = yestHourly[String(h)] || {};
+      const yestOrders = yestHd.orders || 0;
+      if (rowOrders === 0) {
+        panelsHtml += '<td style="text-align:center;color:#ddd">-</td>';
+      } else if (prevRowTotal === null || yestOrders === 0) {
+        panelsHtml += '<td style="text-align:center"><span style="font-size:10px;background:#ede9fe;color:#5b4fcf;padding:2px 6px;border-radius:4px">首单</span></td>';
+      } else {
+        const change = ((rowOrders - yestOrders) / yestOrders * 100);
+        if (change > 0) panelsHtml += `<td style="text-align:center;color:#e74c3c;font-weight:600">+${Math.round(change)}%</td>`;
+        else if (change < 0) panelsHtml += `<td style="text-align:center;color:#27ae60;font-weight:600">${Math.round(change)}%</td>`;
+        else panelsHtml += '<td style="text-align:center;color:#94a3b8">持平</td>';
+      }
+      panelsHtml += '</tr>';
+      if (rowOrders > 0) prevRowTotal = rowOrders;
+    }
+    panelsHtml += '</tbody></table></div>';
+
+    // Product time distribution
+    panelsHtml += '<div style="margin-top:12px;padding:12px 16px;background:#f8fafc;border-radius:8px;font-size:13px">';
+    panelsHtml += '<strong>各品类出单时段：</strong>';
+    const catHours = {};
+    Object.entries(room._hourly_stats || {}).forEach(([h, hd]) => {
+      Object.keys(hd.products || {}).forEach(p => {
+        if (!catHours[p]) catHours[p] = [];
+        catHours[p].push(parseInt(h));
+      });
+    });
+    Object.entries(catHours).sort((a,b) => {
+      const aTotal = (room.products[a[0]] || {}).orders || 0;
+      const bTotal = (room.products[b[0]] || {}).orders || 0;
+      return bTotal - aTotal;
+    }).forEach(([prod, hours]) => {
+      const total = (room.products[prod] || {}).orders || 0;
+      hours.sort((a,b) => a-b);
+      panelsHtml += `<div style="margin:3px 0">📦 <strong>${prod}</strong> (${total}单): ${hours.map(h=>h+':00').join(' → ')}</div>`;
+    });
+    panelsHtml += '</div>';
+
+    panelsHtml += '</div>';
+  });
+
+  document.getElementById('roomDetailTabs').innerHTML = tabsHtml;
+  document.getElementById('roomDetailPanels').innerHTML = panelsHtml;
+}
+
+function switchRoomDetailTab(idx) {
+  document.querySelectorAll('.tab-roomdet').forEach((t, i) => {
+    t.classList.toggle('active', i === idx);
+    t.style.background = i === idx ? '#667eea' : '#fff';
+    t.style.color = i === idx ? '#fff' : '#64748b';
+  });
+  document.querySelectorAll('.roomdet-panel').forEach((p, i) => {
+    p.style.display = i === idx ? 'block' : 'none';
+  });
 }
 
 function renderTodayInsights() {
