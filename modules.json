@@ -23,22 +23,17 @@
         },
         {
           "id": "sales",
-          "title": "6月销量分析",
-          "url": "sales_analysis/index.html",
+          "title": "销售分析",
+          "url": "六月销量分析.html",
           "icon": "📈",
-          "description": "6月每日订单追踪、竞对直播间对比、小时分布、产品结构分析",
+          "description": "小米手环直播间销量分析：每日追踪 + 月度汇总，分月份查看订单、销售额、竞争格局",
           "tag": "Live Sales",
           "badge": "HOT",
-          "hasSubMenu": true
-        },
-        {
-          "id": "juneSummary",
-          "title": "6月月度总结",
-          "url": "六月销量分析.html",
-          "icon": "📊",
-          "description": "6月全月销量汇总：直播间排名(按销售额)、产品结构、周度趋势、竞争格局",
-          "tag": "Monthly Report",
-          "badge": "NEW"
+          "hasSubMenu": true,
+          "subModules": [
+            { "id": "salesJune", "title": "六月", "url": "六月销量分析.html" },
+            { "id": "salesJuly", "title": "七月", "url": "七月销量分析.html", "badge": "NEW" }
+          ]
         },
         {
           "id": "violations",

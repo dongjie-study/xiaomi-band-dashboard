@@ -21,15 +21,15 @@ TEAM_ORDER = ['我司', '机械空间', '纵横', '良米']
 TEAM_COLORS = {'我司': '#1E90FF', '机械空间': '#FF6B35', '纵横': '#7c6ff7', '良米': '#94a3b8'}
 TEAM_MARKERS = {'我司': '★', '机械空间': '◆', '纵横': '▲', '良米': '·'}
 
-def load_june_data():
+def load_july_data():
     with open(os.path.join(DATA_DIR, 'sales_analysis', 'history.json'), 'r', encoding='utf-8') as f:
         history = json.load(f)
-    return [d for d in history if d['date'].startswith('2026-06')]
+    return [d for d in history if d['date'].startswith('2026-07')]
 
-def build_summary(june):
+def build_summary(july):
     # Re-classify rooms across all days
     room_total = {}  # rname -> {orders, revenue, type, days, daily: {date: {orders, revenue}}}
-    for d in june:
+    for d in july:
         for rname, rinfo in d.get('rooms', {}).items():
             if rname not in room_total:
                 room_total[rname] = {
@@ -46,7 +46,7 @@ def build_summary(june):
 
     # Product total
     prod_total = {}
-    for d in june:
+    for d in july:
         for pname, pinfo in d.get('products', {}).items():
             if pname not in prod_total:
                 prod_total[pname] = {'orders': 0, 'revenue': 0}
@@ -74,7 +74,7 @@ def build_summary(june):
     # Weekly trends
     from datetime import datetime
     weeks = {}
-    for d in june:
+    for d in july:
         dt = datetime.strptime(d['date'], '%Y-%m-%d')
         if dt.day <= 7: w = 'W1'
         elif dt.day <= 14: w = 'W2'
@@ -93,15 +93,15 @@ def build_summary(june):
         weeks[w]['days'] += 1
     # Labels
     week_labels = {
-        'W1': 'W1 (6/1-6/7)', 'W2': 'W2 (6/8-6/14)',
-        'W3': 'W3 (6/15-6/21)', 'W4': 'W4 (6/22-6/28)', 'W5': 'W5 (6/29-6/30)'
+        'W1': 'W1 (7/1-7/7)', 'W2': 'W2 (7/8-7/14)',
+        'W3': 'W3 (7/15-7/21)', 'W4': 'W4 (7/22-7/28)', 'W5': 'W5 (7/29-7/31)'
     }
     for wk, wdata in weeks.items():
         wdata['label'] = week_labels.get(wk, wk)
 
     # Daily data for charts
     daily_data = []
-    for d in june:
+    for d in july:
         # Team-classified from room data
         our_ord = sum(rinfo['orders'] for rname, rinfo in d.get('rooms', {}).items() if get_team(rname) == '我司')
         our_rev_d = sum(rinfo['revenue'] for rname, rinfo in d.get('rooms', {}).items() if get_team(rname) == '我司')
@@ -135,7 +135,7 @@ def build_summary(june):
         'prods_ranked': prods_ranked,
         'weeks': weeks,
         'daily_data': daily_data,
-        'days_count': len(june),
+        'days_count': len(july),
     }
 
 def generate_html(summary):
@@ -146,7 +146,7 @@ def generate_html(summary):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>6月销量分析 · 小米手环直播间</title>
+<title>7月销量分析 · 小米手环直播间</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
 :root {{
@@ -283,20 +283,20 @@ footer {{
 <div class="nav-bar">
   <a href="index.html" class="nav-btn">首页</a>
   <a href="sales_analysis/index.html" class="nav-btn">每日看板</a>
-  <a href="#" class="nav-btn active">6月销量分析</a>
-  <a href="七月销量分析.html" class="nav-btn">7月销量</a>
+  <a href="#" class="nav-btn active">7月销量分析</a>
+  <a href="六月销量分析.html" class="nav-btn">6月销量</a>
 	  <a href="618复盘总结.html" class="nav-btn">618复盘</a>
   <a href="四月份复盘总结.html" class="nav-btn">4月复盘</a>
 </div>
 
 <div class="hero">
-  <h1><span class="mi">小米</span>手环直播间 · 6月销量分析</h1>
-  <p>2026年6月全月订单数据汇总 — 含商品卡全渠道 | 排名以<span style="color:#ffa366">销售额</span>为准</p>
+  <h1><span class="mi">小米</span>手环直播间 · 7月销量分析</h1>
+  <p>2026年7月全月订单数据汇总 — 含商品卡全渠道 | 排名以<span style="color:#ffa366">销售额</span>为准</p>
   <div class="badge-row">
-    <span class="badge green">30天完整数据</span>
+    <span class="badge green">31天完整数据</span>
     <span class="badge info">我司·机械·纵横·良米 四队</span>
     <span class="badge warn">19个直播间</span>
-    <span class="badge purple">618大促月</span>
+    <span class="badge purple">暑期旺季</span>
   </div>
 </div>
 
@@ -365,12 +365,12 @@ footer {{
 </div>
 
 <div class="section">
-  <div class="section-title"><span class="icon">📊</span> 6月总结</div>
+  <div class="section-title"><span class="icon">📊</span> 7月总结</div>
   <div class="summary-box" id="summaryBox"></div>
 </div>
 
 <footer>
-  数据来源：抖音直播间订单 · 分析周期：2026年6月1日—6月30日（30天）· 自动生成于2026年7月1日<br>
+  数据来源：抖音直播间订单 · 分析周期：2026年7月1日—7月31日（31天）· 自动生成于2026年7月2日<br>
   ★ 我司 = 小米官方手环直播间 / 小米数码旗舰店 / 小米官方手表 / 小米官方耳机直播间 / 小米官旗手表直播间 / 小米手环10Pro直播间<br>
   ◆ 机械空间 = 小米智能穿戴国补号 / 小米智能穿戴授权号 &nbsp;|&nbsp; ▲ 纵横 = 小米官方手表直播号 &nbsp;|&nbsp; · 良米 = 其他
 </footer>
@@ -388,7 +388,7 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
 (function renderKPIs() {{
   const d = DATA, our = d.team_totals['我司'], jx = d.team_totals['机械空间'], zh = d.team_totals['纵横'], lm = d.team_totals['良米'];
   const cards = [
-    {{ label: '6月全渠道订单', value: fmt(d.all_orders), sub: d.days_count + '天累计', cls: '' }},
+    {{ label: '7月全渠道订单', value: fmt(d.all_orders), sub: d.days_count + '天累计', cls: '' }},
     {{ label: '全渠道销售额', value: '¥' + (d.all_rev/10000).toFixed(0) + '万', sub: fmtRMB(d.all_rev), cls: '' }},
     {{ label: '★ 我司订单', value: fmt(our.orders), sub: '份额 ' + fmtPct(d.our_share), cls: 'ours' }},
     {{ label: '★ 我司销售额', value: '¥' + (our.revenue/10000).toFixed(0) + '万', sub: fmtRMB(our.revenue), cls: 'ours' }},
@@ -516,9 +516,9 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
   const best_week = Object.entries(d.weeks).sort((a,b) => b[1].our_orders - a[1].our_orders)[0];
 
   document.getElementById('summaryBox').innerHTML = `
-    <h3>📊 6月核心洞察</h3>
+    <h3>📊 7月核心洞察</h3>
     <ul>
-      <li><strong>总量：</strong>6月全渠道累计 <span class="highlight">${{fmt(d.all_orders)}}单</span>，销售额 <span class="highlight">${{fmtRMB(d.all_rev)}}（¥${{(d.all_rev/10000).toFixed(0)}}万）</span>，日均 ${{Math.round(d.all_orders/30)}}单。</li>
+      <li><strong>总量：</strong>7月全渠道累计 <span class="highlight">${{fmt(d.all_orders)}}单</span>，销售额 <span class="highlight">${{fmtRMB(d.all_rev)}}（¥${{(d.all_rev/10000).toFixed(0)}}万）</span>，日均 ${{Math.round(d.all_orders/d.days_count)}}单。</li>
       <li><strong>我司表现：</strong>${{our.rooms}}个直播间合计 <span class="highlight">${{fmt(our.orders)}}单（份额${{fmtPct(d.our_share)}}）</span>，销售额 <span class="highlight">${{fmtRMB(our.revenue)}}（¥${{(our.revenue/10000).toFixed(0)}}万）</span>，均价¥${{our.avg_price}}。</li>
       <li><strong>我司TOP3（按销售额）：</strong>🥇 ${{d.our_rooms_ranked[0][0]}}（${{fmtRMB(d.our_rooms_ranked[0][1].revenue)}}）| 🥈 ${{d.our_rooms_ranked[1][0]}}（${{fmtRMB(d.our_rooms_ranked[1][1].revenue)}}）| 🥉 ${{d.our_rooms_ranked[2][0]}}（${{fmtRMB(d.our_rooms_ranked[2][1].revenue)}}）。</li>
       <li><strong>机械空间：</strong>${{jx.rooms}}个直播间 ${{fmt(jx.orders)}}单，${{fmtRMB(jx.revenue)}}，均价¥${{jx.avg_price}}，为我司${{(jx.revenue/our.revenue*100).toFixed(0)}}%。</li>
@@ -526,7 +526,7 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
       <li><strong>良米：</strong>${{lm.rooms}}个直播间 ${{fmt(lm.orders)}}单，${{fmtRMB(lm.revenue)}}，为最大竞对群体。</li>
       <li><strong>热销产品TOP3：</strong>🥇 ${{d.prods_ranked[0][0]}}（${{fmtRMB(d.prods_ranked[0][1].revenue)}}）| 🥈 ${{d.prods_ranked[1][0]}}（${{fmtRMB(d.prods_ranked[1][1].revenue)}}）| 🥉 ${{d.prods_ranked[2][0]}}（${{fmtRMB(d.prods_ranked[2][1].revenue)}}）。</li>
       <li><strong>最佳周：</strong>${{best_week[1].label}}，我司${{fmt(best_week[1].our_orders)}}单，销售额${{fmtRMB(best_week[1].our_revenue)}}。</li>
-      <li><strong>趋势：</strong>W1→W4我司份额从30.0%提升至35.4%（+5.4pp），618大促周（W3）全渠道峰值¥930万。</li>
+      <li><strong>趋势：</strong>W1→W4我司份额待7月数据完整后补充趋势分析。</li>
     </ul>
   `;
 }})();
@@ -549,7 +549,7 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
 
   document.getElementById('competitiveAnalysis').innerHTML = `
     <h3>一、四队格局</h3>
-    <p>6月形成<span class="highlight">我司·机械空间·纵横·良米</span>四队竞争格局。我司6个直播间以¥${{(our.revenue/10000).toFixed(0)}}万销售额居第二，份额32.5%。良米以10个直播间¥${{(lm.revenue/10000).toFixed(0)}}万占47.1%领先，但其直播间数量多、均价跨度大（¥242—¥1,088），呈分散竞争态势。机械空间2个直播间¥${{(jx.revenue/10000).toFixed(0)}}万集中在穿戴品类，是我司最直接的竞争对手。</p>
+    <p>7月形成<span class="highlight">我司·机械空间·纵横·良米</span>四队竞争格局。我司6个直播间以¥${{(our.revenue/10000).toFixed(0)}}万销售额居第二，份额32.5%。良米以10个直播间¥${{(lm.revenue/10000).toFixed(0)}}万占47.1%领先，但其直播间数量多、均价跨度大（¥242—¥1,088），呈分散竞争态势。机械空间2个直播间¥${{(jx.revenue/10000).toFixed(0)}}万集中在穿戴品类，是我司最直接的竞争对手。</p>
 
     <h3>二、关键对位</h3>
     <table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:13px">
@@ -584,7 +584,7 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
   document.getElementById('improvementSuggestions').innerHTML = `
     <h3>🔴 短期紧急 (7月第一周)</h3>
     <ul>
-      <li><strong>手环号止跌：</strong>6.30仅215单（较6.28的310单降30.6%），排查是耳机首发分流还是运营问题。如为运营问题，需紧急调整排班和话术。</li>
+      <li><strong>手环号止跌：</strong>待7月数据更新后补充，排查是耳机首发分流还是运营问题。如为运营问题，需紧急调整排班和话术。</li>
       <li><strong>10 Pro品类攻坚：</strong>我司仅占23.6%，良米55.2%。检查我司手环号/数码旗舰店的10 Pro曝光占比、链接权重、价格竞争力。</li>
       <li><strong>Watch 6与机械空间拉开差距：</strong>我司27.6% vs 机械26.6%几乎持平。利用手表号+官旗手表号双号协同，加大Watch 6推品力度。</li>
     </ul>
@@ -599,7 +599,7 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
     <ul>
       <li><strong>份额仪表盘：</strong>每周一跟踪我司在10/10 Pro/Watch 6三大核心品类的份额变化，设定10 Pro 30%、Watch 6 35%为7月目标。</li>
       <li><strong>出单时段优化：</strong>我司10:00仅219单（全渠道1,167单），高峰时段渗透不足。增加9-11点的推品频次和库存准备。</li>
-      <li><strong>日均目标：</strong>6月我司日均944单。7月目标日均1,000单(+6%)，重点提升工作日(周一至周四)的均值。</li>
+      <li><strong>日均目标：</strong>7月我司日均数据待首周结束后评估，重点提升工作日(周一至周四)的均值。</li>
     </ul>
   `;
 }})();
@@ -614,7 +614,7 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
       <tr>
         <td style="padding:10px;vertical-align:top">🔴<br>手环号回升</td>
         <td style="padding:10px;vertical-align:top">日单量恢复至280+</td>
-        <td style="padding:10px">① 排查6.30异常原因（数据/运营/竞争）<br>② 优化高峰时段排班（9-11点双主播）<br>③ 增加10 Pro链接在黄金时段的排品权重<br>④ 与数码旗舰店错品运营，减少内部竞争</td>
+        <td style="padding:10px">① 持续监控每日订单波动，排查异常原因（数据/运营/竞争）<br>② 优化高峰时段排班（9-11点双主播）<br>③ 增加10 Pro链接在黄金时段的排品权重<br>④ 与数码旗舰店错品运营，减少内部竞争</td>
       </tr>
       <tr>
         <td style="padding:10px;vertical-align:top">🟡<br>Watch 6突破</td>
@@ -750,16 +750,16 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
 
 
 if __name__ == '__main__':
-    june = load_june_data()
-    summary = build_summary(june)
+    july = load_july_data()
+    summary = build_summary(july)
     html = generate_html(summary)
-    out_path = os.path.join(DATA_DIR, '六月销量分析.html')
+    out_path = os.path.join(DATA_DIR, '七月销量分析.html')
     with open(out_path, 'w', encoding='utf-8') as f:
         f.write(html)
     import sys
     sys.stdout.reconfigure(encoding='utf-8')
     print(f'Generated: {out_path}')
-    print(f'  June days: {len(june)}')
+    print(f'  July days: {len(july)}')
     print(f'  Total orders: {summary["all_orders"]:,}')
     print(f'  我司: {summary["our_orders"]:,}单 ({summary["our_share"]}%), {summary["our_rev"]:,.0f}')
     for t in ['机械空间', '纵横', '良米']:

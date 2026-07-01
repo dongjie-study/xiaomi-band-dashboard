@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>7月销量分析 · 小米手环直播间</title>
+<style>
+:root {
+  --bg: #f0f4f8; --surface: #ffffff; --text: #0f172a; --text-secondary: #64748b;
+  --text-muted: #9ca3af; --border: #e8ecf1; --shadow-md: 0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,.10);
+  --radius: 14px; --clr-orange: #ff6900; --clr-ours: #1E90FF;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(circle, rgba(148,163,184,.10) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.nav-bar {
+  display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+  padding: 10px 16px; background: rgba(255,255,255,.9);
+  backdrop-filter: blur(14px); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,.03);
+}
+.nav-btn {
+  padding: 7px 18px; border-radius: 20px; border: 1.5px solid #dde1e6;
+  background: #fff; color: #555; font-size: 12.5px; cursor: pointer;
+  text-decoration: none; transition: all 0.25s; font-family: inherit; font-weight: 500;
+}
+.nav-btn:hover { border-color: var(--clr-orange); color: var(--clr-orange); background: #fff7ed; }
+.nav-btn.active { background: linear-gradient(135deg, var(--clr-orange), #ff8c42); color: #fff; border-color: transparent; font-weight: 600; box-shadow: 0 2px 8px rgba(255,105,0,.2); }
+.hero {
+  position: relative; z-index: 1;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  color: white; padding: 48px 20px 40px; text-align: center;
+  box-shadow: 0 4px 24px rgba(15,52,96,.15);
+}
+.hero h1 { font-size: 38px; font-weight: 800; letter-spacing: -.02em; }
+.hero h1 .mi { color: var(--clr-orange); }
+.hero p { font-size: 15px; opacity: 0.85; margin-top: 8px; max-width: 700px; margin-left: auto; margin-right: auto; }
+.hero .badge-row { margin-top: 16px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.hero .badge { padding: 5px 16px; border-radius: 16px; font-size: 12px; font-weight: 600; letter-spacing: .03em; }
+.badge.green { background: rgba(29,168,92,.18); color: #5ddf8a; }
+.badge.info { background: rgba(30,144,255,.18); color: #80c8ff; }
+.badge.warn { background: rgba(255,105,0,.18); color: #ffa366; }
+.badge.purple { background: rgba(124,111,247,.18); color: #b5a8ff; }
+.kpi-row {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;
+  max-width: 1500px; margin: -28px auto 0; padding: 0 20px; position: relative; z-index: 10;
+}
+@media (max-width: 1100px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+.kpi-card {
+  background: var(--surface); border-radius: var(--radius); padding: 18px 10px; text-align: center;
+  box-shadow: var(--shadow-md); border: 1px solid var(--border);
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.kpi-card .label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+.kpi-card .value { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+.kpi-card .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.kpi-card.ours .value { color: var(--clr-ours); }
+.section { max-width: 1500px; margin: 28px auto; padding: 0 20px; position: relative; z-index: 1; }
+.section-title { font-size: 22px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+.section-title .icon { font-size: 24px; }
+.placeholder-card {
+  background: var(--surface); border-radius: var(--radius); padding: 48px 32px;
+  box-shadow: var(--shadow-md); border: 1px solid var(--border); text-align: center;
+}
+.placeholder-card .icon-large { font-size: 64px; margin-bottom: 16px; }
+.placeholder-card h2 { font-size: 22px; color: var(--text); margin-bottom: 8px; }
+.placeholder-card p { color: var(--text-secondary); font-size: 14px; max-width: 500px; margin: 0 auto; line-height: 1.8; }
+.placeholder-card .status-row { margin-top: 24px; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+.placeholder-card .status-item {
+  background: #f8fafc; border-radius: 10px; padding: 16px 24px;
+  border: 1px solid var(--border); min-width: 140px;
+}
+.placeholder-card .status-item .num { font-size: 28px; font-weight: 800; color: var(--clr-orange); }
+.placeholder-card .status-item .txt { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+footer {
+  text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 12px;
+}
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <a href="index.html" class="nav-btn">首页</a>
+  <a href="sales_analysis/index.html" class="nav-btn">每日看板</a>
+  <a href="六月销量分析.html" class="nav-btn">6月销量</a>
+  <a href="#" class="nav-btn active">7月销量分析</a>
+  <a href="618复盘总结.html" class="nav-btn">618复盘</a>
+  <a href="四月份复盘总结.html" class="nav-btn">4月复盘</a>
+</div>
+
+<div class="hero">
+  <h1><span class="mi">小米</span>手环直播间 · 7月销量分析</h1>
+  <p>2026年7月全月订单数据汇总 — 含商品卡全渠道 | 排名以<span style="color:#ffa366">销售额</span>为准</p>
+  <div class="badge-row">
+    <span class="badge green">31天完整数据</span>
+    <span class="badge info">我司·机械·纵横·良米 四队</span>
+    <span class="badge warn">19个直播间</span>
+    <span class="badge purple">暑期旺季</span>
+  </div>
+</div>
+
+<div class="kpi-row">
+  <div class="kpi-card"><div class="label">7月全渠道订单</div><div class="value">--</div><div class="sub">数据收集中...</div></div>
+  <div class="kpi-card"><div class="label">全渠道销售额</div><div class="value">--</div><div class="sub">数据收集中...</div></div>
+  <div class="kpi-card ours"><div class="label">★ 我司订单</div><div class="value">--</div><div class="sub">数据收集中...</div></div>
+  <div class="kpi-card ours"><div class="label">★ 我司销售额</div><div class="value">--</div><div class="sub">数据收集中...</div></div>
+  <div class="kpi-card"><div class="label">我司均价</div><div class="value">--</div><div class="sub">数据收集中...</div></div>
+  <div class="kpi-card"><div class="label">主要竞对</div><div class="value">--</div><div class="sub">数据收集中...</div></div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="icon">📊</span> 7月数据看板</div>
+  <div class="placeholder-card">
+    <div class="icon-large">📅</div>
+    <h2>7月数据即将上线</h2>
+    <p>当前为2026年7月初，销量数据正在收集中。<br>每日数据将通过 <strong>daily_update.py</strong> 自动入库，月度汇总将在月底或数据齐全后自动生成。</p>
+    <div class="status-row">
+      <div class="status-item"><div class="num">0</div><div class="txt">已入库天数</div></div>
+      <div class="status-item"><div class="num">31</div><div class="txt">目标天数</div></div>
+      <div class="status-item"><div class="num">7/1</div><div class="txt">数据起始日期</div></div>
+    </div>
+    <p style="margin-top:20px;font-size:13px;color:var(--text-muted)">
+      ⚡ 提交7月订单Excel后，运行 <code>python run_all.py</code> 即可自动更新数据<br>
+      ⚡ 月底运行 <code>python generate_july_summary.py</code> 生成完整月度报告
+    </p>
+  </div>
+</div>
+
+<footer>
+  数据来源：抖音直播间订单 · 分析周期：2026年7月1日—7月31日（31天）· 页面创建于2026年7月2日<br>
+  ★ 我司 = 小米官方手环直播间 / 小米数码旗舰店 / 小米官方手表 / 小米官方耳机直播间 / 小米官旗手表直播间 / 小米手环10Pro直播间<br>
+  ◆ 机械空间 = 小米智能穿戴国补号 / 小米智能穿戴授权号 &nbsp;|&nbsp; ▲ 纵横 = 小米官方手表直播号 &nbsp;|&nbsp; · 良米 = 其他
+</footer>
+
+</body>
+</html>
