@@ -383,38 +383,13 @@ function formatChange(current, previous) {
   return `<span class="change ${cls}">${sign}${diff.toLocaleString()} (${sign}${pct}%)</span>`;
 }
 
-// 产品归类：合并同类产品到大类分析
+// 产品归类：保留主要产品名，仅合并配件类小项
 function groupProduct(name) {
-  // 手环10系列（含10和10 Pro）
-  if (/手环10/.test(name)) return '小米手环10系列';
-  // 手环9系列
-  if (/手环9/.test(name)) return '小米手环9系列';
-  // 手环其他
-  if (/手环|Band/.test(name)) return '其他手环';
-  // Watch S系列
-  if (/Watch S\d|WatchS\d/i.test(name)) return 'Xiaomi Watch S系列';
-  // REDMI Watch
-  if (/REDMI Watch|Watch 6|Watch6/i.test(name)) return 'REDMI Watch 6';
-  // 其他手表
-  if (/手表|Watch/i.test(name)) return '其他手表';
-  // Buds 8系列
-  if (/Buds 8/.test(name)) return 'REDMI Buds 8系列';
-  // Buds 7系列
-  if (/Buds 7/.test(name)) return 'REDMI Buds 7系列';
-  // Buds 6系列
-  if (/Buds 6/.test(name)) return 'REDMI Buds 6系列';
-  // 开放式耳机/骨传导
-  if (/开放式|骨传导|耳夹/.test(name)) return '开放式/骨传导耳机';
-  // 头戴耳机
-  if (/头戴/.test(name)) return '头戴式耳机';
-  // 其他耳机
-  if (/耳机|Buds|Air\s?\d/i.test(name)) return '其他耳机';
-  // AI眼镜
-  if (/眼镜|AI/.test(name)) return '智能眼镜';
-  // 充电配件
+  // 充电配件合并
   if (/充电|Type-C|数据线/.test(name)) return '充电/配件';
-  // 插线板
+  // 插线板合并
   if (/插线板|插座/.test(name)) return '插线板';
+  // 其余全部保留原名（手环10/10Pro、Watch S4/S5、各代Buds等各自独立）
   return name;
 }
 
