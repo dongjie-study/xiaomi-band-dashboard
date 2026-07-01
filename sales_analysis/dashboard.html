@@ -383,6 +383,41 @@ function formatChange(current, previous) {
   return `<span class="change ${cls}">${sign}${diff.toLocaleString()} (${sign}${pct}%)</span>`;
 }
 
+// 产品归类：合并同类产品到大类分析
+function groupProduct(name) {
+  // 手环10系列（含10和10 Pro）
+  if (/手环10/.test(name)) return '小米手环10系列';
+  // 手环9系列
+  if (/手环9/.test(name)) return '小米手环9系列';
+  // 手环其他
+  if (/手环|Band/.test(name)) return '其他手环';
+  // Watch S系列
+  if (/Watch S\d|WatchS\d/i.test(name)) return 'Xiaomi Watch S系列';
+  // REDMI Watch
+  if (/REDMI Watch|Watch 6|Watch6/i.test(name)) return 'REDMI Watch 6';
+  // 其他手表
+  if (/手表|Watch/i.test(name)) return '其他手表';
+  // Buds 8系列
+  if (/Buds 8/.test(name)) return 'REDMI Buds 8系列';
+  // Buds 7系列
+  if (/Buds 7/.test(name)) return 'REDMI Buds 7系列';
+  // Buds 6系列
+  if (/Buds 6/.test(name)) return 'REDMI Buds 6系列';
+  // 开放式耳机/骨传导
+  if (/开放式|骨传导|耳夹/.test(name)) return '开放式/骨传导耳机';
+  // 头戴耳机
+  if (/头戴/.test(name)) return '头戴式耳机';
+  // 其他耳机
+  if (/耳机|Buds|Air\s?\d/i.test(name)) return '其他耳机';
+  // AI眼镜
+  if (/眼镜|AI/.test(name)) return '智能眼镜';
+  // 充电配件
+  if (/充电|Type-C|数据线/.test(name)) return '充电/配件';
+  // 插线板
+  if (/插线板|插座/.test(name)) return '插线板';
+  return name;
+}
+
 let charts = {};
 function destroyCharts() {
   Object.values(charts).forEach(c => c.destroy());
@@ -938,6 +973,32 @@ function renderDailyInsights() {
 }
 
 // ===== 商品品类 × 直播间 分小时出单对比 =====
+// 构建房间产品归并数据
+function getGroupedRoomData(roomData) {
+  const grouped = { products: {}, _hourly_stats: {} };
+  // Merge products
+  Object.entries(roomData.products || {}).forEach(([p, info]) => {
+    const g = groupProduct(p);
+    if (!grouped.products[g]) grouped.products[g] = { orders: 0, revenue: 0 };
+    grouped.products[g].orders += info.orders;
+    grouped.products[g].revenue += info.revenue;
+  });
+  // Merge hourly stats
+  Object.entries(roomData._hourly_stats || {}).forEach(([h, hd]) => {
+    if (!grouped._hourly_stats[h]) grouped._hourly_stats[h] = { orders: 0, revenue: 0, products: {} };
+    grouped._hourly_stats[h].orders += hd.orders || 0;
+    grouped._hourly_stats[h].revenue += hd.revenue || 0;
+    Object.entries(hd.products || {}).forEach(([p, pinfo]) => {
+      const g = groupProduct(p);
+      if (!grouped._hourly_stats[h].products[g]) grouped._hourly_stats[h].products[g] = { orders: 0, revenue: 0 };
+      grouped._hourly_stats[h].products[g].orders += pinfo.orders || 0;
+      grouped._hourly_stats[h].products[g].revenue += pinfo.revenue || 0;
+    });
+  });
+  return grouped;
+}
+
+// ===== 商品品类 × 直播间 分小时出单对比 =====
 function renderProdRoomHourly(d) {
   const section = document.getElementById('prodRoomSection');
   const rooms = d.rooms || {};
@@ -945,20 +1006,21 @@ function renderProdRoomHourly(d) {
   if (roomNames.length <= 1) { section.style.display = 'none'; return; }
   section.style.display = '';
 
-  // Collect all product categories across all rooms
+  // Build grouped room data and collect merged product totals
+  const groupedRooms = {};
   const prodSet = {};
   roomNames.forEach(rn => {
-    const prods = rooms[rn].products || {};
-    Object.keys(prods).forEach(p => { prodSet[p] = (prodSet[p]||0) + prods[p].orders; });
+    groupedRooms[rn] = getGroupedRoomData(rooms[rn]);
+    Object.entries(groupedRooms[rn].products).forEach(([g, info]) => {
+      prodSet[g] = (prodSet[g] || 0) + info.orders;
+    });
   });
   const prodOrder = Object.entries(prodSet).sort((a,b) => b[1]-a[1]).map(e => e[0]);
 
-  // Build tabs
   let tabsHtml = '', panelsHtml = '';
   prodOrder.forEach((prod, i) => {
     tabsHtml += `<button class="tab-prodroom ${i===0?'active':''}" onclick="switchProdRoomTab(${i})" style="padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;border:1px solid #dde1e6;background:${i===0?'#4ECDC4':'#fff'};color:${i===0?'#fff':'#64748b'};font-weight:500;transition:all .2s">${prod}</button>`;
 
-    // Build table
     panelsHtml += `<div class="prodroom-panel" id="prodroom-panel-${i}" style="display:${i===0?'block':'none'}">`;
     panelsHtml += '<div style="overflow-x:auto;max-height:520px;overflow-y:auto;border-radius:8px;border:1px solid #e8ecf1">';
     panelsHtml += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
@@ -972,7 +1034,7 @@ function renderProdRoomHourly(d) {
       panelsHtml += `<tr><td style="position:sticky;left:0;background:#fff;font-weight:600;padding:6px 12px;z-index:1">${h}:00</td>`;
       let rowTotal = 0;
       roomNames.forEach(rn => {
-        const hd = (rooms[rn]._hourly_stats || {})[String(h)] || {};
+        const hd = (groupedRooms[rn]._hourly_stats[String(h)] || {});
         const pp = (hd.products || {})[prod] || {};
         const c = pp.orders || 0;
         rowTotal += c;
@@ -983,10 +1045,9 @@ function renderProdRoomHourly(d) {
       panelsHtml += `<td style="text-align:center;background:#fffde0;font-weight:700">${rowTotal || '-'}</td></tr>`;
     }
 
-    // Totals row
     panelsHtml += '<tr style="background:#f8fafc;font-weight:700"><td style="position:sticky;left:0;background:#f8fafc;font-weight:700;padding:8px 12px">合计</td>';
     roomNames.forEach(rn => {
-      const c = (rooms[rn].products || {})[prod];
+      const c = groupedRooms[rn].products[prod];
       panelsHtml += `<td style="text-align:center;padding:6px">${c ? c.orders : '-'}</td>`;
     });
     panelsHtml += `<td style="text-align:center;background:#fffde0">${prodSet[prod]}</td></tr>`;
@@ -1016,33 +1077,39 @@ function renderRoomDetailHourly(d) {
   if (roomNames.length === 0) { section.style.display = 'none'; return; }
   section.style.display = '';
 
-  // Build product order from all rooms
+  // Build grouped data for all rooms
+  const groupedRooms = {};
+  roomNames.forEach(rn => { groupedRooms[rn] = getGroupedRoomData(rooms[rn]); });
+
+  // Build product order from grouped products
   const prodSet = {};
   roomNames.forEach(rn => {
-    Object.keys(rooms[rn].products || {}).forEach(p => {
-      prodSet[p] = (prodSet[p]||0) + rooms[rn].products[p].orders;
+    Object.entries(groupedRooms[rn].products).forEach(([g, info]) => {
+      prodSet[g] = (prodSet[g] || 0) + info.orders;
     });
   });
   const prodOrder = Object.entries(prodSet).sort((a,b) => b[1]-a[1]).map(e => e[0]);
 
   // Yesterday data for DoD
-  let yesterdayRooms = {};
+  let yesterdayGrouped = {};
   if (HISTORY.length > 1) {
     const prev = HISTORY[HISTORY.length - 2];
-    yesterdayRooms = prev.rooms || {};
+    Object.entries(prev.rooms || {}).forEach(([rn, rdata]) => {
+      yesterdayGrouped[rn] = getGroupedRoomData(rdata);
+    });
   }
 
   let tabsHtml = '', panelsHtml = '';
   roomNames.forEach((rn, i) => {
     const room = rooms[rn];
-    const yestRoom = yesterdayRooms[rn] || {};
-    const yestHourly = yestRoom._hourly_stats || {};
+    const grouped = groupedRooms[rn];
+    const yestGrouped = yesterdayGrouped[rn] || {};
+    const yestHourly = yestGrouped._hourly_stats || {};
 
     tabsHtml += `<button class="tab-roomdet ${i===0?'active':''}" onclick="switchRoomDetailTab(${i})" style="padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;border:1px solid #dde1e6;background:${i===0?'#667eea':'#fff'};color:${i===0?'#fff':'#64748b'};font-weight:500;transition:all .2s">${rn} (${room.orders}单)</button>`;
 
-    // Summary cards
-    const activeHours = Object.keys(room._hourly_stats || {}).length;
-    const yestOrders = yestRoom.orders || 0;
+    const activeHours = Object.keys(grouped._hourly_stats).length;
+    const yestOrders = yestGrouped.orders || 0;
     const dodPct = yestOrders > 0 ? ((room.orders - yestOrders) / yestOrders * 100).toFixed(1) : null;
 
     panelsHtml += `<div class="roomdet-panel" id="roomdet-panel-${i}" style="display:${i===0?'block':'none'}">`;
@@ -1050,7 +1117,7 @@ function renderRoomDetailHourly(d) {
     panelsHtml += `<div style="flex:1;min-width:100px;background:#f5f3ff;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:800;color:#667eea">${room.orders}</div><div style="font-size:11px;color:#64748b">总订单</div></div>`;
     panelsHtml += `<div style="flex:1;min-width:100px;background:#fff8f0;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:800;color:#f0a050">¥${Math.round(room.revenue).toLocaleString()}</div><div style="font-size:11px;color:#64748b">销售额</div></div>`;
     panelsHtml += `<div style="flex:1;min-width:100px;background:#f0fdf6;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:800;color:#50b080">¥${Math.round(room.avg_price)}</div><div style="font-size:11px;color:#64748b">均价</div></div>`;
-    panelsHtml += `<div style="flex:1;min-width:100px;background:#eff6ff;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:800;color:#3b82f6">${Object.keys(room.products).length}</div><div style="font-size:11px;color:#64748b">品类数</div></div>`;
+    panelsHtml += `<div style="flex:1;min-width:100px;background:#eff6ff;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:800;color:#3b82f6">${Object.keys(grouped.products).length}</div><div style="font-size:11px;color:#64748b">品类数</div></div>`;
     panelsHtml += `<div style="flex:1;min-width:100px;background:#fef3c7;border-radius:10px;padding:14px;text-align:center"><div style="font-size:24px;font-weight:800;color:#d97706">${activeHours}</div><div style="font-size:11px;color:#64748b">活跃小时</div></div>`;
     if (dodPct !== null) {
       const dodColor = parseFloat(dodPct) >= 0 ? '#e74c3c' : '#27ae60';
@@ -1068,14 +1135,12 @@ function renderRoomDetailHourly(d) {
     });
     panelsHtml += '<th style="background:#f0f4ff;padding:6px 8px;text-align:center">合计</th><th style="background:#fff8f0;padding:6px 8px;text-align:center">销售额</th><th style="background:#f0fff0;padding:6px 8px;text-align:center">环比</th></tr></thead><tbody>';
 
-    let prevRowTotal = null;
     for (let h = 0; h < 24; h++) {
-      const hd = (room._hourly_stats || {})[String(h)] || {};
+      const hd = (grouped._hourly_stats[String(h)] || {});
       const hprods = hd.products || {};
       const rowOrders = hd.orders || 0;
       const rowRev = hd.revenue || 0;
-
-      if (rowOrders === 0) continue; // Skip empty hours
+      if (rowOrders === 0) continue;
 
       panelsHtml += `<tr><td style="position:sticky;left:0;background:#fff;font-weight:600;padding:6px 12px">${h}:00</td>`;
       prodOrder.forEach(p => {
@@ -1087,12 +1152,11 @@ function renderRoomDetailHourly(d) {
       panelsHtml += `<td style="text-align:center;background:#f0f4ff;font-weight:700">${rowOrders}</td>`;
       panelsHtml += `<td style="text-align:center;background:#fff8f0;font-weight:600">¥${Math.round(rowRev).toLocaleString()}</td>`;
 
-      // DoD comparison
       const yestHd = yestHourly[String(h)] || {};
       const yestOrders = yestHd.orders || 0;
       if (rowOrders === 0) {
         panelsHtml += '<td style="text-align:center;color:#ddd">-</td>';
-      } else if (prevRowTotal === null || yestOrders === 0) {
+      } else if (yestOrders === 0) {
         panelsHtml += '<td style="text-align:center"><span style="font-size:10px;background:#ede9fe;color:#5b4fcf;padding:2px 6px;border-radius:4px">首单</span></td>';
       } else {
         const change = ((rowOrders - yestOrders) / yestOrders * 100);
@@ -1101,7 +1165,6 @@ function renderRoomDetailHourly(d) {
         else panelsHtml += '<td style="text-align:center;color:#94a3b8">持平</td>';
       }
       panelsHtml += '</tr>';
-      if (rowOrders > 0) prevRowTotal = rowOrders;
     }
     panelsHtml += '</tbody></table></div>';
 
@@ -1109,18 +1172,18 @@ function renderRoomDetailHourly(d) {
     panelsHtml += '<div style="margin-top:12px;padding:12px 16px;background:#f8fafc;border-radius:8px;font-size:13px">';
     panelsHtml += '<strong>各品类出单时段：</strong>';
     const catHours = {};
-    Object.entries(room._hourly_stats || {}).forEach(([h, hd]) => {
+    Object.entries(grouped._hourly_stats).forEach(([h, hd]) => {
       Object.keys(hd.products || {}).forEach(p => {
         if (!catHours[p]) catHours[p] = [];
         catHours[p].push(parseInt(h));
       });
     });
     Object.entries(catHours).sort((a,b) => {
-      const aTotal = (room.products[a[0]] || {}).orders || 0;
-      const bTotal = (room.products[b[0]] || {}).orders || 0;
+      const aTotal = (grouped.products[a[0]] || {}).orders || 0;
+      const bTotal = (grouped.products[b[0]] || {}).orders || 0;
       return bTotal - aTotal;
     }).forEach(([prod, hours]) => {
-      const total = (room.products[prod] || {}).orders || 0;
+      const total = (grouped.products[prod] || {}).orders || 0;
       hours.sort((a,b) => a-b);
       panelsHtml += `<div style="margin:3px 0">📦 <strong>${prod}</strong> (${total}单): ${hours.map(h=>h+':00').join(' → ')}</div>`;
     });
