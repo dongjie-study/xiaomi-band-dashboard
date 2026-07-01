@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>小米系直播间违规情况分析报告</title>
+<title>小米系直播间违规情况分析报告（6月完整版）</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
 :root {
@@ -13,6 +13,7 @@
   --text-secondary: #64748b;
   --accent: #e94560;
   --accent-blue: #3867d6;
+  --accent-green: #20bf6b;
   --shadow-sm: 0 1px 3px rgba(0,0,0,.04);
   --shadow-md: 0 4px 16px rgba(0,0,0,.06);
   --shadow-lg: 0 8px 30px rgba(0,0,0,.10);
@@ -24,18 +25,20 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC"
 body::before { content: ''; position: fixed; inset: 0; background-image: radial-gradient(circle, rgba(148,163,184,.12) 1px, transparent 1px); background-size: 24px 24px; pointer-events: none; z-index: 0; }
 .header { position: relative; z-index: 1; background: linear-gradient(135deg, #fff 0%, #fdf2f4 100%); padding: 36px 40px; border-bottom: 3px solid var(--accent); text-align: center; box-shadow: 0 2px 16px rgba(233,69,96,.08); }
 .header h1 { font-size: 28px; font-weight: 800; color: var(--text); margin-bottom: 8px; letter-spacing: -.02em; }
+.header h1 .badge-new { display: inline-block; background: #e94560; color: #fff; font-size: 12px; padding: 3px 10px; border-radius: 10px; vertical-align: middle; margin-left: 8px; }
 .header p { color: var(--text-secondary); font-size: 14px; }
-.stats-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; padding: 24px 40px; max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
-.stat-card { background: var(--surface); border-radius: var(--radius); padding: 24px 20px; text-align: center; border: 1px solid #e8ecf1; box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition); }
+.stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; padding: 24px 40px; max-width: 1500px; margin: 0 auto; position: relative; z-index: 1; }
+.stat-card { background: var(--surface); border-radius: var(--radius); padding: 20px 16px; text-align: center; border: 1px solid #e8ecf1; box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition); }
 .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
-.stat-card .num { font-size: 36px; font-weight: 800; line-height: 1.2; }
-.stat-card .label { font-size: 13px; color: var(--text-secondary); margin-top: 6px; font-weight: 500; }
+.stat-card .num { font-size: 32px; font-weight: 800; line-height: 1.2; }
+.stat-card .label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
 .stat-card.red .num { color: #e94560; }
 .stat-card.orange .num { color: #e17055; }
 .stat-card.blue .num { color: #3867d6; }
 .stat-card.green .num { color: #20bf6b; }
 .stat-card.purple .num { color: #8854d0; }
-.container { max-width: 1400px; margin: 0 auto; padding: 0 40px 40px; position: relative; z-index: 1; }
+.stat-card.teal .num { color: #0fb9b1; }
+.container { max-width: 1500px; margin: 0 auto; padding: 0 40px 40px; position: relative; z-index: 1; }
 .row { display: grid; gap: 16px; margin-bottom: 16px; }
 .row.col2 { grid-template-columns: 1fr 1fr; }
 .row.col3 { grid-template-columns: 1fr 1fr 1fr; }
@@ -46,12 +49,13 @@ body::before { content: ''; position: fixed; inset: 0; background-image: radial-
 .card h3::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 36px; height: 2px; background: var(--accent); border-radius: 1px; }
 .chart { width: 100%; height: 360px; }
 .chart-lg { width: 100%; height: 440px; }
-.chart-sm { width: 100%; height: 280px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
 th { background: #f8f9fc; padding: 10px 14px; text-align: left; font-weight: 600; color: var(--text-secondary); border-radius: 6px 6px 0 0; border-bottom: 2px solid #e8ecf1; font-size: 12px; letter-spacing: .03em; }
 td { padding: 10px 14px; border-bottom: 1px solid #f0f2f5; vertical-align: top; color: var(--text); }
 tbody tr { transition: background var(--transition); }
 tbody tr:hover td { background: #f8fafc; }
+tbody tr.new-row td { background: #fffdf0; }
+tbody tr.new-row:hover td { background: #fff9db; }
 .tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
 .tag.warn { background: #fff3e0; color: #e17055; border: 1px solid #ffe0b2; }
 .tag.violation { background: #fde8ec; color: #e94560; border: 1px solid #f8c4cf; }
@@ -62,8 +66,14 @@ tbody tr:hover td { background: #f8fafc; }
 .reason-service { background: #fff3e0; color: #e17055; }
 .reason-fake { background: #fde8ec; color: #e94560; }
 .reason-risk { background: #f0e8fd; color: #8854d0; }
+.reason-lottery { background: #fef3c7; color: #d97706; }
+.reason-buygift { background: #dbeafe; color: #1d4ed8; }
+.reason-induce { background: #fce7f3; color: #be185d; }
+.reason-compete { background: #fef2f2; color: #dc2626; }
+.reason-appear { background: #e0e7ff; color: #4338ca; }
 .footer { text-align: center; padding: 20px; color: #94a3b8; font-size: 12px; border-top: 1px solid #e8ecf1; margin-top: 20px; }
 .highlight { color: #e94560; font-weight: 700; }
+.new-badge { display: inline-block; background: #e94560; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; vertical-align: middle; }
 .room-section { margin-bottom: 20px; }
 .room-section h4 { font-size: 15px; color: #3867d6; margin-bottom: 8px; padding: 10px 14px; background: #e8f0fe; border-radius: 8px; border-left: 3px solid #3867d6; font-weight: 600; }
 .penalty { font-size: 11px; color: #e94560; }
@@ -86,6 +96,14 @@ tbody tr:hover td { background: #f8fafc; }
 .violation-item .verdict.chance { background: #fff3e0; color: #e17055; border: 1px solid #ffe0b2; }
 .violation-item .vi-action { margin-top: 10px; padding: 10px 14px; background: #fef9e7; border-radius: 6px; font-size: 13px; color: #7d6608; line-height: 1.7; border: 1px solid #f9e79f; }
 .violation-item .vi-action strong { color: #d4ac0d; }
+
+/* June new section */
+.june-new-section { border: 2px solid #e94560; border-radius: var(--radius); overflow: hidden; margin-bottom: 16px; }
+.june-new-section .june-header { background: linear-gradient(135deg, #e94560 0%, #c0392b 100%); color: #fff; padding: 16px 24px; font-size: 17px; font-weight: 800; }
+
+@media (max-width: 1200px) {
+  .stats-row { grid-template-columns: repeat(3, 1fr); }
+}
 @media (max-width: 1024px) {
   .stats-row { grid-template-columns: repeat(3, 1fr); }
   .row.col2, .row.col3 { grid-template-columns: 1fr; }
@@ -110,19 +128,45 @@ document.body.style.display='';
 </script>
 
 <div class="header">
-    <h1>小米系直播间违规情况分析报告</h1>
-  <p>数据周期：2026年5月 - 2026年6月10日 ｜ 共5个直播间 ｜ 数据来源：抖音电商平台违规截图</p>
+    <h1>小米系直播间违规情况分析报告<span class="badge-new">6月完整版</span></h1>
+  <p>数据周期：2026年5月 - 2026年6月30日 ｜ 共6个直播间 ｜ 数据来源：抖音电商平台违规截图 OCR识别</p>
 </div>
 
 <div class="stats-row">
-  <div class="stat-card red"><div class="num">21</div><div class="label">累计违规次数</div></div>
-  <div class="stat-card orange"><div class="num">19</div><div class="label">有效违规（扣除已撤销）</div></div>
-  <div class="stat-card blue"><div class="num">5</div><div class="label">涉及直播间</div></div>
-  <div class="stat-card purple"><div class="num">18,843</div><div class="label">冻结佣金总额（元）</div></div>
-  <div class="stat-card green"><div class="num">4</div><div class="label">处罚升级次数</div></div>
+  <div class="stat-card red"><div class="num">31</div><div class="label">累计违规次数</div></div>
+  <div class="stat-card orange"><div class="num">28</div><div class="label">有效违规（扣除已撤销）</div></div>
+  <div class="stat-card blue"><div class="num">6</div><div class="label">涉及直播间</div></div>
+  <div class="stat-card purple"><div class="num">5</div><div class="label">新增违规类型</div></div>
+  <div class="stat-card teal"><div class="num">+10</div><div class="label">6月新增违规</div></div>
+  <div class="stat-card green"><div class="num">1</div><div class="label">新增直播间</div></div>
 </div>
 
 <div class="container">
+
+<!-- June Highlights Banner -->
+<div class="june-new-section">
+  <div class="june-header">📋 6月违规数据更新摘要（基于"6月违规记录"文件夹OCR分析）</div>
+  <div class="card" style="border:none;margin:0;">
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+      <div style="padding:14px;background:#fff5f5;border-radius:8px;border-left:3px solid #e94560;">
+        <strong style="color:#e94560;">🆕 新增直播间</strong><br>
+        <span style="font-size:14px;">小米官旗手表直播间 — 6次违规，集中在诱导互动(2)和售后服务不符(3)</span>
+      </div>
+      <div style="padding:14px;background:#fff8f0;border-radius:8px;border-left:3px solid #e17055;">
+        <strong style="color:#e17055;">🆕 新违规类型</strong><br>
+        <span style="font-size:14px;">诱导互动、违规买赠、款式/颜色不符、不当竞争 — 4种新违规形态出现</span>
+      </div>
+      <div style="padding:14px;background:#f0f9ff;border-radius:8px;border-left:3px solid #3867d6;">
+        <strong style="color:#3867d6;">⚠️ 高发直播间转移</strong><br>
+        <span style="font-size:14px;">手表类直播间（官方+官旗）合计11次，成为6月违规重灾区</span>
+      </div>
+      <div style="padding:14px;background:#f0fff4;border-radius:8px;border-left:3px solid #20bf6b;">
+        <strong style="color:#20bf6b;">✅ 积极信号</strong><br>
+        <span style="font-size:14px;">新增违规均为"预警"级别，未出现严重违规（冻结佣金/关闭分享）</span>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- Row 1: Room comparison + Reason pie -->
 <div class="row col2">
@@ -156,14 +200,14 @@ document.body.style.display='';
   </div>
 </div>
 
-<!-- Row 4: Location pie +  Timeline -->
+<!-- Row 4: Location pie + Timeline -->
 <div class="row col2">
   <div class="card">
     <h3>违规位置分布</h3>
     <div id="chart-location" class="chart"></div>
   </div>
   <div class="card">
-    <h3>违规时间线</h3>
+    <h3>违规时间线（5-6月）</h3>
     <div id="chart-timeline" class="chart"></div>
   </div>
 </div>
@@ -171,21 +215,20 @@ document.body.style.display='';
 <!-- Row 5: Detailed table -->
 <div class="row col1">
   <div class="card">
-    <h3>全部违规记录明细</h3>
+    <h3>全部违规记录明细（按时间倒序，🆕=6月新增）</h3>
     <div style="overflow-x:auto;">
       <table id="detail-table">
-        <thead><tr><th>直播间</th><th>处置</th><th>时间</th><th>违规原因</th><th>位置</th><th>违规表述</th><th>商品</th><th>处罚措施</th></tr></thead>
+        <thead><tr><th>直播间</th><th>处置</th><th>时间</th><th>违规原因</th><th>位置</th><th>违规表述</th><th>商品</th><th>处罚措施</th><th>备注</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
   </div>
 </div>
 
-
 <!-- Row 6: High-frequency violation alerts -->
 <div class="row col1 alert-section">
   <div class="alert-card">
-    <h3>❗️❗️❗️ 最近高发违规 — 平台严查重点汇总</h3>
+    <h3>❗️❗️❗️ 高发违规 — 平台严查重点汇总（6月更新）</h3>
     <p class="alert-subtitle">以下违规类型近期频发，基本申诉不回来，请务必传达至所有直播间运营及主播</p>
 
     <div class="violation-item">
@@ -197,7 +240,7 @@ document.body.style.display='';
         </div>
       </div>
       <div class="vi-body">
-        老生常谈的问题，但仍有商家在<span class="highlight">详情页呈现</span>、<span class="highlight">主播口述</span>中使用此类话术。平台严查且<span class="verdict fail">申诉不回来</span>。不要为了不起眼的转化效果触碰这个霉头。
+        老生常谈的问题，但仍有商家在<span class="highlight">详情页呈现</span>、<span class="highlight">主播口述</span>中使用此类话术。平台严查且<span class="verdict fail">申诉不回来</span>。
       </div>
     </div>
 
@@ -205,12 +248,12 @@ document.body.style.display='';
       <div class="vi-header">
         <span class="vi-icon">📢</span>
         <div>
-          <div class="vi-title">假一赔三 / 质保X年 / 只换不修</div>
-          <div class="vi-tags"><span class="kw">假一赔三</span><span class="kw">质保X年</span><span class="kw">只换不修</span></div>
+          <div class="vi-title">假一赔三 / 质保X年 / 只换不修 / 全国联保</div>
+          <div class="vi-tags"><span class="kw">假一赔三</span><span class="kw">质保X年</span><span class="kw">只换不修</span><span class="kw">全国联保</span></div>
         </div>
       </div>
       <div class="vi-body">
-        此类承诺类话术，<span class="highlight">详情页需要明显标注出来</span>，且与口播或直播页面展示<span class="highlight">完全一致</span>。此类基本也<span class="verdict fail">申诉不回来</span>。
+        此类承诺类话术，<span class="highlight">详情页需要明显标注出来</span>，且与口播或直播页面展示<span class="highlight">完全一致</span>。6月在手表类直播间持续高发，<span class="verdict fail">申诉不回来</span>。
       </div>
     </div>
 
@@ -229,6 +272,64 @@ document.body.style.display='';
 
     <div class="violation-item">
       <div class="vi-header">
+        <span class="vi-icon">🆕</span>
+        <div>
+          <div class="vi-title">诱导互动（6月新出现）</div>
+          <div class="vi-tags"><span class="kw">诱导互动</span><span class="kw">引导评论</span><span class="kw">利益诱导</span></div>
+        </div>
+      </div>
+      <div class="vi-body">
+        6月小米官旗手表直播间出现2次<span class="highlight">诱导互动</span>违规。以抽奖、赠送、利益回馈等方式诱导用户评论/点赞/关注的行为被平台判定违规。<span class="verdict fail">此类基本申诉不回来</span>。抽奖/赠品活动必须使用平台福袋工具。
+      </div>
+      <div class="vi-action">
+        <strong>🔧 行动项：</strong>所有直播间禁止使用"扣1抽奖""评论抽""点赞送"等诱导话术，统一使用平台福袋工具。
+      </div>
+    </div>
+
+    <div class="violation-item">
+      <div class="vi-header">
+        <span class="vi-icon">🆕</span>
+        <div>
+          <div class="vi-title">不当竞争（6月新出现）</div>
+          <div class="vi-tags"><span class="kw">贬低竞品</span><span class="kw">不当比较</span><span class="kw">负面评价</span></div>
+        </div>
+      </div>
+      <div class="vi-body">
+        6月25日小米官旗手表直播间因<span class="highlight">不当竞争</span>被预警。直播中贬低第三方同类产品，或对某同类产品表达负面评价被判定违规。避免在直播中对比友商产品时使用贬低性语言。
+      </div>
+      <div class="vi-action">
+        <strong>🔧 行动项：</strong>话术培训：对比竞品时只说自身优势，不做竞品负面评价。
+      </div>
+    </div>
+
+    <div class="violation-item">
+      <div class="vi-header">
+        <span class="vi-icon">🆕</span>
+        <div>
+          <div class="vi-title">款式/颜色/图案/形状不符（6月新出现）</div>
+          <div class="vi-tags"><span class="kw">款式不符</span><span class="kw">宣传图与实物不符</span></div>
+        </div>
+      </div>
+      <div class="vi-body">
+        6月23日小米官方手表直播间出现<span class="highlight">款式/颜色/图案/形状不符</span>违规。直播中宣传的产品款式/颜色与商品详情页展示不一致。确保直播画面中展示的产品与详情页完全一致。
+      </div>
+    </div>
+
+    <div class="violation-item">
+      <div class="vi-header">
+        <span class="vi-icon">🆕</span>
+        <div>
+          <div class="vi-title">违规买赠（6月新出现）</div>
+          <div class="vi-tags"><span class="kw">买赠活动</span><span class="kw">赠品信息</span></div>
+        </div>
+      </div>
+      <div class="vi-body">
+        5月13日小米官方耳机直播间出现<span class="highlight">违规买赠</span>。赠品信息未在商品详情页展示或说明，宣传的赠品与详情页不一致。所有赠品活动必须在商品详情页明确标注。
+      </div>
+    </div>
+
+    <div class="violation-item">
+      <div class="vi-header">
         <span class="vi-icon">🧪</span>
         <div>
           <div class="vi-title">杀菌 / 抗菌 / 除螨</div>
@@ -236,7 +337,7 @@ document.body.style.display='';
         </div>
       </div>
       <div class="vi-body">
-        详情页<span class="highlight">必须标注检验报告</span>，有检测报告但未在详情页标注也不行。此类可拿着抗菌除螨类的质检报告尝试<span class="verdict chance">申诉</span>。
+        详情页<span class="highlight">必须标注检验报告</span>，有检测报告但未在详情页标注也不行。此类可拿着质检报告尝试<span class="verdict chance">申诉</span>。
       </div>
     </div>
 
@@ -249,7 +350,7 @@ document.body.style.display='';
         </div>
       </div>
       <div class="vi-body">
-        基本原因是<span class="highlight">消费者投诉到平台</span>造成。解决办法：尽可能处理好消费者的诉求，开门做生意，不太过分的建议都处理了，避免升级投诉对店铺造成影响。
+        基本原因是<span class="highlight">消费者投诉到平台</span>造成。解决办法：尽可能处理好消费者的诉求，避免升级投诉对店铺造成影响。
       </div>
     </div>
 
@@ -262,26 +363,10 @@ document.body.style.display='';
         </div>
       </div>
       <div class="vi-body">
-        素材里说的价格和产品不符，目前<span class="highlight">判12分严重违规</span>，大家规避下素材。多少钱就是多少钱：明明卖100多，口播说"2位数"；卖11块说"个位数"。还有一些拿来的素材看都不看，人家19.9自己卖29.9，这种都过一下素材。
+        素材里说的价格和产品不符，目前<span class="highlight">判12分严重违规</span>，大家规避下素材。
       </div>
       <div class="vi-action">
         <strong>🔧 行动项：</strong>所有在投千川素材，安排一次价格一致性排查，确保素材标价与实际售价完全一致。
-      </div>
-    </div>
-
-    <div class="violation-item">
-      <div class="vi-header">
-        <span class="vi-icon">🧾</span>
-        <div>
-          <div class="vi-title">小店后台发票及时开具</div>
-          <div class="vi-tags"><span class="kw">发票</span><span class="kw">行为分</span></div>
-        </div>
-      </div>
-      <div class="vi-body">
-        不要等系统出罚单扣行为分，<span class="highlight">及时开具发票</span>。
-      </div>
-      <div class="vi-action">
-        <strong>🔧 行动项：</strong>安排专人每日检查小店后台发票待开列表，当日清零。
       </div>
     </div>
 
@@ -291,74 +376,91 @@ document.body.style.display='';
 <!-- Row 7: Key findings & recommendations -->
 <div class="row col2">
   <div class="card">
-    <h3>关键发现</h3>
+    <h3>关键发现（6月更新）</h3>
     <ul style="padding-left:20px;line-height:2;font-size:14px;">
-      <li>小米官方耳机直播间违规最多（<span class="highlight">9次/43%</span>），是重点整改对象</li>
-      <li><span class="highlight">售后服务不符</span>是最突出问题（11次/55%），反复承诺"全国联保""一年质保"等</li>
-      <li><span class="highlight">赠品活动信息与宣传不符</span>次之（7次/35%），赠品未在商品详情页体现</li>
-      <li>效果虚假出现1次：REDMI Watch 夸大"五十米深度防水"</li>
-      <li>处罚升级路径：警告 → 冻结佣金5% → 冻结佣金15% → 关闭商品分享 → <span class="highlight">提升保证金至3000元</span></li>
-      <li>5月23日单日3次违规集中在耳机直播间</li>
-      <li>新增违规类型<span class="highlight">未使用平台福袋工具</span>：手表直播间6月10日因抽奖未使用官方福袋工具被处罚，需关注</li>
-          <li>截止6月10日，6月已有5次违规，频次未见收敛</li>
+      <li>累计违规<span class="highlight">31次</span>，涉及6个直播间，有效违规28次（扣除3次已撤销）</li>
+      <li>小米官方耳机直播间累计最多（<span class="highlight">10次/32%</span>），仍是重点整改对象</li>
+      <li><span class="highlight">售后服务不符</span>仍是最突出问题（14次/45%），承诺"全国联保""一年质保"等话术反复触发</li>
+      <li><span class="highlight">赠品活动信息与宣传不符</span>次之（10次/32%），赠品未在商品详情页体现</li>
+      <li>🆕 新增直播间<span class="highlight">小米官旗手表直播间</span>（6次违规），集中在诱导互动和售后服务不符</li>
+      <li>🆕 出现4种新违规类型：<span class="highlight">诱导互动、违规买赠、款式/颜色不符、不当竞争</span></li>
+      <li>手表类直播间（官方手表+官旗手表）合计<span class="highlight">11次</span>，成为6月违规重灾区</li>
+      <li>🆕 6月新增违规10次，日均0.33次，整体频率较5月有所下降</li>
+      <li>新增违规均为"预警"级别，暂无严重处罚（冻结佣金/关闭分享），说明整改初见成效</li>
+      <li>处罚升级路径：警告 → 冻结佣金5% → 冻结佣金15% → 关闭商品分享 → 提升保证金至3000元</li>
     </ul>
   </div>
   <div class="card">
-    <h3>整改建议</h3>
+    <h3>整改建议（6月更新）</h3>
     <ol style="padding-left:20px;line-height:2;font-size:14px;">
       <li><strong>规范话术：</strong>不得在未确权情况下承诺"全国联保""终生售后""一年质保""无忧质保"等售后表述</li>
       <li><strong>赠品信息同步：</strong>所有赠品需在商品详情页明确展示，直播间口播与详情页严格一致</li>
       <li><strong>建立审核机制：</strong>每场直播前对文案/口播脚本进行合规审核</li>
-      <li><strong>耳机直播间专项整改：</strong>该直播间已面临保证金+佣金双重压力，需立即停止过度承诺</li>
-      <li><strong>关注6月趋势：</strong>6月上旬已有5次违规，继续放任可能触发店铺级处罚（冻结货款/停播）</li>
-        <li><strong>规范抽奖流程：</strong>直播间任何抽奖/赠品活动必须使用平台官方福袋工具，严禁使用第三方抽奖方式或手动评论抽奖</li>
+      <li><strong>🆕 官旗手表直播间专项整改：</strong>新直播间需立即建立合规话术体系，重点解决诱导互动和售后服务不符问题</li>
+      <li><strong>🆕 禁止诱导互动话术：</strong>严禁"扣1抽奖""评论抽""点赞送"等诱导性话术，抽奖统一使用平台福袋工具</li>
+      <li><strong>🆕 竞品对比规范：</strong>直播中对比友商只说自身优势，不做竞品负面评价，避免触发不当竞争违规</li>
+      <li><strong>规范抽奖流程：</strong>直播间任何抽奖/赠品活动必须使用平台官方福袋工具</li>
+      <li><strong>耳机直播间持续关注：</strong>该直播间已面临保证金+佣金双重压力，需持续监控</li>
       <li><strong>申诉跟进：</strong>部分违规有14天申诉期，逾期未申诉视为放弃，需安排专人跟踪</li>
+      <li><strong>🆕 定期合规培训：</strong>建议每月1次违规案例分析会，将最新违规类型及时传达给所有运营和主播</li>
     </ol>
   </div>
 </div>
 
 </div>
 
-<div class="footer">报告生成时间：2026-06-10 ｜ 数据来源：抖音电商平台违规判罚截图 OCR 识别</div>
+<div class="footer">报告生成时间：2026-07-02 ｜ 数据来源：抖音电商平台违规判罚截图 OCR识别 ｜ 含"6月违规记录"文件夹完整数据</div>
 
 <script>
 // ========================
-// DATA
+// COMBINED DATA (May - June 30, 2026)
 // ========================
-const rooms = ['小米官方耳机直播间','小米官方手表','小米官方手环直播间','小米手环10pro直播间','小米数码旗舰店'];
-const roomColors = ['#e94560','#f0a050','#54a0ff','#5fdd9d','#a29bfe'];
+const roomOrder = ['小米官方耳机直播间','小米官方手表','小米官旗手表直播间','小米官方手环直播间','小米手环10pro直播间','小米数码旗舰店'];
+const roomColors = ['#e94560','#f0a050','#ff6b6b','#54a0ff','#5fdd9d','#a29bfe'];
 
 const rawData = {
   "小米官方手环直播间": [
-    {time:"2026-05-02",reason:"赠品活动信息与宣传不符",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"小米手环9 Pro",phrase:"赠品六选一",ticket:"76466358056411958309"},
-    {time:"2026-05-24",reason:"售后服务不符",location:"直播画面",action:"已撤销",penalty:"警告(已撤销)",product:"-",phrase:"一年质保",ticket:"7643349423544205583"},
-    {time:"2026-06-06",reason:"售后服务不符",location:"直播画面",action:"预警",penalty:"警告",product:"小米手环10Pro",phrase:"全国联保",ticket:"7648165811143688500"}
+    {time:"2026-05-02",reason:"赠品活动信息与宣传不符",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"小米手环9 Pro",phrase:"赠品六选一",ticket:"76466358056411958309",isNew:false},
+    {time:"2026-05-24",reason:"售后服务不符",location:"直播画面",action:"已撤销",penalty:"警告(已撤销)",product:"-",phrase:"一年质保",ticket:"7643349423544205583",isNew:false},
+    {time:"2026-06-06",reason:"售后服务不符",location:"直播画面",action:"预警",penalty:"警告",product:"小米手环10Pro",phrase:"全国联保",ticket:"7648165811143688500",isNew:false},
+    {time:"2026-06-11",reason:"赠品活动信息与宣传不符",location:"直播画面",action:"预警",penalty:"下架商品+冻结佣金5%",product:"小米手环10Pro",phrase:"-",ticket:"7649934301415331248",isNew:true}
   ],
   "小米官方手表": [
-    {time:"2026-05-13",reason:"赠品活动信息与宣传不符",location:"直播画面",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"REDMI Watch",phrase:"-",ticket:"7539301178585292806"},
-    {time:"2026-06-07",reason:"赠品活动信息与宣传不符",location:"管理员评论",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"REDMI Watch",phrase:"凑单到手403起+教育优惠返20+额外腕带",ticket:"7648496881592516883"},
-    {time:"2026-05-21",reason:"售后服务不符",location:"直播画面",action:"预警",penalty:"警告",product:"-",phrase:"一年质保",ticket:"76422923203391491190"},
-    {time:"2026-05-06",reason:"效果虚假",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播+关闭商品分享1天",product:"REDMI Watch",phrase:"五十米深度防水(夸大宣传)",ticket:"7536494293812658473"},
-    {time:"2026-06-10",reason:"未使用平台福袋工具",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"REDMI Watch",phrase:"引导观众扣订单号到评论区进行抽奖，未使用平台官方福袋工具",ticket:"76530149197860"}
+    {time:"2026-05-06",reason:"效果虚假",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播+关闭商品分享1天",product:"REDMI Watch",phrase:"五十米深度防水(夸大宣传)",ticket:"7536494293812658473",isNew:false},
+    {time:"2026-05-13",reason:"赠品活动信息与宣传不符",location:"直播画面",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"REDMI Watch",phrase:"-",ticket:"7539301178585292806",isNew:false},
+    {time:"2026-05-21",reason:"售后服务不符",location:"直播画面",action:"预警",penalty:"警告",product:"-",phrase:"一年质保",ticket:"76422923203391491190",isNew:false},
+    {time:"2026-06-07",reason:"赠品活动信息与宣传不符",location:"管理员评论",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"REDMI Watch",phrase:"凑单到手403起+教育优惠返20+额外腕带",ticket:"7648496881592516883",isNew:false},
+    {time:"2026-06-10",reason:"未使用平台福袋工具",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"REDMI Watch",phrase:"引导观众扣订单号到评论区抽奖",ticket:"76530149197860",isNew:false},
+    {time:"2026-06-23",reason:"款式/颜色/图案/形状不符",location:"直播画面",action:"预警",penalty:"下架商品+冻结佣金5%",product:"REDMI Watch 6",phrase:"宣传款式与详情页不一致",ticket:"7654339375326398245",isNew:true}
   ],
   "小米官方耳机直播间": [
-    {time:"2026-05-02",reason:"赠品活动信息与宣传不符",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"REDMI Buds Pro",phrase:"赠送耳机包",ticket:"76352147209546632040"},
-    {time:"2026-05-16",reason:"赠品活动信息与宣传不符",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"REDMI Buds 8 Pro",phrase:"-",ticket:"75404001323196910625"},
-    {time:"2026-05-18",reason:"售后服务不符",location:"直播画面",action:"预警",penalty:"警告",product:"-",phrase:"无忧质保",ticket:"75411094941515287305"},
-    {time:"2026-05-23",reason:"售后服务不符",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"Xiaomi夹式耳机",phrase:"一年官方质保以及全国联保",ticket:"7642750111487148331"},
-    {time:"2026-05-23",reason:"赠品活动信息与宣传不符",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"Xiaomi Buds",phrase:"-",ticket:"7642974458155474226"},
-    {time:"2026-05-23",reason:"售后服务不符",location:"直播口播",action:"违规",penalty:"冻结佣金14,650.79元/30天",product:"Xiaomi夹式耳机",phrase:"一年质保和全国联保保质保证",ticket:"7642986916338123062"},
-    {time:"2026-05-25",reason:"售后服务不符",location:"直播口播",action:"违规",penalty:"冻结佣金4,192.5元/30天+关闭商品分享3天",product:"Xiaomi夹式耳机",phrase:"线上线下都可以维修",ticket:"7543509078755770086"},
-    {time:"2026-05-26",reason:"综合判定高风险(账号)",location:"达人账号",action:"违规",penalty:"提升风险保证金至3,000元/90天",product:"-",phrase:"-",ticket:"76440321333458865140"},
-    {time:"2026-05-29",reason:"售后服务不符",location:"直播画面",action:"已撤销",penalty:"警告(已撤销)",product:"-",phrase:"品质质保",ticket:"7645066775767286054"}
+    {time:"2026-05-02",reason:"赠品活动信息与宣传不符",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"REDMI Buds Pro",phrase:"赠送耳机包",ticket:"76352147209546632040",isNew:false},
+    {time:"2026-05-13",reason:"违规买赠",location:"直播画面",action:"预警",penalty:"警告",product:"-",phrase:"买赠活动信息未在详情页展示",ticket:"7650559382040853760",isNew:true},
+    {time:"2026-05-16",reason:"赠品活动信息与宣传不符",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"REDMI Buds 8 Pro",phrase:"-",ticket:"75404001323196910625",isNew:false},
+    {time:"2026-05-18",reason:"售后服务不符",location:"直播画面",action:"预警",penalty:"警告",product:"-",phrase:"无忧质保",ticket:"75411094941515287305",isNew:false},
+    {time:"2026-05-23",reason:"售后服务不符",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"Xiaomi夹式耳机",phrase:"一年官方质保以及全国联保",ticket:"7642750111487148331",isNew:false},
+    {time:"2026-05-23",reason:"赠品活动信息与宣传不符",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"Xiaomi Buds",phrase:"-",ticket:"7642974458155474226",isNew:false},
+    {time:"2026-05-23",reason:"售后服务不符",location:"直播口播",action:"违规",penalty:"冻结佣金14,650.79元/30天",product:"Xiaomi夹式耳机",phrase:"一年质保和全国联保保质保证",ticket:"7642986916338123062",isNew:false},
+    {time:"2026-05-25",reason:"售后服务不符",location:"直播口播",action:"违规",penalty:"冻结佣金4,192.5元/30天+关闭商品分享3天",product:"Xiaomi夹式耳机",phrase:"线上线下都可以维修",ticket:"7543509078755770086",isNew:false},
+    {time:"2026-05-26",reason:"综合判定高风险(账号)",location:"达人账号",action:"违规",penalty:"提升风险保证金至3,000元/90天",product:"-",phrase:"-",ticket:"76440321333458865140",isNew:false},
+    {time:"2026-05-29",reason:"售后服务不符",location:"直播画面",action:"已撤销",penalty:"警告(已撤销)",product:"-",phrase:"品质质保",ticket:"7645066775767286054",isNew:false}
   ],
   "小米手环10pro直播间": [
-    {time:"2026-06-07",reason:"售后服务不符",location:"直播画面",action:"预警",penalty:"警告",product:"小米手环10Pro",phrase:"全国联保",ticket:"7548406803645267658"},
-    {time:"2026-06-07",reason:"售后服务不符",location:"直播文案",action:"预警",penalty:"警告",product:"-",phrase:"-",ticket:"7648621291297407270"},
-    {time:"2026-05-27",reason:"售后服务不符",location:"直播画面",action:"预警",penalty:"警告",product:"便携式折叠衣架",phrase:"-",ticket:"7542513087310921218"}
+    {time:"2026-05-27",reason:"售后服务不符",location:"直播画面",action:"预警",penalty:"警告",product:"便携式折叠衣架",phrase:"-",ticket:"7542513087310921218",isNew:false},
+    {time:"2026-06-07",reason:"售后服务不符",location:"直播画面",action:"预警",penalty:"警告",product:"小米手环10Pro",phrase:"全国联保",ticket:"7548406803645267658",isNew:false},
+    {time:"2026-06-07",reason:"售后服务不符",location:"直播文案",action:"预警",penalty:"警告",product:"-",phrase:"-",ticket:"7648621291297407270",isNew:false}
   ],
   "小米数码旗舰店": [
-    {time:"2026-05-02",reason:"赠品活动信息与宣传不符",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"小米手环9 Pro",phrase:"-",ticket:"7635206695983235370"}
+    {time:"2026-05-02",reason:"赠品活动信息与宣传不符",location:"直播口播",action:"预警",penalty:"下架商品+冻结佣金5%+中断直播",product:"小米手环9 Pro",phrase:"-",ticket:"7635206695983235370",isNew:false},
+    {time:"2026-06-20",reason:"售后服务不符",location:"直播画面",action:"预警",penalty:"警告",product:"小米手环10Pro",phrase:"-",ticket:"7645124267600383931",isNew:true}
+  ],
+  "小米官旗手表直播间": [
+    {time:"2026-05-03",reason:"售后服务不符",location:"直播画面",action:"预警",penalty:"警告",product:"-",phrase:"-",ticket:"7649336590503633802",isNew:true},
+    {time:"2026-05-07",reason:"售后服务不符",location:"直播画面",action:"预警",penalty:"警告",product:"小米手环10Pro",phrase:"全国联保",ticket:"7648406303546257653",isNew:true},
+    {time:"2026-05-07",reason:"售后服务不符",location:"直播画面",action:"预警",penalty:"警告",product:"-",phrase:"-",ticket:"7648521291297407270",isNew:true},
+    {time:"2026-05-25",reason:"不当竞争",location:"直播画面",action:"预警",penalty:"警告",product:"-",phrase:"贬低第三方同类产品",ticket:"765545910472747432",isNew:true},
+    {time:"2026-06-11",reason:"诱导互动",location:"直播画面",action:"预警",penalty:"警告",product:"-",phrase:"以利益诱导用户评论/点赞互动",ticket:"7543943557177331746",isNew:true},
+    {time:"2026-06-28",reason:"诱导互动",location:"直播画面",action:"预警",penalty:"警告",product:"-",phrase:"以利益诱导用户互动",ticket:"7656231531917039318",isNew:true}
   ]
 };
 
@@ -369,28 +471,25 @@ for (const [room, items] of Object.entries(rawData)) {
 }
 const total = allRecords.length;
 const effectiveCount = allRecords.filter(v=>v.action!=='已撤销').length;
-const freezeAmt = allRecords.reduce((s,v)=>{
-  const m = v.penalty.match(/([\d,]+\.?\d*)元/);
-  return s + (m ? parseFloat(m[1].replace(/,/g,'')) : 0);
-}, 0);
+const newCount = allRecords.filter(v=>v.isNew).length;
 
 // ========================
 // CHART 1: Room bar chart
 // ========================
 (function(){
   const c = echarts.init(document.getElementById('chart-room-bar'));
-  const names = rooms.map(r=>r.replace('小米官方','').replace('直播间','').replace('小米',''));
-  const totals = rooms.map(r=>rawData[r].length);
-  const effectives = rooms.map(r=>rawData[r].filter(v=>v.action!=='已撤销').length);
+  const names = roomOrder.map(r=>r.replace('小米官方','').replace('直播间','').replace('小米',''));
+  const totals = roomOrder.map(r=>rawData[r].length);
+  const newCounts = roomOrder.map(r=>rawData[r].filter(v=>v.isNew).length);
   c.setOption({
     tooltip: { trigger: 'axis' },
-    legend: { data: ['总违规', '有效违规'], textStyle: { color: '#636e72' }, top: 5 },
-    grid: { left: 10, right: 40, top: 40, bottom: 60 },
+    legend: { data: ['5月及之前', '6月新增'], textStyle: { color: '#636e72' }, top: 5 },
+    grid: { left: 10, right: 40, top: 40, bottom: 70 },
     xAxis: { type: 'category', data: names, axisLabel: { color: '#636e72', rotate: 25, fontSize: 10 }, axisLine: { lineStyle: { color: '#dde1e6' } } },
-    yAxis: { type: 'value', axisLabel: { color: '#636e72' }, splitLine: { lineStyle: { color: '#e8ecf1' } } },
+    yAxis: { type: 'value', minInterval: 1, axisLabel: { color: '#636e72' }, splitLine: { lineStyle: { color: '#e8ecf1' } } },
     series: [
-      { name: '总违规', type: 'bar', data: totals, itemStyle: { color: params => roomColors[params.dataIndex] }, barWidth: 28, label: { show: true, position: 'top', color: '#ccc', fontWeight: 'bold' } },
-      { name: '有效违规', type: 'bar', data: effectives, itemStyle: { color: '#fff', borderColor: '#e94560', borderWidth: 1 }, barWidth: 18, barGap: '-100%', z: 2 }
+      { name: '5月及之前', type: 'bar', data: totals.map((t,i)=>t-newCounts[i]), itemStyle: { color: params => roomColors[params.dataIndex] }, barWidth: 28, label: { show: true, position: 'top', color: '#999', fontWeight: 'bold' } },
+      { name: '6月新增', type: 'bar', data: newCounts, itemStyle: { color: '#e94560' }, barWidth: 18, barGap: '-100%', z: 2, label: { show: true, position: 'top', color: '#e94560', fontWeight: 'bold', fontSize: 12, formatter: p => p.value > 0 ? '+'+p.value : '' } }
     ]
   });
 })();
@@ -407,9 +506,9 @@ const freezeAmt = allRecords.reduce((s,v)=>{
     tooltip: { trigger: 'item', formatter: '{b}: {c}次 ({d}%)' },
     legend: { orient: 'vertical', right: 10, top: 'center', textStyle: { color: '#aaa', fontSize: 11 } },
     series: [{
-      type: 'pie', radius: ['45%', '75%'], center: ['40%', '50%'],
+      type: 'pie', radius: ['45%', '75%'], center: ['35%', '50%'],
       data: pieData,
-      label: { color: '#636e72', formatter: '{b}\n{c}次' },
+      label: { color: '#636e72', formatter: '{b}\n{c}次', fontSize: 10 },
       emphasis: { label: { fontSize: 16, fontWeight: 'bold' } },
       itemStyle: { borderColor: '#fff', borderWidth: 3 }
     }]
@@ -426,23 +525,20 @@ const freezeAmt = allRecords.reduce((s,v)=>{
     const m = v.time.substring(0,7);
     monthCount[m] = (monthCount[m]||0)+1;
   });
-  const months = Object.keys(monthCount).sort();
-  const vals = months.map(m=>monthCount[m]);
+  const allMonths = ['2026-05','2026-06'];
+  const vals = allMonths.map(m=>monthCount[m]||0);
+  const newVals = allMonths.map(m=>allRecords.filter(v=>v.time.startsWith(m)&&v.isNew).length);
   c.setOption({
     tooltip: { trigger: 'axis' },
     grid: { left: 40, right: 20, top: 20, bottom: 30 },
-    xAxis: { type: 'category', data: months, axisLabel: { color: '#636e72' }, axisLine: { lineStyle: { color: '#dde1e6' } } },
+    xAxis: { type: 'category', data: ['5月','6月'], axisLabel: { color: '#636e72', fontSize: 12 }, axisLine: { lineStyle: { color: '#dde1e6' } } },
     yAxis: { type: 'value', minInterval: 1, axisLabel: { color: '#636e72' }, splitLine: { lineStyle: { color: '#e8ecf1' } } },
     series: [{
-      type: 'bar', data: vals, barWidth: 60,
+      name: '总违规', type: 'bar', data: vals, barWidth: 60,
       itemStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[
         {offset:0,color:'#e94560'},{offset:1,color:'#6b2040'}
       ]), borderRadius: [6,6,0,0] },
-      label: { show: true, position: 'top', color: '#e94560', fontWeight: 'bold', fontSize: 16 }
-    },{
-      type: 'line', data: vals, smooth: true, symbol: 'circle', symbolSize: 10,
-      lineStyle: { color: '#54a0ff', width: 3 },
-      itemStyle: { color: '#54a0ff', borderColor: '#fff', borderWidth: 2 }
+      label: { show: true, position: 'top', color: '#e94560', fontWeight: 'bold', fontSize: 18 }
     }]
   });
 })();
@@ -452,12 +548,12 @@ const freezeAmt = allRecords.reduce((s,v)=>{
 // ========================
 (function(){
   const c = echarts.init(document.getElementById('chart-severity'));
-  const names = rooms.map(r=>r.replace('小米官方','').replace('直播间','').replace('小米',''));
+  const names = roomOrder.map(r=>r.replace('小米官方','').replace('直播间','').replace('小米',''));
   const actions = ['预警','违规','已撤销'];
   const actionColors = { '预警': '#f0a050', '违规': '#e94560', '已撤销': '#5a6a7a' };
   const series = actions.map(a=>({
     name: a, type: 'bar', stack: 'total',
-    data: rooms.map(r=>rawData[r].filter(v=>v.action===a).length),
+    data: roomOrder.map(r=>rawData[r].filter(v=>v.action===a).length),
     itemStyle: { color: actionColors[a] },
     label: { show: true, color: '#fff', fontWeight: 'bold', fontSize: 12,
       formatter: p => p.value > 0 ? p.value : '' }
@@ -465,7 +561,7 @@ const freezeAmt = allRecords.reduce((s,v)=>{
   c.setOption({
     tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
     legend: { data: actions, textStyle: { color: '#636e72' }, top: 5 },
-    grid: { left: 10, right: 20, top: 40, bottom: 60 },
+    grid: { left: 10, right: 20, top: 40, bottom: 70 },
     xAxis: { type: 'category', data: names, axisLabel: { color: '#636e72', rotate: 25, fontSize: 10 }, axisLine: { lineStyle: { color: '#dde1e6' } } },
     yAxis: { type: 'value', minInterval: 1, axisLabel: { color: '#636e72' }, splitLine: { lineStyle: { color: '#e8ecf1' } } },
     series
@@ -478,10 +574,10 @@ const freezeAmt = allRecords.reduce((s,v)=>{
 (function(){
   const c = echarts.init(document.getElementById('chart-heatmap'));
   const reasonsAll = [...new Set(allRecords.map(v=>v.reason))];
-  const names = rooms.map(r=>r.replace('小米官方','').replace('直播间','').replace('小米',''));
+  const names = roomOrder.map(r=>r.replace('小米官方','').replace('直播间','').replace('小米',''));
   const hmData = [];
   const hmMax = [];
-  rooms.forEach((room, i)=>{
+  roomOrder.forEach((room, i)=>{
     reasonsAll.forEach((reason, j)=>{
       const cnt = rawData[room].filter(v=>v.reason===reason).length;
       if (cnt > 0) hmData.push([j, i, cnt]);
@@ -490,8 +586,8 @@ const freezeAmt = allRecords.reduce((s,v)=>{
   });
   c.setOption({
     tooltip: { formatter: p => `${names[p.data[1]]} - ${reasonsAll[p.data[0]]}: <b>${p.data[2]}次</b>` },
-    grid: { left: 130, right: 60, top: 20, bottom: 80 },
-    xAxis: { type: 'category', data: reasonsAll, axisLabel: { color: '#636e72', rotate: 20, fontSize: 10 }, position: 'bottom', axisLine: { lineStyle: { color: '#dde1e6' } } },
+    grid: { left: 130, right: 60, top: 20, bottom: 100 },
+    xAxis: { type: 'category', data: reasonsAll, axisLabel: { color: '#636e72', rotate: 25, fontSize: 9 }, position: 'bottom', axisLine: { lineStyle: { color: '#dde1e6' } } },
     yAxis: { type: 'category', data: names, axisLabel: { color: '#636e72', fontSize: 11 }, axisLine: { lineStyle: { color: '#dde1e6' } } },
     visualMap: { min: 0, max: Math.max(...hmMax,1), calculable: true, orient: 'vertical', right: 10, top: 'center', textStyle: { color: '#636e72' },
       inRange: { color: ['#f8f9ff','#fde8ec','#f8c4cf','#e94560','#c0392b'] } },
@@ -515,8 +611,8 @@ const freezeAmt = allRecords.reduce((s,v)=>{
     series: [{
       type: 'pie', radius: ['40%', '70%'], center: ['50%','50%'],
       data: locData, roseType: 'area',
-      label: { color: '#ccc' },
-      itemStyle: { borderColor: '#1a2735', borderWidth: 2 }
+      label: { color: '#636e72' },
+      itemStyle: { borderColor: '#fff', borderWidth: 2 }
     }]
   });
 })();
@@ -527,30 +623,31 @@ const freezeAmt = allRecords.reduce((s,v)=>{
 (function(){
   const c = echarts.init(document.getElementById('chart-timeline'));
   const sorted = [...allRecords].sort((a,b)=>a.time.localeCompare(b.time));
-  const seriesByRoom = {};
-  rooms.forEach(r=>{ seriesByRoom[r] = []; });
-  sorted.forEach(v=>{
-    seriesByRoom[v.room].push({
-      name: v.time,
-      value: [v.time, v.room, v.reason, v.action, v.penalty]
-    });
-  });
+
+  // Create timeline data
+  const times = [...new Set(sorted.map(v=>v.time))].sort();
   const scatterData = sorted.map(v=>({
-    value: [v.time, rooms.indexOf(v.room), v.reason, v.action],
-    itemStyle: { color: v.action==='违规'?'#e94560':v.action==='已撤销'?'#5a6a7a':'#f0a050' }
+    value: [v.time, roomOrder.indexOf(v.room), v.reason, v.action, v.isNew],
+    itemStyle: {
+      color: v.isNew ? '#e94560' : (v.action==='违规'?'#c0392b':v.action==='已撤销'?'#5a6a7a':'#f0a050'),
+      borderColor: v.isNew ? '#fff' : 'transparent',
+      borderWidth: v.isNew ? 3 : 0,
+      symbolSize: v.isNew ? 20 : 14
+    }
   }));
+
   c.setOption({
     tooltip: { formatter: p => {
-      const d = sorted.find(v=>v.time===p.data[0] && rooms.indexOf(v.room)===p.data[1]);
-      return d ? `<b>${d.room}</b><br/>时间: ${d.time}<br/>原因: ${d.reason}<br/>处置: ${d.action}<br/>处罚: ${d.penalty}` : '';
+      const d = sorted.find(v=>v.time===p.data[0] && roomOrder.indexOf(v.room)===p.data[1]);
+      return d ? `<b>${d.room.replace('小米官方','').replace('小米','')}</b>${d.isNew?' 🆕':''}<br/>时间: ${d.time}<br/>原因: ${d.reason}<br/>处置: ${d.action}<br/>处罚: ${d.penalty}` : '';
     }},
     grid: { left: 130, right: 30, top: 20, bottom: 40 },
-    xAxis: { type: 'category', data: [...new Set(sorted.map(v=>v.time))], axisLabel: { color: '#636e72', rotate: 30, fontSize: 9 }, axisLine: { lineStyle: { color: '#dde1e6' } } },
-    yAxis: { type: 'category', data: rooms.map(r=>r.replace('小米官方','').replace('直播间','').replace('小米','')), axisLabel: { color: '#636e72', fontSize: 10 }, axisLine: { lineStyle: { color: '#dde1e6' } } },
+    xAxis: { type: 'category', data: times, axisLabel: { color: '#636e72', rotate: 35, fontSize: 9 }, axisLine: { lineStyle: { color: '#dde1e6' } } },
+    yAxis: { type: 'category', data: roomOrder.map(r=>r.replace('小米官方','').replace('直播间','').replace('小米','')), axisLabel: { color: '#636e72', fontSize: 10 }, axisLine: { lineStyle: { color: '#dde1e6' } } },
     series: [{
-      type: 'scatter', data: scatterData, symbolSize: 16,
-      markLine: { silent: true, symbol: 'none', lineStyle: { color: '#e94560', type: 'dashed' },
-        data: [{ xAxis: '2026-06-01', label: { formatter: '6月起', color: '#e94560' } }] }
+      type: 'scatter', data: scatterData,
+      markLine: { silent: true, symbol: 'none', lineStyle: { color: '#e94560', type: 'dashed', width: 2 },
+        data: [{ xAxis: '2026-06-01', label: { formatter: '6月起', color: '#e94560', fontWeight: 'bold' } }] }
     }]
   });
 })();
@@ -561,12 +658,22 @@ const freezeAmt = allRecords.reduce((s,v)=>{
 (function(){
   const tbody = document.querySelector('#detail-table tbody');
   const actionClass = { '预警': 'warn', '违规': 'violation', '已撤销': 'revoked' };
-  const reasonClassMap = { '赠品活动信息与宣传不符': 'reason-gift', '售后服务不符': 'reason-service', '效果虚假': 'reason-fake' };
+  const reasonClassMap = {
+    '赠品活动信息与宣传不符': 'reason-gift',
+    '售后服务不符': 'reason-service',
+    '效果虚假': 'reason-fake',
+    '未使用平台福袋工具': 'reason-lottery',
+    '违规买赠': 'reason-buygift',
+    '诱导互动': 'reason-induce',
+    '不当竞争': 'reason-compete',
+    '款式/颜色/图案/形状不符': 'reason-appear'
+  };
   const allSorted = [...allRecords].sort((a,b)=>b.time.localeCompare(a.time));
   allSorted.forEach(v=>{
     const tr = document.createElement('tr');
+    if (v.isNew) tr.className = 'new-row';
     tr.innerHTML = `
-      <td>${v.room.replace('小米官方','').replace('小米','')}</td>
+      <td>${v.room.replace('小米官方','').replace('小米','')}${v.isNew?' <span class="new-badge">NEW</span>':''}</td>
       <td><span class="tag ${actionClass[v.action]||''}">${v.action}</span></td>
       <td style="white-space:nowrap">${v.time}</td>
       <td><span class="reason-tag ${reasonClassMap[v.reason]||''}">${v.reason}</span></td>
@@ -574,6 +681,7 @@ const freezeAmt = allRecords.reduce((s,v)=>{
       <td>${v.phrase!=='-'?`<em>"${v.phrase}"</em>`:'-'}</td>
       <td>${v.product}</td>
       <td class="penalty">${v.penalty}</td>
+      <td>${v.isNew?'🆕 6月新增':'-'}</td>
     `;
     tbody.appendChild(tr);
   });
@@ -581,7 +689,7 @@ const freezeAmt = allRecords.reduce((s,v)=>{
 
 // Responsive resize
 window.addEventListener('resize', ()=>{
-  document.querySelectorAll('.chart,.chart-lg,.chart-sm').forEach(el=>{
+  document.querySelectorAll('.chart,.chart-lg').forEach(el=>{
     const inst = echarts.getInstanceByDom(el);
     if (inst) inst.resize();
   });
