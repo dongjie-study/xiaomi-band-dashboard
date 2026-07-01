@@ -34,6 +34,8 @@
     --clr-upgrade:    #ec4899;
     --clr-visual:     #10b981;
     --clr-streamer:   #ec4899;
+    --clr-monthly:    #1da85c;
+    --clr-event:      #f59e0b;
 
     --clr-sales-bg:      #fff7ed;
     --clr-violations-bg: #fef2f2;
@@ -44,6 +46,8 @@
     --clr-upgrade-bg:    #fdf2f8;
     --clr-visual-bg:     #ecfdf5;
     --clr-streamer-bg:   #fdf2f8;
+    --clr-monthly-bg:    #ecfdf5;
+    --clr-event-bg:      #fffbeb;
   }
 
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -163,6 +167,8 @@
   .sidebar-nav a.upgrade::after    { background: var(--clr-upgrade); }
   .sidebar-nav a.visual::after     { background: var(--clr-visual); }
   .sidebar-nav a.streamer::after   { background: var(--clr-streamer); }
+  .sidebar-nav a.monthlySummary::after { background: var(--clr-monthly); }
+  .sidebar-nav a.eventSummary::after   { background: var(--clr-event); }
 
   .sidebar-nav a:hover {
     background: var(--sidebar-hover);
@@ -211,6 +217,8 @@
   .sidebar-nav a.upgrade .nav-dot    { background: var(--clr-upgrade); }
   .sidebar-nav a.visual .nav-dot     { background: var(--clr-visual); }
   .sidebar-nav a.streamer .nav-dot   { background: var(--clr-streamer); }
+  .sidebar-nav a.monthlySummary .nav-dot { background: var(--clr-monthly); }
+  .sidebar-nav a.eventSummary .nav-dot   { background: var(--clr-event); }
 
   .sidebar-nav a .badge-nav {
     font-size: .64em;
@@ -444,6 +452,8 @@
   .module-card.gsv::before        { background: linear-gradient(90deg, var(--clr-gsv), #67e8f9); }
   .module-card.upgrade::before    { background: linear-gradient(90deg, var(--clr-upgrade), #f9a8d4); }
   .module-card.streamer::before   { background: linear-gradient(90deg, var(--clr-streamer), #f9a8d4); }
+  .module-card.monthlySummary::before { background: linear-gradient(90deg, var(--clr-monthly), #6ee7b7); }
+  .module-card.eventSummary::before   { background: linear-gradient(90deg, var(--clr-event), #fcd34d); }
 
   .module-card .mod-icon {
     width: 46px; height: 46px;
@@ -470,6 +480,8 @@
   .module-card.upgrade .mod-icon    { background: var(--clr-upgrade-bg); }
   .module-card.visual .mod-icon     { background: var(--clr-visual-bg); }
   .module-card.streamer .mod-icon   { background: var(--clr-streamer-bg); }
+  .module-card.monthlySummary .mod-icon { background: var(--clr-monthly-bg); }
+  .module-card.eventSummary .mod-icon   { background: var(--clr-event-bg); }
 
   .module-card h3 {
     font-size: .95em;
@@ -488,6 +500,8 @@
   .module-card.gsv:hover h3        { color: var(--clr-gsv); }
   .module-card.upgrade:hover h3    { color: var(--clr-upgrade); }
   .module-card.streamer:hover h3   { color: var(--clr-streamer); }
+  .module-card.monthlySummary:hover h3 { color: var(--clr-monthly); }
+  .module-card.eventSummary:hover h3   { color: var(--clr-event); }
 
   .module-card p {
     font-size: .8em;
@@ -517,6 +531,8 @@
   .module-card.upgrade .mod-tag    { background: var(--clr-upgrade-bg); color: var(--clr-upgrade); }
   .module-card.visual .mod-tag     { background: var(--clr-visual-bg); color: var(--clr-visual); }
   .module-card.streamer .mod-tag   { background: var(--clr-streamer-bg); color: var(--clr-streamer); }
+	  .module-card.monthlySummary .mod-tag { background: var(--clr-monthly-bg); color: var(--clr-monthly); }
+	  .module-card.eventSummary .mod-tag   { background: var(--clr-event-bg); color: var(--clr-event); }
 
   .module-card:hover .mod-tag {
     filter: brightness(.97);
@@ -666,12 +682,21 @@ function renderSidebar(config) {
         html += '<span class="sub-arrow">&#x25B8;</span></a>';
         html += '<div class="sub-menu" id="' + subMenuId + '" style="display:none;">';
         mod.subModules.forEach(function(sub) {
-          var datesId = 'monthDates_' + sub.monthKey;
-          html += '<a class="month-item" onclick="toggleMonthDates(this, \'' + sub.monthKey + '\', \'' + datesId + '\')">';
-          html += '📅 ' + sub.title;
-          if (sub.badge) html += ' <span class="badge-nav">' + sub.badge + '</span>';
-          html += '<span class="sub-arrow" style="font-size:.65em;opacity:.5">&#x25B8;</span></a>';
-          html += '<div class="sub-menu month-dates" id="' + datesId + '" style="display:none;"></div>';
+          if (sub.monthKey) {
+            // Month → expands to show dates
+            var datesId = 'monthDates_' + sub.monthKey;
+            html += '<a class="month-item" onclick="toggleMonthDates(this, \'' + sub.monthKey + '\', \'' + datesId + '\')">';
+            html += '📅 ' + sub.title;
+            if (sub.badge) html += ' <span class="badge-nav">' + sub.badge + '</span>';
+            html += '<span class="sub-arrow" style="font-size:.65em;opacity:.5">&#x25B8;</span></a>';
+            html += '<div class="sub-menu month-dates" id="' + datesId + '" style="display:none;"></div>';
+          } else if (sub.url) {
+            // Direct link → opens URL
+            html += '<a data-module="' + sub.id + '" data-title="' + sub.title + '" data-url="' + sub.url + '" data-parent="' + mod.id + '" onclick="openSubModule(this)">';
+            html += '📋 ' + sub.title;
+            if (sub.badge) html += ' <span class="badge-nav">' + sub.badge + '</span>';
+            html += '</a>';
+          }
         });
         html += '</div>';
       } else if (mod.hasSubMenu) {
@@ -713,6 +738,11 @@ function buildModuleRegistry(config) {
   config.sections.forEach(function(section) {
     section.modules.forEach(function(mod) {
       modules[mod.id] = { url: mod.url, title: mod.title };
+      if (mod.subModules) {
+        mod.subModules.forEach(function(sub) {
+          modules[sub.id] = { url: sub.url || mod.url, title: sub.title };
+        });
+      }
     });
   });
 }
@@ -805,6 +835,26 @@ function buildMonthDates(monthKey, container) {
   });
   if (!html) html = '<a style="color:var(--text-muted);cursor:default">暂无数据</a>';
   container.innerHTML = html;
+}
+
+// ----- 打开子模块（直接链接型：月度总结、节点总结）-----
+function openSubModule(el) {
+  var url = el.dataset.url;
+  var title = el.dataset.title;
+  var parentId = el.dataset.parent;
+  if (!url) return;
+
+  document.querySelectorAll('.sidebar-nav > a, .sub-menu a, .month-item').forEach(function(a) { a.classList.remove('active'); });
+  var parentLink = document.querySelector('.sidebar-nav > a[data-module="' + parentId + '"]');
+  if (parentLink) parentLink.classList.add('active');
+  el.classList.add('active');
+
+  document.getElementById('overview').classList.add('hidden');
+  var iframe = document.getElementById('iframePanel');
+  iframe.src = url;
+  iframe.classList.add('show');
+
+  document.getElementById('breadcrumb').innerHTML = '首页 / <span>' + title + '</span>';
 }
 
 // ----- 打开每日数据 -----

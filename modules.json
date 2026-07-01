@@ -4,24 +4,6 @@
       "name": "数据看板",
       "modules": [
         {
-          "id": "review618",
-          "title": "618复盘总结",
-          "url": "618复盘总结.html",
-          "icon": "🏆",
-          "description": "618大促全周期复盘：销量×视频×视觉三维分析，核心洞察与后续规划",
-          "tag": "Hot Review",
-          "badge": "NEW"
-        },
-        {
-          "id": "reviewApril",
-          "title": "四月份复盘总结",
-          "url": "四月份复盘总结.html",
-          "icon": "📋",
-          "description": "四月份订单全周期复盘：直播间+商品卡全渠道数据，三大团队竞争格局，四月vs618趋势对比",
-          "tag": "Monthly Review",
-          "badge": "NEW"
-        },
-        {
           "id": "sales",
           "title": "销售分析",
           "url": "sales_analysis/index.html",
@@ -36,13 +18,31 @@
           ]
         },
         {
-          "id": "juneSummary",
-          "title": "6月月度总结",
+          "id": "monthlySummary",
+          "title": "月度总结",
           "url": "六月销量分析.html",
           "icon": "📊",
-          "description": "6月全月销量汇总：直播间排名(按销售额)、产品结构、周度趋势、竞争格局",
+          "description": "每月销量汇总：直播间排名、产品结构、周度趋势、竞争格局",
           "tag": "Monthly Report",
-          "badge": "NEW"
+          "hasSubMenu": true,
+          "subModules": [
+            { "id": "summaryJune", "title": "六月", "url": "六月销量分析.html" },
+            { "id": "summaryJuly", "title": "七月", "url": "七月销量分析.html", "badge": "NEW" }
+          ]
+        },
+        {
+          "id": "eventSummary",
+          "title": "节点总结",
+          "url": "618复盘总结.html",
+          "icon": "🏆",
+          "description": "大促节点全周期复盘：618、双11等关键营销节点分析",
+          "tag": "Event Review",
+          "badge": "NEW",
+          "hasSubMenu": true,
+          "subModules": [
+            { "id": "event618", "title": "618复盘", "url": "618复盘总结.html" },
+            { "id": "eventApril", "title": "4月复盘", "url": "四月份复盘总结.html" }
+          ]
         },
         {
           "id": "violations",
