@@ -261,6 +261,9 @@ return;
   <div class="daily-summary-module" id="dailySummaryModule">
     <h2>每日数据总结分析（全平台历史总览）</h2>
 
+    <!-- 今日数据洞察 -->
+    <div class="summary-box" id="todayInsights" style="margin-bottom:20px;border:2px solid #FFD700;background:linear-gradient(135deg,#fffdf0 0%,#fff 100%);"></div>
+
     <div class="kpi-row" id="summaryKpiRow"></div>
 
     <div class="charts-row">
@@ -914,6 +917,125 @@ function renderDailyInsights() {
     lines.map(function(l) { return '<div class="insight-line ' + l.cls + '">' + l.text + '</div>'; }).join('');
 }
 
+function renderTodayInsights() {
+  const container = document.getElementById('todayInsights');
+  if (!DATA || HISTORY.length < 1) { container.innerHTML = ''; return; }
+
+  const today = DATA;
+  const prev = HISTORY.length > 1 ? HISTORY[HISTORY.length - 2] : null;
+  const dateLabel = today.date;
+
+  // Team totals
+  const typeSummary = today.type_summary || {};
+  const our = typeSummary['我方'] || {orders:0, revenue:0, avg_price:0, rooms:0};
+  const jx = typeSummary['机械空间'] || {orders:0, revenue:0, avg_price:0, rooms:0};
+  const zh = typeSummary['纵横'] || {orders:0, revenue:0, avg_price:0, rooms:0};
+  const lm = typeSummary['良米'] || {orders:0, revenue:0, avg_price:0, rooms:0};
+  const share = today.total_orders > 0 ? (our.orders / today.total_orders * 100).toFixed(1) : 0;
+
+  // Yesterday comparison
+  let dodHtml = '';
+  if (prev && prev.type_summary && prev.type_summary['我方']) {
+    const prevOur = prev.type_summary['我方'].orders;
+    const diff = our.orders - prevOur;
+    const pct = prevOur > 0 ? (diff / prevOur * 100).toFixed(1) : 0;
+    const arrow = diff >= 0 ? '📈' : '📉';
+    const color = diff >= 0 ? '#e74c3c' : '#27ae60';
+    dodHtml = `<span style="color:${color}">${arrow} 环比 ${diff>=0?'+':''}${diff}单 (${diff>=0?'+':''}${pct}%)</span>`;
+  }
+
+  // Top rooms (by revenue)
+  const rooms = today.rooms || {};
+  const roomSorted = Object.entries(rooms).sort((a,b) => b[1].revenue - a[1].revenue);
+  const topRoom = roomSorted[0];
+  const topOurRoom = roomSorted.filter(([n]) => rooms[n].type === '我司')[0];
+
+  // Top products
+  const prodSorted = Object.entries(today.products || {}).sort((a,b) => b[1].orders - a[1].orders);
+  const top3Prods = prodSorted.slice(0, 3);
+
+  // Peak hours
+  const hourly = today._hourly_stats || {};
+  const hourSorted = Object.entries(hourly).sort((a,b) => b[1].orders - a[1].orders);
+  const peakHours = hourSorted.slice(0, 3);
+
+  // Our rooms detail
+  const ourRooms = Object.entries(rooms).filter(([n, r]) => r.type === '我司').sort((a,b) => b[1].orders - a[1].orders);
+  const ourRoomsList = ourRooms.map(([n, r]) => `<strong>${n}</strong>(${r.orders}单/¥${Math.round(r.revenue).toLocaleString()})`).join('、');
+
+  // Competitor strength
+  const compTypes = [];
+  if (jx.orders > 0) compTypes.push(`机械空间 ${jx.orders}单(¥${Math.round(jx.revenue).toLocaleString()})`);
+  if (zh.orders > 0) compTypes.push(`纵横 ${zh.orders}单(¥${Math.round(zh.revenue).toLocaleString()})`);
+  if (lm.orders > 0) compTypes.push(`良米 ${lm.orders}单(¥${Math.round(lm.revenue).toLocaleString()})`);
+
+  // Build HTML
+  let html = '<h3>📋 ' + dateLabel + ' 数据洞察</h3>';
+
+  // Overall summary
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:12px 0;">';
+
+  html += '<div style="background:#f8fafc;border-radius:10px;padding:14px 18px;">';
+  html += '<div style="font-size:12px;color:#64748b;margin-bottom:4px;">📊 今日总览</div>';
+  html += '<div style="font-size:14px;line-height:1.8;">';
+  html += '全渠道 <strong>' + today.total_orders.toLocaleString() + '单</strong>，销售额 <strong>¥' + Math.round(today.total_revenue).toLocaleString() + '</strong><br>';
+  html += '我司 <strong style="color:#1E90FF">' + our.orders.toLocaleString() + '单</strong>（份额 <strong>' + share + '%</strong>），' + our.rooms + '个直播间<br>';
+  html += dodHtml ? '较前日：' + dodHtml + '<br>' : '';
+  html += '</div></div>';
+
+  html += '<div style="background:#f8fafc;border-radius:10px;padding:14px 18px;">';
+  html += '<div style="font-size:12px;color:#64748b;margin-bottom:4px;">⚔️ 竞对格局</div>';
+  html += '<div style="font-size:14px;line-height:1.8;">';
+  html += compTypes.join('<br>');
+  html += '</div></div>';
+
+  html += '<div style="background:#f8fafc;border-radius:10px;padding:14px 18px;">';
+  html += '<div style="font-size:12px;color:#64748b;margin-bottom:4px;">🏪 我司直播间</div>';
+  html += '<div style="font-size:13px;line-height:1.8;">';
+  html += ourRoomsList || '无';
+  html += '</div></div>';
+
+  html += '</div>';
+
+  // Key data points
+  html += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:8px 0;">';
+
+  if (topRoom) {
+    const marker = rooms[topRoom[0]].type === '我司' ? '⭐' : '·';
+    html += '<div class="insight-line neutral">🏆 销冠直播间：' + marker + ' <strong>' + topRoom[0] + '</strong> — ' + topRoom[1].orders.toLocaleString() + '单 / ¥' + Math.round(topRoom[1].revenue).toLocaleString() + '</div>';
+  }
+
+  html += '<div class="insight-line neutral">📦 热销TOP3：';
+  html += top3Prods.map((p, i) => (i+1) + '.' + p[0] + '(' + p[1].orders + '单)').join(' | ');
+  html += '</div>';
+
+  html += '<div class="insight-line neutral">⏰ 出单高峰：';
+  html += peakHours.map(h => h[0] + ':00(' + h[1].orders + '单)').join(' → ');
+  html += '</div>';
+
+  // Team comparison
+  if (our.avg_price > 0) {
+    const priceCompare = [];
+    if (jx.avg_price > 0) priceCompare.push('机械¥' + Math.round(jx.avg_price));
+    if (zh.avg_price > 0) priceCompare.push('纵横¥' + Math.round(zh.avg_price));
+    if (lm.avg_price > 0) priceCompare.push('良米¥' + Math.round(lm.avg_price));
+    html += '<div class="insight-line neutral">💰 我司均价 ¥' + Math.round(our.avg_price) + ' | ' + priceCompare.join(' | ') + '</div>';
+  }
+
+  // Share position
+  if (share > 35) {
+    html += '<div class="insight-line positive">✅ 今日份额 ' + share + '% 表现良好，超过35%关口</div>';
+  } else if (share < 25) {
+    html += '<div class="insight-line negative">⚠️ 今日份额仅 ' + share + '%，低于25%，需重点关注</div>';
+  } else {
+    html += '<div class="insight-line neutral">📊 今日份额 ' + share + '% 处于中等水平（25%-35%区间）</div>';
+  }
+
+  html += '</div>';
+
+  container.innerHTML = html;
+}
+
 function renderDailySummary() {
   const module = document.getElementById('dailySummaryModule');
   // 仅全部直播间汇总页面显示每日总结模块，单直播间不显示
@@ -926,6 +1048,7 @@ function renderDailySummary() {
     module.innerHTML = '<h2>每日数据总结分析</h2><div class="hour-empty">历史数据不足（需要至少2天数据）</div>';
     return;
   }
+  renderTodayInsights();
   renderSummaryKPIs();
   renderDailyTrendChart();
   renderDailyTable();
