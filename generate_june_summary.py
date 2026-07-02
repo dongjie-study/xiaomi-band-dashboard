@@ -13,13 +13,14 @@ TEAM_MAP = {
     '小米官方耳机直播间': '我司', '小米手环10Pro直播间': '我司', '小米官旗手表直播间': '我司',
     '小米智能穿戴国补号': '机械空间', '小米智能穿戴授权号': '机械空间',
     '小米官方手表直播号': '纵横',
+    '小米手环官方直播间': '凝云', '小米手环新品直播间': '凝云', '小米手环直播间': '凝云',
 }
 def get_team(room_name):
     return TEAM_MAP.get(room_name, '良米')
 
-TEAM_ORDER = ['我司', '机械空间', '纵横', '良米']
-TEAM_COLORS = {'我司': '#1E90FF', '机械空间': '#FF6B35', '纵横': '#7c6ff7', '良米': '#94a3b8'}
-TEAM_MARKERS = {'我司': '★', '机械空间': '◆', '纵横': '▲', '良米': '·'}
+TEAM_ORDER = ['我司', '机械空间', '纵横', '凝云', '良米']
+TEAM_COLORS = {'我司': '#1E90FF', '机械空间': '#FF6B35', '纵横': '#7c6ff7', '凝云': '#e74c3c', '良米': '#94a3b8'}
+TEAM_MARKERS = {'我司': '★', '机械空间': '◆', '纵横': '▲', '凝云': '●', '良米': '·'}
 
 def load_june_data():
     with open(os.path.join(DATA_DIR, 'sales_analysis', 'history.json'), 'r', encoding='utf-8') as f:
@@ -376,8 +377,8 @@ footer {{
 
 <script>
 const DATA = {data_json};
-const TEAM_COLORS = {{'我司':'#1E90FF','机械空间':'#FF6B35','纵横':'#7c6ff7','良米':'#94a3b8'}};
-const TEAM_ORDER = ['我司','机械空间','纵横','良米'];
+const TEAM_COLORS = {{'我司':'#1E90FF','机械空间':'#FF6B35','纵横':'#7c6ff7','凝云':'#e74c3c','良米':'#94a3b8'}};
+const TEAM_ORDER = ['我司','机械空间','纵横','凝云','良米'];
 
 function fmt(n) {{ return n.toLocaleString('zh-CN'); }}
 function fmtRMB(n) {{ return '¥' + Math.round(n).toLocaleString('zh-CN'); }}

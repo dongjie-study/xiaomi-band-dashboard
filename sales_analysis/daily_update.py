@@ -23,6 +23,8 @@ TEAM_MAP = {
     '小米智能穿戴国补号': '机械空间', '小米智能穿戴授权号': '机械空间',
     # 纵横
     '小米官方手表直播号': '纵横',
+    # 凝云
+    '小米手环官方直播间': '凝云', '小米手环新品直播间': '凝云', '小米手环直播间': '凝云',
 }
 # Everything else → 良米
 
@@ -31,7 +33,7 @@ def classify_room(room_name):
 
 # Teams we want to highlight
 OUR_TEAM = '我司'
-ALL_TEAMS = ['我司', '机械空间', '纵横', '良米']
+ALL_TEAMS = ['我司', '机械空间', '纵横', '凝云', '良米']
 
 
 def shorten_product(name):
@@ -278,7 +280,7 @@ def print_comparison(today, yesterday=None):
     rooms = today.get('rooms', {})
 
     # ===== 团队总览 =====
-    team_colors = {'我司': '★', '机械空间': '◆', '纵横': '▲', '良米': '·'}
+    team_colors = {'我司': '★', '机械空间': '◆', '纵横': '▲', '凝云': '●', '良米': '·'}
     print(f"\n  【四队总览】")
     print(f"    {'':<15s} {'订单':>8s} {'占比':>8s} {'销售额':>14s} {'均价':>10s} {'直播间':>8s}")
     print(f"    {'-'*65}")
