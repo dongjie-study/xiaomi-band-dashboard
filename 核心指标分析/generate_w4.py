@@ -280,76 +280,80 @@ def analyze_titles(data):
 
 # ===== NEW: Live Room Data Analysis =====
 def analyze_liveroom(data):
-    """Analyze live room screen data and return metrics"""
+    """Analyze live room screen data and return metrics.
+    Data structure: each room has 1 summary row (date='全部') + N daily rows."""
     hc = data[data['cost'] > 0].copy()
-    # Exclude summary/汇总 rows
-    daily = hc[~hc['name'].str.contains('汇总|总计|合计', na=False)].copy()
-    summary_rows = hc[hc['name'].str.contains('汇总|总计|合计', na=False)]
 
-    if len(daily) == 0 and len(summary_rows) > 0:
-        daily = summary_rows
+    # Separate summary rows (date='全部') from daily rows
+    summary_mask = hc['date'].astype(str).str.contains('全部|汇总|总计|合计', na=False)
+    summary_rows = hc[summary_mask].copy()
+    daily_rows = hc[~summary_mask].copy()
 
-    total_cost = hc['cost'].sum()
-    total_deal = hc['deal_amt'].sum()
-    total_orders = hc['orders'].sum()
-    total_enter = hc['hourly_enter'].sum()
+    if len(daily_rows) == 0:
+        daily_rows = summary_rows
+
+    # Totals from summary rows only (more accurate than summing daily rows)
+    total_cost = summary_rows['cost'].sum() if len(summary_rows) > 0 else hc['cost'].sum()
+    total_deal = summary_rows['deal_amt'].sum() if len(summary_rows) > 0 else hc['deal_amt'].sum()
+    total_orders = summary_rows['orders'].sum() if len(summary_rows) > 0 else hc['orders'].sum()
+    total_enter = summary_rows['hourly_enter'].sum() if len(summary_rows) > 0 else hc['hourly_enter'].sum()
     roi = total_deal / total_cost if total_cost > 0 else 0
-    pay_roi = hc['pay_amt'].sum() / total_cost if total_cost > 0 else 0
-    avg_cvr = hc['cvr'].mean()
+    pay_roi = 0  # Will use roi as primary
+    avg_cvr = summary_rows['cvr'].mean() if len(summary_rows) > 0 else daily_rows['cvr'].mean()
 
-    # Top screens by ROI
-    top_screens = daily.nlargest(10, 'roi') if len(daily) > 0 else hc.nlargest(10, 'roi')
-    top_list = []
-    for _, r in top_screens.iterrows():
-        top_list.append({
-            'name': str(r['name'])[:60],
-            'cost': r['cost'],
-            'roi': r['roi'],
-            'deal_amt': r['deal_amt'],
-            'cvr': r['cvr'],
-            'hourly_enter': r['hourly_enter'],
-        })
-
-    # Daily trend data
-    daily_trend = []
-    for _, r in daily.iterrows():
-        daily_trend.append({
-            'date': str(r['date'])[:10],
-            'cost': float(r['cost']),
-            'roi': float(r['roi']),
-            'deal_amt': float(r['deal_amt']),
-            'hourly_enter': float(r['hourly_enter']) if pd.notna(r['hourly_enter']) else 0,
-        })
-
-    # Screen name breakdown
+    # Per-room breakdown from summary rows
     screens = []
-    for name in daily['name'].unique():
-        s = daily[daily['name'] == name]
-        c = s['cost'].sum()
-        d = s['deal_amt'].sum()
-        r = d / c if c > 0 else 0
+    for _, r in summary_rows.iterrows():
         screens.append({
-            'name': str(name)[:60],
-            'cost': round(c, 2),
-            'deal': round(d, 2),
-            'roi': round(r, 2),
-            'days': len(s),
-            'cvr': round(s['cvr'].mean(), 2),
+            'name': str(r['name'])[:60],
+            'cost': round(float(r['cost']), 2),
+            'deal': round(float(r['deal_amt']), 2),
+            'roi': round(float(r['roi']), 2),
+            'cvr': round(float(r['cvr']), 2),
+            'orders': int(r['orders']) if pd.notna(r['orders']) else 0,
+            'hourly_enter': int(r['hourly_enter']) if pd.notna(r['hourly_enter']) else 0,
         })
     screens.sort(key=lambda x: x['cost'], reverse=True)
 
+    # Daily trend: group by date, sum across rooms
+    daily_trend = []
+    for date in sorted(daily_rows['date'].unique()):
+        d = daily_rows[daily_rows['date'] == date]
+        daily_trend.append({
+            'date': str(date)[:10],
+            'cost': round(float(d['cost'].sum()), 2),
+            'roi': round(float(d['deal_amt'].sum()) / float(d['cost'].sum()), 2) if d['cost'].sum() > 0 else 0,
+            'deal_amt': round(float(d['deal_amt'].sum()), 2),
+            'hourly_enter': int(d['hourly_enter'].sum()) if pd.notna(d['hourly_enter'].sum()) else 0,
+            'orders': int(d['orders'].sum()) if pd.notna(d['orders'].sum()) else 0,
+        })
+
+    # Per-room daily data for detailed view
+    room_daily = {}
+    for name in daily_rows['name'].unique():
+        rd = daily_rows[daily_rows['name'] == name].copy()
+        room_daily[str(name)[:60]] = []
+        for _, r in rd.iterrows():
+            room_daily[str(name)[:60]].append({
+                'date': str(r['date'])[:10],
+                'cost': round(float(r['cost']), 2),
+                'roi': round(float(r['roi']), 2),
+                'deal_amt': round(float(r['deal_amt']), 2),
+                'hourly_enter': int(r['hourly_enter']) if pd.notna(r['hourly_enter']) else 0,
+                'orders': int(r['orders']) if pd.notna(r['orders']) else 0,
+            })
+
     return {
-        'total_screens': len(daily['name'].unique()) if len(daily) > 0 else len(hc['name'].unique()),
+        'total_screens': len(screens),
         'total_cost': round(total_cost, 2),
         'total_deal': round(total_deal, 2),
         'total_orders': int(total_orders),
         'total_enter': int(total_enter),
         'roi': round(roi, 2),
-        'pay_roi': round(pay_roi, 2),
         'avg_cvr': round(avg_cvr, 2),
-        'top_screens': top_list,
         'screens': screens,
         'daily_trend': daily_trend,
+        'room_daily': room_daily,
     }
 
 def fmt_money(v):
@@ -681,29 +685,50 @@ def gen_title_section(t, label=''):
 
 # ===== NEW: Live Room Section Generators =====
 def gen_liveroom_section(room, label=''):
-    """Generate full live room analysis section"""
+    """Generate full live room analysis section with clean per-room layout"""
     if room is None:
         return '<div class="section"><h2>09 直播间画面分析</h2><p style="color:var(--text-secondary);">暂无直播间画面数据</p></div>'
 
-    # Screen table
-    screen_rows = ''
-    for s in room['screens'][:10]:
-        screen_rows += f'<tr><td>{s["name"]}</td><td>{fmt_money(s["cost"])}</td><td>{fmt_money(s["deal"])}</td><td><b>{s["roi"]:.1f}</b></td><td>{s["cvr"]:.2f}%</td><td>{s["days"]}</td></tr>\n'
+    # Build per-room cards
+    room_cards = ''
+    for s in room['screens']:
+        # Build daily table for this room
+        daily_rows = ''
+        room_name = s['name']
+        if room_name in room.get('room_daily', {}):
+            for d in room['room_daily'][room_name]:
+                daily_rows += f'<tr><td style="font-size:11px;">{d["date"]}</td><td style="font-size:11px;">{fmt_money(d["cost"])}</td><td style="font-size:11px;">{fmt_money(d["deal_amt"])}</td><td style="font-size:11px;"><b>{d["roi"]:.1f}</b></td><td style="font-size:11px;">{d["orders"]}</td></tr>\n'
 
-    # Daily trend data for chart
+        room_cards += f'''<div style="background:var(--surface);border:1px solid #e8ecf1;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+<div style="background:linear-gradient(135deg,#f0f4ff,#e8ecf1);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+<h3 style="margin:0;font-size:15px;">📺 {room_name}</h3>
+<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;">
+<span>💰消耗 <b style="color:#FF4757;">{fmt_money(s["cost"])}</b></span>
+<span>💵成交 <b style="color:#2ED573;">{fmt_money(s["deal"])}</b></span>
+<span>📈ROI <b style="color:#1E90FF;font-size:15px;">{s["roi"]:.1f}</b></span>
+<span>🔄CVR <b>{s["cvr"]:.1f}%</b></span>
+<span>📦订单 <b>{s["orders"]}</b></span>
+</div>
+</div>
+<div style="padding:8px 16px 12px;">
+<table><tr><th>日期</th><th>消耗</th><th>成交</th><th>ROI</th><th>订单</th></tr>{daily_rows}</table>
+</div>
+</div>'''
+
+    # Daily trend chart (combined, excluding summary rows)
     daily_json = json.dumps(room['daily_trend'])
 
     return f'''<div class="section"><h2>09 直播间画面分析 {label}</h2>
-<div class="grid-3" style="grid-template-columns:repeat(5,1fr);">
+<div class="grid-3" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px;">
 <div class="kpi-card"><div class="value" style="color:#FF4757;">{fmt_money(room['total_cost'])}</div><div class="label">画面总消耗</div></div>
 <div class="kpi-card"><div class="value" style="color:#2ED573;">{fmt_money(room['total_deal'])}</div><div class="label">画面总成交</div></div>
 <div class="kpi-card"><div class="value" style="color:#1E90FF;">{room['roi']:.2f}</div><div class="label">画面整体ROI</div></div>
 <div class="kpi-card"><div class="value" style="color:#FF6B35;">{fmt_num(room['total_enter'])}</div><div class="label">1h进入人数</div></div>
 <div class="kpi-card"><div class="value" style="color:#A855F7;">{fmt_num(room['total_orders'])}</div><div class="label">净成交订单数</div></div>
 </div>
-<div class="chart-box" id="chart-room-daily"></div>
-<h3>📺 直播间画面对比（按消耗排名）</h3>
-<table><tr><th>画面名称</th><th>消耗</th><th>成交金额</th><th>ROI</th><th>CVR</th><th>天数</th></tr>{screen_rows}</table>
+<div class="chart-box" id="chart-room-daily" style="height:320px;"></div>
+<h3 style="margin:20px 0 12px;">📺 按直播间逐一拆分</h3>
+{room_cards}
 </div>
 <script>
 (function(){{
@@ -1193,7 +1218,7 @@ if room_our and room_comp:
 <span>💵 成交 <b style="color:#2ED573;">{fmt_money(o['deal'])}</b></span>
 <span>📈 ROI <b style="color:#1E90FF;font-size:16px;">{o['roi']:.1f}</b></span>
 <span>🔄 CVR <b>{o['cvr']:.1f}%</b></span>
-<span>📅 {o['days']}天</span>
+<span>📦 订单 <b>{o.get('orders', 0)}</b></span>
 </div>
 </div>
 <div style="background:#fff4f0;border-radius:10px;padding:14px;">
@@ -1203,7 +1228,7 @@ if room_our and room_comp:
 <span>💵 成交 <b style="color:#2ED573;">{fmt_money(c['deal'])}</b></span>
 <span>📈 ROI <b style="color:#FF6B35;font-size:16px;">{c['roi']:.1f}</b></span>
 <span>🔄 CVR <b>{c['cvr']:.1f}%</b></span>
-<span>📅 {c['days']}天</span>
+<span>📦 订单 <b>{c.get('orders', 0)}</b></span>
 </div>
 </div>
 </div>

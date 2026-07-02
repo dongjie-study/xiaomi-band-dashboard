@@ -207,26 +207,140 @@ document.body.style.display='';
 </div>
 </div>
 <div class="section"><h2>09 直播间画面分析 </h2>
-<div class="grid-3" style="grid-template-columns:repeat(5,1fr);">
-<div class="kpi-card"><div class="value" style="color:#FF4757;">¥10.1万</div><div class="label">画面总消耗</div></div>
-<div class="kpi-card"><div class="value" style="color:#2ED573;">¥601.7万</div><div class="label">画面总成交</div></div>
+<div class="grid-3" style="grid-template-columns:repeat(5,1fr);margin-bottom:20px;">
+<div class="kpi-card"><div class="value" style="color:#FF4757;">¥5.0万</div><div class="label">画面总消耗</div></div>
+<div class="kpi-card"><div class="value" style="color:#2ED573;">¥300.9万</div><div class="label">画面总成交</div></div>
 <div class="kpi-card"><div class="value" style="color:#1E90FF;">59.78</div><div class="label">画面整体ROI</div></div>
 <div class="kpi-card"><div class="value" style="color:#FF6B35;">0</div><div class="label">1h进入人数</div></div>
-<div class="kpi-card"><div class="value" style="color:#A855F7;">6,878</div><div class="label">净成交订单数</div></div>
+<div class="kpi-card"><div class="value" style="color:#A855F7;">1,530</div><div class="label">净成交订单数</div></div>
 </div>
-<div class="chart-box" id="chart-room-daily"></div>
-<h3>📺 直播间画面对比（按消耗排名）</h3>
-<table><tr><th>画面名称</th><th>消耗</th><th>成交金额</th><th>ROI</th><th>CVR</th><th>天数</th></tr><tr><td>小米官方手环直播间</td><td>¥3.5万</td><td>¥136.5万</td><td><b>39.0</b></td><td>84.15%</td><td>11</td></tr>
-<tr><td>小米数码旗舰店</td><td>¥3.4万</td><td>¥134.9万</td><td><b>40.2</b></td><td>83.18%</td><td>11</td></tr>
-<tr><td>小米官方手表</td><td>¥1.9万</td><td>¥84.9万</td><td><b>43.8</b></td><td>77.40%</td><td>11</td></tr>
-<tr><td>小米官方耳机直播间</td><td>¥9,903.48</td><td>¥232.7万</td><td><b>234.9</b></td><td>91.50%</td><td>11</td></tr>
-<tr><td>小米官旗手表直播间</td><td>¥2,865.58</td><td>¥12.8万</td><td><b>44.7</b></td><td>76.63%</td><td>10</td></tr>
+<div class="chart-box" id="chart-room-daily" style="height:320px;"></div>
+<h3 style="margin:20px 0 12px;">📺 按直播间逐一拆分</h3>
+<div style="background:var(--surface);border:1px solid #e8ecf1;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+<div style="background:linear-gradient(135deg,#f0f4ff,#e8ecf1);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+<h3 style="margin:0;font-size:15px;">📺 小米官方手环直播间</h3>
+<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;">
+<span>💰消耗 <b style="color:#FF4757;">¥1.7万</b></span>
+<span>💵成交 <b style="color:#2ED573;">¥68.3万</b></span>
+<span>📈ROI <b style="color:#1E90FF;font-size:15px;">39.0</b></span>
+<span>🔄CVR <b>84.3%</b></span>
+<span>📦订单 <b>0</b></span>
+</div>
+</div>
+<div style="padding:8px 16px 12px;">
+<table><tr><th>日期</th><th>消耗</th><th>成交</th><th>ROI</th><th>订单</th></tr><tr><td style="font-size:11px;">2026-06-22</td><td style="font-size:11px;">¥1,198.86</td><td style="font-size:11px;">¥5.7万</td><td style="font-size:11px;"><b>47.5</b></td><td style="font-size:11px;">158</td></tr>
+<tr><td style="font-size:11px;">2026-06-23</td><td style="font-size:11px;">¥977.98</td><td style="font-size:11px;">¥4.4万</td><td style="font-size:11px;"><b>45.0</b></td><td style="font-size:11px;">119</td></tr>
+<tr><td style="font-size:11px;">2026-06-24</td><td style="font-size:11px;">¥3,282.66</td><td style="font-size:11px;">¥10.9万</td><td style="font-size:11px;"><b>33.2</b></td><td style="font-size:11px;">299</td></tr>
+<tr><td style="font-size:11px;">2026-06-25</td><td style="font-size:11px;">¥2,042.75</td><td style="font-size:11px;">¥7.5万</td><td style="font-size:11px;"><b>36.9</b></td><td style="font-size:11px;">209</td></tr>
+<tr><td style="font-size:11px;">2026-06-26</td><td style="font-size:11px;">¥2,486.88</td><td style="font-size:11px;">¥9.2万</td><td style="font-size:11px;"><b>37.1</b></td><td style="font-size:11px;">245</td></tr>
+<tr><td style="font-size:11px;">2026-06-27</td><td style="font-size:11px;">¥1,474.66</td><td style="font-size:11px;">¥7.1万</td><td style="font-size:11px;"><b>47.8</b></td><td style="font-size:11px;">195</td></tr>
+<tr><td style="font-size:11px;">2026-06-28</td><td style="font-size:11px;">¥2,279</td><td style="font-size:11px;">¥7.7万</td><td style="font-size:11px;"><b>33.7</b></td><td style="font-size:11px;">217</td></tr>
+<tr><td style="font-size:11px;">2026-06-29</td><td style="font-size:11px;">¥1,797.22</td><td style="font-size:11px;">¥7.0万</td><td style="font-size:11px;"><b>38.8</b></td><td style="font-size:11px;">196</td></tr>
+<tr><td style="font-size:11px;">2026-06-30</td><td style="font-size:11px;">¥1,061.52</td><td style="font-size:11px;">¥4.9万</td><td style="font-size:11px;"><b>45.9</b></td><td style="font-size:11px;">136</td></tr>
+<tr><td style="font-size:11px;">2026-07-01</td><td style="font-size:11px;">¥878.90</td><td style="font-size:11px;">¥3.9万</td><td style="font-size:11px;"><b>44.7</b></td><td style="font-size:11px;">109</td></tr>
 </table>
+</div>
+</div><div style="background:var(--surface);border:1px solid #e8ecf1;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+<div style="background:linear-gradient(135deg,#f0f4ff,#e8ecf1);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+<h3 style="margin:0;font-size:15px;">📺 小米数码旗舰店</h3>
+<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;">
+<span>💰消耗 <b style="color:#FF4757;">¥1.7万</b></span>
+<span>💵成交 <b style="color:#2ED573;">¥67.4万</b></span>
+<span>📈ROI <b style="color:#1E90FF;font-size:15px;">40.2</b></span>
+<span>🔄CVR <b>83.1%</b></span>
+<span>📦订单 <b>0</b></span>
+</div>
+</div>
+<div style="padding:8px 16px 12px;">
+<table><tr><th>日期</th><th>消耗</th><th>成交</th><th>ROI</th><th>订单</th></tr><tr><td style="font-size:11px;">2026-06-22</td><td style="font-size:11px;">¥1,205.85</td><td style="font-size:11px;">¥4.6万</td><td style="font-size:11px;"><b>38.2</b></td><td style="font-size:11px;">124</td></tr>
+<tr><td style="font-size:11px;">2026-06-23</td><td style="font-size:11px;">¥936.81</td><td style="font-size:11px;">¥4.1万</td><td style="font-size:11px;"><b>43.6</b></td><td style="font-size:11px;">119</td></tr>
+<tr><td style="font-size:11px;">2026-06-24</td><td style="font-size:11px;">¥1,674.24</td><td style="font-size:11px;">¥6.6万</td><td style="font-size:11px;"><b>39.1</b></td><td style="font-size:11px;">187</td></tr>
+<tr><td style="font-size:11px;">2026-06-25</td><td style="font-size:11px;">¥2,138.01</td><td style="font-size:11px;">¥8.5万</td><td style="font-size:11px;"><b>39.8</b></td><td style="font-size:11px;">235</td></tr>
+<tr><td style="font-size:11px;">2026-06-26</td><td style="font-size:11px;">¥1,325.21</td><td style="font-size:11px;">¥5.5万</td><td style="font-size:11px;"><b>41.4</b></td><td style="font-size:11px;">155</td></tr>
+<tr><td style="font-size:11px;">2026-06-27</td><td style="font-size:11px;">¥1,947.21</td><td style="font-size:11px;">¥7.8万</td><td style="font-size:11px;"><b>39.9</b></td><td style="font-size:11px;">233</td></tr>
+<tr><td style="font-size:11px;">2026-06-28</td><td style="font-size:11px;">¥2,739.43</td><td style="font-size:11px;">¥10.5万</td><td style="font-size:11px;"><b>38.4</b></td><td style="font-size:11px;">304</td></tr>
+<tr><td style="font-size:11px;">2026-06-29</td><td style="font-size:11px;">¥1,659.17</td><td style="font-size:11px;">¥6.7万</td><td style="font-size:11px;"><b>40.2</b></td><td style="font-size:11px;">195</td></tr>
+<tr><td style="font-size:11px;">2026-06-30</td><td style="font-size:11px;">¥1,544.82</td><td style="font-size:11px;">¥6.8万</td><td style="font-size:11px;"><b>44.0</b></td><td style="font-size:11px;">206</td></tr>
+<tr><td style="font-size:11px;">2026-07-01</td><td style="font-size:11px;">¥1,591.72</td><td style="font-size:11px;">¥6.4万</td><td style="font-size:11px;"><b>40.4</b></td><td style="font-size:11px;">177</td></tr>
+</table>
+</div>
+</div><div style="background:var(--surface);border:1px solid #e8ecf1;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+<div style="background:linear-gradient(135deg,#f0f4ff,#e8ecf1);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+<h3 style="margin:0;font-size:15px;">📺 小米官方手表</h3>
+<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;">
+<span>💰消耗 <b style="color:#FF4757;">¥9,701.43</b></span>
+<span>💵成交 <b style="color:#2ED573;">¥42.4万</b></span>
+<span>📈ROI <b style="color:#1E90FF;font-size:15px;">43.8</b></span>
+<span>🔄CVR <b>77.7%</b></span>
+<span>📦订单 <b>846</b></span>
+</div>
+</div>
+<div style="padding:8px 16px 12px;">
+<table><tr><th>日期</th><th>消耗</th><th>成交</th><th>ROI</th><th>订单</th></tr><tr><td style="font-size:11px;">2026-06-22</td><td style="font-size:11px;">¥617.62</td><td style="font-size:11px;">¥2.4万</td><td style="font-size:11px;"><b>38.4</b></td><td style="font-size:11px;">51</td></tr>
+<tr><td style="font-size:11px;">2026-06-23</td><td style="font-size:11px;">¥728.16</td><td style="font-size:11px;">¥3.2万</td><td style="font-size:11px;"><b>43.4</b></td><td style="font-size:11px;">65</td></tr>
+<tr><td style="font-size:11px;">2026-06-24</td><td style="font-size:11px;">¥998.78</td><td style="font-size:11px;">¥4.0万</td><td style="font-size:11px;"><b>40.1</b></td><td style="font-size:11px;">82</td></tr>
+<tr><td style="font-size:11px;">2026-06-25</td><td style="font-size:11px;">¥1,042.97</td><td style="font-size:11px;">¥4.4万</td><td style="font-size:11px;"><b>42.4</b></td><td style="font-size:11px;">97</td></tr>
+<tr><td style="font-size:11px;">2026-06-26</td><td style="font-size:11px;">¥1,445.97</td><td style="font-size:11px;">¥4.9万</td><td style="font-size:11px;"><b>34.1</b></td><td style="font-size:11px;">97</td></tr>
+<tr><td style="font-size:11px;">2026-06-27</td><td style="font-size:11px;">¥801.04</td><td style="font-size:11px;">¥3.5万</td><td style="font-size:11px;"><b>43.2</b></td><td style="font-size:11px;">73</td></tr>
+<tr><td style="font-size:11px;">2026-06-28</td><td style="font-size:11px;">¥855.37</td><td style="font-size:11px;">¥5.1万</td><td style="font-size:11px;"><b>59.9</b></td><td style="font-size:11px;">105</td></tr>
+<tr><td style="font-size:11px;">2026-06-29</td><td style="font-size:11px;">¥926.86</td><td style="font-size:11px;">¥5.0万</td><td style="font-size:11px;"><b>54.4</b></td><td style="font-size:11px;">99</td></tr>
+<tr><td style="font-size:11px;">2026-06-30</td><td style="font-size:11px;">¥982.48</td><td style="font-size:11px;">¥5.0万</td><td style="font-size:11px;"><b>51.4</b></td><td style="font-size:11px;">96</td></tr>
+<tr><td style="font-size:11px;">2026-07-01</td><td style="font-size:11px;">¥1,302.18</td><td style="font-size:11px;">¥4.9万</td><td style="font-size:11px;"><b>37.5</b></td><td style="font-size:11px;">81</td></tr>
+</table>
+</div>
+</div><div style="background:var(--surface);border:1px solid #e8ecf1;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+<div style="background:linear-gradient(135deg,#f0f4ff,#e8ecf1);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+<h3 style="margin:0;font-size:15px;">📺 小米官方耳机直播间</h3>
+<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;">
+<span>💰消耗 <b style="color:#FF4757;">¥4,951.74</b></span>
+<span>💵成交 <b style="color:#2ED573;">¥116.3万</b></span>
+<span>📈ROI <b style="color:#1E90FF;font-size:15px;">234.9</b></span>
+<span>🔄CVR <b>97.3%</b></span>
+<span>📦订单 <b>537</b></span>
+</div>
+</div>
+<div style="padding:8px 16px 12px;">
+<table><tr><th>日期</th><th>消耗</th><th>成交</th><th>ROI</th><th>订单</th></tr><tr><td style="font-size:11px;">2026-06-22</td><td style="font-size:11px;">¥224.15</td><td style="font-size:11px;">¥5,767</td><td style="font-size:11px;"><b>25.7</b></td><td style="font-size:11px;">13</td></tr>
+<tr><td style="font-size:11px;">2026-06-23</td><td style="font-size:11px;">¥236.91</td><td style="font-size:11px;">¥5,160</td><td style="font-size:11px;"><b>21.8</b></td><td style="font-size:11px;">10</td></tr>
+<tr><td style="font-size:11px;">2026-06-24</td><td style="font-size:11px;">¥213.38</td><td style="font-size:11px;">¥1.1万</td><td style="font-size:11px;"><b>49.9</b></td><td style="font-size:11px;">19</td></tr>
+<tr><td style="font-size:11px;">2026-06-25</td><td style="font-size:11px;">¥297.81</td><td style="font-size:11px;">¥8,017</td><td style="font-size:11px;"><b>26.9</b></td><td style="font-size:11px;">13</td></tr>
+<tr><td style="font-size:11px;">2026-06-26</td><td style="font-size:11px;">¥377.11</td><td style="font-size:11px;">¥17.9万</td><td style="font-size:11px;"><b>474.9</b></td><td style="font-size:11px;">29</td></tr>
+<tr><td style="font-size:11px;">2026-06-27</td><td style="font-size:11px;">¥119.70</td><td style="font-size:11px;">¥29.0万</td><td style="font-size:11px;"><b>2425.2</b></td><td style="font-size:11px;">19</td></tr>
+<tr><td style="font-size:11px;">2026-06-28</td><td style="font-size:11px;">¥86.51</td><td style="font-size:11px;">¥45.0万</td><td style="font-size:11px;"><b>5205.1</b></td><td style="font-size:11px;">34</td></tr>
+<tr><td style="font-size:11px;">2026-06-29</td><td style="font-size:11px;">¥85.98</td><td style="font-size:11px;">¥7.6万</td><td style="font-size:11px;"><b>884.2</b></td><td style="font-size:11px;">93</td></tr>
+<tr><td style="font-size:11px;">2026-06-30</td><td style="font-size:11px;">¥2,951.26</td><td style="font-size:11px;">¥13.0万</td><td style="font-size:11px;"><b>43.9</b></td><td style="font-size:11px;">278</td></tr>
+<tr><td style="font-size:11px;">2026-07-01</td><td style="font-size:11px;">¥358.93</td><td style="font-size:11px;">¥8,546.35</td><td style="font-size:11px;"><b>23.8</b></td><td style="font-size:11px;">29</td></tr>
+</table>
+</div>
+</div><div style="background:var(--surface);border:1px solid #e8ecf1;border-radius:12px;overflow:hidden;margin-bottom:16px;">
+<div style="background:linear-gradient(135deg,#f0f4ff,#e8ecf1);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+<h3 style="margin:0;font-size:15px;">📺 小米官旗手表直播间</h3>
+<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:13px;">
+<span>💰消耗 <b style="color:#FF4757;">¥1,432.79</b></span>
+<span>💵成交 <b style="color:#2ED573;">¥6.4万</b></span>
+<span>📈ROI <b style="color:#1E90FF;font-size:15px;">44.7</b></span>
+<span>🔄CVR <b>85.5%</b></span>
+<span>📦订单 <b>147</b></span>
+</div>
+</div>
+<div style="padding:8px 16px 12px;">
+<table><tr><th>日期</th><th>消耗</th><th>成交</th><th>ROI</th><th>订单</th></tr><tr><td style="font-size:11px;">2026-06-23</td><td style="font-size:11px;">¥183.59</td><td style="font-size:11px;">¥1.2万</td><td style="font-size:11px;"><b>64.2</b></td><td style="font-size:11px;">19</td></tr>
+<tr><td style="font-size:11px;">2026-06-24</td><td style="font-size:11px;">¥208.43</td><td style="font-size:11px;">¥8,724.10</td><td style="font-size:11px;"><b>41.9</b></td><td style="font-size:11px;">18</td></tr>
+<tr><td style="font-size:11px;">2026-06-25</td><td style="font-size:11px;">¥200.81</td><td style="font-size:11px;">¥1.1万</td><td style="font-size:11px;"><b>53.2</b></td><td style="font-size:11px;">27</td></tr>
+<tr><td style="font-size:11px;">2026-06-26</td><td style="font-size:11px;">¥251.30</td><td style="font-size:11px;">¥1.2万</td><td style="font-size:11px;"><b>48.6</b></td><td style="font-size:11px;">27</td></tr>
+<tr><td style="font-size:11px;">2026-06-27</td><td style="font-size:11px;">¥11.66</td><td style="font-size:11px;">¥0</td><td style="font-size:11px;"><b>0.0</b></td><td style="font-size:11px;">0</td></tr>
+<tr><td style="font-size:11px;">2026-06-28</td><td style="font-size:11px;">¥69.38</td><td style="font-size:11px;">¥1,775</td><td style="font-size:11px;"><b>25.6</b></td><td style="font-size:11px;">5</td></tr>
+<tr><td style="font-size:11px;">2026-06-29</td><td style="font-size:11px;">¥196.24</td><td style="font-size:11px;">¥6,968.95</td><td style="font-size:11px;"><b>35.5</b></td><td style="font-size:11px;">22</td></tr>
+<tr><td style="font-size:11px;">2026-06-30</td><td style="font-size:11px;">¥204.79</td><td style="font-size:11px;">¥6,104.15</td><td style="font-size:11px;"><b>29.8</b></td><td style="font-size:11px;">16</td></tr>
+<tr><td style="font-size:11px;">2026-07-01</td><td style="font-size:11px;">¥106.59</td><td style="font-size:11px;">¥5,764.75</td><td style="font-size:11px;"><b>54.1</b></td><td style="font-size:11px;">13</td></tr>
+</table>
+</div>
+</div>
 </div>
 <script>
 (function(){
   var chart = echarts.init(document.getElementById('chart-room-daily'));
-  var daily = [{"date": "\u5168\u90e8", "cost": 17480.43, "roi": 39.05, "deal_amt": 682558.28, "hourly_enter": 0}, {"date": "2026-06-22", "cost": 1198.86, "roi": 47.46, "deal_amt": 56894.9, "hourly_enter": 0}, {"date": "2026-06-23", "cost": 977.98, "roi": 44.97, "deal_amt": 43979.55, "hourly_enter": 0}, {"date": "2026-06-24", "cost": 3282.66, "roi": 33.22, "deal_amt": 109050.85, "hourly_enter": 0}, {"date": "2026-06-25", "cost": 2042.75, "roi": 36.91, "deal_amt": 75389.75, "hourly_enter": 0}, {"date": "2026-06-26", "cost": 2486.88, "roi": 37.08, "deal_amt": 92209.3, "hourly_enter": 0}, {"date": "2026-06-27", "cost": 1474.66, "roi": 47.84, "deal_amt": 70544.0, "hourly_enter": 0}, {"date": "2026-06-28", "cost": 2279.0, "roi": 33.68, "deal_amt": 76750.9, "hourly_enter": 0}, {"date": "2026-06-29", "cost": 1797.22, "roi": 38.8, "deal_amt": 69727.13, "hourly_enter": 0}, {"date": "2026-06-30", "cost": 1061.52, "roi": 45.9, "deal_amt": 48726.9, "hourly_enter": 0}, {"date": "2026-07-01", "cost": 878.9, "roi": 44.7, "deal_amt": 39285.0, "hourly_enter": 0}, {"date": "\u5168\u90e8", "cost": 16762.47, "roi": 40.23, "deal_amt": 674286.75, "hourly_enter": 0}, {"date": "2026-06-22", "cost": 1205.85, "roi": 38.18, "deal_amt": 46034.0, "hourly_enter": 0}, {"date": "2026-06-23", "cost": 936.81, "roi": 43.62, "deal_amt": 40862.3, "hourly_enter": 0}, {"date": "2026-06-24", "cost": 1674.24, "roi": 39.15, "deal_amt": 65553.1, "hourly_enter": 0}, {"date": "2026-06-25", "cost": 2138.01, "roi": 39.75, "deal_amt": 84995.8, "hourly_enter": 0}, {"date": "2026-06-26", "cost": 1325.21, "roi": 41.41, "deal_amt": 54871.0, "hourly_enter": 0}, {"date": "2026-06-27", "cost": 1947.21, "roi": 39.94, "deal_amt": 77778.7, "hourly_enter": 0}, {"date": "2026-06-28", "cost": 2739.43, "roi": 38.44, "deal_amt": 105310.2, "hourly_enter": 0}, {"date": "2026-06-29", "cost": 1659.17, "roi": 40.21, "deal_amt": 66717.8, "hourly_enter": 0}, {"date": "2026-06-30", "cost": 1544.82, "roi": 43.97, "deal_amt": 67924.8, "hourly_enter": 0}, {"date": "2026-07-01", "cost": 1591.72, "roi": 40.36, "deal_amt": 64239.05, "hourly_enter": 0}, {"date": "\u5168\u90e8", "cost": 9701.43, "roi": 43.75, "deal_amt": 424403.7, "hourly_enter": 0}, {"date": "2026-06-22", "cost": 617.62, "roi": 38.4, "deal_amt": 23714.9, "hourly_enter": 0}, {"date": "2026-06-23", "cost": 728.16, "roi": 43.37, "deal_amt": 31579.15, "hourly_enter": 0}, {"date": "2026-06-24", "cost": 998.78, "roi": 40.06, "deal_amt": 40010.5, "hourly_enter": 0}, {"date": "2026-06-25", "cost": 1042.97, "roi": 42.38, "deal_amt": 44200.45, "hourly_enter": 0}, {"date": "2026-06-26", "cost": 1445.97, "roi": 34.15, "deal_amt": 49377.05, "hourly_enter": 0}, {"date": "2026-06-27", "cost": 801.04, "roi": 43.19, "deal_amt": 34598.55, "hourly_enter": 0}, {"date": "2026-06-28", "cost": 855.37, "roi": 59.85, "deal_amt": 51196.0, "hourly_enter": 0}, {"date": "2026-06-29", "cost": 926.86, "roi": 54.4, "deal_amt": 50424.0, "hourly_enter": 0}, {"date": "2026-06-30", "cost": 982.48, "roi": 51.4, "deal_amt": 50498.55, "hourly_enter": 0}, {"date": "2026-07-01", "cost": 1302.18, "roi": 37.48, "deal_amt": 48804.55, "hourly_enter": 0}, {"date": "\u5168\u90e8", "cost": 4951.74, "roi": 234.95, "deal_amt": 1163424.3, "hourly_enter": 0}, {"date": "2026-06-22", "cost": 224.15, "roi": 25.73, "deal_amt": 5767.0, "hourly_enter": 0}, {"date": "2026-06-23", "cost": 236.91, "roi": 21.78, "deal_amt": 5160.0, "hourly_enter": 0}, {"date": "2026-06-24", "cost": 213.38, "roi": 49.87, "deal_amt": 10641.9, "hourly_enter": 0}, {"date": "2026-06-25", "cost": 297.81, "roi": 26.92, "deal_amt": 8017.0, "hourly_enter": 0}, {"date": "2026-06-26", "cost": 377.11, "roi": 474.9, "deal_amt": 179090.0, "hourly_enter": 0}, {"date": "2026-06-27", "cost": 119.7, "roi": 2425.15, "deal_amt": 290290.0, "hourly_enter": 0}, {"date": "2026-06-28", "cost": 86.51, "roi": 5205.12, "deal_amt": 450295.0, "hourly_enter": 0}, {"date": "2026-06-29", "cost": 85.98, "roi": 884.18, "deal_amt": 76021.9, "hourly_enter": 0}, {"date": "2026-06-30", "cost": 2951.26, "roi": 43.91, "deal_amt": 129595.15, "hourly_enter": 0}, {"date": "2026-07-01", "cost": 358.93, "roi": 23.81, "deal_amt": 8546.35, "hourly_enter": 0}, {"date": "\u5168\u90e8", "cost": 1432.79, "roi": 44.67, "deal_amt": 64005.7, "hourly_enter": 0}, {"date": "2026-06-23", "cost": 183.59, "roi": 64.22, "deal_amt": 11790.05, "hourly_enter": 0}, {"date": "2026-06-24", "cost": 208.43, "roi": 41.86, "deal_amt": 8724.1, "hourly_enter": 0}, {"date": "2026-06-25", "cost": 200.81, "roi": 53.16, "deal_amt": 10675.2, "hourly_enter": 0}, {"date": "2026-06-26", "cost": 251.3, "roi": 48.56, "deal_amt": 12203.5, "hourly_enter": 0}, {"date": "2026-06-27", "cost": 11.66, "roi": 0.0, "deal_amt": 0.0, "hourly_enter": 0}, {"date": "2026-06-28", "cost": 69.38, "roi": 25.58, "deal_amt": 1775.0, "hourly_enter": 0}, {"date": "2026-06-29", "cost": 196.24, "roi": 35.51, "deal_amt": 6968.95, "hourly_enter": 0}, {"date": "2026-06-30", "cost": 204.79, "roi": 29.81, "deal_amt": 6104.15, "hourly_enter": 0}, {"date": "2026-07-01", "cost": 106.59, "roi": 54.08, "deal_amt": 5764.75, "hourly_enter": 0}];
+  var daily = [{"date": "2026-06-22", "cost": 3246.48, "roi": 40.79, "deal_amt": 132410.8, "hourly_enter": 0, "orders": 346}, {"date": "2026-06-23", "cost": 3063.45, "roi": 43.54, "deal_amt": 133371.05, "hourly_enter": 0, "orders": 332}, {"date": "2026-06-24", "cost": 6377.49, "roi": 36.69, "deal_amt": 233980.45, "hourly_enter": 0, "orders": 605}, {"date": "2026-06-25", "cost": 5722.35, "roi": 39.02, "deal_amt": 223278.2, "hourly_enter": 0, "orders": 581}, {"date": "2026-06-26", "cost": 5886.47, "roi": 65.87, "deal_amt": 387750.85, "hourly_enter": 0, "orders": 553}, {"date": "2026-06-27", "cost": 4354.27, "roi": 108.68, "deal_amt": 473211.25, "hourly_enter": 0, "orders": 520}, {"date": "2026-06-28", "cost": 6029.69, "roi": 113.66, "deal_amt": 685327.1, "hourly_enter": 0, "orders": 665}, {"date": "2026-06-29", "cost": 4665.47, "roi": 57.84, "deal_amt": 269859.78, "hourly_enter": 0, "orders": 605}, {"date": "2026-06-30", "cost": 6744.87, "roi": 44.9, "deal_amt": 302849.55, "hourly_enter": 0, "orders": 732}, {"date": "2026-07-01", "cost": 4238.32, "roi": 39.32, "deal_amt": 166639.7, "hourly_enter": 0, "orders": 409}];
   chart.setOption({
     tooltip:{trigger:'axis'},
     legend:{data:['消耗','ROI','成交金额'],top:0},
@@ -265,12 +379,12 @@ document.body.style.display='';
 </div><div class="summary-card">
 <h3>🎬 直播间画面</h3>
 <div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:8px;">
-<span><b>总消耗</b> ¥10.1万</span>
-<span><b>总成交</b> ¥601.7万</span>
+<span><b>总消耗</b> ¥5.0万</span>
+<span><b>总成交</b> ¥300.9万</span>
 <span><b>ROI</b> 59.78</span>
 <span><b>画面数</b> 5组</span>
 <span><b>1h进入</b> 0人</span>
-<span><b>转化率</b> 82.68%</span>
+<span><b>转化率</b> 85.57%</span>
 </div>
 </div>
 </div>
