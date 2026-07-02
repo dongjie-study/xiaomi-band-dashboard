@@ -267,11 +267,11 @@
     transition: all var(--transition);
     position: relative;
   }
-  .month-item:hover { color: var(--text); background: var(--sidebar-hover); }
-  .month-item.active { color: #1e40af; background: #f0f4ff; font-weight: 600; }
-  .month-item.expanded { color: var(--text); font-weight: 600; }
-  .month-item .sub-arrow { transition: transform .25s ease; }
-  .month-item.expanded .sub-arrow { transform: rotate(90deg); opacity: 1; }
+  .month-item:hover, .period-item:hover { color: var(--text); background: var(--sidebar-hover); }
+  .month-item.active, .period-item.active { color: #1e40af; background: #f0f4ff; font-weight: 600; }
+  .month-item.expanded, .period-item.expanded { color: var(--text); font-weight: 600; }
+  .month-item .sub-arrow, .period-item .sub-arrow { transition: transform .25s ease; }
+  .month-item.expanded .sub-arrow, .period-item.expanded .sub-arrow { transform: rotate(90deg); opacity: 1; }
 
   /* 日期项（三级，更深缩进） */
   .month-dates a {
@@ -690,6 +690,21 @@ function renderSidebar(config) {
             if (sub.badge) html += ' <span class="badge-nav">' + sub.badge + '</span>';
             html += '<span class="sub-arrow" style="font-size:.65em;opacity:.5">&#x25B8;</span></a>';
             html += '<div class="sub-menu month-dates" id="' + datesId + '" style="display:none;"></div>';
+          } else if (sub.subModules) {
+            // Nested sub-modules (e.g. 千川视频分析 → W1/W2/W3 → 核心指标/竞对数据/竞对对比)
+            var nestedId = 'nestedSub_' + sub.id;
+            html += '<a class="month-item period-item" onclick="toggleNestedSub(this, \'' + nestedId + '\')">';
+            html += '📅 ' + sub.title;
+            if (sub.badge) html += ' <span class="badge-nav">' + sub.badge + '</span>';
+            html += '<span class="sub-arrow" style="font-size:.65em;opacity:.5">&#x25B8;</span></a>';
+            html += '<div class="sub-menu month-dates nested-dates" id="' + nestedId + '" style="display:none;">';
+            sub.subModules.forEach(function(item) {
+              html += '<a data-module="' + item.id + '" data-title="' + item.title + '" data-url="' + item.url + '" data-parent="' + mod.id + '" onclick="openSubModule(this)">';
+              html += '📋 ' + item.title;
+              if (item.badge) html += ' <span class="badge-nav">' + item.badge + '</span>';
+              html += '</a>';
+            });
+            html += '</div>';
           } else if (sub.url) {
             // Direct link → opens URL
             html += '<a data-module="' + sub.id + '" data-title="' + sub.title + '" data-url="' + sub.url + '" data-parent="' + mod.id + '" onclick="openSubModule(this)">';
@@ -740,7 +755,14 @@ function buildModuleRegistry(config) {
       modules[mod.id] = { url: mod.url, title: mod.title };
       if (mod.subModules) {
         mod.subModules.forEach(function(sub) {
-          modules[sub.id] = { url: sub.url || mod.url, title: sub.title };
+          if (sub.url) {
+            modules[sub.id] = { url: sub.url, title: sub.title };
+          }
+          if (sub.subModules) {
+            sub.subModules.forEach(function(item) {
+              modules[item.id] = { url: item.url, title: item.title };
+            });
+          }
         });
       }
     });
@@ -754,7 +776,7 @@ function openModule(el) {
   if (!info || !info.url) return;
 
   // Clear all active
-  document.querySelectorAll('.sidebar-nav > a, .sub-menu a').forEach(function(a) { a.classList.remove('active'); });
+  document.querySelectorAll('.sidebar-nav > a, .sub-menu a, .month-item, .period-item').forEach(function(a) { a.classList.remove('active'); });
   var sideLink = document.querySelector('.sidebar-nav > a[data-module="' + m + '"]');
   if (sideLink) sideLink.classList.add('active');
 
@@ -773,7 +795,7 @@ function openModule(el) {
 
 // ----- 回到首页 -----
 function goHome() {
-  document.querySelectorAll('.sidebar-nav > a, .sub-menu a, .month-item').forEach(function(a) { a.classList.remove('active'); });
+  document.querySelectorAll('.sidebar-nav > a, .sub-menu a, .month-item, .period-item').forEach(function(a) { a.classList.remove('active'); });
   collapseAllSubs();
   document.getElementById('overview').classList.remove('hidden');
   var iframe = document.getElementById('iframePanel');
@@ -799,7 +821,7 @@ function toggleSubMenu(el, subMenuId) {
 
 function collapseAllSubs() {
   document.querySelectorAll('.sub-menu').forEach(function(m) { m.style.display = 'none'; });
-  document.querySelectorAll('.sidebar-nav > a.expanded, .month-item.expanded').forEach(function(a) { a.classList.remove('expanded'); });
+  document.querySelectorAll('.sidebar-nav > a.expanded, .month-item.expanded, .period-item.expanded').forEach(function(a) { a.classList.remove('expanded'); });
 }
 
 // ----- 二级菜单：月份 → 日期 -----
@@ -814,12 +836,29 @@ function toggleMonthDates(el, monthKey, datesId) {
   }
   // Close other month date lists
   document.querySelectorAll('.month-dates').forEach(function(m) { m.style.display = 'none'; });
-  document.querySelectorAll('.month-item.expanded').forEach(function(a) { a.classList.remove('expanded'); });
+  document.querySelectorAll('.month-item.expanded, .period-item.expanded').forEach(function(a) { a.classList.remove('expanded'); });
   // Populate dates if empty
   if (!datesDiv.children.length) {
     buildMonthDates(monthKey, datesDiv);
   }
   datesDiv.style.display = 'block';
+  el.classList.add('expanded');
+}
+
+// ----- 二级菜单：分析周期 → 报告类型（千川视频分析用）-----
+function toggleNestedSub(el, nestedId) {
+  var nestedDiv = document.getElementById(nestedId);
+  if (!nestedDiv) return;
+  var expanded = el.classList.contains('expanded');
+  if (expanded) {
+    nestedDiv.style.display = 'none';
+    el.classList.remove('expanded');
+    return;
+  }
+  // Close other nested date lists
+  document.querySelectorAll('.nested-dates, .month-dates').forEach(function(m) { m.style.display = 'none'; });
+  document.querySelectorAll('.month-item.expanded, .period-item.expanded').forEach(function(a) { a.classList.remove('expanded'); });
+  nestedDiv.style.display = 'block';
   el.classList.add('expanded');
 }
 
@@ -837,14 +876,14 @@ function buildMonthDates(monthKey, container) {
   container.innerHTML = html;
 }
 
-// ----- 打开子模块（直接链接型：月度总结、节点总结）-----
+// ----- 打开子模块（直接链接型：月度总结、节点总结、千川视频分析）-----
 function openSubModule(el) {
   var url = el.dataset.url;
   var title = el.dataset.title;
   var parentId = el.dataset.parent;
   if (!url) return;
 
-  document.querySelectorAll('.sidebar-nav > a, .sub-menu a, .month-item').forEach(function(a) { a.classList.remove('active'); });
+  document.querySelectorAll('.sidebar-nav > a, .sub-menu a, .month-item, .period-item').forEach(function(a) { a.classList.remove('active'); });
   var parentLink = document.querySelector('.sidebar-nav > a[data-module="' + parentId + '"]');
   if (parentLink) parentLink.classList.add('active');
   el.classList.add('active');

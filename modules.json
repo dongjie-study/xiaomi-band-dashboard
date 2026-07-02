@@ -58,7 +58,42 @@
           "url": "核心指标分析/核心指标报告.html",
           "icon": "🎬",
           "description": "千川视频素材核心指标：消耗/成交/ROI/CTR，W1-W3三周趋势追踪，竞对数据对比与深度洞察",
-          "tag": "Video Analytics"
+          "tag": "Video Analytics",
+          "hasSubMenu": true,
+          "subModules": [
+            {
+              "id": "videoW1",
+              "title": "W1 (6.1-6.7)",
+              "subModules": [
+                { "id": "videoW1Core", "title": "核心指标", "url": "核心指标分析/核心指标报告.html" },
+                { "id": "videoW1Comp", "title": "竞对数据", "url": "核心指标分析/竞对数据报告.html" },
+                { "id": "videoW1Cmp", "title": "竞对对比", "url": "核心指标分析/竞对对比报告.html" }
+              ]
+            },
+            {
+              "id": "videoW2",
+              "title": "W2 (6.8-6.13)",
+              "subModules": [
+                { "id": "videoW2Core", "title": "核心指标", "url": "核心指标分析/核心指标报告_W2.html" },
+                { "id": "videoW2Comp", "title": "竞对数据", "url": "核心指标分析/竞对数据报告_W2.html" },
+                { "id": "videoW2Cmp", "title": "竞对对比", "url": "核心指标分析/竞对对比报告_W2.html" }
+              ]
+            },
+            {
+              "id": "videoW3",
+              "title": "W3 (6.14-6.21)",
+              "subModules": [
+                { "id": "videoW3Core", "title": "核心指标", "url": "核心指标分析/核心指标报告_W3.html" },
+                { "id": "videoW3Comp", "title": "竞对数据", "url": "核心指标分析/竞对数据报告_W3.html" },
+                { "id": "videoW3Cmp", "title": "竞对对比", "url": "核心指标分析/竞对对比报告_W3.html" }
+              ]
+            },
+            {
+              "id": "videoWeekly",
+              "title": "周度总结对比",
+              "url": "核心指标分析/周度总结对比.html"
+            }
+          ]
         },
         {
           "id": "hourly",
