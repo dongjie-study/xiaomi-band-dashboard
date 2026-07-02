@@ -1093,92 +1093,238 @@ comp_report += f'''</div>
 <div class="finding info"><strong>6. 差异化策略建议：</strong>我们应保持CTR优势，重点提升投放规模和播放效率。在高CTR基础上加大预算投入，放大内容优势。</div>
 </div>'''
 
-# Add title data comparison if available
+# ===== Section 07: 视频标题对比（双方TOP10并列）=====
 if title_our and title_comp:
-    title_cost_diff = title_comp['total_cost'] - title_our['total_cost']
-    title_roi_diff = title_comp['roi'] - title_our['roi']
-    comp_report += f'''<div class="section"><h2>07 视频标题对比</h2>
+    # Build our TOP10 ROI titles table rows
+    our_title_rows = ''
+    for i, t in enumerate(title_our['top_roi'][:10]):
+        orders_val = int(t["orders"]) if pd.notna(t["orders"]) else 0
+        our_title_rows += f'<tr><td>{i+1}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{t["name"]}">{t["name"]}</td><td>{fmt_money(t["cost"])}</td><td><b>{t["pay_roi"]:.1f}</b></td><td>{orders_val}</td></tr>\n'
+
+    comp_title_rows = ''
+    for i, t in enumerate(title_comp['top_roi'][:10]):
+        orders_val = int(t["orders"]) if pd.notna(t["orders"]) else 0
+        comp_title_rows += f'<tr><td>{i+1}</td><td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{t["name"]}">{t["name"]}</td><td>{fmt_money(t["cost"])}</td><td><b>{t["pay_roi"]:.1f}</b></td><td>{orders_val}</td></tr>\n'
+
+    title_roi_gap = abs(title_our['roi'] - title_comp['roi'])
+    title_leader = '我司' if title_our['roi'] > title_comp['roi'] else '良米'
+
+    comp_report += f'''<div class="section"><h2>07 视频标题对比 — 双方TOP10高ROI标题</h2>
+<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;">
+<div class="stat-badge" style="flex:1;min-width:140px;background:#f0f4ff;border-radius:12px;padding:18px 16px;text-align:center;">
+<div style="font-size:28px;font-weight:800;color:#1E90FF;">{title_our['cost_titles']:,}</div>
+<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">我司 有消耗标题</div>
+</div>
+<div class="stat-badge" style="flex:1;min-width:140px;background:#fff4f0;border-radius:12px;padding:18px 16px;text-align:center;">
+<div style="font-size:28px;font-weight:800;color:#FF6B35;">{title_comp['cost_titles']:,}</div>
+<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">良米 有消耗标题</div>
+</div>
+<div class="stat-badge" style="flex:1;min-width:140px;background:#f0fff4;border-radius:12px;padding:18px 16px;text-align:center;">
+<div style="font-size:28px;font-weight:800;color:#2ED573;">{title_our['roi']:.1f}</div>
+<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">我司 标题ROI</div>
+</div>
+<div class="stat-badge" style="flex:1;min-width:140px;background:#fff8f0;border-radius:12px;padding:18px 16px;text-align:center;">
+<div style="font-size:28px;font-weight:800;color:#FFA502;">{title_comp['roi']:.1f}</div>
+<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">良米 标题ROI</div>
+</div>
+<div class="stat-badge" style="flex:1;min-width:140px;background:#f8f0ff;border-radius:12px;padding:18px 16px;text-align:center;">
+<div style="font-size:28px;font-weight:800;color:#A855F7;">{title_leader} +{title_roi_gap:.1f}</div>
+<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">ROI领先方</div>
+</div>
+</div>
 <div class="grid-2">
-<div style="padding:20px;background:#f0f4ff;border-radius:12px;">
-<h3 style="color:#1E90FF;">我司标题数据</h3>
-<div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;">
-<span><b style="color:var(--text-secondary);">有消耗标题</b><br><b style="font-size:22px;">{title_our['cost_titles']:,}</b>条</span>
-<span><b style="color:var(--text-secondary);">总消耗</b><br><b style="font-size:22px;color:#FF4757;">{fmt_money(title_our['total_cost'])}</b></span>
-<span><b style="color:var(--text-secondary);">总成交</b><br><b style="font-size:22px;color:#2ED573;">{fmt_money(title_our['total_pay'])}</b></span>
-<span><b style="color:var(--text-secondary);">支付ROI</b><br><b style="font-size:22px;color:#1E90FF;">{title_our['roi']:.2f}</b></span>
-<span><b style="color:var(--text-secondary);">订单数</b><br><b style="font-size:22px;">{title_our['total_orders']:,}</b>单</span>
+<div>
+<h3 style="color:#1E90FF;margin-bottom:12px;">🔵 我司 TOP10 高ROI标题</h3>
+<table><tr><th>#</th><th>标题</th><th>消耗</th><th>支付ROI</th><th>订单</th></tr>{our_title_rows}</table>
 </div>
-</div>
-<div style="padding:20px;background:#fff4f0;border-radius:12px;">
-<h3 style="color:#FF6B35;">良米标题数据</h3>
-<div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;">
-<span><b style="color:var(--text-secondary);">有消耗标题</b><br><b style="font-size:22px;">{title_comp['cost_titles']:,}</b>条</span>
-<span><b style="color:var(--text-secondary);">总消耗</b><br><b style="font-size:22px;color:#FF4757;">{fmt_money(title_comp['total_cost'])}</b></span>
-<span><b style="color:var(--text-secondary);">总成交</b><br><b style="font-size:22px;color:#2ED573;">{fmt_money(title_comp['total_pay'])}</b></span>
-<span><b style="color:var(--text-secondary);">支付ROI</b><br><b style="font-size:22px;color:#1E90FF;">{title_comp['roi']:.2f}</b></span>
-<span><b style="color:var(--text-secondary);">订单数</b><br><b style="font-size:22px;">{title_comp['total_orders']:,}</b>单</span>
-</div>
+<div>
+<h3 style="color:#FF6B35;margin-bottom:12px;">🟠 良米 TOP10 高ROI标题</h3>
+<table><tr><th>#</th><th>标题</th><th>消耗</th><th>支付ROI</th><th>订单</th></tr>{comp_title_rows}</table>
 </div>
 </div>
 <div style="margin-top:16px;padding:14px 20px;background:#f8f9fc;border-radius:8px;font-size:14px;">
-<b>📊 标题效率对比：</b>标题ROI：我司 {title_our['roi']:.2f} vs 竞对 {title_comp['roi']:.2f}（{"我司领先" if title_our['roi'] > title_comp['roi'] else "竞对领先"} {abs(title_our['roi'] - title_comp['roi']):.1f}）|
-标题均消耗：我司 ¥{title_our['total_cost']/title_our['cost_titles']:.1f} vs 竞对 ¥{title_comp['total_cost']/title_comp['cost_titles']:.1f} |
-标题总数：我司 {title_our['total_titles']:,} vs 竞对 {title_comp['total_titles']:,}
+<b>📊 标题洞察：</b>双方TOP10标题均为低成本高ROI类型（消耗多在¥0-3），{"我司标题ROI整体更高，但良米标题覆盖面更广（" + str(title_comp['total_titles']) + " vs " + str(title_our['total_titles']) + "）" if title_comp['total_titles'] > title_our['total_titles'] else "我司标题数量和质量双领先"}。关键词集中在"耳机""新品""红米""Buds"等品类热词。
 </div>
 </div>'''
 
-# Add live room comparison if available
+# ===== Section 08: 直播间画面对比（按直播间详细拆分）=====
 if room_our and room_comp:
-    room_cost_diff = room_comp['total_cost'] - room_our['total_cost']
-    room_roi_diff = room_comp['roi'] - room_our['roi']
-    comp_report += f'''<div class="section"><h2>08 直播间画面对比</h2>
-<div class="grid-2">
-<div style="padding:20px;background:#f0f4ff;border-radius:12px;">
-<h3 style="color:#1E90FF;">我司直播画面</h3>
-<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;">
-<span><b style="color:var(--text-secondary);">画面数</b><br><b style="font-size:22px;">{room_our['total_screens']}</b>组</span>
-<span><b style="color:var(--text-secondary);">总消耗</b><br><b style="font-size:22px;color:#FF4757;">{fmt_money(room_our['total_cost'])}</b></span>
-<span><b style="color:var(--text-secondary);">总成交</b><br><b style="font-size:22px;color:#2ED573;">{fmt_money(room_our['total_deal'])}</b></span>
-<span><b style="color:var(--text-secondary);">ROI</b><br><b style="font-size:22px;color:#1E90FF;">{room_our['roi']:.2f}</b></span>
-<span><b style="color:var(--text-secondary);">转化率</b><br><b style="font-size:22px;color:#A855F7;">{room_our['avg_cvr']:.2f}%</b></span>
+    # Build room-by-room comparison cards
+    room_cards = ''
+    # Match rooms by similar names
+    our_rooms = {s['name']: s for s in room_our['screens']}
+    comp_rooms = {s['name']: s for s in room_comp['screens']}
+
+    # Define room pairs for comparison (our → competitor mapping)
+    room_pairs = [
+        ('小米官方手环直播间', '小米手环', '⌚'),
+        ('小米数码旗舰店', '小米智能手表旗舰店', '🏪'),
+        ('小米官方手表', '小米手表官方直播间', '⌚'),
+        ('小米官方耳机直播间', '小米耳机官方直播间', '🎧'),
+        ('小米官旗手表直播间', '小米耳机', '📱'),
+    ]
+
+    for our_name, comp_name, icon in room_pairs:
+        o = our_rooms.get(our_name)
+        c = comp_rooms.get(comp_name)
+        if not o or not c:
+            continue
+
+        roi_better = 'our' if o['roi'] > c['roi'] else 'comp'
+        cvr_better = 'our' if o['cvr'] > c['cvr'] else 'comp'
+
+        room_cards += f'''<div style="background:var(--surface);border:1px solid var(--border-light);border-radius:12px;padding:20px;margin-bottom:16px;">
+<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+<span style="font-size:24px;">{icon}</span>
+<h3 style="margin:0;font-size:16px;">{our_name} vs {comp_name}</h3>
+</div>
+<div class="grid-2" style="gap:12px;">
+<div style="background:#f0f4ff;border-radius:10px;padding:14px;">
+<div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">🔵 我司「{our_name}」</div>
+<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:13px;">
+<span>💰 消耗 <b style="color:#FF4757;">{fmt_money(o['cost'])}</b></span>
+<span>💵 成交 <b style="color:#2ED573;">{fmt_money(o['deal'])}</b></span>
+<span>📈 ROI <b style="color:#1E90FF;font-size:16px;">{o['roi']:.1f}</b></span>
+<span>🔄 CVR <b>{o['cvr']:.1f}%</b></span>
+<span>📅 {o['days']}天</span>
 </div>
 </div>
-<div style="padding:20px;background:#fff4f0;border-radius:12px;">
-<h3 style="color:#FF6B35;">良米直播画面</h3>
-<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;">
-<span><b style="color:var(--text-secondary);">画面数</b><br><b style="font-size:22px;">{room_comp['total_screens']}</b>组</span>
-<span><b style="color:var(--text-secondary);">总消耗</b><br><b style="font-size:22px;color:#FF4757;">{fmt_money(room_comp['total_cost'])}</b></span>
-<span><b style="color:var(--text-secondary);">总成交</b><br><b style="font-size:22px;color:#2ED573;">{fmt_money(room_comp['total_deal'])}</b></span>
-<span><b style="color:var(--text-secondary);">ROI</b><br><b style="font-size:22px;color:#1E90FF;">{room_comp['roi']:.2f}</b></span>
-<span><b style="color:var(--text-secondary);">转化率</b><br><b style="font-size:22px;color:#A855F7;">{room_comp['avg_cvr']:.2f}%</b></span>
+<div style="background:#fff4f0;border-radius:10px;padding:14px;">
+<div style="font-size:11px;color:var(--text-secondary);margin-bottom:8px;">🟠 良米「{comp_name}」</div>
+<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:13px;">
+<span>💰 消耗 <b style="color:#FF4757;">{fmt_money(c['cost'])}</b></span>
+<span>💵 成交 <b style="color:#2ED573;">{fmt_money(c['deal'])}</b></span>
+<span>📈 ROI <b style="color:#FF6B35;font-size:16px;">{c['roi']:.1f}</b></span>
+<span>🔄 CVR <b>{c['cvr']:.1f}%</b></span>
+<span>📅 {c['days']}天</span>
 </div>
 </div>
 </div>
-<div style="margin-top:16px;padding:14px 20px;background:#f8f9fc;border-radius:8px;font-size:14px;">
-<b>🎬 画面效率对比：</b>ROI：我司 {room_our['roi']:.2f} vs 竞对 {room_comp['roi']:.2f}（{"我司领先" if room_our['roi'] > room_comp['roi'] else "竞对领先"} {abs(room_our['roi'] - room_comp['roi']):.1f}）|
-1h进入人数：我司 {room_our['total_enter']:,} vs 竞对 {room_comp['total_enter']:,} |
-订单数：我司 {room_our['total_orders']:,} vs 竞对 {room_comp['total_orders']:,}
+<div style="margin-top:10px;font-size:12px;color:var(--text-secondary);padding:8px 12px;background:#f8f9fc;border-radius:6px;">
+ROI对比：{"我司领先 " + str(round(o['roi'] - c['roi'], 1)) if roi_better == 'our' else "良米领先 " + str(round(c['roi'] - o['roi'], 1))} |
+CVR对比：{"我司领先 " + str(round(o['cvr'] - c['cvr'], 1)) + "%" if cvr_better == 'our' else "良米领先 " + str(round(c['cvr'] - o['cvr'], 1)) + "%"} |
+消耗差异：{"我司多投 " + fmt_money(o['cost'] - c['cost']) if o['cost'] > c['cost'] else "良米多投 " + fmt_money(c['cost'] - o['cost'])}
 </div>
 </div>'''
 
-# Comprehensive comparison summary
-comp_report += f'''<div class="section"><h2>09 综合对比总结</h2>
-<div class="grid-3">
-<div class="summary-card"><h3>📊 整体评估</h3>
-<p>W4周期（6.22-7.1）：{"我司在创意效率上保持优势，成交规模首次反超竞对" if m_our['roi'] > m_comp['roi'] else "竞对在规模上领先"}。双方ROI均大幅提升，效率竞争进入新阶段。</p>
+    comp_report += f'''<div class="section"><h2>08 直播间画面对比 — 按直播间逐一拆分</h2>
+<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;">
+<div class="stat-badge" style="flex:1;min-width:120px;background:#f0f4ff;border-radius:12px;padding:18px 16px;text-align:center;">
+<div style="font-size:28px;font-weight:800;color:#FF4757;">{fmt_money(room_our['total_cost'])}</div>
+<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">我司 画面总消耗</div>
 </div>
-<div class="summary-card"><h3>🎯 核心结论</h3>
-<p>1. 视频创意：我司CTR领先{abs(diff_ctr):.1f}个百分点<br>
-2. 成交反超：我司成交¥346.6万 vs 竞对¥314.0万<br>
-3. 转化能力：我司CVR {m_our['cvr']:.2f}% vs 竞对 {m_comp['cvr']:.2f}%<br>
-4. 标题ROI：我司 {title_our["roi"]:.1f} vs 竞对 {title_comp["roi"]:.1f}<br>
-5. 画面ROI：我司 {room_our["roi"]:.1f} vs 竞对 {room_comp["roi"]:.1f}</p>
+<div class="stat-badge" style="flex:1;min-width:120px;background:#fff4f0;border-radius:12px;padding:18px 16px;text-align:center;">
+<div style="font-size:28px;font-weight:800;color:#FF4757;">{fmt_money(room_comp['total_cost'])}</div>
+<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">良米 画面总消耗</div>
 </div>
-<div class="summary-card"><h3>🚀 行动方向</h3>
-<p>保持CTR优势→加大高ROI素材投放<br>
-修复CVR下降→优化落地页转化链路<br>
-借鉴竞对画面策略→丰富直播间画面类型<br>
-标题效率优化→提升标题ROI至60+</p>
+<div class="stat-badge" style="flex:1;min-width:120px;background:#f0fff4;border-radius:12px;padding:18px 16px;text-align:center;">
+<div style="font-size:28px;font-weight:800;color:#2ED573;">{room_our['roi']:.1f}</div>
+<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">我司 画面ROI</div>
+</div>
+<div class="stat-badge" style="flex:1;min-width:120px;background:#fff8f0;border-radius:12px;padding:18px 16px;text-align:center;">
+<div style="font-size:28px;font-weight:800;color:#FFA502;">{room_comp['roi']:.1f}</div>
+<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">良米 画面ROI</div>
+</div>
+<div class="stat-badge" style="flex:1;min-width:120px;background:#f8f0ff;border-radius:12px;padding:18px 16px;text-align:center;">
+<div style="font-size:28px;font-weight:800;color:#A855F7;">{room_comp['roi'] - room_our['roi']:+.1f}</div>
+<div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">ROI差异</div>
+</div>
+</div>
+{room_cards}
+</div>'''
+
+# ===== Section 09: 综合对比总结（仪表盘风格）=====
+our_leader_count = 0
+comp_leader_count = 0
+# Count who leads in key metrics
+if m_our['roi'] > m_comp['roi']: our_leader_count += 1
+else: comp_leader_count += 1
+if m_our['ctr'] > m_comp['ctr']: our_leader_count += 1
+else: comp_leader_count += 1
+if m_our['cvr'] > m_comp['cvr']: our_leader_count += 1
+else: comp_leader_count += 1
+if m_our['total_deal'] > m_comp['total_deal']: our_leader_count += 1
+else: comp_leader_count += 1
+if m_our['plays_per_yuan'] > m_comp['plays_per_yuan']: our_leader_count += 1
+else: comp_leader_count += 1
+
+comp_report += f'''<div class="section"><h2>09 综合对比仪表盘</h2>
+
+<div class="grid-3" style="margin-bottom:24px;">
+<div class="kpi-card" style="border-left:3px solid #1E90FF;">
+<div class="value" style="color:#1E90FF;">{m_our['roi']:.1f}</div>
+<div class="label">我司 ROI</div>
+<div style="font-size:11px;color:{'#2ED573' if m_our['roi'] > m_comp['roi'] else '#FF4757'};">{'▲' if m_our['roi'] > m_comp['roi'] else '▼'} vs 竞对 {m_comp['roi']:.1f}</div>
+</div>
+<div class="kpi-card" style="border-left:3px solid #FF6B35;">
+<div class="value" style="color:#FF6B35;">{m_comp['roi']:.1f}</div>
+<div class="label">竞对 ROI</div>
+<div style="font-size:11px;color:{'#2ED573' if m_comp['roi'] > m_our['roi'] else '#FF4757'};">{'▲' if m_comp['roi'] > m_our['roi'] else '▼'} vs 我司 {m_our['roi']:.1f}</div>
+</div>
+<div class="kpi-card" style="border-left:3px solid #2ED573;">
+<div class="value" style="color:#2ED573;">{fmt_money(m_our['total_deal'])}</div>
+<div class="label">我司 净成交</div>
+<div style="font-size:11px;">竞对 {fmt_money(m_comp['total_deal'])}</div>
+</div>
+</div>
+
+<div class="grid-3" style="margin-bottom:24px;">
+<div class="kpi-card" style="border-left:3px solid #A855F7;">
+<div class="value" style="color:#A855F7;">{m_our['ctr']:.2f}%</div>
+<div class="label">我司 CTR</div>
+<div style="font-size:11px;color:#2ED573;">▲ 领先 {abs(diff_ctr):.1f}pp</div>
+</div>
+<div class="kpi-card" style="border-left:3px solid #FFA502;">
+<div class="value" style="color:#FFA502;">{m_our['cvr']:.2f}%</div>
+<div class="label">我司 CVR</div>
+<div style="font-size:11px;color:{'#2ED573' if m_our['cvr'] > m_comp['cvr'] else '#FF4757'};">{'▲' if m_our['cvr'] > m_comp['cvr'] else '▼'} vs 竞对 {m_comp['cvr']:.2f}%</div>
+</div>
+<div class="kpi-card" style="border-left:3px solid #FF4757;">
+<div class="value" style="color:#FF4757;">{fmt_money(m_our['total_cost'])}</div>
+<div class="label">我司 总消耗</div>
+<div style="font-size:11px;">竞对 {fmt_money(m_comp['total_cost'])}</div>
+</div>
+</div>
+
+<div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:24px;">
+<div class="summary-card" style="flex:1;min-width:280px;">
+<h3>🏆 竞争力仪表盘</h3>
+<div style="margin-top:12px;">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+<span style="font-size:13px;">🔵 我司领先指标</span>
+<span style="font-size:22px;font-weight:800;color:#1E90FF;">{our_leader_count}/5</span>
+</div>
+<div style="background:#e8ecf1;border-radius:20px;height:8px;overflow:hidden;">
+<div style="background:linear-gradient(90deg,#1E90FF,#667eea);height:100%;width:{our_leader_count/5*100}%;border-radius:20px;"></div>
+</div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;margin-bottom:10px;">
+<span style="font-size:13px;">🟠 竞对领先指标</span>
+<span style="font-size:22px;font-weight:800;color:#FF6B35;">{comp_leader_count}/5</span>
+</div>
+<div style="background:#e8ecf1;border-radius:20px;height:8px;overflow:hidden;">
+<div style="background:linear-gradient(90deg,#FF6B35,#FFA502);height:100%;width:{comp_leader_count/5*100}%;border-radius:20px;"></div>
+</div>
+</div>
+</div>
+<div class="summary-card" style="flex:1;min-width:280px;">
+<h3>🎯 核心结论</h3>
+<div style="margin-top:8px;font-size:13px;line-height:2;">
+<div>✅ 我司ROI <b>{m_our['roi']:.1f}</b>，领先竞对 <b>{abs(diff_roi):.1f}</b> 点</div>
+<div>✅ CTR <b>{m_our['ctr']:.2f}%</b>，创意吸引力显著更强</div>
+<div>✅ 成交首次反超：<b>+{fmt_money(m_our['total_deal'] - m_comp['total_deal'])}</b></div>
+<div>⚠️ CVR {m_our['cvr']:.2f}%，需优化转化链路</div>
+<div>⚠️ 播放量仅为竞对 <b>{m_comp['total_plays']/m_our['total_plays']:.1f}x</b></div>
+</div>
+</div>
+<div class="summary-card" style="flex:1;min-width:280px;">
+<h3>🚀 W5行动清单</h3>
+<div style="margin-top:8px;font-size:13px;line-height:2;">
+<div>📌 保持CTR+ROI双领先优势</div>
+<div>📌 修复CVR下降（落地页优化）</div>
+<div>📌 模仿竞对高ROI标题风格</div>
+<div>📌 丰富直播间画面类型组合</div>
+<div>📌 在高ROI基础上逐步扩量</div>
+</div>
 </div>
 </div>
 </div>'''
