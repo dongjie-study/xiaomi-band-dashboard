@@ -53,8 +53,8 @@ tbody tr:hover td{background:#f8fafc;}
 .summary-card{background:linear-gradient(135deg,#f8f9fc 0%,#e8ecf1 100%);border-radius:var(--radius);padding:24px;margin-bottom:16px;border-left:4px solid #667eea;}
 .summary-card h3{color:#667eea;margin-bottom:8px;}
 .summary-card p{font-size:14px;line-height:1.8;color:var(--text-secondary);}
-@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr);}.header h1{font-size:26px;}.grid-2{grid-template-columns:1fr;}.grid-3{grid-template-columns:1fr;}}
-@media(max-width:500px){.kpi-row{grid-template-columns:1fr 1fr;}.section{padding:20px 16px;}}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr);}.header h1{font-size:26px;}.grid-2{grid-template-columns:1fr;}.grid-3{grid-template-columns:1fr;}.grid-3[style*="repeat(5"]{grid-template-columns:repeat(3,1fr)!important;}}
+@media(max-width:500px){.kpi-row{grid-template-columns:1fr 1fr;}.section{padding:20px 16px;}.grid-3[style*="repeat(5"]{grid-template-columns:1fr 1fr!important;}}
 </style>
 </head><body style="display:none">
 <script>
@@ -163,10 +163,10 @@ document.body.style.display='';
 <div class="kpi-card"><div class="value" style="color:#2ED573;">¥345.6万</div><div class="label">标题总成交</div></div>
 <div class="kpi-card"><div class="value" style="color:#1E90FF;">57.13</div><div class="label">标题整体ROI</div></div>
 </div>
-<div class="grid-2">
-<div>
+<p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">🔑 高频关键词：小米手环(2799), 小米(1280), 红米(1057), 手表(589), 智能手表(461), 福利(434), 数码科技(399), 小米新品(358), 小助手(312), 活动(301)</p>
+<div style="margin-bottom:24px;">
 <h3>📊 标题ROI分布</h3>
-<table><tr><td>ROI=0</td><td>1856</td><td>80.8%</td></tr>
+<table style="max-width:600px;"><tr><td>ROI=0</td><td>1856</td><td>80.8%</td></tr>
 <tr><td>0<ROI≤1</td><td>1</td><td>0.0%</td></tr>
 <tr><td>1<ROI≤5</td><td>12</td><td>0.5%</td></tr>
 <tr><td>5<ROI≤10</td><td>35</td><td>1.5%</td></tr>
@@ -175,70 +175,43 @@ document.body.style.display='';
 <tr><td>ROI>100</td><td>83</td><td>3.6%</td></tr>
 </table>
 </div>
-<div>
-<h3>🏷️ 高频关键词</h3>
-<div class="word-cloud"><span class="word-tag" style="font-size:33px;opacity:1.0;">小米手环(2799)</span>
-<span class="word-tag" style="font-size:22px;opacity:0.7286530903894248;">小米(1280)</span>
-<span class="word-tag" style="font-size:20px;opacity:0.6888174347981422;">红米(1057)</span>
-<span class="word-tag" style="font-size:17px;opacity:0.6052161486245088;">手表(589)</span>
-<span class="word-tag" style="font-size:16px;opacity:0.5823508395855663;">智能手表(461)</span>
-<span class="word-tag" style="font-size:16px;opacity:0.5775276884601643;">福利(434)</span>
-<span class="word-tag" style="font-size:15px;opacity:0.5712754555198285;">数码科技(399)</span>
-<span class="word-tag" style="font-size:15px;opacity:0.5639514112182923;">小米新品(358)</span>
-<span class="word-tag" style="font-size:15px;opacity:0.5557341907824223;">小助手(312)</span>
-<span class="word-tag" style="font-size:15px;opacity:0.5537692032868882;">活动(301)</span>
-<span class="word-tag" style="font-size:15px;opacity:0.5519828510182208;">耳机(291)</span>
-<span class="word-tag" style="font-size:15px;opacity:0.5514469453376206;">智能穿戴(288)</span>
-<span class="word-tag" style="font-size:14px;opacity:0.5453733476241515;">好物节(254)</span>
-<span class="word-tag" style="font-size:14px;opacity:0.5421579135405502;">礼物(236)</span>
-<span class="word-tag" style="font-size:14px;opacity:0.5396570203644159;">优惠(222)</span>
-<span class="word-tag" style="font-size:14px;opacity:0.5350125044658807;">抖音创作小助手(196)</span>
-<span class="word-tag" style="font-size:14px;opacity:0.5325116112897463;">新品(182)</span>
-<span class="word-tag" style="font-size:14px;opacity:0.5325116112897463;">抖音小助手(182)</span>
-<span class="word-tag" style="font-size:13px;opacity:0.522508038585209;">半入耳耳机(126)</span>
-<span class="word-tag" style="font-size:13px;opacity:0.5221507681314755;">蓝牙耳机(124)</span>
-</div>
-</div>
-</div>
 <div class="grid-2">
 <div>
 <h3>🔥 TOP10 高消耗标题</h3>
-<table><tr><th>#</th><th>标题</th><th>消耗</th><th>成交金额</th><th>支付ROI</th><th>订单数</th></tr><tr><td>1</td><td>小米手环10补货啦 #小米 #小米手环10 #数码科技 #小米手环</td><td>¥2,883</td><td>¥5.0万</td><td><b>17.4</b></td><td>158</td></tr>
-<tr><td>2</td><td>真让你给等到了 #小米手环#小米手环9pro#福利#活动#运动@DOU+小助手</td><td>¥2,241</td><td>¥3.6万</td><td><b>15.9</b></td><td>96</td></tr>
-<tr><td>3</td><td>小米手环10放券了 #小米手环#小米手表#小米手环10#福利 #活动</td><td>¥2,140</td><td>¥4.1万</td><td><b>19.1</b></td><td>121</td></tr>
-<tr><td>4</td><td>小米手环10补货啦 #小米手环#福利#活动#数码科技手表#小米手环10@DOU+小助手</td><td>¥1,862</td><td>¥4.3万</td><td><b>22.9</b></td><td>133</td></tr>
-<tr><td>5</td><td>补货来袭 #小米#小米手环10 #数码科技#智能穿戴</td><td>¥1,776</td><td>¥2.8万</td><td><b>15.9</b></td><td>90</td></tr>
-<tr><td>6</td><td>补货来袭 #小米手环#小米手表#小米手环10#福利#活动</td><td>¥1,631</td><td>¥3.5万</td><td><b>21.6</b></td><td>110</td></tr>
-<tr><td>7</td><td>小米手环10粉色银色补货来袭 #小米  #小米手环NFC #小米手环10 #数码科技 #智能穿戴</td><td>¥1,615</td><td>¥2.6万</td><td><b>16.3</b></td><td>83</td></tr>
-<tr><td>8</td><td>大额优惠券来啦 #红米Watch6#智能手表#手表#新品#数码科技</td><td>¥1,398</td><td>¥2.8万</td><td><b>20.2</b></td><td>71</td></tr>
-<tr><td>9</td><td>小米手环10银色补货来袭 #小米#小米手环10#小米手环#小米手环10nfc#数码科技</td><td>¥1,289</td><td>¥2.2万</td><td><b>16.9</b></td><td>68</td></tr>
-<tr><td>10</td><td>小米手环10即将迎来补货 #小米手环#小米手表#小米手环10#福利#活动</td><td>¥1,246</td><td>¥2.3万</td><td><b>18.1</b></td><td>70</td></tr>
+<table><tr><th>#</th><th>标题</th><th>消耗</th><th>成交金额</th><th>支付ROI</th><th>订单数</th></tr><tr><td>1</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="小米手环10补货啦 #小米 #小米手环10 #数码科技 #小米手环">小米手环10补货啦 #小米 #小米手环10 #数码科技 #小米手环</td><td>¥2,883</td><td>¥5.0万</td><td><b>17.4</b></td><td>158</td></tr>
+<tr><td>2</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="真让你给等到了 #小米手环#小米手环9pro#福利#活动#运动@DOU+小助手">真让你给等到了 #小米手环#小米手环9pro#福利#活动#运动@DOU+小助手</td><td>¥2,241</td><td>¥3.6万</td><td><b>15.9</b></td><td>96</td></tr>
+<tr><td>3</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="小米手环10放券了 #小米手环#小米手表#小米手环10#福利 #活动">小米手环10放券了 #小米手环#小米手表#小米手环10#福利 #活动</td><td>¥2,140</td><td>¥4.1万</td><td><b>19.1</b></td><td>121</td></tr>
+<tr><td>4</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="小米手环10补货啦 #小米手环#福利#活动#数码科技手表#小米手环10@DOU+小助手">小米手环10补货啦 #小米手环#福利#活动#数码科技手表#小米手环10@DOU+小助手</td><td>¥1,862</td><td>¥4.3万</td><td><b>22.9</b></td><td>133</td></tr>
+<tr><td>5</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="补货来袭 #小米#小米手环10 #数码科技#智能穿戴">补货来袭 #小米#小米手环10 #数码科技#智能穿戴</td><td>¥1,776</td><td>¥2.8万</td><td><b>15.9</b></td><td>90</td></tr>
+<tr><td>6</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="补货来袭 #小米手环#小米手表#小米手环10#福利#活动">补货来袭 #小米手环#小米手表#小米手环10#福利#活动</td><td>¥1,631</td><td>¥3.5万</td><td><b>21.6</b></td><td>110</td></tr>
+<tr><td>7</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="小米手环10粉色银色补货来袭 #小米  #小米手环NFC #小米手环10 #数码科技 #智能穿戴">小米手环10粉色银色补货来袭 #小米  #小米手环NFC #小米手环10 #数码科技 #智能穿戴</td><td>¥1,615</td><td>¥2.6万</td><td><b>16.3</b></td><td>83</td></tr>
+<tr><td>8</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="大额优惠券来啦 #红米Watch6#智能手表#手表#新品#数码科技">大额优惠券来啦 #红米Watch6#智能手表#手表#新品#数码科技</td><td>¥1,398</td><td>¥2.8万</td><td><b>20.2</b></td><td>71</td></tr>
+<tr><td>9</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="小米手环10银色补货来袭 #小米#小米手环10#小米手环#小米手环10nfc#数码科技">小米手环10银色补货来袭 #小米#小米手环10#小米手环#小米手环10nfc#数码科技</td><td>¥1,289</td><td>¥2.2万</td><td><b>16.9</b></td><td>68</td></tr>
+<tr><td>10</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="小米手环10即将迎来补货 #小米手环#小米手表#小米手环10#福利#活动">小米手环10即将迎来补货 #小米手环#小米手表#小米手环10#福利#活动</td><td>¥1,246</td><td>¥2.3万</td><td><b>18.1</b></td><td>70</td></tr>
 </table>
 </div>
 <div>
 <h3>⭐ TOP10 高ROI标题</h3>
-<table><tr><th>#</th><th>标题</th><th>消耗</th><th>成交金额</th><th>支付ROI</th><th>订单数</th></tr><tr><td>1</td><td>什么？！！618来啦！！我先冲！ #618好物节#耳机#小米#XIAOMIBuds6#520礼物</td><td>¥0</td><td>¥9,999</td><td><b>83325.0</b></td><td>0</td></tr>
-<tr><td>2</td><td>轻松拿下 #小米Buds6#小米#半入耳耳机#新品#同声传译@抖音小助手</td><td>¥0</td><td>¥9,999</td><td><b>31246.9</b></td><td>0</td></tr>
-<tr><td>3</td><td>买耳机送音响？？？ #半入耳耳机#红米#红米Buds7S#抗风噪#长续航@抖音小助手</td><td>¥1</td><td>¥9,999</td><td><b>13887.5</b></td><td>0</td></tr>
-<tr><td>4</td><td>红米头戴式耳机，直播间预约预约购机赢限量好礼 #小米#耳机#红米头戴式耳机#小米新品#礼物</td><td>¥1</td><td>¥9,999</td><td><b>10751.6</b></td><td>0</td></tr>
-<tr><td>5</td><td>活动来袭！！ #618好物节 #耳机#小米#红米buds8青春版#520礼物</td><td>¥1</td><td>¥9,999</td><td><b>8694.8</b></td><td>0</td></tr>
-<tr><td>6</td><td>有些话要防着闺蜜 #小米Buds6#小米#耳机#蓝牙耳机#半入耳耳机@抖音小助手</td><td>¥1</td><td>¥9,999</td><td><b>7193.5</b></td><td>0</td></tr>
-<tr><td>7</td><td>REDMI头戴式耳机，直播间预约享好礼！！！ #小米#耳机#红米头戴式耳机#小米新品#礼物</td><td>¥2</td><td>¥9,999</td><td><b>6023.5</b></td><td>0</td></tr>
-<tr><td>8</td><td>新品发售 #红米#新品#优惠#耳机#REDMIBuds8</td><td>¥2</td><td>¥9,999</td><td><b>5050.0</b></td><td>0</td></tr>
-<tr><td>9</td><td>倒计时1天，快来参与揪锦鲤 #耳机#蓝牙耳机#红米#红米Buds8pro#新品上新@抖音小助手</td><td>¥2</td><td>¥9,999</td><td><b>4877.6</b></td><td>0</td></tr>
-<tr><td>10</td><td>快醒醒 #红米#红米Buds8青春版#新品#优惠</td><td>¥3</td><td>¥9,999</td><td><b>3816.4</b></td><td>0</td></tr>
+<table><tr><th>#</th><th>标题</th><th>消耗</th><th>成交金额</th><th>支付ROI</th><th>订单数</th></tr><tr><td>1</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="什么？！！618来啦！！我先冲！ #618好物节#耳机#小米#XIAOMIBuds6#520礼物">什么？！！618来啦！！我先冲！ #618好物节#耳机#小米#XIAOMIBuds6#520礼物</td><td>¥0</td><td>¥9,999</td><td><b>83325.0</b></td><td>0</td></tr>
+<tr><td>2</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="轻松拿下 #小米Buds6#小米#半入耳耳机#新品#同声传译@抖音小助手">轻松拿下 #小米Buds6#小米#半入耳耳机#新品#同声传译@抖音小助手</td><td>¥0</td><td>¥9,999</td><td><b>31246.9</b></td><td>0</td></tr>
+<tr><td>3</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="买耳机送音响？？？ #半入耳耳机#红米#红米Buds7S#抗风噪#长续航@抖音小助手">买耳机送音响？？？ #半入耳耳机#红米#红米Buds7S#抗风噪#长续航@抖音小助手</td><td>¥1</td><td>¥9,999</td><td><b>13887.5</b></td><td>0</td></tr>
+<tr><td>4</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="红米头戴式耳机，直播间预约预约购机赢限量好礼 #小米#耳机#红米头戴式耳机#小米新品#礼物">红米头戴式耳机，直播间预约预约购机赢限量好礼 #小米#耳机#红米头戴式耳机#小米新品#礼物</td><td>¥1</td><td>¥9,999</td><td><b>10751.6</b></td><td>0</td></tr>
+<tr><td>5</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="活动来袭！！ #618好物节 #耳机#小米#红米buds8青春版#520礼物">活动来袭！！ #618好物节 #耳机#小米#红米buds8青春版#520礼物</td><td>¥1</td><td>¥9,999</td><td><b>8694.8</b></td><td>0</td></tr>
+<tr><td>6</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="有些话要防着闺蜜 #小米Buds6#小米#耳机#蓝牙耳机#半入耳耳机@抖音小助手">有些话要防着闺蜜 #小米Buds6#小米#耳机#蓝牙耳机#半入耳耳机@抖音小助手</td><td>¥1</td><td>¥9,999</td><td><b>7193.5</b></td><td>0</td></tr>
+<tr><td>7</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="REDMI头戴式耳机，直播间预约享好礼！！！ #小米#耳机#红米头戴式耳机#小米新品#礼物">REDMI头戴式耳机，直播间预约享好礼！！！ #小米#耳机#红米头戴式耳机#小米新品#礼物</td><td>¥2</td><td>¥9,999</td><td><b>6023.5</b></td><td>0</td></tr>
+<tr><td>8</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="新品发售 #红米#新品#优惠#耳机#REDMIBuds8">新品发售 #红米#新品#优惠#耳机#REDMIBuds8</td><td>¥2</td><td>¥9,999</td><td><b>5050.0</b></td><td>0</td></tr>
+<tr><td>9</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="倒计时1天，快来参与揪锦鲤 #耳机#蓝牙耳机#红米#红米Buds8pro#新品上新@抖音小助手">倒计时1天，快来参与揪锦鲤 #耳机#蓝牙耳机#红米#红米Buds8pro#新品上新@抖音小助手</td><td>¥2</td><td>¥9,999</td><td><b>4877.6</b></td><td>0</td></tr>
+<tr><td>10</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="快醒醒 #红米#红米Buds8青春版#新品#优惠">快醒醒 #红米#红米Buds8青春版#新品#优惠</td><td>¥3</td><td>¥9,999</td><td><b>3816.4</b></td><td>0</td></tr>
 </table>
 </div>
 </div>
 </div>
 <div class="section"><h2>09 直播间画面分析 </h2>
-<div class="grid-3">
+<div class="grid-3" style="grid-template-columns:repeat(5,1fr);">
 <div class="kpi-card"><div class="value" style="color:#FF4757;">¥10.1万</div><div class="label">画面总消耗</div></div>
 <div class="kpi-card"><div class="value" style="color:#2ED573;">¥601.7万</div><div class="label">画面总成交</div></div>
 <div class="kpi-card"><div class="value" style="color:#1E90FF;">59.78</div><div class="label">画面整体ROI</div></div>
-</div>
-<div class="grid-2">
-<div class="kpi-card"><div class="value" style="color:#FF6B35;">0</div><div class="label">1小时进入人数</div></div>
+<div class="kpi-card"><div class="value" style="color:#FF6B35;">0</div><div class="label">1h进入人数</div></div>
 <div class="kpi-card"><div class="value" style="color:#A855F7;">6,878</div><div class="label">净成交订单数</div></div>
 </div>
 <div class="chart-box" id="chart-room-daily"></div>
@@ -270,7 +243,37 @@ document.body.style.display='';
 })();
 </script>
 <div class="section"><h2>10 综合分析总结 - 我司</h2>
-<div class="summary-card"><h3>📹 视频投放</h3><p>总消耗¥6.9万，净成交¥346.6万，ROI 50.24。有消耗视频3,789条，ROI>1占比14.4%。</p></div><div class="summary-card"><h3>📝 标题素材</h3><p>标题总消耗¥6.1万，成交¥345.6万，ROI 57.13。共分析2,298条有消耗标题。热门关键词：小米手环, 小米, 红米, 手表, 智能手表, 福利, 数码科技, 小米新品。</p></div><div class="summary-card"><h3>🎬 直播间画面</h3><p>5组画面总消耗¥10.1万，成交¥601.7万，ROI 59.78。1小时进入0人，转化率82.68%。</p></div>
+<div class="grid-3">
+<div class="summary-card">
+<h3>📹 视频投放</h3>
+<div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:8px;">
+<span><b>总消耗</b> ¥6.9万</span>
+<span><b>净成交</b> ¥346.6万</span>
+<span><b>ROI</b> 50.24</span>
+<span><b>有消耗视频</b> 3,789条</span>
+<span><b>ROI>1占比</b> 14.4%</span>
+</div></div><div class="summary-card">
+<h3>📝 标题素材</h3>
+<div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:8px;">
+<span><b>总消耗</b> ¥6.1万</span>
+<span><b>总成交</b> ¥345.6万</span>
+<span><b>ROI</b> 57.13</span>
+<span><b>有消耗标题</b> 2,298条</span>
+<span><b>总订单</b> 3,037单</span>
+</div>
+<p style="margin-top:8px;color:var(--text-secondary);font-size:13px;">🔑 热门关键词：小米手环, 小米, 红米, 手表, 智能手表, 福利, 数码科技, 小米新品</p>
+</div><div class="summary-card">
+<h3>🎬 直播间画面</h3>
+<div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:8px;">
+<span><b>总消耗</b> ¥10.1万</span>
+<span><b>总成交</b> ¥601.7万</span>
+<span><b>ROI</b> 59.78</span>
+<span><b>画面数</b> 5组</span>
+<span><b>1h进入</b> 0人</span>
+<span><b>转化率</b> 82.68%</span>
+</div>
+</div>
+</div>
 </div>
 <div class="footer">数据来源：千川后台导出 | 分析周期：2026.6.22 - 2026.7.1 | 我司</div>
 </div>

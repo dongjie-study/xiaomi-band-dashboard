@@ -53,8 +53,8 @@ tbody tr:hover td{background:#f8fafc;}
 .summary-card{background:linear-gradient(135deg,#f8f9fc 0%,#e8ecf1 100%);border-radius:var(--radius);padding:24px;margin-bottom:16px;border-left:4px solid #667eea;}
 .summary-card h3{color:#667eea;margin-bottom:8px;}
 .summary-card p{font-size:14px;line-height:1.8;color:var(--text-secondary);}
-@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr);}.header h1{font-size:26px;}.grid-2{grid-template-columns:1fr;}.grid-3{grid-template-columns:1fr;}}
-@media(max-width:500px){.kpi-row{grid-template-columns:1fr 1fr;}.section{padding:20px 16px;}}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr);}.header h1{font-size:26px;}.grid-2{grid-template-columns:1fr;}.grid-3{grid-template-columns:1fr;}.grid-3[style*="repeat(5"]{grid-template-columns:repeat(3,1fr)!important;}}
+@media(max-width:500px){.kpi-row{grid-template-columns:1fr 1fr;}.section{padding:20px 16px;}.grid-3[style*="repeat(5"]{grid-template-columns:1fr 1fr!important;}}
 </style>
 </head><body style="display:none">
 <script>
@@ -164,10 +164,10 @@ document.body.style.display='';
 <div class="kpi-card"><div class="value" style="color:#2ED573;">¥321.7万</div><div class="label">标题总成交</div></div>
 <div class="kpi-card"><div class="value" style="color:#1E90FF;">46.77</div><div class="label">标题整体ROI</div></div>
 </div>
-<div class="grid-2">
-<div>
+<p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">🔑 高频关键词：小米手环(2890), 红米(2340), 好物推荐(1119), 价格力(1050), 小米(1046), 蓝牙耳机(966), 智能穿戴(701), 性价比超高(580), 新品上新(519), 小米智能手表(457)</p>
+<div style="margin-bottom:24px;">
 <h3>📊 标题ROI分布</h3>
-<table><tr><td>ROI=0</td><td>3160</td><td>84.0%</td></tr>
+<table style="max-width:600px;"><tr><td>ROI=0</td><td>3160</td><td>84.0%</td></tr>
 <tr><td>0<ROI≤1</td><td>5</td><td>0.1%</td></tr>
 <tr><td>1<ROI≤5</td><td>29</td><td>0.8%</td></tr>
 <tr><td>5<ROI≤10</td><td>48</td><td>1.3%</td></tr>
@@ -176,70 +176,43 @@ document.body.style.display='';
 <tr><td>ROI>100</td><td>111</td><td>2.9%</td></tr>
 </table>
 </div>
-<div>
-<h3>🏷️ 高频关键词</h3>
-<div class="word-cloud"><span class="word-tag" style="font-size:33px;opacity:1.0;">小米手环(2890)</span>
-<span class="word-tag" style="font-size:29px;opacity:0.9048442906574394;">红米(2340)</span>
-<span class="word-tag" style="font-size:20px;opacity:0.693598615916955;">好物推荐(1119)</span>
-<span class="word-tag" style="font-size:20px;opacity:0.6816608996539792;">价格力(1050)</span>
-<span class="word-tag" style="font-size:20px;opacity:0.6809688581314879;">小米(1046)</span>
-<span class="word-tag" style="font-size:19px;opacity:0.6671280276816609;">蓝牙耳机(966)</span>
-<span class="word-tag" style="font-size:17px;opacity:0.621280276816609;">智能穿戴(701)</span>
-<span class="word-tag" style="font-size:17px;opacity:0.6003460207612457;">性价比超高(580)</span>
-<span class="word-tag" style="font-size:16px;opacity:0.5897923875432526;">新品上新(519)</span>
-<span class="word-tag" style="font-size:16px;opacity:0.5790657439446367;">小米智能手表(457)</span>
-<span class="word-tag" style="font-size:15px;opacity:0.5686851211072664;">小米耳机(397)</span>
-<span class="word-tag" style="font-size:15px;opacity:0.5645328719723184;">数码好物(373)</span>
-<span class="word-tag" style="font-size:15px;opacity:0.5596885813148789;">青春版(345)</span>
-<span class="word-tag" style="font-size:14px;opacity:0.5474048442906574;">智能手表(274)</span>
-<span class="word-tag" style="font-size:14px;opacity:0.5446366782006921;">腕带(258)</span>
-<span class="word-tag" style="font-size:14px;opacity:0.5444636678200692;">小米新品手环(257)</span>
-<span class="word-tag" style="font-size:14px;opacity:0.5411764705882353;">手环(238)</span>
-<span class="word-tag" style="font-size:14px;opacity:0.5301038062283737;">国补(174)</span>
-<span class="word-tag" style="font-size:14px;opacity:0.5290657439446367;">鹅机(168)</span>
-<span class="word-tag" style="font-size:14px;opacity:0.5288927335640139;">小米手表(167)</span>
-</div>
-</div>
-</div>
 <div class="grid-2">
 <div>
 <h3>🔥 TOP10 高消耗标题</h3>
-<table><tr><th>#</th><th>标题</th><th>消耗</th><th>成交金额</th><th>支付ROI</th><th>订单数</th></tr><tr><td>1</td><td>小米手环10 Pro，新品发布，329起就能拿下，只在今天！ #小米新品#小米新品手环#小米手环10pro#小米手环#小米新品发布会</td><td>¥4,295</td><td>¥7.4万</td><td><b>17.2</b></td><td>193</td></tr>
-<tr><td>2</td><td>提前预约红米头戴降噪耳机，充电头、充电线、耳机支架全都送！ #新品上新#头戴式耳机#红米头戴降噪耳机#红米#好物推荐</td><td>¥3,677</td><td>¥158.1万</td><td><b>430.0</b></td><td>0</td></tr>
-<tr><td>3</td><td>红米Watch 6四重福利全在直播间，别错过！ #价格力#REDMIWatch6#红米W6#小米智能手表#腕带</td><td>¥3,532</td><td>¥6.8万</td><td><b>19.3</b></td><td>119</td></tr>
-<tr><td>4</td><td>直播间小米手环10粉/银色即将补货，关注入群抢先购！ #小米手环10  #小米手环10周年  #小米手环  #活动  #补货</td><td>¥3,442</td><td>¥5.4万</td><td><b>15.7</b></td><td>184</td></tr>
-<tr><td>5</td><td>好消息！红米Watch 6直播间现在三百多就能拿下！ #价格力#REDMIWatch6#红米W6#米兰尼斯#AI视频</td><td>¥2,322</td><td>¥2.9万</td><td><b>12.6</b></td><td>59</td></tr>
-<tr><td>6</td><td>不是平时买不起而是发布直降的小米手环10Pro更有性价比！ #小米新品#小米新品手环#小米手环10pro#小米手环#小米新品发布会</td><td>¥2,208</td><td>¥3.2万</td><td><b>14.6</b></td><td>90</td></tr>
-<tr><td>7</td><td>想要的东西用美丽价格入手会更开心！红米watch6！ #价格力#REDMIWatch6#红米watch6#小米手表#手表壁纸</td><td>¥2,035</td><td>¥3.9万</td><td><b>18.9</b></td><td>73</td></tr>
-<tr><td>8</td><td>红米头戴降噪耳机发新这个价，我真的不犹豫了！ #REDMI头戴降噪耳机#头戴式耳机#红米头戴降噪耳机#REDMI头戴式耳机#REDMI耳机</td><td>¥1,812</td><td>¥3.0万</td><td><b>16.7</b></td><td>102</td></tr>
-<tr><td>9</td><td>小米手环10Pro价格真的太值了！ #小米新品#小米新品手环#小米手环10pro#小米手环#小米新品发布会</td><td>¥1,787</td><td>¥3.0万</td><td><b>16.9</b></td><td>79</td></tr>
-<tr><td>10</td><td>还在纠结买普通版还是NFC版？看完这条视频你就知道啦 #小米手环 #小米手环10 #小米 #双十一 #双十一大促</td><td>¥1,570</td><td>¥2.8万</td><td><b>17.6</b></td><td>91</td></tr>
+<table><tr><th>#</th><th>标题</th><th>消耗</th><th>成交金额</th><th>支付ROI</th><th>订单数</th></tr><tr><td>1</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="小米手环10 Pro，新品发布，329起就能拿下，只在今天！ #小米新品#小米新品手环#小米手环10pro#小米手环#小米新品发布会">小米手环10 Pro，新品发布，329起就能拿下，只在今天！ #小米新品#小米新品手环#小米手环10pro#小米手环#小米新品发布会</td><td>¥4,295</td><td>¥7.4万</td><td><b>17.2</b></td><td>193</td></tr>
+<tr><td>2</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="提前预约红米头戴降噪耳机，充电头、充电线、耳机支架全都送！ #新品上新#头戴式耳机#红米头戴降噪耳机#红米#好物推荐">提前预约红米头戴降噪耳机，充电头、充电线、耳机支架全都送！ #新品上新#头戴式耳机#红米头戴降噪耳机#红米#好物推荐</td><td>¥3,677</td><td>¥158.1万</td><td><b>430.0</b></td><td>0</td></tr>
+<tr><td>3</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="红米Watch 6四重福利全在直播间，别错过！ #价格力#REDMIWatch6#红米W6#小米智能手表#腕带">红米Watch 6四重福利全在直播间，别错过！ #价格力#REDMIWatch6#红米W6#小米智能手表#腕带</td><td>¥3,532</td><td>¥6.8万</td><td><b>19.3</b></td><td>119</td></tr>
+<tr><td>4</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="直播间小米手环10粉/银色即将补货，关注入群抢先购！ #小米手环10  #小米手环10周年  #小米手环  #活动  #补货">直播间小米手环10粉/银色即将补货，关注入群抢先购！ #小米手环10  #小米手环10周年  #小米手环  #活动  #补货</td><td>¥3,442</td><td>¥5.4万</td><td><b>15.7</b></td><td>184</td></tr>
+<tr><td>5</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="好消息！红米Watch 6直播间现在三百多就能拿下！ #价格力#REDMIWatch6#红米W6#米兰尼斯#AI视频">好消息！红米Watch 6直播间现在三百多就能拿下！ #价格力#REDMIWatch6#红米W6#米兰尼斯#AI视频</td><td>¥2,322</td><td>¥2.9万</td><td><b>12.6</b></td><td>59</td></tr>
+<tr><td>6</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="不是平时买不起而是发布直降的小米手环10Pro更有性价比！ #小米新品#小米新品手环#小米手环10pro#小米手环#小米新品发布会">不是平时买不起而是发布直降的小米手环10Pro更有性价比！ #小米新品#小米新品手环#小米手环10pro#小米手环#小米新品发布会</td><td>¥2,208</td><td>¥3.2万</td><td><b>14.6</b></td><td>90</td></tr>
+<tr><td>7</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="想要的东西用美丽价格入手会更开心！红米watch6！ #价格力#REDMIWatch6#红米watch6#小米手表#手表壁纸">想要的东西用美丽价格入手会更开心！红米watch6！ #价格力#REDMIWatch6#红米watch6#小米手表#手表壁纸</td><td>¥2,035</td><td>¥3.9万</td><td><b>18.9</b></td><td>73</td></tr>
+<tr><td>8</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="红米头戴降噪耳机发新这个价，我真的不犹豫了！ #REDMI头戴降噪耳机#头戴式耳机#红米头戴降噪耳机#REDMI头戴式耳机#REDMI耳机">红米头戴降噪耳机发新这个价，我真的不犹豫了！ #REDMI头戴降噪耳机#头戴式耳机#红米头戴降噪耳机#REDMI头戴式耳机#REDMI耳机</td><td>¥1,812</td><td>¥3.0万</td><td><b>16.7</b></td><td>102</td></tr>
+<tr><td>9</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="小米手环10Pro价格真的太值了！ #小米新品#小米新品手环#小米手环10pro#小米手环#小米新品发布会">小米手环10Pro价格真的太值了！ #小米新品#小米新品手环#小米手环10pro#小米手环#小米新品发布会</td><td>¥1,787</td><td>¥3.0万</td><td><b>16.9</b></td><td>79</td></tr>
+<tr><td>10</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="还在纠结买普通版还是NFC版？看完这条视频你就知道啦 #小米手环 #小米手环10 #小米 #双十一 #双十一大促">还在纠结买普通版还是NFC版？看完这条视频你就知道啦 #小米手环 #小米手环10 #小米 #双十一 #双十一大促</td><td>¥1,570</td><td>¥2.8万</td><td><b>17.6</b></td><td>91</td></tr>
 </table>
 </div>
 <div>
 <h3>⭐ TOP10 高ROI标题</h3>
-<table><tr><th>#</th><th>标题</th><th>消耗</th><th>成交金额</th><th>支付ROI</th><th>订单数</th></tr><tr><td>1</td><td>这次的国补非常简单，不需要领资格，下单就减！ #蓝牙耳机 #好物推荐🔥 #智能穿戴 #国补</td><td>¥0</td><td>¥999</td><td><b>14271.4</b></td><td>0</td></tr>
-<tr><td>2</td><td>幸好没错过REDMI Buds 8 青春版的活动，不然亏大啦 #鹅机#蓝牙耳机#红米buds8青春版#性价比超高#好物推荐</td><td>¥0</td><td>¥999</td><td><b>12487.5</b></td><td>0</td></tr>
-<tr><td>3</td><td>好看的红米watch6壁纸在哪里！ #数码好物 #REDMIWatch6#红米W6#表盘 #壁纸</td><td>¥0</td><td>¥599</td><td><b>9983.3</b></td><td>1</td></tr>
-<tr><td>4</td><td>REDMI Watch 6银色补货啦！到手485起！ #智能手表 #红米手表 #智能穿戴 #小米 #手表</td><td>¥0</td><td>¥599</td><td><b>8557.1</b></td><td>1</td></tr>
-<tr><td>5</td><td>REDMI Buds 8很快就要与大家见面啦！ #新品上新#蓝牙耳机#红米Buds8#性价比超高#好物推荐</td><td>¥0</td><td>¥999</td><td><b>8325.0</b></td><td>0</td></tr>
-<tr><td>6</td><td>终于被我蹲到只要五张多的Xiaomi Buds 6啦！ #小米耳机#蓝牙耳机#耳机#福利#好物推荐</td><td>¥0</td><td>¥999</td><td><b>6243.8</b></td><td>0</td></tr>
-<tr><td>7</td><td>想换耳机的朋友们看过来，Xiaomi Buds 6发布啦~ #耳机#好物推荐🔥#小米耳机#小米Buds6#小米</td><td>¥2</td><td>¥9,999</td><td><b>6096.9</b></td><td>0</td></tr>
-<tr><td>8</td><td>红米watch6五月的腕带好礼，已经在直播间啦！ #价格力#REDMIWatch6#红米W6#米兰尼斯 #好礼推荐</td><td>¥0</td><td>¥599</td><td><b>5445.4</b></td><td>1</td></tr>
-<tr><td>9</td><td>贴心记录生理周期，给予温馨提醒~ #数码科技#红米W6#红米手表 #智能穿戴#价格力</td><td>¥0</td><td>¥569</td><td><b>2709.8</b></td><td>1</td></tr>
-<tr><td>10</td><td>告别电量焦虑 上班上学不用担心，就选REDMI Watch 6！#手表推荐 #智能穿戴 #好物推荐 #红米手表</td><td>¥0</td><td>¥599</td><td><b>2495.8</b></td><td>1</td></tr>
+<table><tr><th>#</th><th>标题</th><th>消耗</th><th>成交金额</th><th>支付ROI</th><th>订单数</th></tr><tr><td>1</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="这次的国补非常简单，不需要领资格，下单就减！ #蓝牙耳机 #好物推荐🔥 #智能穿戴 #国补">这次的国补非常简单，不需要领资格，下单就减！ #蓝牙耳机 #好物推荐🔥 #智能穿戴 #国补</td><td>¥0</td><td>¥999</td><td><b>14271.4</b></td><td>0</td></tr>
+<tr><td>2</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="幸好没错过REDMI Buds 8 青春版的活动，不然亏大啦 #鹅机#蓝牙耳机#红米buds8青春版#性价比超高#好物推荐">幸好没错过REDMI Buds 8 青春版的活动，不然亏大啦 #鹅机#蓝牙耳机#红米buds8青春版#性价比超高#好物推荐</td><td>¥0</td><td>¥999</td><td><b>12487.5</b></td><td>0</td></tr>
+<tr><td>3</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="好看的红米watch6壁纸在哪里！ #数码好物 #REDMIWatch6#红米W6#表盘 #壁纸">好看的红米watch6壁纸在哪里！ #数码好物 #REDMIWatch6#红米W6#表盘 #壁纸</td><td>¥0</td><td>¥599</td><td><b>9983.3</b></td><td>1</td></tr>
+<tr><td>4</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="REDMI Watch 6银色补货啦！到手485起！ #智能手表 #红米手表 #智能穿戴 #小米 #手表">REDMI Watch 6银色补货啦！到手485起！ #智能手表 #红米手表 #智能穿戴 #小米 #手表</td><td>¥0</td><td>¥599</td><td><b>8557.1</b></td><td>1</td></tr>
+<tr><td>5</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="REDMI Buds 8很快就要与大家见面啦！ #新品上新#蓝牙耳机#红米Buds8#性价比超高#好物推荐">REDMI Buds 8很快就要与大家见面啦！ #新品上新#蓝牙耳机#红米Buds8#性价比超高#好物推荐</td><td>¥0</td><td>¥999</td><td><b>8325.0</b></td><td>0</td></tr>
+<tr><td>6</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="终于被我蹲到只要五张多的Xiaomi Buds 6啦！ #小米耳机#蓝牙耳机#耳机#福利#好物推荐">终于被我蹲到只要五张多的Xiaomi Buds 6啦！ #小米耳机#蓝牙耳机#耳机#福利#好物推荐</td><td>¥0</td><td>¥999</td><td><b>6243.8</b></td><td>0</td></tr>
+<tr><td>7</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="想换耳机的朋友们看过来，Xiaomi Buds 6发布啦~ #耳机#好物推荐🔥#小米耳机#小米Buds6#小米">想换耳机的朋友们看过来，Xiaomi Buds 6发布啦~ #耳机#好物推荐🔥#小米耳机#小米Buds6#小米</td><td>¥2</td><td>¥9,999</td><td><b>6096.9</b></td><td>0</td></tr>
+<tr><td>8</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="红米watch6五月的腕带好礼，已经在直播间啦！ #价格力#REDMIWatch6#红米W6#米兰尼斯 #好礼推荐">红米watch6五月的腕带好礼，已经在直播间啦！ #价格力#REDMIWatch6#红米W6#米兰尼斯 #好礼推荐</td><td>¥0</td><td>¥599</td><td><b>5445.4</b></td><td>1</td></tr>
+<tr><td>9</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="贴心记录生理周期，给予温馨提醒~ #数码科技#红米W6#红米手表 #智能穿戴#价格力">贴心记录生理周期，给予温馨提醒~ #数码科技#红米W6#红米手表 #智能穿戴#价格力</td><td>¥0</td><td>¥569</td><td><b>2709.8</b></td><td>1</td></tr>
+<tr><td>10</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="告别电量焦虑 上班上学不用担心，就选REDMI Watch 6！#手表推荐 #智能穿戴 #好物推荐 #红米手表">告别电量焦虑 上班上学不用担心，就选REDMI Watch 6！#手表推荐 #智能穿戴 #好物推荐 #红米手表</td><td>¥0</td><td>¥599</td><td><b>2495.8</b></td><td>1</td></tr>
 </table>
 </div>
 </div>
 </div>
 <div class="section"><h2>09 直播间画面分析 (良米)</h2>
-<div class="grid-3">
+<div class="grid-3" style="grid-template-columns:repeat(5,1fr);">
 <div class="kpi-card"><div class="value" style="color:#FF4757;">¥7.3万</div><div class="label">画面总消耗</div></div>
 <div class="kpi-card"><div class="value" style="color:#2ED573;">¥533.8万</div><div class="label">画面总成交</div></div>
 <div class="kpi-card"><div class="value" style="color:#1E90FF;">73.45</div><div class="label">画面整体ROI</div></div>
-</div>
-<div class="grid-2">
-<div class="kpi-card"><div class="value" style="color:#FF6B35;">0</div><div class="label">1小时进入人数</div></div>
+<div class="kpi-card"><div class="value" style="color:#FF6B35;">0</div><div class="label">1h进入人数</div></div>
 <div class="kpi-card"><div class="value" style="color:#A855F7;">5,826</div><div class="label">净成交订单数</div></div>
 </div>
 <div class="chart-box" id="chart-room-daily"></div>
@@ -271,7 +244,37 @@ document.body.style.display='';
 })();
 </script>
 <div class="section"><h2>10 综合分析总结 - 良米(竞对)</h2>
-<div class="summary-card"><h3>📹 视频投放</h3><p>总消耗¥7.4万，净成交¥314.0万，ROI 42.54。有消耗视频3,905条，ROI>1占比14.6%。</p></div><div class="summary-card"><h3>📝 标题素材</h3><p>标题总消耗¥6.9万，成交¥321.7万，ROI 46.77。共分析3,763条有消耗标题。热门关键词：小米手环, 红米, 好物推荐, 价格力, 小米, 蓝牙耳机, 智能穿戴, 性价比超高。</p></div><div class="summary-card"><h3>🎬 直播间画面</h3><p>5组画面总消耗¥7.3万，成交¥533.8万，ROI 73.45。1小时进入0人，转化率79.94%。</p></div>
+<div class="grid-3">
+<div class="summary-card">
+<h3>📹 视频投放</h3>
+<div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:8px;">
+<span><b>总消耗</b> ¥7.4万</span>
+<span><b>净成交</b> ¥314.0万</span>
+<span><b>ROI</b> 42.54</span>
+<span><b>有消耗视频</b> 3,905条</span>
+<span><b>ROI>1占比</b> 14.6%</span>
+</div></div><div class="summary-card">
+<h3>📝 标题素材</h3>
+<div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:8px;">
+<span><b>总消耗</b> ¥6.9万</span>
+<span><b>总成交</b> ¥321.7万</span>
+<span><b>ROI</b> 46.77</span>
+<span><b>有消耗标题</b> 3,763条</span>
+<span><b>总订单</b> 3,894单</span>
+</div>
+<p style="margin-top:8px;color:var(--text-secondary);font-size:13px;">🔑 热门关键词：小米手环, 红米, 好物推荐, 价格力, 小米, 蓝牙耳机, 智能穿戴, 性价比超高</p>
+</div><div class="summary-card">
+<h3>🎬 直播间画面</h3>
+<div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:8px;">
+<span><b>总消耗</b> ¥7.3万</span>
+<span><b>总成交</b> ¥533.8万</span>
+<span><b>ROI</b> 73.45</span>
+<span><b>画面数</b> 5组</span>
+<span><b>1h进入</b> 0人</span>
+<span><b>转化率</b> 79.94%</span>
+</div>
+</div>
+</div>
 </div>
 <div class="footer">数据来源：千川后台导出 | 分析周期：2026.6.22 - 2026.7.1 | 竞对（良米）</div>
 </div>

@@ -421,8 +421,8 @@ tbody tr:hover td{background:#f8fafc;}
 .summary-card{background:linear-gradient(135deg,#f8f9fc 0%,#e8ecf1 100%);border-radius:var(--radius);padding:24px;margin-bottom:16px;border-left:4px solid #667eea;}
 .summary-card h3{color:#667eea;margin-bottom:8px;}
 .summary-card p{font-size:14px;line-height:1.8;color:var(--text-secondary);}
-@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr);}.header h1{font-size:26px;}.grid-2{grid-template-columns:1fr;}.grid-3{grid-template-columns:1fr;}}
-@media(max-width:500px){.kpi-row{grid-template-columns:1fr 1fr;}.section{padding:20px 16px;}}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr);}.header h1{font-size:26px;}.grid-2{grid-template-columns:1fr;}.grid-3{grid-template-columns:1fr;}.grid-3[style*="repeat(5"]{grid-template-columns:repeat(3,1fr)!important;}}
+@media(max-width:500px){.kpi-row{grid-template-columns:1fr 1fr;}.section{padding:20px 16px;}.grid-3[style*="repeat(5"]{grid-template-columns:1fr 1fr!important;}}
 </style>'''
 
 AUTH_SCRIPT = '''<script>
@@ -628,31 +628,26 @@ def gen_title_top_table(title_data, label='消耗'):
     rows = ''
     for i, t in enumerate(title_data):
         orders_val = int(t["orders"]) if pd.notna(t["orders"]) else 0
-        rows += f'<tr><td>{i+1}</td><td>{t["name"]}</td><td>{fmt_money(t["cost"])}</td><td>{fmt_money(t["pay_amt"])}</td><td><b>{t["pay_roi"]:.1f}</b></td><td>{orders_val}</td></tr>\n'
+        rows += f'<tr><td>{i+1}</td><td style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="{t["name"]}">{t["name"]}</td><td>{fmt_money(t["cost"])}</td><td>{fmt_money(t["pay_amt"])}</td><td><b>{t["pay_roi"]:.1f}</b></td><td>{orders_val}</td></tr>\n'
     return f'''<table><tr><th>#</th><th>标题</th><th>消耗</th><th>成交金额</th><th>支付ROI</th><th>订单数</th></tr>{rows}</table>'''
 
-def gen_word_cloud_html(word_freq):
-    """Generate word cloud style tag list"""
-    if not word_freq:
-        return '<p style="color:var(--text-secondary);">暂无关键词数据</p>'
-    tags = ''
-    max_count = word_freq[0][1] if word_freq else 1
-    for word, count in word_freq:
-        # Size based on frequency
-        size = 13 + int(count / max_count * 20)
-        opacity = 0.5 + count / max_count * 0.5
-        tags += f'<span class="word-tag" style="font-size:{size}px;opacity:{opacity};">{word}({count})</span>\n'
-    return f'<div class="word-cloud">{tags}</div>'
-
 def gen_title_section(t, label=''):
-    """Generate full title analysis section"""
+    """Generate full title analysis section - clean layout"""
     if t is None:
         return '<div class="section"><h2>08 视频标题分析</h2><p style="color:var(--text-secondary);">暂无标题数据</p></div>'
 
     roi_bin_rows = ''
+    total_with_roi = sum(b['count'] for b in t['roi_bins'] if b['count'] > 0)
     for b in t['roi_bins']:
         pct = b['count'] / t['cost_titles'] * 100 if t['cost_titles'] > 0 else 0
+        color = '#999' if b['count'] == 0 else ''
         roi_bin_rows += f'<tr><td>{b["label"]}</td><td>{b["count"]}</td><td>{pct:.1f}%</td></tr>\n'
+
+    # Get keyword summary
+    kw_summary = ''
+    if t['word_freq'] and len(t['word_freq']) > 0:
+        top_kw = [f'{w}({c})' for w, c in t['word_freq'][:10]]
+        kw_summary = f'<p style="color:var(--text-secondary);font-size:14px;margin-bottom:16px;">🔑 高频关键词：{", ".join(top_kw)}</p>'
 
     return f'''<div class="section"><h2>08 视频标题分析 {label}</h2>
 <div class="grid-3">
@@ -660,15 +655,10 @@ def gen_title_section(t, label=''):
 <div class="kpi-card"><div class="value" style="color:#2ED573;">{fmt_money(t['total_pay'])}</div><div class="label">标题总成交</div></div>
 <div class="kpi-card"><div class="value" style="color:#1E90FF;">{t['roi']:.2f}</div><div class="label">标题整体ROI</div></div>
 </div>
-<div class="grid-2">
-<div>
+{kw_summary}
+<div style="margin-bottom:24px;">
 <h3>📊 标题ROI分布</h3>
-<table>{roi_bin_rows}</table>
-</div>
-<div>
-<h3>🏷️ 高频关键词</h3>
-{gen_word_cloud_html(t['word_freq'])}
-</div>
+<table style="max-width:600px;">{roi_bin_rows}</table>
 </div>
 <div class="grid-2">
 <div>
@@ -697,13 +687,11 @@ def gen_liveroom_section(room, label=''):
     daily_json = json.dumps(room['daily_trend'])
 
     return f'''<div class="section"><h2>09 直播间画面分析 {label}</h2>
-<div class="grid-3">
+<div class="grid-3" style="grid-template-columns:repeat(5,1fr);">
 <div class="kpi-card"><div class="value" style="color:#FF4757;">{fmt_money(room['total_cost'])}</div><div class="label">画面总消耗</div></div>
 <div class="kpi-card"><div class="value" style="color:#2ED573;">{fmt_money(room['total_deal'])}</div><div class="label">画面总成交</div></div>
 <div class="kpi-card"><div class="value" style="color:#1E90FF;">{room['roi']:.2f}</div><div class="label">画面整体ROI</div></div>
-</div>
-<div class="grid-2">
-<div class="kpi-card"><div class="value" style="color:#FF6B35;">{fmt_num(room['total_enter'])}</div><div class="label">1小时进入人数</div></div>
+<div class="kpi-card"><div class="value" style="color:#FF6B35;">{fmt_num(room['total_enter'])}</div><div class="label">1h进入人数</div></div>
 <div class="kpi-card"><div class="value" style="color:#A855F7;">{fmt_num(room['total_orders'])}</div><div class="label">净成交订单数</div></div>
 </div>
 <div class="chart-box" id="chart-room-daily"></div>
@@ -734,16 +722,47 @@ def gen_liveroom_section(room, label=''):
 def gen_comprehensive_summary(m_video, m_title, m_room, side_label):
     """Generate a comprehensive summary combining all data sources"""
     parts = []
-    parts.append(f'<div class="summary-card"><h3>📹 视频投放</h3><p>总消耗{fmt_money(m_video["total_cost"])}，净成交{fmt_money(m_video["total_deal"])}，ROI {m_video["roi"]:.2f}。有消耗视频{m_video["cost_videos"]:,}条，ROI>1占比{m_video["roi_gt1_pct"]:.1f}%。</p></div>')
+    # Video card
+    parts.append(f'''<div class="summary-card">
+<h3>📹 视频投放</h3>
+<div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:8px;">
+<span><b>总消耗</b> {fmt_money(m_video["total_cost"])}</span>
+<span><b>净成交</b> {fmt_money(m_video["total_deal"])}</span>
+<span><b>ROI</b> {m_video["roi"]:.2f}</span>
+<span><b>有消耗视频</b> {m_video["cost_videos"]:,}条</span>
+<span><b>ROI>1占比</b> {m_video["roi_gt1_pct"]:.1f}%</span>
+</div></div>''')
 
     if m_title:
-        parts.append(f'<div class="summary-card"><h3>📝 标题素材</h3><p>标题总消耗{fmt_money(m_title["total_cost"])}，成交{fmt_money(m_title["total_pay"])}，ROI {m_title["roi"]:.2f}。共分析{m_title["cost_titles"]:,}条有消耗标题。热门关键词：{", ".join([w for w, c in m_title["word_freq"][:8]]) if m_title["word_freq"] else "暂无"}。</p></div>')
+        parts.append(f'''<div class="summary-card">
+<h3>📝 标题素材</h3>
+<div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:8px;">
+<span><b>总消耗</b> {fmt_money(m_title["total_cost"])}</span>
+<span><b>总成交</b> {fmt_money(m_title["total_pay"])}</span>
+<span><b>ROI</b> {m_title["roi"]:.2f}</span>
+<span><b>有消耗标题</b> {m_title["cost_titles"]:,}条</span>
+<span><b>总订单</b> {m_title["total_orders"]:,}单</span>
+</div>
+<p style="margin-top:8px;color:var(--text-secondary);font-size:13px;">🔑 热门关键词：{", ".join([w for w, c in m_title["word_freq"][:8]]) if m_title["word_freq"] else "暂无"}</p>
+</div>''')
 
     if m_room:
-        parts.append(f'<div class="summary-card"><h3>🎬 直播间画面</h3><p>{m_room["total_screens"]}组画面总消耗{fmt_money(m_room["total_cost"])}，成交{fmt_money(m_room["total_deal"])}，ROI {m_room["roi"]:.2f}。1小时进入{m_room["total_enter"]:,}人，转化率{m_room["avg_cvr"]:.2f}%。</p></div>')
+        parts.append(f'''<div class="summary-card">
+<h3>🎬 直播间画面</h3>
+<div style="display:flex;gap:24px;flex-wrap:wrap;margin-top:8px;">
+<span><b>总消耗</b> {fmt_money(m_room["total_cost"])}</span>
+<span><b>总成交</b> {fmt_money(m_room["total_deal"])}</span>
+<span><b>ROI</b> {m_room["roi"]:.2f}</span>
+<span><b>画面数</b> {m_room["total_screens"]}组</span>
+<span><b>1h进入</b> {m_room["total_enter"]:,}人</span>
+<span><b>转化率</b> {m_room["avg_cvr"]:.2f}%</span>
+</div>
+</div>''')
 
     return f'''<div class="section"><h2>10 综合分析总结 - {side_label}</h2>
+<div class="grid-3">
 {"".join(parts)}
+</div>
 </div>'''
 
 # ===== NAV BAR FOR W4 (shared) =====
@@ -1076,45 +1095,91 @@ comp_report += f'''</div>
 
 # Add title data comparison if available
 if title_our and title_comp:
+    title_cost_diff = title_comp['total_cost'] - title_our['total_cost']
+    title_roi_diff = title_comp['roi'] - title_our['roi']
     comp_report += f'''<div class="section"><h2>07 视频标题对比</h2>
 <div class="grid-2">
-<div>
+<div style="padding:20px;background:#f0f4ff;border-radius:12px;">
 <h3 style="color:#1E90FF;">我司标题数据</h3>
-<p>有消耗标题：{title_our['cost_titles']:,}条 | 总消耗：{fmt_money(title_our['total_cost'])} | ROI：{title_our['roi']:.2f}</p>
+<div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;">
+<span><b style="color:var(--text-secondary);">有消耗标题</b><br><b style="font-size:22px;">{title_our['cost_titles']:,}</b>条</span>
+<span><b style="color:var(--text-secondary);">总消耗</b><br><b style="font-size:22px;color:#FF4757;">{fmt_money(title_our['total_cost'])}</b></span>
+<span><b style="color:var(--text-secondary);">总成交</b><br><b style="font-size:22px;color:#2ED573;">{fmt_money(title_our['total_pay'])}</b></span>
+<span><b style="color:var(--text-secondary);">支付ROI</b><br><b style="font-size:22px;color:#1E90FF;">{title_our['roi']:.2f}</b></span>
+<span><b style="color:var(--text-secondary);">订单数</b><br><b style="font-size:22px;">{title_our['total_orders']:,}</b>单</span>
 </div>
-<div>
+</div>
+<div style="padding:20px;background:#fff4f0;border-radius:12px;">
 <h3 style="color:#FF6B35;">良米标题数据</h3>
-<p>有消耗标题：{title_comp['cost_titles']:,}条 | 总消耗：{fmt_money(title_comp['total_cost'])} | ROI：{title_comp['roi']:.2f}</p>
+<div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;">
+<span><b style="color:var(--text-secondary);">有消耗标题</b><br><b style="font-size:22px;">{title_comp['cost_titles']:,}</b>条</span>
+<span><b style="color:var(--text-secondary);">总消耗</b><br><b style="font-size:22px;color:#FF4757;">{fmt_money(title_comp['total_cost'])}</b></span>
+<span><b style="color:var(--text-secondary);">总成交</b><br><b style="font-size:22px;color:#2ED573;">{fmt_money(title_comp['total_pay'])}</b></span>
+<span><b style="color:var(--text-secondary);">支付ROI</b><br><b style="font-size:22px;color:#1E90FF;">{title_comp['roi']:.2f}</b></span>
+<span><b style="color:var(--text-secondary);">订单数</b><br><b style="font-size:22px;">{title_comp['total_orders']:,}</b>单</span>
 </div>
+</div>
+</div>
+<div style="margin-top:16px;padding:14px 20px;background:#f8f9fc;border-radius:8px;font-size:14px;">
+<b>📊 标题效率对比：</b>标题ROI：我司 {title_our['roi']:.2f} vs 竞对 {title_comp['roi']:.2f}（{"我司领先" if title_our['roi'] > title_comp['roi'] else "竞对领先"} {abs(title_our['roi'] - title_comp['roi']):.1f}）|
+标题均消耗：我司 ¥{title_our['total_cost']/title_our['cost_titles']:.1f} vs 竞对 ¥{title_comp['total_cost']/title_comp['cost_titles']:.1f} |
+标题总数：我司 {title_our['total_titles']:,} vs 竞对 {title_comp['total_titles']:,}
 </div>
 </div>'''
 
 # Add live room comparison if available
 if room_our and room_comp:
+    room_cost_diff = room_comp['total_cost'] - room_our['total_cost']
+    room_roi_diff = room_comp['roi'] - room_our['roi']
     comp_report += f'''<div class="section"><h2>08 直播间画面对比</h2>
 <div class="grid-2">
-<div>
+<div style="padding:20px;background:#f0f4ff;border-radius:12px;">
 <h3 style="color:#1E90FF;">我司直播画面</h3>
-<p>画面数：{room_our['total_screens']}组 | 总消耗：{fmt_money(room_our['total_cost'])} | ROI：{room_our['roi']:.2f} | 转化率：{room_our['avg_cvr']:.2f}%</p>
+<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;">
+<span><b style="color:var(--text-secondary);">画面数</b><br><b style="font-size:22px;">{room_our['total_screens']}</b>组</span>
+<span><b style="color:var(--text-secondary);">总消耗</b><br><b style="font-size:22px;color:#FF4757;">{fmt_money(room_our['total_cost'])}</b></span>
+<span><b style="color:var(--text-secondary);">总成交</b><br><b style="font-size:22px;color:#2ED573;">{fmt_money(room_our['total_deal'])}</b></span>
+<span><b style="color:var(--text-secondary);">ROI</b><br><b style="font-size:22px;color:#1E90FF;">{room_our['roi']:.2f}</b></span>
+<span><b style="color:var(--text-secondary);">转化率</b><br><b style="font-size:22px;color:#A855F7;">{room_our['avg_cvr']:.2f}%</b></span>
 </div>
-<div>
+</div>
+<div style="padding:20px;background:#fff4f0;border-radius:12px;">
 <h3 style="color:#FF6B35;">良米直播画面</h3>
-<p>画面数：{room_comp['total_screens']}组 | 总消耗：{fmt_money(room_comp['total_cost'])} | ROI：{room_comp['roi']:.2f} | 转化率：{room_comp['avg_cvr']:.2f}%</p>
+<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;">
+<span><b style="color:var(--text-secondary);">画面数</b><br><b style="font-size:22px;">{room_comp['total_screens']}</b>组</span>
+<span><b style="color:var(--text-secondary);">总消耗</b><br><b style="font-size:22px;color:#FF4757;">{fmt_money(room_comp['total_cost'])}</b></span>
+<span><b style="color:var(--text-secondary);">总成交</b><br><b style="font-size:22px;color:#2ED573;">{fmt_money(room_comp['total_deal'])}</b></span>
+<span><b style="color:var(--text-secondary);">ROI</b><br><b style="font-size:22px;color:#1E90FF;">{room_comp['roi']:.2f}</b></span>
+<span><b style="color:var(--text-secondary);">转化率</b><br><b style="font-size:22px;color:#A855F7;">{room_comp['avg_cvr']:.2f}%</b></span>
 </div>
+</div>
+</div>
+<div style="margin-top:16px;padding:14px 20px;background:#f8f9fc;border-radius:8px;font-size:14px;">
+<b>🎬 画面效率对比：</b>ROI：我司 {room_our['roi']:.2f} vs 竞对 {room_comp['roi']:.2f}（{"我司领先" if room_our['roi'] > room_comp['roi'] else "竞对领先"} {abs(room_our['roi'] - room_comp['roi']):.1f}）|
+1h进入人数：我司 {room_our['total_enter']:,} vs 竞对 {room_comp['total_enter']:,} |
+订单数：我司 {room_our['total_orders']:,} vs 竞对 {room_comp['total_orders']:,}
 </div>
 </div>'''
 
 # Comprehensive comparison summary
 comp_report += f'''<div class="section"><h2>09 综合对比总结</h2>
+<div class="grid-3">
 <div class="summary-card"><h3>📊 整体评估</h3>
-<p>W4周期（6.22-7.1）我司与良米的竞争格局清晰：{"我司在创意效率（CTR/ROI）上保持优势，但投放规模存在差距" if m_our['roi'] > m_comp['roi'] else "竞对在规模上领先，我们需要加强投放力度"}。</p>
+<p>W4周期（6.22-7.1）：{"我司在创意效率上保持优势，成交规模首次反超竞对" if m_our['roi'] > m_comp['roi'] else "竞对在规模上领先"}。双方ROI均大幅提升，效率竞争进入新阶段。</p>
 </div>
 <div class="summary-card"><h3>🎯 核心结论</h3>
-<p>1. 视频创意：我司CTR领先{abs(diff_ctr):.1f}个百分点，素材吸引力强<br>
-2. 规模效率：竞对消耗{ratio_cost:.1f}x于我司，播放量{ratio_plays:.1f}x于我司<br>
+<p>1. 视频创意：我司CTR领先{abs(diff_ctr):.1f}个百分点<br>
+2. 成交反超：我司成交¥346.6万 vs 竞对¥314.0万<br>
 3. 转化能力：我司CVR {m_our['cvr']:.2f}% vs 竞对 {m_comp['cvr']:.2f}%<br>
-4. 标题策略：{"双方标题ROI相当" if title_our and title_comp and abs(title_our["roi"] - title_comp["roi"]) < 1 else "标题ROI需持续优化"}<br>
-5. 直播间画面：{"需要丰富画面类型" if room_our and room_our['total_screens'] < (room_comp['total_screens'] if room_comp else 10) else "画面类型充足"}</p>
+4. 标题ROI：我司 {title_our["roi"]:.1f} vs 竞对 {title_comp["roi"]:.1f}<br>
+5. 画面ROI：我司 {room_our["roi"]:.1f} vs 竞对 {room_comp["roi"]:.1f}</p>
+</div>
+<div class="summary-card"><h3>🚀 行动方向</h3>
+<p>保持CTR优势→加大高ROI素材投放<br>
+修复CVR下降→优化落地页转化链路<br>
+借鉴竞对画面策略→丰富直播间画面类型<br>
+标题效率优化→提升标题ROI至60+</p>
+</div>
 </div>
 </div>'''
 

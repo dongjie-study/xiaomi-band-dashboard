@@ -53,8 +53,8 @@ tbody tr:hover td{background:#f8fafc;}
 .summary-card{background:linear-gradient(135deg,#f8f9fc 0%,#e8ecf1 100%);border-radius:var(--radius);padding:24px;margin-bottom:16px;border-left:4px solid #667eea;}
 .summary-card h3{color:#667eea;margin-bottom:8px;}
 .summary-card p{font-size:14px;line-height:1.8;color:var(--text-secondary);}
-@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr);}.header h1{font-size:26px;}.grid-2{grid-template-columns:1fr;}.grid-3{grid-template-columns:1fr;}}
-@media(max-width:500px){.kpi-row{grid-template-columns:1fr 1fr;}.section{padding:20px 16px;}}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr);}.header h1{font-size:26px;}.grid-2{grid-template-columns:1fr;}.grid-3{grid-template-columns:1fr;}.grid-3[style*="repeat(5"]{grid-template-columns:repeat(3,1fr)!important;}}
+@media(max-width:500px){.kpi-row{grid-template-columns:1fr 1fr;}.section{padding:20px 16px;}.grid-3[style*="repeat(5"]{grid-template-columns:1fr 1fr!important;}}
 </style>
 </head><body style="display:none">
 <script>
@@ -166,36 +166,78 @@ document.body.style.display='';
 <div class="finding info"><strong>6. 差异化策略建议：</strong>我们应保持CTR优势，重点提升投放规模和播放效率。在高CTR基础上加大预算投入，放大内容优势。</div>
 </div><div class="section"><h2>07 视频标题对比</h2>
 <div class="grid-2">
-<div>
+<div style="padding:20px;background:#f0f4ff;border-radius:12px;">
 <h3 style="color:#1E90FF;">我司标题数据</h3>
-<p>有消耗标题：2,298条 | 总消耗：¥6.1万 | ROI：57.13</p>
+<div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;">
+<span><b style="color:var(--text-secondary);">有消耗标题</b><br><b style="font-size:22px;">2,298</b>条</span>
+<span><b style="color:var(--text-secondary);">总消耗</b><br><b style="font-size:22px;color:#FF4757;">¥6.1万</b></span>
+<span><b style="color:var(--text-secondary);">总成交</b><br><b style="font-size:22px;color:#2ED573;">¥345.6万</b></span>
+<span><b style="color:var(--text-secondary);">支付ROI</b><br><b style="font-size:22px;color:#1E90FF;">57.13</b></span>
+<span><b style="color:var(--text-secondary);">订单数</b><br><b style="font-size:22px;">3,037</b>单</span>
 </div>
-<div>
+</div>
+<div style="padding:20px;background:#fff4f0;border-radius:12px;">
 <h3 style="color:#FF6B35;">良米标题数据</h3>
-<p>有消耗标题：3,763条 | 总消耗：¥6.9万 | ROI：46.77</p>
+<div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:14px;">
+<span><b style="color:var(--text-secondary);">有消耗标题</b><br><b style="font-size:22px;">3,763</b>条</span>
+<span><b style="color:var(--text-secondary);">总消耗</b><br><b style="font-size:22px;color:#FF4757;">¥6.9万</b></span>
+<span><b style="color:var(--text-secondary);">总成交</b><br><b style="font-size:22px;color:#2ED573;">¥321.7万</b></span>
+<span><b style="color:var(--text-secondary);">支付ROI</b><br><b style="font-size:22px;color:#1E90FF;">46.77</b></span>
+<span><b style="color:var(--text-secondary);">订单数</b><br><b style="font-size:22px;">3,894</b>单</span>
 </div>
+</div>
+</div>
+<div style="margin-top:16px;padding:14px 20px;background:#f8f9fc;border-radius:8px;font-size:14px;">
+<b>📊 标题效率对比：</b>标题ROI：我司 57.13 vs 竞对 46.77（我司领先 10.4）|
+标题均消耗：我司 ¥26.3 vs 竞对 ¥18.3 |
+标题总数：我司 2,298 vs 竞对 3,765
 </div>
 </div><div class="section"><h2>08 直播间画面对比</h2>
 <div class="grid-2">
-<div>
+<div style="padding:20px;background:#f0f4ff;border-radius:12px;">
 <h3 style="color:#1E90FF;">我司直播画面</h3>
-<p>画面数：5组 | 总消耗：¥10.1万 | ROI：59.78 | 转化率：82.68%</p>
+<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;">
+<span><b style="color:var(--text-secondary);">画面数</b><br><b style="font-size:22px;">5</b>组</span>
+<span><b style="color:var(--text-secondary);">总消耗</b><br><b style="font-size:22px;color:#FF4757;">¥10.1万</b></span>
+<span><b style="color:var(--text-secondary);">总成交</b><br><b style="font-size:22px;color:#2ED573;">¥601.7万</b></span>
+<span><b style="color:var(--text-secondary);">ROI</b><br><b style="font-size:22px;color:#1E90FF;">59.78</b></span>
+<span><b style="color:var(--text-secondary);">转化率</b><br><b style="font-size:22px;color:#A855F7;">82.68%</b></span>
 </div>
-<div>
+</div>
+<div style="padding:20px;background:#fff4f0;border-radius:12px;">
 <h3 style="color:#FF6B35;">良米直播画面</h3>
-<p>画面数：5组 | 总消耗：¥7.3万 | ROI：73.45 | 转化率：79.94%</p>
+<div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;">
+<span><b style="color:var(--text-secondary);">画面数</b><br><b style="font-size:22px;">5</b>组</span>
+<span><b style="color:var(--text-secondary);">总消耗</b><br><b style="font-size:22px;color:#FF4757;">¥7.3万</b></span>
+<span><b style="color:var(--text-secondary);">总成交</b><br><b style="font-size:22px;color:#2ED573;">¥533.8万</b></span>
+<span><b style="color:var(--text-secondary);">ROI</b><br><b style="font-size:22px;color:#1E90FF;">73.45</b></span>
+<span><b style="color:var(--text-secondary);">转化率</b><br><b style="font-size:22px;color:#A855F7;">79.94%</b></span>
 </div>
+</div>
+</div>
+<div style="margin-top:16px;padding:14px 20px;background:#f8f9fc;border-radius:8px;font-size:14px;">
+<b>🎬 画面效率对比：</b>ROI：我司 59.78 vs 竞对 73.45（竞对领先 13.7）|
+1h进入人数：我司 0 vs 竞对 0 |
+订单数：我司 6,878 vs 竞对 5,826
 </div>
 </div><div class="section"><h2>09 综合对比总结</h2>
+<div class="grid-3">
 <div class="summary-card"><h3>📊 整体评估</h3>
-<p>W4周期（6.22-7.1）我司与良米的竞争格局清晰：我司在创意效率（CTR/ROI）上保持优势，但投放规模存在差距。</p>
+<p>W4周期（6.22-7.1）：我司在创意效率上保持优势，成交规模首次反超竞对。双方ROI均大幅提升，效率竞争进入新阶段。</p>
 </div>
 <div class="summary-card"><h3>🎯 核心结论</h3>
-<p>1. 视频创意：我司CTR领先3.9个百分点，素材吸引力强<br>
-2. 规模效率：竞对消耗1.1x于我司，播放量3.2x于我司<br>
+<p>1. 视频创意：我司CTR领先3.9个百分点<br>
+2. 成交反超：我司成交¥346.6万 vs 竞对¥314.0万<br>
 3. 转化能力：我司CVR 0.94% vs 竞对 0.67%<br>
-4. 标题策略：标题ROI需持续优化<br>
-5. 直播间画面：画面类型充足</p>
+4. 标题ROI：我司 57.1 vs 竞对 46.8<br>
+5. 画面ROI：我司 59.8 vs 竞对 73.5</p>
+</div>
+<div class="summary-card"><h3>🚀 行动方向</h3>
+<p>保持CTR优势→加大高ROI素材投放<br>
+修复CVR下降→优化落地页转化链路<br>
+借鉴竞对画面策略→丰富直播间画面类型<br>
+标题效率优化→提升标题ROI至60+</p>
+</div>
 </div>
 </div>
 <div class="footer">数据来源：千川后台导出 | 分析周期：2026.6.22 - 2026.7.1 | 我司 vs 良米</div>
