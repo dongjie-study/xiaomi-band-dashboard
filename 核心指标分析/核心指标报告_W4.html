@@ -1,0 +1,360 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>千川视频数据 - 我司核心指标 (6.22-7.1)</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root{--bg:#f0f4f8;--surface:#ffffff;--text:#0f172a;--text-secondary:#64748b;--accent:#1E90FF;--accent2:#FF4757;--shadow-sm:0 1px 3px rgba(0,0,0,.04);--shadow-md:0 4px 16px rgba(0,0,0,.06);--shadow-lg:0 8px 30px rgba(0,0,0,.10);--radius:14px;--transition:0.25s cubic-bezier(0.4,0,0.2,1);--ours:#1E90FF;--theirs:#FF6B35;--green:#2ED573;--purple:#A855F7;--orange:#FFA502;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);}
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle,rgba(148,163,184,.12)1px,transparent 1px);background-size:24px 24px;pointer-events:none;z-index:0;}
+.nav-bar{display:flex;justify-content:center;gap:8px;padding:12px 20px;background:rgba(255,255,255,.88);backdrop-filter:blur(12px);border-bottom:1px solid #e8ecf1;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.04);flex-wrap:wrap;}
+.nav-btn{padding:8px 18px;border-radius:22px;border:1.5px solid #dde1e6;background:#fff;color:#555;font-size:13px;cursor:pointer;text-decoration:none;transition:all var(--transition);font-family:inherit;font-weight:500;}
+.nav-btn:hover{border-color:#1E90FF;color:#1E90FF;background:#eff6ff;transform:translateY(-1px);}
+.nav-btn.active{background:#1E90FF;color:#fff;border-color:#1E90FF;font-weight:600;box-shadow:0 2px 8px rgba(30,144,255,.25);}
+.nav-btn.summary{background:linear-gradient(135deg,#1E90FF,#FF4757);color:#fff;border-color:transparent;font-weight:600;}
+.nav-btn.w4{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-color:transparent;font-weight:600;}
+.header{position:relative;z-index:1;padding:50px 20px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.1);color:white;}
+.header h1{font-size:34px;font-weight:800;margin-bottom:10px;letter-spacing:-.02em;}
+.header p{font-size:15px;opacity:0.9;font-weight:400;}
+.kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;max-width:1400px;margin:-28px auto 0;padding:0 20px;position:relative;z-index:10;}
+.kpi-card{background:var(--surface);border-radius:var(--radius);padding:22px 14px;text-align:center;box-shadow:var(--shadow-md);border:1px solid #e8ecf1;transition:transform var(--transition),box-shadow var(--transition);}
+.kpi-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lg);}
+.kpi-card .value{font-size:26px;font-weight:800;line-height:1.2;}
+.kpi-card .label{font-size:12px;color:var(--text-secondary);margin-top:6px;font-weight:500;letter-spacing:.03em;text-transform:uppercase;}
+.container{max-width:1400px;margin:40px auto;padding:0 20px;position:relative;z-index:1;}
+.section{background:var(--surface);border-radius:var(--radius);padding:32px;margin-bottom:24px;box-shadow:var(--shadow-sm);border:1px solid #e8ecf1;transition:box-shadow var(--transition);}
+.section:hover{box-shadow:var(--shadow-md);}
+.section h2{font-size:20px;font-weight:700;color:var(--text);margin-bottom:20px;padding-bottom:14px;border-bottom:2px solid #f0f0f0;position:relative;}
+.section h2::after{content:'';position:absolute;bottom:-2px;left:0;width:48px;height:2px;background:var(--accent2);border-radius:1px;}
+.section h3{font-size:16px;font-weight:700;color:var(--text);margin-bottom:14px;}
+.chart-box{height:450px;}
+.chart-box-lg{height:550px;}
+.chart-box-sm{height:350px;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{background:#f8f9fc;text-align:left;padding:12px 16px;font-size:12px;color:var(--text-secondary);font-weight:600;border-bottom:2px solid #e8ecf1;}
+td{padding:12px 16px;font-size:13px;border-bottom:1px solid #f0f2f5;}
+tbody tr{transition:background var(--transition);}
+tbody tr:hover td{background:#f8fafc;}
+.finding{padding:16px 20px;margin-bottom:12px;border-radius:0 10px 10px 0;font-size:14px;line-height:1.8;box-shadow:var(--shadow-sm);}
+.finding.good{background:#e8f5e9;border-left:4px solid #2e7d32;}
+.finding.warn{background:#fff3e0;border-left:4px solid #e65100;}
+.finding.info{background:#e3f2fd;border-left:4px solid #1565c0;}
+.finding.neutral{background:#f3e5f5;border-left:4px solid #7b1fa2;}
+.footer{text-align:center;color:#94a3b8;padding:30px;font-size:13px;position:relative;z-index:1;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px;}
+.tag{display:inline-block;padding:3px 10px;border-radius:12px;font-size:11px;margin-left:6px;font-weight:600;}
+.tag-up{background:#ffebee;color:#c62828;}
+.tag-down{background:#e8f5e9;color:#2e7d32;}
+.diff-up{color:#c62828;}
+.diff-down{color:#2e7d32;}
+.period-badge{display:inline-block;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:600;background:rgba(255,255,255,.2);margin-left:10px;vertical-align:middle;}
+.word-cloud{display:flex;flex-wrap:wrap;gap:8px;padding:20px;}
+.word-tag{padding:6px 14px;border-radius:18px;font-size:13px;font-weight:600;background:#e8ecf1;color:#555;transition:all .2s;}
+.word-tag:hover{background:#1E90FF;color:#fff;transform:scale(1.05);}
+.summary-card{background:linear-gradient(135deg,#f8f9fc 0%,#e8ecf1 100%);border-radius:var(--radius);padding:24px;margin-bottom:16px;border-left:4px solid #667eea;}
+.summary-card h3{color:#667eea;margin-bottom:8px;}
+.summary-card p{font-size:14px;line-height:1.8;color:var(--text-secondary);}
+@media(max-width:900px){.kpi-row{grid-template-columns:repeat(3,1fr);}.header h1{font-size:26px;}.grid-2{grid-template-columns:1fr;}.grid-3{grid-template-columns:1fr;}}
+@media(max-width:500px){.kpi-row{grid-template-columns:1fr 1fr;}.section{padding:20px 16px;}}
+</style>
+</head><body style="display:none">
+<script>
+(function(){
+var K='mi_band_auth_v1';
+if(!localStorage.getItem(K)){window.location.href='../index.html';return;}
+document.body.style.display='';
+})();
+</script>
+<div class="nav-bar">
+<a class="nav-btn" href="核心指标报告.html">我司W1</a>
+<a class="nav-btn" href="核心指标报告_W2.html">我司W2</a>
+<a class="nav-btn" href="核心指标报告_W3.html">我司W3</a>
+<a class="nav-btn w4 active" href="核心指标报告_W4.html">我司W4</a>
+<span style="color:#ccc;margin:0 2px;">|</span>
+<a class="nav-btn" href="竞对数据报告.html">竞对W1</a>
+<a class="nav-btn" href="竞对数据报告_W2.html">竞对W2</a>
+<a class="nav-btn" href="竞对数据报告_W3.html">竞对W3</a>
+<a class="nav-btn" href="竞对数据报告_W4.html">竞对W4</a>
+<span style="color:#ccc;margin:0 2px;">|</span>
+<a class="nav-btn" href="竞对对比报告.html">对比W1</a>
+<a class="nav-btn" href="竞对对比报告_W2.html">对比W2</a>
+<a class="nav-btn" href="竞对对比报告_W3.html">对比W3</a>
+<a class="nav-btn" href="竞对对比报告_W4.html">对比W4</a>
+<span style="color:#ccc;margin:0 2px;">|</span>
+<a class="nav-btn summary" href="周度总结对比.html">📊 周度总结</a>
+</div>
+<div class="header" style="background:linear-gradient(135deg, #FF4757 0%, #1E90FF 100%);">
+<h1>千川视频数据 — 我司核心指标分析<span class="period-badge">6.22 - 7.1</span></h1>
+<p>2026年6月22日 - 7月1日 | 有消耗视频 3,789 条 | 整体ROI 50.24 | 净成交 ¥346.6万</p>
+</div>
+<div class="kpi-row">
+<div class="kpi-card"><div class="value" style="color:#FF4757;">¥6.9万</div><div class="label">总消耗</div></div>
+<div class="kpi-card"><div class="value" style="color:#2ED573;">¥346.6万</div><div class="label">净成交金额</div></div>
+<div class="kpi-card"><div class="value" style="color:#1E90FF;">50.24</div><div class="label">净成交ROI</div></div>
+<div class="kpi-card"><div class="value" style="color:#FF6B35;">3.9百万</div><div class="label">总播放量</div></div>
+<div class="kpi-card"><div class="value" style="color:#A855F7;">8.45%</div><div class="label">整体点击率</div></div>
+<div class="kpi-card"><div class="value" style="color:#FFA502;">2,920</div><div class="label">净成交订单数</div></div>
+</div>
+<div class="container">
+<div class="section"><h2>01 核心指标概览</h2><div class="chart-box" id="chart-overview"></div></div>
+<div class="section"><h2>02 渠道分析</h2>
+<div class="grid-2"><div class="chart-box" id="chart-channel-bar"></div><div class="chart-box" id="chart-channel-pie"></div></div>
+<table><tr><th>渠道</th><th>消耗</th><th>成交金额</th><th>订单数</th><th>ROI</th><th>播放量</th></tr><tr><td>抖音号主页素材</td><td>¥5.5万</td><td>¥267.2万</td><td>2366</td><td><b>48.9</b></td><td>3.3百万</td></tr>
+<tr><td>AIGC动态创意</td><td>¥8,492</td><td>¥15.5万</td><td>291</td><td><b>18.3</b></td><td>16.2万</td></tr>
+<tr><td>本地上传</td><td>¥5,857</td><td>¥63.9万</td><td>263</td><td><b>109.1</b></td><td>45.5万</td></tr>
+<tr><td>-</td><td>¥7</td><td>¥0</td><td>0</td><td><b>0.0</b></td><td>109</td></tr>
+</table>
+</div>
+<div class="section"><h2>03 产品线表现</h2>
+<div class="grid-2"><div class="chart-box" id="chart-product-bar"></div><div class="chart-box" id="chart-product-roi"></div></div>
+<table><tr><th>产品线</th><th>消耗</th><th>成交金额</th><th>ROI</th><th>播放量</th><th>视频数</th></tr><tr><td>Xiaomi Band</td><td>¥3.9万 (56.8%)</td><td>¥58.9万</td><td><b>15.0</b></td><td>1.3百万</td><td>2022</td></tr>
+<tr><td>Redmi Watch6</td><td>¥1.3万 (18.5%)</td><td>¥17.8万</td><td><b>13.9</b></td><td>47.2万</td><td>965</td></tr>
+<tr><td>Earphones</td><td>¥4,200 (6.1%)</td><td>¥193.3万</td><td><b>460.2</b></td><td>1.6百万</td><td>495</td></tr>
+<tr><td>AIGC Collection</td><td>¥8,492 (12.3%)</td><td>¥15.5万</td><td><b>18.3</b></td><td>16.2万</td><td>1</td></tr>
+<tr><td>Other/General</td><td>¥4,335 (6.3%)</td><td>¥61.1万</td><td><b>141.0</b></td><td>38.8万</td><td>306</td></tr>
+</table>
+</div>
+<div class="section"><h2>04 TOP10 消耗视频</h2>
+<table><tr><th>#</th><th>视频名称</th><th>消耗</th><th>成交金额</th><th>ROI</th><th>播放量</th><th>CTR</th></tr><tr><td>1</td><td>AIGC动态创意视频素材集合</td><td>¥8,492</td><td>¥15.5万</td><td><b>18.3</b></td><td>16.2万</td><td>10.95%</td></tr>
+<tr><td>2</td><td>小米手环10补货啦 #小米 #小米手环10 #数码科技 #小米手环</td><td>¥2,883</td><td>¥4.1万</td><td><b>14.2</b></td><td>7.0万</td><td>14.46%</td></tr>
+<tr><td>3</td><td>真让你给等到了 #小米手环#小米手环9pro#福利#活动#运动@DOU+小助手</td><td>¥2,241</td><td>¥2.7万</td><td><b>12.0</b></td><td>8.5万</td><td>7.61%</td></tr>
+<tr><td>4</td><td>小米手环10放券了 #小米手环#小米手表#小米手环10#福利 #活动</td><td>¥2,140</td><td>¥3.3万</td><td><b>15.5</b></td><td>7.8万</td><td>12.00%</td></tr>
+<tr><td>5</td><td>小米手环10补货啦 #小米手环#福利#活动#数码科技手表#小米手环10@DOU+小助手</td><td>¥1,840</td><td>¥3.5万</td><td><b>18.9</b></td><td>10.4万</td><td>13.62%</td></tr>
+<tr><td>6</td><td>补货来袭 #小米#小米手环9pro#数码科技#智能穿戴</td><td>¥1,698</td><td>¥2.2万</td><td><b>12.9</b></td><td>11.0万</td><td>11.01%</td></tr>
+<tr><td>7</td><td>小米手环10粉色银色补货来袭 #小米  #小米手环NFC #小米手环10 #数码科技 #智能穿戴</td><td>¥1,615</td><td>¥2.3万</td><td><b>14.6</b></td><td>3.1万</td><td>11.86%</td></tr>
+<tr><td>8</td><td>手环10 223.mp4</td><td>¥1,488</td><td>¥2.7万</td><td><b>18.3</b></td><td>6.5万</td><td>11.72%</td></tr>
+<tr><td>9</td><td>小米手环10即将迎来补货 #小米手环#小米手表#小米手环10#福利#活动</td><td>¥1,246</td><td>¥1.9万</td><td><b>14.9</b></td><td>1.6万</td><td>11.90%</td></tr>
+<tr><td>10</td><td>直播间首销直降，来看来看！！ #小米#小米新品#耳机#小米耳夹式耳机#618好物节</td><td>¥1,226</td><td>¥163.3万</td><td><b>1332.4</b></td><td>1.4百万</td><td>5.06%</td></tr>
+</table>
+</div>
+<div class="section"><h2>05 高ROI黑马视频 (消耗≤¥200, ROI≥30)</h2>
+<table><tr><th>#</th><th>视频名称</th><th>消耗</th><th>成交金额</th><th>ROI</th><th>播放量</th></tr><tr><td>1</td><td>新品发售 #红米#新品#优惠#耳机#REDMIBuds8@抖音小助手</td><td>¥0</td><td>¥9,999</td><td><b>99990.0</b></td><td>32</td></tr>
+<tr><td>2</td><td>什么？！！618来啦！！我先冲！ #618好物节#耳机#小米#XIAOMIBuds6#520礼物</td><td>¥0</td><td>¥9,999</td><td><b>83325.0</b></td><td>336</td></tr>
+<tr><td>3</td><td>轻松拿下 #小米Buds6#小米#半入耳耳机#新品#同声传译@抖音小助手</td><td>¥0</td><td>¥9,999</td><td><b>31246.9</b></td><td>97</td></tr>
+<tr><td>4</td><td>新品发售 #红米#新品#优惠#耳机#REDMIBuds8</td><td>¥0</td><td>¥9,999</td><td><b>24997.5</b></td><td>76</td></tr>
+<tr><td>5</td><td>买耳机送音响？？？ #半入耳耳机#红米#红米Buds7S#抗风噪#长续航@抖音小助手</td><td>¥1</td><td>¥9,999</td><td><b>13887.5</b></td><td>159</td></tr>
+<tr><td>6</td><td>新品发售 #红米#新品#优惠#耳机#REDMIBuds8@抖音小助手</td><td>¥1</td><td>¥9,999</td><td><b>13512.2</b></td><td>66</td></tr>
+<tr><td>7</td><td>红米头戴式耳机，直播间预约预约购机赢限量好礼 #小米#耳机#红米头戴式耳机#小米新品#礼物</td><td>¥1</td><td>¥9,999</td><td><b>10751.6</b></td><td>644</td></tr>
+<tr><td>8</td><td>活动来袭！！ #618好物节 #耳机#小米#红米buds8青春版#520礼物</td><td>¥1</td><td>¥9,999</td><td><b>9522.9</b></td><td>653</td></tr>
+</table>
+</div>
+<div class="section"><h2>06 ROI分布分析</h2>
+<div class="grid-2"><div class="chart-box" id="chart-roi-dist"></div>
+<div style="padding:30px;"><table>
+<tr><th>指标</th><th>数值</th></tr>
+<tr><td>ROI>0 视频占比</td><td><b>14.4% (546条)</b></td></tr>
+<tr><td>ROI=0 视频占比</td><td>85.6% (3243条)</td></tr>
+<tr><td>中位ROI</td><td>0.00</td></tr>
+<tr><td>均值ROI</td><td>99.14</td></tr>
+<tr><td>有消耗视频</td><td><b>3,789条</b></td></tr>
+<tr><td>总视频数</td><td>4,466条</td></tr>
+<tr><td>零消耗视频</td><td>677条</td></tr>
+</table></div>
+</div></div>
+<div class="section"><h2>07 关键发现</h2>
+<div class="finding good"><strong>1. 成交规模观察：</strong>本周净成交金额¥346.6万，净成交ROI 50.2，支付ROI高达53.1。14.4%视频有正向成交，其中ROI 20-100区间有210条视频，ROI>100的超级黑马115条。</div>
+<div class="finding good"><strong>2. CTR保持行业领先：</strong>整体CTR 8.45%，高于行业平均水平。高CTR说明我司视频素材创意吸引力强，是千川投放的核心竞争力。</div>
+<div class="finding info"><strong>3. 播放效率良好：</strong>总播放量3.9百万次，播放效率56.3次/元。完播率18.1%，2秒播放率25.7%，内容留人能力稳定。</div>
+<div class="finding info"><strong>4. 手环+Watch双品类驱动：</strong>小米手环和红米Watch6贡献主要成交，ROI表现稳健。</div>
+<div class="finding warn"><strong>5. CVR仍有提升空间：</strong>整体CVR 0.94%，从点击到成交的转化链条可进一步优化。</div>
+</div>
+<div class="section"><h2>08 视频标题分析 </h2>
+<div class="grid-3">
+<div class="kpi-card"><div class="value" style="color:#FF4757;">¥6.1万</div><div class="label">标题总消耗</div></div>
+<div class="kpi-card"><div class="value" style="color:#2ED573;">¥345.6万</div><div class="label">标题总成交</div></div>
+<div class="kpi-card"><div class="value" style="color:#1E90FF;">57.13</div><div class="label">标题整体ROI</div></div>
+</div>
+<div class="grid-2">
+<div>
+<h3>📊 标题ROI分布</h3>
+<table><tr><td>ROI=0</td><td>1856</td><td>80.8%</td></tr>
+<tr><td>0<ROI≤1</td><td>1</td><td>0.0%</td></tr>
+<tr><td>1<ROI≤5</td><td>12</td><td>0.5%</td></tr>
+<tr><td>5<ROI≤10</td><td>35</td><td>1.5%</td></tr>
+<tr><td>10<ROI≤20</td><td>127</td><td>5.5%</td></tr>
+<tr><td>20<ROI≤100</td><td>184</td><td>8.0%</td></tr>
+<tr><td>ROI>100</td><td>83</td><td>3.6%</td></tr>
+</table>
+</div>
+<div>
+<h3>🏷️ 高频关键词</h3>
+<div class="word-cloud"><span class="word-tag" style="font-size:33px;opacity:1.0;">小米手环(2799)</span>
+<span class="word-tag" style="font-size:22px;opacity:0.7286530903894248;">小米(1280)</span>
+<span class="word-tag" style="font-size:20px;opacity:0.6888174347981422;">红米(1057)</span>
+<span class="word-tag" style="font-size:17px;opacity:0.6052161486245088;">手表(589)</span>
+<span class="word-tag" style="font-size:16px;opacity:0.5823508395855663;">智能手表(461)</span>
+<span class="word-tag" style="font-size:16px;opacity:0.5775276884601643;">福利(434)</span>
+<span class="word-tag" style="font-size:15px;opacity:0.5712754555198285;">数码科技(399)</span>
+<span class="word-tag" style="font-size:15px;opacity:0.5639514112182923;">小米新品(358)</span>
+<span class="word-tag" style="font-size:15px;opacity:0.5557341907824223;">小助手(312)</span>
+<span class="word-tag" style="font-size:15px;opacity:0.5537692032868882;">活动(301)</span>
+<span class="word-tag" style="font-size:15px;opacity:0.5519828510182208;">耳机(291)</span>
+<span class="word-tag" style="font-size:15px;opacity:0.5514469453376206;">智能穿戴(288)</span>
+<span class="word-tag" style="font-size:14px;opacity:0.5453733476241515;">好物节(254)</span>
+<span class="word-tag" style="font-size:14px;opacity:0.5421579135405502;">礼物(236)</span>
+<span class="word-tag" style="font-size:14px;opacity:0.5396570203644159;">优惠(222)</span>
+<span class="word-tag" style="font-size:14px;opacity:0.5350125044658807;">抖音创作小助手(196)</span>
+<span class="word-tag" style="font-size:14px;opacity:0.5325116112897463;">新品(182)</span>
+<span class="word-tag" style="font-size:14px;opacity:0.5325116112897463;">抖音小助手(182)</span>
+<span class="word-tag" style="font-size:13px;opacity:0.522508038585209;">半入耳耳机(126)</span>
+<span class="word-tag" style="font-size:13px;opacity:0.5221507681314755;">蓝牙耳机(124)</span>
+</div>
+</div>
+</div>
+<div class="grid-2">
+<div>
+<h3>🔥 TOP10 高消耗标题</h3>
+<table><tr><th>#</th><th>标题</th><th>消耗</th><th>成交金额</th><th>支付ROI</th><th>订单数</th></tr><tr><td>1</td><td>小米手环10补货啦 #小米 #小米手环10 #数码科技 #小米手环</td><td>¥2,883</td><td>¥5.0万</td><td><b>17.4</b></td><td>158</td></tr>
+<tr><td>2</td><td>真让你给等到了 #小米手环#小米手环9pro#福利#活动#运动@DOU+小助手</td><td>¥2,241</td><td>¥3.6万</td><td><b>15.9</b></td><td>96</td></tr>
+<tr><td>3</td><td>小米手环10放券了 #小米手环#小米手表#小米手环10#福利 #活动</td><td>¥2,140</td><td>¥4.1万</td><td><b>19.1</b></td><td>121</td></tr>
+<tr><td>4</td><td>小米手环10补货啦 #小米手环#福利#活动#数码科技手表#小米手环10@DOU+小助手</td><td>¥1,862</td><td>¥4.3万</td><td><b>22.9</b></td><td>133</td></tr>
+<tr><td>5</td><td>补货来袭 #小米#小米手环10 #数码科技#智能穿戴</td><td>¥1,776</td><td>¥2.8万</td><td><b>15.9</b></td><td>90</td></tr>
+<tr><td>6</td><td>补货来袭 #小米手环#小米手表#小米手环10#福利#活动</td><td>¥1,631</td><td>¥3.5万</td><td><b>21.6</b></td><td>110</td></tr>
+<tr><td>7</td><td>小米手环10粉色银色补货来袭 #小米  #小米手环NFC #小米手环10 #数码科技 #智能穿戴</td><td>¥1,615</td><td>¥2.6万</td><td><b>16.3</b></td><td>83</td></tr>
+<tr><td>8</td><td>大额优惠券来啦 #红米Watch6#智能手表#手表#新品#数码科技</td><td>¥1,398</td><td>¥2.8万</td><td><b>20.2</b></td><td>71</td></tr>
+<tr><td>9</td><td>小米手环10银色补货来袭 #小米#小米手环10#小米手环#小米手环10nfc#数码科技</td><td>¥1,289</td><td>¥2.2万</td><td><b>16.9</b></td><td>68</td></tr>
+<tr><td>10</td><td>小米手环10即将迎来补货 #小米手环#小米手表#小米手环10#福利#活动</td><td>¥1,246</td><td>¥2.3万</td><td><b>18.1</b></td><td>70</td></tr>
+</table>
+</div>
+<div>
+<h3>⭐ TOP10 高ROI标题</h3>
+<table><tr><th>#</th><th>标题</th><th>消耗</th><th>成交金额</th><th>支付ROI</th><th>订单数</th></tr><tr><td>1</td><td>什么？！！618来啦！！我先冲！ #618好物节#耳机#小米#XIAOMIBuds6#520礼物</td><td>¥0</td><td>¥9,999</td><td><b>83325.0</b></td><td>0</td></tr>
+<tr><td>2</td><td>轻松拿下 #小米Buds6#小米#半入耳耳机#新品#同声传译@抖音小助手</td><td>¥0</td><td>¥9,999</td><td><b>31246.9</b></td><td>0</td></tr>
+<tr><td>3</td><td>买耳机送音响？？？ #半入耳耳机#红米#红米Buds7S#抗风噪#长续航@抖音小助手</td><td>¥1</td><td>¥9,999</td><td><b>13887.5</b></td><td>0</td></tr>
+<tr><td>4</td><td>红米头戴式耳机，直播间预约预约购机赢限量好礼 #小米#耳机#红米头戴式耳机#小米新品#礼物</td><td>¥1</td><td>¥9,999</td><td><b>10751.6</b></td><td>0</td></tr>
+<tr><td>5</td><td>活动来袭！！ #618好物节 #耳机#小米#红米buds8青春版#520礼物</td><td>¥1</td><td>¥9,999</td><td><b>8694.8</b></td><td>0</td></tr>
+<tr><td>6</td><td>有些话要防着闺蜜 #小米Buds6#小米#耳机#蓝牙耳机#半入耳耳机@抖音小助手</td><td>¥1</td><td>¥9,999</td><td><b>7193.5</b></td><td>0</td></tr>
+<tr><td>7</td><td>REDMI头戴式耳机，直播间预约享好礼！！！ #小米#耳机#红米头戴式耳机#小米新品#礼物</td><td>¥2</td><td>¥9,999</td><td><b>6023.5</b></td><td>0</td></tr>
+<tr><td>8</td><td>新品发售 #红米#新品#优惠#耳机#REDMIBuds8</td><td>¥2</td><td>¥9,999</td><td><b>5050.0</b></td><td>0</td></tr>
+<tr><td>9</td><td>倒计时1天，快来参与揪锦鲤 #耳机#蓝牙耳机#红米#红米Buds8pro#新品上新@抖音小助手</td><td>¥2</td><td>¥9,999</td><td><b>4877.6</b></td><td>0</td></tr>
+<tr><td>10</td><td>快醒醒 #红米#红米Buds8青春版#新品#优惠</td><td>¥3</td><td>¥9,999</td><td><b>3816.4</b></td><td>0</td></tr>
+</table>
+</div>
+</div>
+</div>
+<div class="section"><h2>09 直播间画面分析 </h2>
+<div class="grid-3">
+<div class="kpi-card"><div class="value" style="color:#FF4757;">¥10.1万</div><div class="label">画面总消耗</div></div>
+<div class="kpi-card"><div class="value" style="color:#2ED573;">¥601.7万</div><div class="label">画面总成交</div></div>
+<div class="kpi-card"><div class="value" style="color:#1E90FF;">59.78</div><div class="label">画面整体ROI</div></div>
+</div>
+<div class="grid-2">
+<div class="kpi-card"><div class="value" style="color:#FF6B35;">0</div><div class="label">1小时进入人数</div></div>
+<div class="kpi-card"><div class="value" style="color:#A855F7;">6,878</div><div class="label">净成交订单数</div></div>
+</div>
+<div class="chart-box" id="chart-room-daily"></div>
+<h3>📺 直播间画面对比（按消耗排名）</h3>
+<table><tr><th>画面名称</th><th>消耗</th><th>成交金额</th><th>ROI</th><th>CVR</th><th>天数</th></tr><tr><td>小米官方手环直播间</td><td>¥3.5万</td><td>¥136.5万</td><td><b>39.0</b></td><td>84.15%</td><td>11</td></tr>
+<tr><td>小米数码旗舰店</td><td>¥3.4万</td><td>¥134.9万</td><td><b>40.2</b></td><td>83.18%</td><td>11</td></tr>
+<tr><td>小米官方手表</td><td>¥1.9万</td><td>¥84.9万</td><td><b>43.7</b></td><td>77.40%</td><td>11</td></tr>
+<tr><td>小米官方耳机直播间</td><td>¥9,903</td><td>¥232.7万</td><td><b>235.0</b></td><td>91.50%</td><td>11</td></tr>
+<tr><td>小米官旗手表直播间</td><td>¥2,866</td><td>¥12.8万</td><td><b>44.7</b></td><td>76.63%</td><td>10</td></tr>
+</table>
+</div>
+<script>
+(function(){
+  var chart = echarts.init(document.getElementById('chart-room-daily'));
+  var daily = [{"date": "\u5168\u90e8", "cost": 17480.43, "roi": 39.05, "deal_amt": 682558.28, "hourly_enter": 0}, {"date": "2026-06-22", "cost": 1198.86, "roi": 47.46, "deal_amt": 56894.9, "hourly_enter": 0}, {"date": "2026-06-23", "cost": 977.98, "roi": 44.97, "deal_amt": 43979.55, "hourly_enter": 0}, {"date": "2026-06-24", "cost": 3282.66, "roi": 33.22, "deal_amt": 109050.85, "hourly_enter": 0}, {"date": "2026-06-25", "cost": 2042.75, "roi": 36.91, "deal_amt": 75389.75, "hourly_enter": 0}, {"date": "2026-06-26", "cost": 2486.88, "roi": 37.08, "deal_amt": 92209.3, "hourly_enter": 0}, {"date": "2026-06-27", "cost": 1474.66, "roi": 47.84, "deal_amt": 70544.0, "hourly_enter": 0}, {"date": "2026-06-28", "cost": 2279.0, "roi": 33.68, "deal_amt": 76750.9, "hourly_enter": 0}, {"date": "2026-06-29", "cost": 1797.22, "roi": 38.8, "deal_amt": 69727.13, "hourly_enter": 0}, {"date": "2026-06-30", "cost": 1061.52, "roi": 45.9, "deal_amt": 48726.9, "hourly_enter": 0}, {"date": "2026-07-01", "cost": 878.9, "roi": 44.7, "deal_amt": 39285.0, "hourly_enter": 0}, {"date": "\u5168\u90e8", "cost": 16762.47, "roi": 40.23, "deal_amt": 674286.75, "hourly_enter": 0}, {"date": "2026-06-22", "cost": 1205.85, "roi": 38.18, "deal_amt": 46034.0, "hourly_enter": 0}, {"date": "2026-06-23", "cost": 936.81, "roi": 43.62, "deal_amt": 40862.3, "hourly_enter": 0}, {"date": "2026-06-24", "cost": 1674.24, "roi": 39.15, "deal_amt": 65553.1, "hourly_enter": 0}, {"date": "2026-06-25", "cost": 2138.01, "roi": 39.75, "deal_amt": 84995.8, "hourly_enter": 0}, {"date": "2026-06-26", "cost": 1325.21, "roi": 41.41, "deal_amt": 54871.0, "hourly_enter": 0}, {"date": "2026-06-27", "cost": 1947.21, "roi": 39.94, "deal_amt": 77778.7, "hourly_enter": 0}, {"date": "2026-06-28", "cost": 2739.43, "roi": 38.44, "deal_amt": 105310.2, "hourly_enter": 0}, {"date": "2026-06-29", "cost": 1659.17, "roi": 40.21, "deal_amt": 66717.8, "hourly_enter": 0}, {"date": "2026-06-30", "cost": 1544.82, "roi": 43.97, "deal_amt": 67924.8, "hourly_enter": 0}, {"date": "2026-07-01", "cost": 1591.72, "roi": 40.36, "deal_amt": 64239.05, "hourly_enter": 0}, {"date": "\u5168\u90e8", "cost": 9701.43, "roi": 43.75, "deal_amt": 424403.7, "hourly_enter": 0}, {"date": "2026-06-22", "cost": 617.62, "roi": 38.4, "deal_amt": 23714.9, "hourly_enter": 0}, {"date": "2026-06-23", "cost": 728.16, "roi": 43.37, "deal_amt": 31579.15, "hourly_enter": 0}, {"date": "2026-06-24", "cost": 998.78, "roi": 40.06, "deal_amt": 40010.5, "hourly_enter": 0}, {"date": "2026-06-25", "cost": 1042.97, "roi": 42.38, "deal_amt": 44200.45, "hourly_enter": 0}, {"date": "2026-06-26", "cost": 1445.97, "roi": 34.15, "deal_amt": 49377.05, "hourly_enter": 0}, {"date": "2026-06-27", "cost": 801.04, "roi": 43.19, "deal_amt": 34598.55, "hourly_enter": 0}, {"date": "2026-06-28", "cost": 855.37, "roi": 59.85, "deal_amt": 51196.0, "hourly_enter": 0}, {"date": "2026-06-29", "cost": 926.86, "roi": 54.4, "deal_amt": 50424.0, "hourly_enter": 0}, {"date": "2026-06-30", "cost": 982.48, "roi": 51.4, "deal_amt": 50498.55, "hourly_enter": 0}, {"date": "2026-07-01", "cost": 1302.18, "roi": 37.48, "deal_amt": 48804.55, "hourly_enter": 0}, {"date": "\u5168\u90e8", "cost": 4951.74, "roi": 234.95, "deal_amt": 1163424.3, "hourly_enter": 0}, {"date": "2026-06-22", "cost": 224.15, "roi": 25.73, "deal_amt": 5767.0, "hourly_enter": 0}, {"date": "2026-06-23", "cost": 236.91, "roi": 21.78, "deal_amt": 5160.0, "hourly_enter": 0}, {"date": "2026-06-24", "cost": 213.38, "roi": 49.87, "deal_amt": 10641.9, "hourly_enter": 0}, {"date": "2026-06-25", "cost": 297.81, "roi": 26.92, "deal_amt": 8017.0, "hourly_enter": 0}, {"date": "2026-06-26", "cost": 377.11, "roi": 474.9, "deal_amt": 179090.0, "hourly_enter": 0}, {"date": "2026-06-27", "cost": 119.7, "roi": 2425.15, "deal_amt": 290290.0, "hourly_enter": 0}, {"date": "2026-06-28", "cost": 86.51, "roi": 5205.12, "deal_amt": 450295.0, "hourly_enter": 0}, {"date": "2026-06-29", "cost": 85.98, "roi": 884.18, "deal_amt": 76021.9, "hourly_enter": 0}, {"date": "2026-06-30", "cost": 2951.26, "roi": 43.91, "deal_amt": 129595.15, "hourly_enter": 0}, {"date": "2026-07-01", "cost": 358.93, "roi": 23.81, "deal_amt": 8546.35, "hourly_enter": 0}, {"date": "\u5168\u90e8", "cost": 1432.79, "roi": 44.67, "deal_amt": 64005.7, "hourly_enter": 0}, {"date": "2026-06-23", "cost": 183.59, "roi": 64.22, "deal_amt": 11790.05, "hourly_enter": 0}, {"date": "2026-06-24", "cost": 208.43, "roi": 41.86, "deal_amt": 8724.1, "hourly_enter": 0}, {"date": "2026-06-25", "cost": 200.81, "roi": 53.16, "deal_amt": 10675.2, "hourly_enter": 0}, {"date": "2026-06-26", "cost": 251.3, "roi": 48.56, "deal_amt": 12203.5, "hourly_enter": 0}, {"date": "2026-06-27", "cost": 11.66, "roi": 0.0, "deal_amt": 0.0, "hourly_enter": 0}, {"date": "2026-06-28", "cost": 69.38, "roi": 25.58, "deal_amt": 1775.0, "hourly_enter": 0}, {"date": "2026-06-29", "cost": 196.24, "roi": 35.51, "deal_amt": 6968.95, "hourly_enter": 0}, {"date": "2026-06-30", "cost": 204.79, "roi": 29.81, "deal_amt": 6104.15, "hourly_enter": 0}, {"date": "2026-07-01", "cost": 106.59, "roi": 54.08, "deal_amt": 5764.75, "hourly_enter": 0}];
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['消耗','ROI','成交金额'],top:0},
+    grid:{left:20,right:60,top:50,bottom:50},
+    xAxis:{type:'category',data:daily.map(function(d){return d.date;}),axisLabel:{fontSize:11,rotate:25}},
+    yAxis:[{type:'value',name:'金额(¥)',splitLine:{lineStyle:{color:'#eee'}}},{type:'value',name:'ROI'}],
+    series:[
+      {name:'消耗',type:'bar',data:daily.map(function(d){return d.cost;}),itemStyle:{color:'#FF4757'},barWidth:20,label:{show:true,position:'top',fontSize:10,formatter:function(p){return p.value>=1000?'¥'+(p.value/1000).toFixed(0)+'k':p.value;}}},
+      {name:'成交金额',type:'bar',data:daily.map(function(d){return d.deal_amt;}),itemStyle:{color:'#2ED573'},barWidth:20,label:{show:true,position:'top',fontSize:10,formatter:function(p){return p.value>=1000?'¥'+(p.value/1000).toFixed(0)+'k':p.value;}}},
+      {name:'ROI',type:'line',yAxisIndex:1,data:daily.map(function(d){return d.roi;}),lineStyle:{color:'#1E90FF',width:3},symbol:'circle',symbolSize:8,itemStyle:{color:'#1E90FF'},label:{show:true,fontSize:11,fontWeight:'bold'}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+<div class="section"><h2>10 综合分析总结 - 我司</h2>
+<div class="summary-card"><h3>📹 视频投放</h3><p>总消耗¥6.9万，净成交¥346.6万，ROI 50.24。有消耗视频3,789条，ROI>1占比14.4%。</p></div><div class="summary-card"><h3>📝 标题素材</h3><p>标题总消耗¥6.1万，成交¥345.6万，ROI 57.13。共分析2,298条有消耗标题。热门关键词：小米手环, 小米, 红米, 手表, 智能手表, 福利, 数码科技, 小米新品。</p></div><div class="summary-card"><h3>🎬 直播间画面</h3><p>5组画面总消耗¥10.1万，成交¥601.7万，ROI 59.78。1小时进入0人，转化率82.68%。</p></div>
+</div>
+<div class="footer">数据来源：千川后台导出 | 分析周期：2026.6.22 - 2026.7.1 | 我司</div>
+</div>
+<script>
+(function(){
+  var chart = echarts.init(document.getElementById('chart-overview'));
+  chart.setOption({
+    tooltip:{trigger:'axis'},legend:{top:0},
+    grid:{left:80,right:40,top:40,bottom:0},
+    xAxis:{type:'value',splitLine:{lineStyle:{color:'#eee'}}},
+    yAxis:{type:'category',data:["\u6d88\u8017(\u00a5)", "\u6210\u4ea4\u91d1\u989d(\u00a5)", "\u8ba2\u5355\u6570", "\u64ad\u653e\u91cf", "ROI", "CTR(%)", "CVR(%)", "\u64ad\u653e/\u5143"],axisLabel:{fontSize:13}},
+    series:[{type:'bar',barMaxWidth:35,
+      data:[{value:68992.7500,itemStyle:{color:"#FF4757"}},{value:3466356.9300,itemStyle:{color:"#2ED573"}},{value:2920.0000,itemStyle:{color:"#FFA502"}},{value:3884302.0000,itemStyle:{color:"#FF6B35"}},{value:50.2423,itemStyle:{color:"#1E90FF"}},{value:8.4470,itemStyle:{color:"#A855F7"}},{value:0.9390,itemStyle:{color:"#FF6348"}},{value:56.3001,itemStyle:{color:"#0891b2"}}],
+      label:{show:true,position:'right',fontSize:13,formatter:function(p){var v=p.value;if(v>=1000000)return(v/1000000).toFixed(1)+'百万';if(v>=10000)return(v/10000).toFixed(1)+'万';if(v>=1000)return v.toLocaleString();return v.toFixed(2);}}
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+(function(){
+  var chart = echarts.init(document.getElementById('chart-channel-bar'));
+  var data = [{"name": "\u6296\u97f3\u53f7\u4e3b\u9875\u7d20\u6750", "cost": 54636.450000000004}, {"name": "AIGC\u52a8\u6001\u521b\u610f", "cost": 8492.0}, {"name": "\u672c\u5730\u4e0a\u4f20", "cost": 5857.179999999999}, {"name": "-", "cost": 7.119999999999999}];
+  chart.setOption({
+    tooltip:{trigger:'axis'},legend:{top:0},
+    grid:{left:20,right:20,top:40,bottom:50},
+    xAxis:{type:'category',data:data.map(function(d){return d.name;}),axisLabel:{fontSize:11,rotate:20}},
+    yAxis:{type:'value',name:'消耗 (¥)',splitLine:{lineStyle:{color:'#eee'}}},
+    series:[{name:'消耗',type:'bar',data:data.map(function(d){return d.cost;}),itemStyle:{color:'#FF4757'},barWidth:40,label:{show:true,position:'top',fontSize:12,formatter:function(p){return'¥'+(p.value/1000).toFixed(1)+'k';}}}]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+(function(){
+  var chart = echarts.init(document.getElementById('chart-channel-pie'));
+  var data = [{"value": 54636.450000000004, "name": "\u6296\u97f3\u53f7\u4e3b\u9875\u7d20\u6750"}, {"value": 8492.0, "name": "AIGC\u52a8\u6001\u521b\u610f"}, {"value": 5857.179999999999, "name": "\u672c\u5730\u4e0a\u4f20"}, {"value": 7.119999999999999, "name": "-"}];
+  var colors = ["#FF4757", "#1E90FF", "#2ED573", "#A855F7", "#FFA502", "#0891b2"];
+  data.forEach(function(d,i){d.itemStyle={color:colors[i%colors.length]};});
+  chart.setOption({
+    tooltip:{trigger:'item',formatter:'{b}: ¥{c} ({d}%)'},
+    legend:{bottom:0},
+    series:[{type:'pie',radius:['45%','75%'],label:{formatter:'{b}\n{d}%'},data:data}]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+(function(){
+  var chart = echarts.init(document.getElementById('chart-product-bar'));
+  chart.setOption({
+    tooltip:{trigger:'axis'},legend:{top:0},
+    grid:{left:20,right:50,top:40,bottom:0},
+    xAxis:{type:'category',data:["Xiaomi Band", "Redmi Watch6", "Earphones", "AIGC Collection", "Other/General"],axisLabel:{fontSize:12}},
+    yAxis:[{type:'value',name:'消耗 (¥)',splitLine:{lineStyle:{color:'#eee'}}},{type:'value',name:'ROI'}],
+    series:[
+      {name:'消耗',type:'bar',data:[39178.92, 12786.46, 4199.91, 8492.0, 4335.460000000001],itemStyle:{color:'#FF4757'},barWidth:30,label:{show:true,position:'top',fontSize:11,formatter:function(p){return'¥'+(p.value/1000).toFixed(1)+'k';}}},
+      {name:'ROI',type:'line',yAxisIndex:1,data:[15.02368799344137, 13.931182672921201, 460.2352431361624, 18.308625765426285, 140.97491384997207],lineStyle:{color:'#1E90FF',width:3},symbol:'circle',symbolSize:10,itemStyle:{color:'#1E90FF'},label:{show:true,fontSize:12,fontWeight:'bold'}}
+    ]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+
+(function(){
+  var chart = echarts.init(document.getElementById('chart-product-roi'));
+  var sorted = [{"name": "Redmi Watch6", "roi": 13.931182672921201}, {"name": "Xiaomi Band", "roi": 15.02368799344137}, {"name": "AIGC Collection", "roi": 18.308625765426285}, {"name": "Other/General", "roi": 140.97491384997207}, {"name": "Earphones", "roi": 460.2352431361624}];
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    grid:{left:100,right:60,top:10,bottom:20},
+    xAxis:{type:'value',name:'ROI',splitLine:{lineStyle:{color:'#eee'}}},
+    yAxis:{type:'category',data:sorted.map(function(d){return d.name;}).reverse(),axisLabel:{fontSize:13}},
+    series:[{type:'bar',
+      data:sorted.map(function(d){return{value:d.roi,itemStyle:{color:d.roi>=13?'#2ED573':'#FFA502'}};}).reverse(),
+      barWidth:25,label:{show:true,position:'right',fontSize:14,fontWeight:'bold'}
+    }]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+(function(){
+  var chart = echarts.init(document.getElementById('chart-roi-dist'));
+  var data = [{"value": 3243, "name": "ROI=0"}, {"value": 1, "name": "0<ROI\u22641"}, {"value": 20, "name": "1<ROI\u22645"}, {"value": 59, "name": "5<ROI\u226410"}, {"value": 141, "name": "10<ROI\u226420"}, {"value": 210, "name": "20<ROI\u2264100"}, {"value": 115, "name": "ROI>100"}];
+  var colors = ["#ccc", "#FFA502", "#FF6B35", "#FF4757", "#1E90FF", "#A855F7", "#2ED573"];
+  data.forEach(function(d,i){d.itemStyle={color:colors[i]};});
+  chart.setOption({
+    tooltip:{trigger:'item',formatter:'{b}: {c}条 ({d}%)'},
+    legend:{bottom:0},
+    series:[{type:'pie',radius:['55%','80%'],label:{formatter:'{b}\n{d}%',fontSize:12},data:data}]
+  });
+  window.addEventListener('resize',function(){chart.resize();});
+})();
+</script>
+</body></html>
