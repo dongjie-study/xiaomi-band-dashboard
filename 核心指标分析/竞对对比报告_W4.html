@@ -129,33 +129,40 @@ document.body.style.display='';
 </div>
 
 <div class="section"><h2>05 ROI分布对比</h2>
-<div class="grid-2">
-<div style="padding:20px;">
-<h3 style="color:#1E90FF;margin-bottom:14px;">我司 ROI分布</h3>
-<table>
-<tr><th>ROI区间</th><th>视频数</th><th>占比</th></tr>
-<tr><td>ROI=0</td><td>3243</td><td>85.6%</td></tr>
-<tr><td>0<ROI≤1</td><td>1</td><td>0.0%</td></tr>
-<tr><td>1<ROI≤5</td><td>20</td><td>0.5%</td></tr>
-<tr><td>5<ROI≤10</td><td>59</td><td>1.6%</td></tr>
-<tr><td>10<ROI≤20</td><td>141</td><td>3.7%</td></tr>
-<tr><td>20<ROI≤100</td><td>210</td><td>5.5%</td></tr>
-<tr><td>ROI>100</td><td>115</td><td>3.0%</td></tr>
+<div class="chart-box" id="chart-roi-dist-comp" style="height:340px;"></div>
+<table style="margin-top:16px;">
+<tr><th>ROI区间</th><th style="color:#1E90FF;">我司</th><th style="color:#1E90FF;">占比</th><th style="width:140px;"></th><th style="color:#FF6B35;">良米</th><th style="color:#FF6B35;">占比</th><th style="width:140px;"></th></tr>
+<tr><td style="font-weight:600;">ROI=0</td><td><b>3,243</b></td><td>85.6%</td><td><div style="height:6px;background:#e8ecf1;border-radius:3px;width:140px;"><div style="height:100%;width:120px;background:linear-gradient(90deg,#1E90FF,#60a5fa);border-radius:3px;"></div></div></td><td><b>3,330</b></td><td>85.3%</td><td><div style="height:6px;background:#e8ecf1;border-radius:3px;width:140px;"><div style="height:100%;width:119px;background:linear-gradient(90deg,#FF6B35,#fdba74);border-radius:3px;"></div></div></td></tr>
+<tr><td style="font-weight:600;">0&lt;ROI≤1</td><td><b>1</b></td><td>0.0%</td><td><div style="height:6px;background:#e8ecf1;border-radius:3px;width:140px;"><div style="height:100%;width:2px;background:linear-gradient(90deg,#1E90FF,#60a5fa);border-radius:3px;"></div></div></td><td><b>6</b></td><td>0.2%</td><td><div style="height:6px;background:#e8ecf1;border-radius:3px;width:140px;"><div style="height:100%;width:2px;background:linear-gradient(90deg,#FF6B35,#fdba74);border-radius:3px;"></div></div></td></tr>
+<tr><td style="font-weight:600;">1&lt;ROI≤5</td><td><b>20</b></td><td>0.5%</td><td><div style="height:6px;background:#e8ecf1;border-radius:3px;width:140px;"><div style="height:100%;width:2px;background:linear-gradient(90deg,#1E90FF,#60a5fa);border-radius:3px;"></div></div></td><td><b>32</b></td><td>0.8%</td><td><div style="height:6px;background:#e8ecf1;border-radius:3px;width:140px;"><div style="height:100%;width:2px;background:linear-gradient(90deg,#FF6B35,#fdba74);border-radius:3px;"></div></div></td></tr>
+<tr style="background:#f8fafc;"><td style="font-weight:600;">5&lt;ROI≤10</td><td><b>59</b></td><td>1.6%</td><td><div style="height:6px;background:#e8ecf1;border-radius:3px;width:140px;"><div style="height:100%;width:2px;background:linear-gradient(90deg,#1E90FF,#60a5fa);border-radius:3px;"></div></div></td><td><b>47</b></td><td>1.2%</td><td><div style="height:6px;background:#e8ecf1;border-radius:3px;width:140px;"><div style="height:100%;width:2px;background:linear-gradient(90deg,#FF6B35,#fdba74);border-radius:3px;"></div></div></td></tr>
+<tr><td style="font-weight:600;">10&lt;ROI≤20</td><td><b>141</b></td><td>3.7%</td><td><div style="height:6px;background:#e8ecf1;border-radius:3px;width:140px;"><div style="height:100%;width:5px;background:linear-gradient(90deg,#1E90FF,#60a5fa);border-radius:3px;"></div></div></td><td><b>143</b></td><td>3.7%</td><td><div style="height:6px;background:#e8ecf1;border-radius:3px;width:140px;"><div style="height:100%;width:5px;background:linear-gradient(90deg,#FF6B35,#fdba74);border-radius:3px;"></div></div></td></tr>
+<tr style="background:#f0faf3;"><td style="font-weight:600;">20&lt;ROI≤100</td><td><b>210</b></td><td>5.5%</td><td><div style="height:6px;background:#e8ecf1;border-radius:3px;width:140px;"><div style="height:100%;width:8px;background:linear-gradient(90deg,#2ED573,#1E90FF);border-radius:3px;"></div></div></td><td><b>234</b></td><td>6.0%</td><td><div style="height:6px;background:#e8ecf1;border-radius:3px;width:140px;"><div style="height:100%;width:8px;background:linear-gradient(90deg,#2ED573,#FF6B35);border-radius:3px;"></div></div></td></tr>
+<tr style="background:#fff8e1;"><td style="font-weight:600;">ROI&gt;100</td><td><b>115</b></td><td>3.0%</td><td><div style="height:6px;background:#e8ecf1;border-radius:3px;width:140px;"><div style="height:100%;width:4px;background:linear-gradient(90deg,#FFA502,#FF4757);border-radius:3px;"></div></div></td><td><b>113</b></td><td>2.9%</td><td><div style="height:6px;background:#e8ecf1;border-radius:3px;width:140px;"><div style="height:100%;width:4px;background:linear-gradient(90deg,#FFA502,#FF4757);border-radius:3px;"></div></div></td></tr>
 </table>
-</div>
-<div style="padding:20px;">
-<h3 style="color:#FF6B35;margin-bottom:14px;">良米 ROI分布</h3>
-<table>
-<tr><th>ROI区间</th><th>视频数</th><th>占比</th></tr>
-<tr><td>ROI=0</td><td>3330</td><td>85.3%</td></tr>
-<tr><td>0<ROI≤1</td><td>6</td><td>0.2%</td></tr>
-<tr><td>1<ROI≤5</td><td>32</td><td>0.8%</td></tr>
-<tr><td>5<ROI≤10</td><td>47</td><td>1.2%</td></tr>
-<tr><td>10<ROI≤20</td><td>143</td><td>3.7%</td></tr>
-<tr><td>20<ROI≤100</td><td>234</td><td>6.0%</td></tr>
-<tr><td>ROI>100</td><td>113</td><td>2.9%</td></tr>
-</div>
-</div>
+<div style="display:flex;gap:16px;margin-top:20px;flex-wrap:wrap;">
+<div style="flex:1;min-width:140px;background:#f0f4ff;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:11px;color:var(--text-secondary);">我司 ROI&gt;1 占比</div><div style="font-size:20px;font-weight:800;color:#1E90FF;">14.4%</div></div>
+<div style="flex:1;min-width:140px;background:#fff4f0;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:11px;color:var(--text-secondary);">良米 ROI&gt;1 占比</div><div style="font-size:20px;font-weight:800;color:#FF6B35;">14.6%</div></div>
+<div style="flex:1;min-width:140px;background:#f0fff4;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:11px;color:var(--text-secondary);">我司 中位ROI</div><div style="font-size:20px;font-weight:800;color:#2ED573;">0.00</div></div>
+<div style="flex:1;min-width:140px;background:#fff8f0;border-radius:10px;padding:14px;text-align:center;"><div style="font-size:11px;color:var(--text-secondary);">良米 中位ROI</div><div style="font-size:20px;font-weight:800;color:#FFA502;">0.00</div></div>
+</div></div>
+<script>
+(function(){
+  var c=echarts.init(document.getElementById('chart-roi-dist-comp'));
+  c.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['我司','良米'],top:0},
+    grid:{left:10,right:10,top:36,bottom:60},
+    xAxis:{type:'category',data:['ROI=0','0<ROI≤1','1<ROI≤5','5<ROI≤10','10<ROI≤20','20<ROI≤100','ROI>100'],axisLabel:{fontSize:9,rotate:25}},
+    yAxis:{type:'value',name:'视频数',splitLine:{lineStyle:{color:'#eee'}}},
+    series:[
+      {name:'我司',type:'bar',data:[3243,1,20,59,141,210,115],itemStyle:{color:'#1E90FF',borderRadius:[4,4,0,0]},barWidth:18,label:{show:true,position:'top',fontSize:9}},
+      {name:'良米',type:'bar',data:[3330,6,32,47,143,234,113],itemStyle:{color:'#FF6B35',borderRadius:[4,4,0,0]},barWidth:18,label:{show:true,position:'top',fontSize:9}}
+    ]
+  });
+  window.addEventListener('resize',function(){c.resize();});
+})();
+</script>
 
 <div class="section"><h2>06 关键发现</h2>
 <div class="finding warn"><strong>1. 投放规模差距：</strong>竞对投入1.1x于我司的消耗（¥7.4万 vs ¥6.9万），视频数相当但单视频投入更高。</div>
