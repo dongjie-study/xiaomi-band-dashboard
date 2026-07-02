@@ -112,7 +112,7 @@ def compute_metrics(clean):
         r = d / c if c > 0 else 0
         o = s['orders'].sum()
         p = s['plays'].sum()
-        sources.append({'name': src, 'cost': c, 'deal': d, 'roi': r, 'orders': int(o), 'plays': p, 'videos': len(s)})
+        sources.append({'name': src, 'cost': round(c, 2), 'deal': round(d, 2), 'roi': round(r, 2), 'orders': int(o), 'plays': round(p), 'videos': len(s)})
     sources.sort(key=lambda x: x['cost'], reverse=True)
 
     # Product breakdown
@@ -126,7 +126,7 @@ def compute_metrics(clean):
         r = d / c if c > 0 else 0
         o = s['orders'].sum()
         p = s['plays'].sum()
-        products.append({'name': prod, 'cost': c, 'deal': d, 'roi': r, 'orders': int(o), 'plays': p, 'videos': len(s)})
+        products.append({'name': prod, 'cost': round(c, 2), 'deal': round(d, 2), 'roi': round(r, 2), 'orders': int(o), 'plays': round(p), 'videos': len(s)})
 
     # ROI distribution
     roi_bins = [
@@ -171,34 +171,37 @@ def compute_metrics(clean):
             'plays': r['plays'],
         })
 
+    total_cost = float(f"{total_cost:.2f}")
+    total_deal = float(f"{total_deal:.2f}")
+    total_pay = float(f"{total_pay:.2f}")
     return {
         'total_videos': len(clean),
         'cost_videos': len(hc),
         'total_cost': total_cost,
         'total_deal': total_deal,
         'total_orders': int(total_orders),
-        'total_plays': total_plays,
-        'total_impressions': total_impressions,
+        'total_plays': int(round(total_plays)),
+        'total_impressions': int(round(total_impressions)),
         'total_clicks': int(total_clicks),
         'total_pay': total_pay,
         'total_pay_orders': int(total_pay_orders),
-        'roi': roi,
-        'pay_roi': pay_roi,
-        'ctr': ctr,
-        'cvr': cvr,
-        'plays_per_yuan': plays_per_yuan,
-        'avg_watch_time': hc['avg_watch_time'].mean(),
-        'avg_completion': hc['completion'].mean(),
-        'avg_play_2s': hc['play_2s'].mean(),
-        'cpc': total_cost / total_clicks if total_clicks > 0 else 0,
-        'cpm': total_cost / total_impressions * 1000 if total_impressions > 0 else 0,
+        'roi': round(roi, 2),
+        'pay_roi': round(pay_roi, 2),
+        'ctr': round(ctr, 2),
+        'cvr': round(cvr, 2),
+        'plays_per_yuan': round(plays_per_yuan, 2),
+        'avg_watch_time': round(hc['avg_watch_time'].mean(), 2) if pd.notna(hc['avg_watch_time'].mean()) else 0,
+        'avg_completion': round(hc['completion'].mean(), 2) if pd.notna(hc['completion'].mean()) else 0,
+        'avg_play_2s': round(hc['play_2s'].mean(), 2) if pd.notna(hc['play_2s'].mean()) else 0,
+        'cpc': round(total_cost / total_clicks, 2) if total_clicks > 0 else 0,
+        'cpm': round(total_cost / total_impressions * 1000, 2) if total_impressions > 0 else 0,
         'sources': sources,
         'products': products,
         'roi_bins': roi_bins,
-        'median_roi': median_roi,
-        'mean_roi': mean_roi,
-        'roi_gt1_pct': roi_gt1_pct,
-        'roi_eq0_pct': roi_eq0_pct,
+        'median_roi': round(median_roi, 2),
+        'mean_roi': round(mean_roi, 2),
+        'roi_gt1_pct': round(roi_gt1_pct, 2),
+        'roi_eq0_pct': round(roi_eq0_pct, 2),
         'top10': top10_list,
         'dark': dark_list,
     }
@@ -264,11 +267,11 @@ def analyze_titles(data):
     return {
         'total_titles': len(data),
         'cost_titles': len(hc),
-        'total_cost': total_cost,
-        'total_pay': total_pay,
+        'total_cost': round(total_cost, 2),
+        'total_pay': round(total_pay, 2),
         'total_orders': int(total_orders),
-        'roi': roi,
-        'avg_price': avg_price,
+        'roi': round(roi, 2),
+        'avg_price': round(avg_price, 2),
         'top_cost': top_cost_list,
         'top_roi': top_roi_list,
         'roi_bins': roi_bins,
@@ -327,39 +330,43 @@ def analyze_liveroom(data):
         r = d / c if c > 0 else 0
         screens.append({
             'name': str(name)[:60],
-            'cost': c,
-            'deal': d,
-            'roi': r,
+            'cost': round(c, 2),
+            'deal': round(d, 2),
+            'roi': round(r, 2),
             'days': len(s),
-            'cvr': s['cvr'].mean(),
+            'cvr': round(s['cvr'].mean(), 2),
         })
     screens.sort(key=lambda x: x['cost'], reverse=True)
 
     return {
         'total_screens': len(daily['name'].unique()) if len(daily) > 0 else len(hc['name'].unique()),
-        'total_cost': total_cost,
-        'total_deal': total_deal,
+        'total_cost': round(total_cost, 2),
+        'total_deal': round(total_deal, 2),
         'total_orders': int(total_orders),
         'total_enter': int(total_enter),
-        'roi': roi,
-        'pay_roi': pay_roi,
-        'avg_cvr': avg_cvr,
+        'roi': round(roi, 2),
+        'pay_roi': round(pay_roi, 2),
+        'avg_cvr': round(avg_cvr, 2),
         'top_screens': top_list,
         'screens': screens,
         'daily_trend': daily_trend,
     }
 
 def fmt_money(v):
+    v = round(float(v), 2)
     if abs(v) >= 10000:
         return f'¥{v/10000:.1f}万'
-    return f'¥{v:,.0f}'
+    if v == int(v):
+        return f'¥{int(v):,}'
+    return f'¥{v:,.2f}'
 
 def fmt_num(v):
+    v = round(float(v))
     if abs(v) >= 1000000:
         return f'{v/1000000:.1f}百万'
     if abs(v) >= 10000:
         return f'{v/10000:.1f}万'
-    return f'{v:,.0f}'
+    return f'{int(v):,}'
 
 def fmt_roi(v):
     return f'{v:.2f}'
@@ -984,29 +991,29 @@ print("✓ Written: 竞对数据报告_W4.html")
 # ===== Generate Comparison Report W4 =====
 print("Generating comparison report...")
 
-# Compute differences
-diff_cost = m_comp['total_cost'] - m_our['total_cost']
-diff_deal = m_comp['total_deal'] - m_our['total_deal']
-diff_roi = m_comp['roi'] - m_our['roi']
-diff_ctr = m_comp['ctr'] - m_our['ctr']
-diff_cvr = m_comp['cvr'] - m_our['cvr']
-diff_plays = m_comp['total_plays'] - m_our['total_plays']
+# Compute differences (rounded to 2dp)
+diff_cost = round(m_comp['total_cost'] - m_our['total_cost'], 2)
+diff_deal = round(m_comp['total_deal'] - m_our['total_deal'], 2)
+diff_roi = round(m_comp['roi'] - m_our['roi'], 2)
+diff_ctr = round(m_comp['ctr'] - m_our['ctr'], 2)
+diff_cvr = round(m_comp['cvr'] - m_our['cvr'], 2)
+diff_plays = round(m_comp['total_plays'] - m_our['total_plays'])
 diff_orders = m_comp['total_orders'] - m_our['total_orders']
 
 def diff_class(v):
     return 'diff-up' if v > 0 else ('diff-down' if v < 0 else '')
 
-# Per-video efficiency
-our_avg_cost = m_our['total_cost'] / m_our['cost_videos']
-comp_avg_cost = m_comp['total_cost'] / m_comp['cost_videos']
-our_avg_deal = m_our['total_deal'] / m_our['cost_videos']
-comp_avg_deal = m_comp['total_deal'] / m_comp['cost_videos']
-our_avg_plays = m_our['total_plays'] / m_our['cost_videos']
-comp_avg_plays = m_comp['total_plays'] / m_comp['cost_videos']
-our_cpo = m_our['total_cost'] / m_our['total_orders'] if m_our['total_orders'] > 0 else 0
-comp_cpo = m_comp['total_cost'] / m_comp['total_orders'] if m_comp['total_orders'] > 0 else 0
-our_dpo = m_our['total_deal'] / m_our['total_orders'] if m_our['total_orders'] > 0 else 0
-comp_dpo = m_comp['total_deal'] / m_comp['total_orders'] if m_comp['total_orders'] > 0 else 0
+# Per-video efficiency (rounded to 2dp)
+our_avg_cost = round(m_our['total_cost'] / m_our['cost_videos'], 2)
+comp_avg_cost = round(m_comp['total_cost'] / m_comp['cost_videos'], 2)
+our_avg_deal = round(m_our['total_deal'] / m_our['cost_videos'], 2)
+comp_avg_deal = round(m_comp['total_deal'] / m_comp['cost_videos'], 2)
+our_avg_plays = round(m_our['total_plays'] / m_our['cost_videos'])
+comp_avg_plays = round(m_comp['total_plays'] / m_comp['cost_videos'])
+our_cpo = round(m_our['total_cost'] / m_our['total_orders'], 2) if m_our['total_orders'] > 0 else 0
+comp_cpo = round(m_comp['total_cost'] / m_comp['total_orders'], 2) if m_comp['total_orders'] > 0 else 0
+our_dpo = round(m_our['total_deal'] / m_our['total_orders'], 2) if m_our['total_orders'] > 0 else 0
+comp_dpo = round(m_comp['total_deal'] / m_comp['total_orders'], 2) if m_comp['total_orders'] > 0 else 0
 
 comp_report = f'''<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>千川视频数据 - 竞对对比分析 (6.22-7.1)</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
