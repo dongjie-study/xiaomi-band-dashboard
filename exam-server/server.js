@@ -1,8 +1,3 @@
-const app = require('./app');
-const PORT = process.env.PORT || 3000;
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || 'xiaomi2026';
-
-app.listen(PORT, () => {
-  console.log(`考试服务器已启动: http://localhost:${PORT}`);
-  console.log(`管理后台: http://localhost:${PORT}/admin?token=${ADMIN_TOKEN}`);
-});
+// 本地开发可继续用: node server.js
+// 阿里云FC也兼容
+require('./index.js');
