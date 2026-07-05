@@ -10,6 +10,12 @@ const DATA_DIR = fs.existsSync('/tmp') ? '/tmp/data' : path.join(__dirname, 'dat
 const RESULTS_FILE = path.join(DATA_DIR, 'results.json');
 
 app.use(express.json({ limit: '1mb' }));
+app.use(express.static(__dirname));
+
+// 访问根路径直接显示考试页面
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, '主播合规考试.html'));
+});
 
 // Ensure data dir and file exist
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
