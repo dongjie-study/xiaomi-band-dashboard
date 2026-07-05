@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小米系直播间主播合规考试</title>
+<style>
+:root {
+  --bg: #f0f4f8; --surface: #fff; --text: #0f172a; --text-secondary: #64748b;
+  --accent: #e94560; --accent-blue: #3867d6; --accent-green: #20bf6b; --accent-orange: #e17055;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.04); --shadow-md: 0 4px 16px rgba(0,0,0,.06); --shadow-lg: 0 8px 30px rgba(0,0,0,.10);
+  --radius: 14px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+body::before { content: ''; position: fixed; inset: 0; background-image: radial-gradient(circle, rgba(148,163,184,.12) 1px, transparent 1px); background-size: 24px 24px; pointer-events: none; z-index: 0; }
+.header { position: relative; z-index: 1; background: linear-gradient(135deg, #fff 0%, #fdf2f4 100%); padding: 32px 40px; border-bottom: 3px solid var(--accent); text-align: center; box-shadow: 0 2px 16px rgba(233,69,96,.08); }
+.header h1 { font-size: 26px; font-weight: 800; margin-bottom: 6px; }
+.header p { color: var(--text-secondary); font-size: 14px; }
+.container { max-width: 900px; margin: 0 auto; padding: 24px 20px 60px; position: relative; z-index: 1; }
+
+.info-banner { background: linear-gradient(135deg, #fff5f5 0%, #fff 50%, #fff5f5 100%); border: 2px solid #e94560; border-radius: var(--radius); padding: 20px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(233,69,96,.08); }
+.info-banner .info-row { display: flex; flex-wrap: wrap; gap: 20px; }
+.info-banner .info-item { flex: 1; min-width: 140px; text-align: center; }
+.info-banner .val { font-size: 28px; font-weight: 800; color: #e94560; }
+.info-banner .lbl { font-size: 12px; color: #888; margin-top: 2px; }
+
+.timer-box { background: #1a1a2e; color: #fff; border-radius: var(--radius); padding: 16px 24px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; box-shadow: var(--shadow-md); }
+.timer-box .clock { font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.timer-box .clock.warning { color: #e17055; animation: pulse 1s infinite; }
+.timer-box .clock.danger { color: #e94560; animation: pulse 0.5s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+.timer-box .timer-label { font-size: 13px; color: #94a3b8; }
+
+.progress-wrap { margin-bottom: 24px; }
+.progress-inner { display: flex; align-items: center; gap: 10px; }
+.progress-bar { flex: 1; height: 8px; background: #e8ecf1; border-radius: 4px; overflow: hidden; }
+.progress-bar .fill { height: 100%; background: linear-gradient(90deg, #3867d6, #20bf6b); border-radius: 4px; transition: width 0.3s; }
+.progress-text { font-size: 13px; font-weight: 600; color: var(--text-secondary); min-width: 60px; }
+
+.section-title { font-size: 17px; font-weight: 700; color: var(--accent-blue); margin: 28px 0 12px; padding: 10px 16px; background: #e8f0fe; border-radius: 8px; border-left: 3px solid var(--accent-blue); }
+.section-title .badge { display: inline-block; background: var(--accent-blue); color: #fff; font-size: 11px; padding: 2px 8px; border-radius: 4px; margin-right: 8px; }
+
+.q-card { background: var(--surface); border-radius: var(--radius); padding: 24px; margin-bottom: 16px; border: 1px solid #e8ecf1; box-shadow: var(--shadow-sm); transition: all 0.25s; position: relative; }
+.q-card:hover { box-shadow: var(--shadow-md); }
+.q-card.answered { border-left: 4px solid var(--accent-blue); }
+.q-card.correct { border-left: 4px solid #20bf6b; background: #f0fff4; }
+.q-card.wrong { border-left: 4px solid #e94560; background: #fff5f5; }
+.q-num { display: inline-block; width: 28px; height: 28px; line-height: 28px; text-align: center; background: #e8ecf1; border-radius: 50%; font-weight: 700; font-size: 13px; margin-right: 8px; }
+.q-text { font-size: 15px; font-weight: 600; line-height: 1.6; color: var(--text); margin-bottom: 14px; }
+
+.options { display: flex; flex-direction: column; gap: 6px; }
+.option { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border: 1.5px solid #e8ecf1; border-radius: 8px; cursor: pointer; transition: all 0.2s; font-size: 14px; }
+.option:hover { border-color: var(--accent-blue); background: #f0f6ff; }
+.option input[type="radio"], .option input[type="checkbox"] { accent-color: var(--accent-blue); width: 18px; height: 18px; cursor: pointer; }
+.option.selected { border-color: var(--accent-blue); background: #e8f0fe; font-weight: 500; }
+
+.tf-options { display: flex; gap: 12px; }
+.tf-btn { flex: 1; padding: 12px; border: 2px solid #e8ecf1; border-radius: 10px; cursor: pointer; text-align: center; font-size: 15px; font-weight: 600; transition: all 0.2s; background: #fff; }
+.tf-btn:hover { border-color: var(--accent-blue); }
+.tf-btn.selected { border-color: var(--accent-blue); background: #e8f0fe; color: var(--accent-blue); }
+
+.q-explanation { margin-top: 12px; padding: 12px 16px; background: #f0fdf4; border-radius: 8px; font-size: 13px; line-height: 1.7; border-left: 3px solid #20bf6b; display: none; }
+.q-explanation.show { display: block; }
+.q-explanation strong { color: #16a34a; }
+.q-explanation .ref { font-size: 11px; color: #64748b; margin-top: 4px; }
+
+.submit-area { text-align: center; margin-top: 30px; }
+.btn { display: inline-block; padding: 14px 40px; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; border: none; transition: all 0.25s; }
+.btn-primary { background: linear-gradient(135deg, #3867d6, #4a7cf7); color: #fff; box-shadow: 0 4px 14px rgba(56,103,214,.35); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(56,103,214,.45); }
+.btn-reset { background: #fff; color: var(--text-secondary); border: 2px solid #e8ecf1; margin-left: 12px; }
+
+.score-card { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; border-radius: var(--radius); padding: 36px 28px; text-align: center; box-shadow: var(--shadow-lg); margin-bottom: 24px; display: none; }
+.score-card .score-num { font-size: 72px; font-weight: 900; line-height: 1; }
+.score-card .score-num.pass { color: #20bf6b; }
+.score-card .score-num.fail { color: #e94560; }
+.score-card .score-label { font-size: 16px; color: #94a3b8; margin-top: 8px; }
+.score-card .score-detail { font-size: 13px; color: #64748b; margin-top: 8px; }
+.score-card .grade { font-size: 24px; font-weight: 800; margin-top: 16px; }
+.score-card .grade.A { color: #20bf6b; }
+.score-card .grade.B { color: #3867d6; }
+.score-card .grade.C { color: #e17055; }
+.score-card .grade.D { color: #e94560; }
+
+.name-input-row { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; }
+.name-input-row label { font-weight: 600; font-size: 14px; white-space: nowrap; }
+.name-input-row input { flex: 1; padding: 10px 14px; border: 1.5px solid #e8ecf1; border-radius: 8px; font-size: 14px; }
+.name-input-row input:focus { outline: none; border-color: var(--accent-blue); box-shadow: 0 0 0 3px rgba(56,103,214,.1); }
+
+@media (max-width: 768px) {
+  .info-banner .info-row { gap: 10px; }
+  .info-item { min-width: 80px; }
+  .header { padding: 20px 16px; }
+  .container { padding: 16px 12px; }
+}
+
+@media print {
+  body { background: #fff; }
+  body::before { display: none; }
+  .header { border-bottom-color: #000; }
+  .q-card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+  .btn, .timer-box, .submit-area, .name-input-row { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🎯 小米系直播间主播合规考试</h1>
+  <p>考试范围：2026年5月-7月违规记录分析 ｜ 满分100分 ｜ 及格线100分（满分通过） ｜ 考试时间45分钟</p>
+</div>
+
+<div class="container">
+
+<div class="info-banner">
+  <div class="info-row">
+    <div class="info-item"><div class="val">32</div><div class="lbl">累计违规次数</div></div>
+    <div class="info-item"><div class="val">6</div><div class="lbl">涉及直播间</div></div>
+    <div class="info-item"><div class="val">9</div><div class="lbl">违规类型</div></div>
+    <div class="info-item"><div class="val">4</div><div class="lbl">处罚等级</div></div>
+  </div>
+</div>
+
+<div class="timer-box">
+  <div><div class="timer-label">⏱ 剩余时间</div><div class="clock" id="timer">45:00</div></div>
+  <div><div class="timer-label">📝 已答题目</div><div style="font-size:24px;font-weight:700;"><span id="answered-count">0</span> / 30</div></div>
+</div>
+
+<div class="progress-wrap">
+  <div class="progress-inner">
+    <span style="font-size:13px;font-weight:600;">答题进度</span>
+    <div class="progress-bar"><div class="fill" id="progress-fill" style="width:0%"></div></div>
+    <span class="progress-text" id="progress-pct">0%</span>
+  </div>
+</div>
+
+<div class="name-input-row">
+  <label>👤 主播姓名：</label>
+  <input type="text" id="streamerName" placeholder="请输入姓名">
+  <label style="margin-left:20px;">👥 所属组别：</label>
+  <input type="text" id="streamerGroup" placeholder="请输入组别">
+</div>
+
+<form id="examForm">
+
+<!-- ==================== 一、单选题 10题×3分=30分 ==================== -->
+<div class="section-title"><span class="badge">一</span> 单选题（每题3分，共30分）</div>
+
+<div class="q-card" data-q="1" data-type="single" data-score="3" data-answer="C">
+  <div class="q-text"><span class="q-num">1</span>主播在直播中告诉观众"买了以后去附近小米之家，让店员帮你查验一下是不是正品"，这种行为属于什么违规？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q1" value="A"> A. 赠品活动信息与宣传不符</label>
+    <label class="option"><input type="radio" name="q1" value="B"> B. 诱导互动</label>
+    <label class="option"><input type="radio" name="q1" value="C"> C. 售后服务不符（虚假宣传）</label>
+    <label class="option"><input type="radio" name="q1" value="D"> D. 违规买赠</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：C</strong><br>7月4日最新违规案例：小米官方手表直播间主播口播"去附近小米店/小米之家让店员查验"，但门店实际不提供鉴真/验货服务，属于虚假售后承诺。处罚：警告（申诉失败）。<br><span class="ref">📎 案例来源：违规单号 7658380441224773924</span></div>
+</div>
+
+<div class="q-card" data-q="2" data-type="single" data-score="3" data-answer="B">
+  <div class="q-text"><span class="q-num">2</span>以下哪种"赠品"描述最容易触发违规？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q2" value="A"> A. 在商品详情页明确写明的赠品，直播时复述一遍</label>
+    <label class="option"><input type="radio" name="q2" value="B"> B. 口播承诺"买就送XX"，但商品详情页没有对应赠品信息</label>
+    <label class="option"><input type="radio" name="q2" value="C"> C. 所有赠品都在直播间展示实物并同步更新详情页</label>
+    <label class="option"><input type="radio" name="q2" value="D"> D. 通过平台福袋工具发放赠品</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：B</strong><br>"赠品活动信息与宣传不符"是最高频的违规类型之一（占6月新增违规的29%）。核心原因：口头承诺的赠品未在商品详情页体现，或与详情页信息不一致。<br><span class="ref">📎 处罚：冻结佣金5% × 30天 + 警告</span></div>
+</div>
+
+<div class="q-card" data-q="3" data-type="single" data-score="3" data-answer="A">
+  <div class="q-text"><span class="q-num">3</span>直播间做抽奖活动，以下哪种做法是合规的？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q3" value="A"> A. 使用抖音平台自带的"福袋"工具进行抽奖</label>
+    <label class="option"><input type="radio" name="q3" value="B"> B. 让观众扣"1"，主播手动随机挑选中奖者</label>
+    <label class="option"><input type="radio" name="q3" value="C"> C. 让观众点赞+转发，然后在评论区手动抽奖</label>
+    <label class="option"><input type="radio" name="q3" value="D"> D. 让观众刷礼物，刷最多的送奖品</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：A</strong><br>小米官方手表直播间曾因"未使用平台福袋工具"收到违规预警。所有抽奖/送福利活动必须通过抖音平台官方福袋工具进行，禁止手动抽奖、诱导刷礼物等行为。<br><span class="ref">📎 案例来源：违规单号 7649453501491976456</span></div>
+</div>
+
+<div class="q-card" data-q="4" data-type="single" data-score="3" data-answer="C">
+  <div class="q-text"><span class="q-num">4</span>"点赞过1000就抽一个人送手环"，这种互动方式属于什么违规？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q4" value="A"> A. 正常互动，不违规</label>
+    <label class="option"><input type="radio" name="q4" value="B"> B. 售后服务不符</label>
+    <label class="option"><input type="radio" name="q4" value="C"> C. 诱导互动</label>
+    <label class="option"><input type="radio" name="q4" value="D"> D. 不当竞争</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：C</strong><br>"诱导互动"是6月新出现的违规类型。小米官旗手表直播间已有2次诱导互动违规记录。以利益诱导用户点赞、评论、转发等行为均属于诱导互动违规。<br><span class="ref">📎 案例来源：违规单号 7543943557177331746、7656231531917039318</span></div>
+</div>
+
+<div class="q-card" data-q="5" data-type="single" data-score="3" data-answer="D">
+  <div class="q-text"><span class="q-num">5</span>主播说"我们家的手环比华为手环好用一百倍，华为那个根本不行"，这属于什么违规？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q5" value="A"> A. 售后服务不符</label>
+    <label class="option"><input type="radio" name="q5" value="B"> B. 夸大宣传</label>
+    <label class="option"><input type="radio" name="q5" value="C"> C. 诱导互动</label>
+    <label class="option"><input type="radio" name="q5" value="D"> D. 不当竞争 + 夸大宣传</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：D</strong><br>小米官旗手表直播间已有"不当竞争"违规记录。贬低竞品属于不当竞争；"好用一百倍"属于无依据的夸大宣传。两者叠加处罚更重。<br><span class="ref">📎 案例来源：违规单号 765545910472747432</span></div>
+</div>
+
+<div class="q-card" data-q="6" data-type="single" data-score="3" data-answer="B">
+  <div class="q-text"><span class="q-num">6</span>直播时展示产品颜色与实际销售商品颜色不一致，这属于什么违规？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q6" value="A"> A. 售后服务不符</label>
+    <label class="option"><input type="radio" name="q6" value="B"> B. 款式/颜色/图案/形状不符</label>
+    <label class="option"><input type="radio" name="q6" value="C"> C. 商品活动信息不规范</label>
+    <label class="option"><input type="radio" name="q6" value="D"> D. 综合服务不符</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：B</strong><br>"款式/颜色/图案/形状不符"是6月新出现的违规类型。小米官方手表直播间6月23日因此被罚。直播间展示的产品外观必须与商品链接实际售卖的商品完全一致。<br><span class="ref">📎 案例来源：违规单号 7654339375326398245</span></div>
+</div>
+
+<div class="q-card" data-q="7" data-type="single" data-score="3" data-answer="A">
+  <div class="q-text"><span class="q-num">7</span>在5-7月的违规记录中，以下哪个直播间违规次数最多？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q7" value="A"> A. 小米官方耳机直播间（9次）</label>
+    <label class="option"><input type="radio" name="q7" value="B"> B. 小米官方手表（4次）</label>
+    <label class="option"><input type="radio" name="q7" value="C"> C. 小米官方手环直播间（3次）</label>
+    <label class="option"><input type="radio" name="q7" value="D"> D. 小米手环10Pro直播间（3次）</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：A</strong><br>小米官方耳机直播间累计9次违规，是违规最多的直播间，其中4次为"违规"级别（高于"预警"），需要重点关注。<br><span class="ref">📎 数据来源：analysis.json 汇总统计</span></div>
+</div>
+
+<div class="q-card" data-q="8" data-type="single" data-score="3" data-answer="C">
+  <div class="q-text"><span class="q-num">8</span>首次违规"售后服务不符"的典型处罚是什么？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q8" value="A"> A. 直接关闭直播间</label>
+    <label class="option"><input type="radio" name="q8" value="B"> B. 冻结佣金15% × 30天</label>
+    <label class="option"><input type="radio" name="q8" value="C"> C. 警告（预警级别），可申诉</label>
+    <label class="option"><input type="radio" name="q8" value="D"> D. 永久关闭商品分享功能</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：C</strong><br>首次违规通常为"预警"级别，处罚为警告，可以申诉。但再犯将升级：冻结佣金5% → 冻结佣金15% + 商品下架 → 永久关闭商品分享功能。<br><span class="ref">📎 处罚升级路径参考多次违规案例综合判断</span></div>
+</div>
+
+<div class="q-card" data-q="9" data-type="single" data-score="3" data-answer="B">
+  <div class="q-text"><span class="q-num">9</span>关于"违规买赠"，以下说法正确的是？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q9" value="A"> A. 只要送的赠品不贵就没事</label>
+    <label class="option"><input type="radio" name="q9" value="B"> B. 买赠活动需要符合平台规则，赠品信息需在商品详情页体现</label>
+    <label class="option"><input type="radio" name="q9" value="C"> C. 买赠活动完全禁止，不能送任何东西</label>
+    <label class="option"><input type="radio" name="q9" value="D"> D. 只有大促期间才能做买赠活动</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：B</strong><br>小米官方耳机直播间曾因"违规买赠"收到预警。买赠本身允许，但必须：(1)赠品信息在商品详情页体现；(2)不夸大赠品价值；(3)不诱导消费者误以为赠品是主要购买动机。<br><span class="ref">📎 案例来源：违规单号 7650559382040853760</span></div>
+</div>
+
+<div class="q-card" data-q="10" data-type="single" data-score="3" data-answer="D">
+  <div class="q-text"><span class="q-num">10</span>以下哪种行为可能触发"综合服务不符"违规？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q10" value="A"> A. 承诺"7天无理由退货"但实际不支持</label>
+    <label class="option"><input type="radio" name="q10" value="B"> B. 承诺"运费险"但实际没有购买</label>
+    <label class="option"><input type="radio" name="q10" value="C"> C. 承诺"假一赔十"但商品详情页无此承诺</label>
+    <label class="option"><input type="radio" name="q10" value="D"> D. 以上都是</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：D</strong><br>"综合服务不符"涵盖运费险、退换货、试用承诺、价格承诺、质保承诺、假货赔付等多个方面。任何口头承诺与实际商品信息不一致的情况都会被判定为综合服务不符。<br><span class="ref">📎 案例来源：多个直播间综合服务不符违规记录</span></div>
+</div>
+
+<!-- ==================== 二、判断题 10题×2分=20分 ==================== -->
+<div class="section-title"><span class="badge">二</span> 判断题（每题2分，共20分）</div>
+
+<div class="q-card" data-q="11" data-type="tf" data-score="2" data-answer="true">
+  <div class="q-text"><span class="q-num">11</span>主播说"这个手环能测血糖"（而实际产品没有血糖监测功能），这属于虚假宣传，会被平台处罚。</div>
+  <div class="tf-options">
+    <div class="tf-btn true" data-val="true">✅ 正确</div>
+    <div class="tf-btn false" data-val="false">❌ 错误</div>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：正确</strong><br>夸大或虚构产品功能属于"综合服务不符"或"夸大宣传"。小米官方手表直播间已有因"夸张或不实宣传商品使用效果"被处罚的案例。<br><span class="ref">📎 案例来源：违规单号 7536494293812658473</span></div>
+</div>
+
+<div class="q-card" data-q="12" data-type="tf" data-score="2" data-answer="false">
+  <div class="q-text"><span class="q-num">12</span>违规预警只是"警告"而已，不会有实际经济损失，不用太在意。</div>
+  <div class="tf-options">
+    <div class="tf-btn true" data-val="true">✅ 正确</div>
+    <div class="tf-btn false" data-val="false">❌ 错误</div>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：错误</strong><br>预警虽然是初次处罚较轻，但：(1)部分预警已包含"冻结佣金5%×30天"的经济处罚；(2)再次违规将升级至冻结佣金15%+商品下架；(3)第三次可能永久关闭商品分享功能。预警是"黄牌"，不是没事。<br><span class="ref">📎 处罚升级路径：警告 → 冻结5% → 冻结15%+下架 → 永久关闭分享</span></div>
+</div>
+
+<div class="q-card" data-q="13" data-type="tf" data-score="2" data-answer="true">
+  <div class="q-text"><span class="q-num">13</span>直播间展示的商品外观（颜色、款式）必须与商品链接中实际售卖的商品完全一致。</div>
+  <div class="tf-options">
+    <div class="tf-btn true" data-val="true">✅ 正确</div>
+    <div class="tf-btn false" data-val="false">❌ 错误</div>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：正确</strong><br>6月23日小米官方手表直播间因"款式/颜色/图案/形状不符"被处罚。直播展示的商品外观必须与链接商品一致。<br><span class="ref">📎 案例来源：违规单号 7654339375326398245</span></div>
+</div>
+
+<div class="q-card" data-q="14" data-type="tf" data-score="2" data-answer="false">
+  <div class="q-text"><span class="q-num">14</span>申诉失败不影响后续，大不了再犯再申诉。</div>
+  <div class="tf-options">
+    <div class="tf-btn true" data-val="true">✅ 正确</div>
+    <div class="tf-btn false" data-val="false">❌ 错误</div>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：错误</strong><br>7月4日最新案例：小米官方手表直播间申诉失败后，处罚记录留底。再犯将直接升级处罚（冻结佣金+商品下架），不会再给"警告"机会。<br><span class="ref">📎 案例来源：违规单号 7658380441224773924（申诉失败）</span></div>
+</div>
+
+<div class="q-card" data-q="15" data-type="tf" data-score="2" data-answer="true">
+  <div class="q-text"><span class="q-num">15</span>6月份手表类直播间（官方手表+官旗手表）合计出现10次以上违规，已成为违规重灾区。</div>
+  <div class="tf-options">
+    <div class="tf-btn true" data-val="true">✅ 正确</div>
+    <div class="tf-btn false" data-val="false">❌ 错误</div>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：正确</strong><br>小米官方手表(4次)+小米官旗手表直播间(6次)+7月新增1次=11次。手表类直播间的违规集中在售后服务不符和赠品宣传问题上。<br><span class="ref">📎 数据来源：june_violations_analysis.json</span></div>
+</div>
+
+<div class="q-card" data-q="16" data-type="tf" data-score="2" data-answer="false">
+  <div class="q-text"><span class="q-num">16</span>直播画面中展示了违规内容，但主播口播没有违规词，就不会被罚。</div>
+  <div class="tf-options">
+    <div class="tf-btn true" data-val="true">✅ 正确</div>
+    <div class="tf-btn false" data-val="false">❌ 错误</div>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：错误</strong><br>违规检测不只看口播，还包括：直播画面、管理员评论、商品标题、商品详情页等。数据显示"直播画面"是违规判定最多的来源（占比超90%）。<br><span class="ref">📎 数据来源：june_violations_analysis.json — locations: 直播画面 16次</span></div>
+</div>
+
+<div class="q-card" data-q="17" data-type="tf" data-score="2" data-answer="true">
+  <div class="q-text"><span class="q-num">17</span>平台会对直播间进行"直播预审"，在开播前或直播中自动检测违规风险。</div>
+  <div class="tf-options">
+    <div class="tf-btn true" data-val="true">✅ 正确</div>
+    <div class="tf-btn false" data-val="false">❌ 错误</div>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：正确</strong><br>多个违规记录显示"直播预审发现"作为违规来源。抖音平台有AI+人工的实时审核机制，会在直播过程中扫描画面、识别语音，主动推送违规预警。<br><span class="ref">📎 案例来源：多个违规记录的location字段为"直播预审发现"</span></div>
+</div>
+
+<div class="q-card" data-q="18" data-type="tf" data-score="2" data-answer="true">
+  <div class="q-text"><span class="q-num">18</span>在管理员评论区发布赠品信息，与商品详情页不一致，也会触发违规。</div>
+  <div class="tf-options">
+    <div class="tf-btn true" data-val="true">✅ 正确</div>
+    <div class="tf-btn false" data-val="false">❌ 错误</div>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：正确</strong><br>小米官方手表直播间曾有案例：管理员在评论中发布的赠品信息与详情页不一致，被判"商品活动信息不规范"。评论、画面、口播三个渠道都会被审核。<br><span class="ref">📎 案例来源：违规单号 7648496881592516883</span></div>
+</div>
+
+<div class="q-card" data-q="19" data-type="tf" data-score="2" data-answer="false">
+  <div class="q-text"><span class="q-num">19</span>使用美颜滤镜让产品看起来更好看是可以的，平台不会管。</div>
+  <div class="tf-options">
+    <div class="tf-btn true" data-val="true">✅ 正确</div>
+    <div class="tf-btn false" data-val="false">❌ 错误</div>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：错误</strong><br>违规记录中明确提到"通过美颜、不科学的实验等方式夸大商品实际效果"属于违规。适度的直播间美颜可以，但不能通过美化效果让产品颜色、质感、功能与实物产生显著差异。<br><span class="ref">📎 案例来源：违规单号 7536494293812658473</span></div>
+</div>
+
+<div class="q-card" data-q="20" data-type="tf" data-score="2" data-answer="true">
+  <div class="q-text"><span class="q-num">20</span>违规处罚可能导致保证金增加。例如，平台将保证金应交额提升至3000元。</div>
+  <div class="tf-options">
+    <div class="tf-btn true" data-val="true">✅ 正确</div>
+    <div class="tf-btn false" data-val="false">❌ 错误</div>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：正确</strong><br>小米官方耳机直播间曾有一次违规导致"保证金应交额至3000元"。除了佣金冻结、商品下架等处罚外，平台还可以提高保证金门槛作为惩罚。<br><span class="ref">📎 案例来源：违规单号 76440321333458865140</span></div>
+</div>
+
+<!-- ==================== 三、多选题 5题×4分=20分 ==================== -->
+<div class="section-title"><span class="badge">三</span> 多选题（每题4分，共20分，少选得2分，错选不得分）</div>
+
+<div class="q-card" data-q="21" data-type="multi" data-score="4" data-answer="ABCD">
+  <div class="q-text"><span class="q-num">21</span>以下哪些渠道的内容会被平台审核并可能触发违规？（多选）</div>
+  <div class="options">
+    <label class="option"><input type="checkbox" name="q21" value="A"> A. 主播口播</label>
+    <label class="option"><input type="checkbox" name="q21" value="B"> B. 直播画面中的文字和贴纸</label>
+    <label class="option"><input type="checkbox" name="q21" value="C"> C. 管理员评论</label>
+    <label class="option"><input type="checkbox" name="q21" value="D"> D. 商品详情页信息</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：ABCD</strong><br>从违规记录中可以看出，平台审核覆盖多个渠道：口播、画面、管理员评论、商品详情页。每一个环节都需要合规。<br><span class="ref">📎 数据来源：analysis.json 中的 location 字段</span></div>
+</div>
+
+<div class="q-card" data-q="22" data-type="multi" data-score="4" data-answer="ABCD">
+  <div class="q-text"><span class="q-num">22</span>以下哪些属于5-7月出现的真实违规类型？（多选）</div>
+  <div class="options">
+    <label class="option"><input type="checkbox" name="q22" value="A"> A. 售后服务不符</label>
+    <label class="option"><input type="checkbox" name="q22" value="B"> B. 诱导互动</label>
+    <label class="option"><input type="checkbox" name="q22" value="C"> C. 不当竞争</label>
+    <label class="option"><input type="checkbox" name="q22" value="D"> D. 违规买赠</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：ABCD</strong><br>以上均为5-7月真实出现的违规类型。其中"诱导互动"、"违规买赠"、"不当竞争"是6月新增的违规形态。<br><span class="ref">📎 数据来源：final_report.json — new_violation_types</span></div>
+</div>
+
+<div class="q-card" data-q="23" data-type="multi" data-score="4" data-answer="ABC">
+  <div class="q-text"><span class="q-num">23</span>再次违规可能面临的处罚升级包括？（多选）</div>
+  <div class="options">
+    <label class="option"><input type="checkbox" name="q23" value="A"> A. 冻结佣金5% → 冻结佣金15%</label>
+    <label class="option"><input type="checkbox" name="q23" value="B"> B. 关闭/下架商品</label>
+    <label class="option"><input type="checkbox" name="q23" value="C"> C. 中断直播间播放</label>
+    <label class="option"><input type="checkbox" name="q23" value="D"> D. 直接封禁主播个人抖音号</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：ABC</strong><br>从多个违规记录的penalty字段可以看出升级路径：警告 → 冻结佣金5% × 30天 → 冻结佣金15% + 商品下架 + 中断直播。目前尚未出现"封禁主播个人号"的处罚。<br><span class="ref">📎 数据来源：analysis.json 中多个违规记录的处罚信息</span></div>
+</div>
+
+<div class="q-card" data-q="24" data-type="multi" data-score="4" data-answer="ABD">
+  <div class="q-text"><span class="q-num">24</span>要避免"赠品活动信息与宣传不符"违规，应该做到？（多选）</div>
+  <div class="options">
+    <label class="option"><input type="checkbox" name="q24" value="A"> A. 所有赠品信息必须在商品详情页明确体现</label>
+    <label class="option"><input type="checkbox" name="q24" value="B"> B. 口播描述的赠品与详情页一致，不额外承诺</label>
+    <label class="option"><input type="checkbox" name="q24" value="C"> C. 赠品信息只需要在直播间口头说就行，不需要写</label>
+    <label class="option"><input type="checkbox" name="q24" value="D"> D. 赠品活动上线前，先确认详情页信息已更新</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：ABD</strong><br>赠品违规的核心原因是"说的和写的不一致"。最佳流程：活动前先更新详情页 → 直播时严格按详情页描述口播 → 不临时口头加码承诺额外赠品。<br><span class="ref">📎 综合多个赠品类违规案例分析得出</span></div>
+</div>
+
+<div class="q-card" data-q="25" data-type="multi" data-score="4" data-answer="ABC">
+  <div class="q-text"><span class="q-num">25</span>遇到违规判罚后，正确的做法是？（多选）</div>
+  <div class="options">
+    <label class="option"><input type="checkbox" name="q25" value="A"> A. 第一时间截图保存，查看违规详情</label>
+    <label class="option"><input type="checkbox" name="q25" value="B"> B. 立即通知团队负责人和运营</label>
+    <label class="option"><input type="checkbox" name="q25" value="C"> C. 排查同类问题，修改话术和画面内容</label>
+    <label class="option"><input type="checkbox" name="q25" value="D"> D. 不用管，继续播，反正只是预警</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：ABC</strong><br>违规后标准流程：(1)立即查看违规详情，截图留存 → (2)通知负责人 → (3)排查整改 → (4)如有异议及时申诉。忽视预警会导致升级处罚。<br><span class="ref">📎 参考7月4日最新违规的处理教训</span></div>
+</div>
+
+<!-- ==================== 四、情景分析题 5题×6分=30分 ==================== -->
+<div class="section-title"><span class="badge">四</span> 情景分析题（每题6分，共30分）</div>
+
+<div class="q-card" data-q="26" data-type="single" data-score="6" data-answer="C">
+  <div class="q-text"><span class="q-num">26</span><strong>【情景】</strong>你正在直播小米手环10Pro，有观众问"这个和隔壁华为手环比怎么样？"以下哪种回答最合规？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q26" value="A"> A. "华为那个手环不行，心率测不准，电池也不行，我们的好太多了"</label>
+    <label class="option"><input type="radio" name="q26" value="B"> B. "我只能说，买华为的肯定会后悔，我们的才是最好的"</label>
+    <label class="option"><input type="radio" name="q26" value="C"> C. "我们的小米手环10Pro支持HRV心率监测、睡眠分析、150+运动模式，屏幕是AMOLED，续航14天，您可以对比一下参数看哪款更适合您"</label>
+    <label class="option"><input type="radio" name="q26" value="D"> D. "华为早就落后了，现在大家都买小米，你还考虑华为？"</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：C</strong><br>A和D属于不当竞争（贬低竞品）；B属于无依据的主观评价。C的做法是客观列举自家产品参数，让消费者自行判断——这是合规的竞品对比方式。<br><span class="ref">📎 参考不当竞争违规案例（小米官旗手表直播间）</span></div>
+</div>
+
+<div class="q-card" data-q="27" data-type="single" data-score="6" data-answer="B">
+  <div class="q-text"><span class="q-num">27</span><strong>【情景】</strong>运营临时通知你："今天加送一个赠品——买手环送运动毛巾，详情页来不及更新，你先口播说一下。"你应该怎么做？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q27" value="A"> A. 听运营的，先口播承诺，等详情页更新了再说</label>
+    <label class="option"><input type="radio" name="q27" value="B"> B. 拒绝口播该赠品，要求先更新商品详情页，确认后再宣传</label>
+    <label class="option"><input type="radio" name="q27" value="C"> C. 在管理员评论区先发赠品信息，口头不提</label>
+    <label class="option"><input type="radio" name="q27" value="D"> D. 说"可能送毛巾"，用不确定的语气就没事</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：B</strong><br>这是"赠品活动信息与宣传不符"的典型场景。已有多次违规就是因为"先说了再补详情页"或"评论区发了但详情页没有"。正确做法：详情页必须有 → 才能宣传。管理员评论也不行。<br><span class="ref">📎 案例来源：违规单号 7648496881592516883</span></div>
+</div>
+
+<div class="q-card" data-q="28" data-type="single" data-score="6" data-answer="D">
+  <div class="q-text"><span class="q-num">28</span><strong>【情景】</strong>直播时你想增加互动氛围，说了"点赞到5000，我随机抽3个粉丝送手环！"这时你应该立刻意识到什么问题？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q28" value="A"> A. 没有任何问题，这是正常互动</label>
+    <label class="option"><input type="radio" name="q28" value="B"> B. 只需要确认有没有手环库存就行</label>
+    <label class="option"><input type="radio" name="q28" value="C"> C. 只需要事后真的送出去就行</label>
+    <label class="option"><input type="radio" name="q28" value="D"> D. 这属于"诱导互动"+"未使用福袋工具"双重违规风险，应立即改用平台福袋工具</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：D</strong><br>两个问题：(1)"点赞到5000就抽奖"属于诱导互动（以利益诱导用户行为）；(2)手动抽奖属于"未使用平台福袋工具"违规。正确做法：使用抖音官方福袋工具，不设置互动门槛。<br><span class="ref">📎 案例来源：诱导互动违规 + 未使用福袋工具违规</span></div>
+</div>
+
+<div class="q-card" data-q="29" data-type="single" data-score="6" data-answer="C">
+  <div class="q-text"><span class="q-num">29</span><strong>【情景】</strong>有观众问"万一手环坏了，去哪修？"以下回答中哪个最有违规风险？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q29" value="A"> A. "包装里有售后卡，可以联系官方客服处理"</label>
+    <label class="option"><input type="radio" name="q29" value="B"> B. "支持7天无理由，15天质量问题换新，1年质保，具体可以看商品详情页"</label>
+    <label class="option"><input type="radio" name="q29" value="C"> C. "你去任何一个小米之家，他们都能帮你免费检测维修，全国联保的"</label>
+    <label class="option"><input type="radio" name="q29" value="D"> D. "售后政策在详情页有写，您点进去看一下"</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：C</strong><br>C选项与7月4日最新违规案例高度相似——承诺"去小米之家让店员查验/维修"，但实际门店不一定提供该服务。除非你100%确认所有门店都支持，否则不要替线下门店做售后承诺。<br><span class="ref">📎 案例来源：违规单号 7658380441224773924</span></div>
+</div>
+
+<div class="q-card" data-q="30" data-type="single" data-score="6" data-answer="B">
+  <div class="q-text"><span class="q-num">30</span><strong>【情景】</strong>直播过程中你收到平台的"直播预审"违规预警推送。这时你应该怎么做？</div>
+  <div class="options">
+    <label class="option"><input type="radio" name="q30" value="A"> A. 忽略它，播完再说</label>
+    <label class="option"><input type="radio" name="q30" value="B"> B. 立即查看预警内容，停止相关话术/画面，通知运营，播后复盘</label>
+    <label class="option"><input type="radio" name="q30" value="C"> C. 直接关播，今天不播了</label>
+    <label class="option"><input type="radio" name="q30" value="D"> D. 跟观众吐槽平台审核太严</label>
+  </div>
+  <div class="q-explanation"><strong>✅ 正确答案：B</strong><br>直播预审预警是平台给的"改正机会"，不是最终处罚。标准流程：(1)立即查看预警内容 → (2)停止相关违规话术 → (3)通知运营团队 → (4)继续正常直播 → (5)播后复盘整改。不处理可能导致处罚升级。<br><span class="ref">📎 综合多个违规处理经验</span></div>
+</div>
+
+<div class="submit-area">
+  <button type="button" class="btn btn-primary" onclick="submitExam()">📝 提交答卷</button>
+  <button type="button" class="btn btn-reset" onclick="resetExam()">🔄 重新作答</button>
+</div>
+
+<div class="score-card" id="scoreCard">
+  <div class="score-label">考试成绩</div>
+  <div class="score-num" id="scoreNum">0</div>
+  <div class="score-label">分</div>
+  <div class="grade" id="gradeText"></div>
+  <div class="score-detail" id="scoreDetail"></div>
+</div>
+
+</form>
+</div>
+
+<script>
+var totalSeconds = 45 * 60, timerInterval = null, examSubmitted = false;
+
+function startTimer() {
+  var el = document.getElementById('timer');
+  timerInterval = setInterval(function() {
+    if (totalSeconds <= 0) { clearInterval(timerInterval); if (!examSubmitted) submitExam(); return; }
+    totalSeconds--;
+    var m = Math.floor(totalSeconds / 60), s = totalSeconds % 60;
+    el.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+    if (totalSeconds < 600) el.classList.add('warning');
+    if (totalSeconds < 180) el.classList.add('danger');
+  }, 1000);
+}
+
+function updateProgress() {
+  var total = document.querySelectorAll('.q-card').length, answered = 0;
+  document.querySelectorAll('.q-card').forEach(function(card) {
+    var type = card.dataset.type;
+    if (type === 'single' || type === 'multi') {
+      if (card.querySelectorAll('input:checked').length > 0) answered++;
+    } else if (type === 'tf') {
+      if (card.querySelector('.tf-btn.selected')) answered++;
+    }
+  });
+  document.getElementById('answered-count').textContent = answered;
+  var pct = Math.round(answered / total * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent = pct + '%';
+}
+
+document.querySelectorAll('.option').forEach(function(opt) {
+  opt.addEventListener('click', function(e) {
+    if (examSubmitted) return;
+    var card = this.closest('.q-card'), input = this.querySelector('input'), type = card.dataset.type;
+    if (type === 'single') {
+      card.querySelectorAll('.option').forEach(function(o) { o.classList.remove('selected'); });
+      this.classList.add('selected'); card.classList.add('answered'); input.checked = true;
+    } else if (type === 'multi') {
+      input.checked = !input.checked; this.classList.toggle('selected', input.checked);
+      card.classList.toggle('answered', card.querySelectorAll('input:checked').length > 0);
+    }
+    updateProgress();
+  });
+});
+
+document.querySelectorAll('.tf-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    if (examSubmitted) return;
+    var card = this.closest('.q-card');
+    card.querySelectorAll('.tf-btn').forEach(function(b) { b.classList.remove('selected'); });
+    this.classList.add('selected'); card.classList.add('answered');
+    updateProgress();
+  });
+});
+
+function submitExam() {
+  if (examSubmitted) return;
+  examSubmitted = true; clearInterval(timerInterval);
+  var totalScore = 0, earnedScore = 0, correctCount = 0, wrongCount = 0;
+
+  document.querySelectorAll('.q-card').forEach(function(card) {
+    var type = card.dataset.type, maxScore = parseInt(card.dataset.score), correctAnswer = card.dataset.answer;
+    totalScore += maxScore;
+    var userAnswer = '', isCorrect = false;
+
+    if (type === 'single') {
+      var checked = card.querySelector('input:checked');
+      userAnswer = checked ? checked.value : '';
+      isCorrect = (userAnswer === correctAnswer);
+    } else if (type === 'multi') {
+      var checkedArr = Array.from(card.querySelectorAll('input:checked')).map(function(i) { return i.value; }).sort().join('');
+      userAnswer = checkedArr;
+      var correct = correctAnswer.split('').sort().join('');
+      if (userAnswer === correct) { isCorrect = true; }
+      else if (userAnswer.length > 0 && userAnswer.split('').every(function(c) { return correct.indexOf(c) >= 0; })) { isCorrect = 'partial'; }
+    } else if (type === 'tf') {
+      var selected = card.querySelector('.tf-btn.selected');
+      userAnswer = selected ? selected.dataset.val : '';
+      isCorrect = (userAnswer === correctAnswer);
+    }
+
+    if (isCorrect === true) { earnedScore += maxScore; correctCount++; card.classList.add('correct'); }
+    else if (isCorrect === 'partial') { earnedScore += Math.floor(maxScore / 2); card.classList.add('answered'); }
+    else { wrongCount++; card.classList.add('wrong'); }
+
+    var expl = card.querySelector('.q-explanation');
+    if (expl) expl.classList.add('show');
+  });
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  var scoreCard = document.getElementById('scoreCard'), scoreNum = document.getElementById('scoreNum');
+  var gradeText = document.getElementById('gradeText'), scoreDetail = document.getElementById('scoreDetail');
+  scoreNum.textContent = earnedScore; scoreCard.style.display = 'block';
+  var pct = totalScore > 0 ? Math.round(earnedScore / totalScore * 100) : 0;
+  var grade, gradeClass;
+  if (pct >= 100) { grade = '🏆 满分通过 — 合规知识扎实，可以上岗！'; gradeClass = 'A'; }
+  else if (pct >= 90) { grade = '⚠️ 未通过 (A) — 很接近了，错题需重点复习后补考'; gradeClass = 'B'; }
+  else if (pct >= 70) { grade = '❌ 未通过 (B) — 多个知识点遗漏，需要重新学习后补考'; gradeClass = 'C'; }
+  else { grade = '❌ 未通过 (C) — 合规意识严重不足，必须重新培训后再考'; gradeClass = 'D'; }
+  scoreNum.className = 'score-num ' + (pct >= 100 ? 'pass' : 'fail');
+  gradeText.className = 'grade ' + gradeClass; gradeText.textContent = grade;
+  scoreDetail.innerHTML = '答对 ' + correctCount + ' 题 / 共 ' + document.querySelectorAll('.q-card').length + ' 题 &nbsp;|&nbsp; 正确率 ' + pct + '% &nbsp;|&nbsp; 及格线 100分（满分通过）';
+
+  var name = document.getElementById('streamerName').value.trim() || '未填写';
+  var group = document.getElementById('streamerGroup').value.trim() || '未填写';
+  var resultData = {
+    name: name, group: group,
+    score: earnedScore, total: totalScore, pct: pct,
+    correct: correctCount, wrong: wrongCount,
+    grade: pct >= 100 ? 'A' : pct >= 90 ? 'B' : pct >= 70 ? 'C' : 'D'
+  };
+
+  // 本地备份
+  try {
+    var key = 'violation_exam_results', prev = JSON.parse(localStorage.getItem(key) || '[]');
+    prev.push(Object.assign({}, resultData, { time: new Date().toISOString() }));
+    localStorage.setItem(key, JSON.stringify(prev));
+  } catch(e) {}
+
+  // 提交到服务器
+  var statusEl = document.createElement('div');
+  statusEl.style.cssText = 'text-align:center;margin-top:16px;font-size:14px;padding:10px;border-radius:8px;';
+  statusEl.textContent = '⏳ 正在上传成绩...';
+  scoreCard.appendChild(statusEl);
+
+  fetch('/api/submit', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(resultData)
+  }).then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      statusEl.textContent = '✅ 成绩已成功上传到服务器';
+      statusEl.style.background = '#e6fff0';
+      statusEl.style.color = '#16a34a';
+    } else {
+      statusEl.textContent = '⚠️ 上传失败：' + (data.error || '未知错误') + '（成绩已保存在本地）';
+      statusEl.style.background = '#fff8f0';
+      statusEl.style.color = '#e17055';
+    }
+  }).catch(function(err) {
+    statusEl.textContent = '⚠️ 无法连接服务器（成绩已保存在本地浏览器）';
+    statusEl.style.background = '#fff8f0';
+    statusEl.style.color = '#e17055';
+  });
+}
+
+function resetExam() {
+  if (!examSubmitted) { if (!confirm('确定要重新作答吗？所有已选答案将被清除。')) return; }
+  examSubmitted = false; totalSeconds = 45 * 60; clearInterval(timerInterval);
+  document.getElementById('timer').textContent = '45:00';
+  document.getElementById('timer').classList.remove('warning', 'danger');
+  startTimer();
+  document.querySelectorAll('.q-card').forEach(function(card) {
+    card.classList.remove('answered', 'correct', 'wrong');
+    card.querySelectorAll('.option').forEach(function(o) { o.classList.remove('selected'); });
+    card.querySelectorAll('input').forEach(function(i) { i.checked = false; });
+    card.querySelectorAll('.tf-btn').forEach(function(b) { b.classList.remove('selected'); });
+    var expl = card.querySelector('.q-explanation'); if (expl) expl.classList.remove('show');
+  });
+  document.getElementById('scoreCard').style.display = 'none';
+  updateProgress();
+}
+
+startTimer(); updateProgress();
+</script>
+</body>
+</html>

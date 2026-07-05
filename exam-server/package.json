@@ -1,10 +1,14 @@
 {
   "name": "xiaomi-exam-server",
   "version": "1.0.0",
-  "description": "小米系直播间主播合规考试 - 在线版（零依赖）",
+  "description": "小米系直播间主播合规考试 - Cloudflare Workers版",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "deploy": "npx wrangler deploy"
   },
-  "dependencies": {}
+  "dependencies": {},
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
 }

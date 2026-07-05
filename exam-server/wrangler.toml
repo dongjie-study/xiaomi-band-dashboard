@@ -1,0 +1,9 @@
+name = "xiaomi-exam"
+main = "worker.js"
+compatibility_date = "2025-07-05"
+
+# KV 存储考试结果（免费：1GB存储 / 1000万次读取/月 / 100万次写入/月）
+[[kv_namespaces]]
+binding = "EXAM_KV"
+id = "CREATE_ME"  # 第一次部署前需创建，见下方说明
+preview_id = "CREATE_ME"
