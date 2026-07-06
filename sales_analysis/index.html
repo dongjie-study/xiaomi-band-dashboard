@@ -291,7 +291,8 @@ return;
       </div>
     </div>
 
-    <div class="chart-card" style="margin:16px 0;">
+    <!-- 每日数据明细 已隐藏 -->
+    <!-- <div class="chart-card" style="margin:16px 0;">
       <h3>每日数据明细</h3>
       <div style="overflow-x:auto;">
         <table class="daily-table" id="dailyDetailTable">
@@ -299,7 +300,7 @@ return;
           <tbody></tbody>
         </table>
       </div>
-    </div>
+    </div> -->
 
     <div class="summary-box" id="dailyInsights"></div>
   </div>
@@ -1372,7 +1373,7 @@ function renderDailySummary() {
   renderTodayInsights();
   renderSummaryKPIs();
   renderDailyTrendChart();
-  renderDailyTable();
+  // renderDailyTable(); // 每日数据明细已隐藏
   renderDailyInsights();
 }
 
