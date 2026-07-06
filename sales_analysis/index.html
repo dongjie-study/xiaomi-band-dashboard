@@ -801,35 +801,76 @@ function renderHourlyBreakdown(data) {
 // ===== 每日数据总结分析模块 =====
 let dailyTrendChart = null;
 
+// 从 type_summary 提取我方/竞对数据，兼容新旧格式
+// 旧格式: {'我方': {...}, '竞对': {...}}
+// 新格式: {'我司': {...}, '机械空间': {...}, '纵横': {...}, '良米': {...}, '凝云': {...}}
+function getOurCompData(entry) {
+  if (!entry || !entry.type_summary) return { ourOrders: 0, compOrders: 0, ourRevenue: 0, compRevenue: 0, ourRooms: 0, compRooms: 0 };
+  var ts = entry.type_summary;
+  // 旧格式兼容
+  if (ts['我方'] || ts['竞对']) {
+    return {
+      ourOrders: ts['我方'] ? ts['我方'].orders : 0,
+      compOrders: ts['竞对'] ? ts['竞对'].orders : 0,
+      ourRevenue: ts['我方'] ? ts['我方'].revenue : 0,
+      compRevenue: ts['竞对'] ? ts['竞对'].revenue : 0,
+      ourRooms: ts['我方'] ? ts['我方'].rooms : 0,
+      compRooms: ts['竞对'] ? ts['竞对'].rooms : 0
+    };
+  }
+  // 新格式: 我司 vs 竞对(机械空间+纵横+良米+凝云)
+  var ourOrders = ts['我司'] ? ts['我司'].orders : 0;
+  var ourRevenue = ts['我司'] ? ts['我司'].revenue : 0;
+  var ourRooms = ts['我司'] ? ts['我司'].rooms : 0;
+  var compOrders = 0, compRevenue = 0, compRooms = 0;
+  var compTeams = ['机械空间', '纵横', '良米', '凝云'];
+  for (var i = 0; i < compTeams.length; i++) {
+    if (ts[compTeams[i]]) {
+      compOrders += ts[compTeams[i]].orders;
+      compRevenue += ts[compTeams[i]].revenue;
+      compRooms += ts[compTeams[i]].rooms;
+    }
+  }
+  return { ourOrders: ourOrders, compOrders: compOrders, ourRevenue: ourRevenue, compRevenue: compRevenue, ourRooms: ourRooms, compRooms: compRooms };
+}
+
+// 按月过滤：只保留当前选中日期所在月份的历史数据
+function getMonthHistory() {
+  var month = currentDate.substring(0, 7); // e.g. "2026-07"
+  return HISTORY.filter(function(h) { return h.date.substring(0, 7) === month; });
+}
+
 function renderSummaryKPIs() {
-  const ourOrders = HISTORY.map(d => (d.type_summary && d.type_summary['我方']) ? d.type_summary['我方'].orders : 0);
-  const compOrders = HISTORY.map(d => (d.type_summary && d.type_summary['竞对']) ? d.type_summary['竞对'].orders : 0);
-  const shares = ourOrders.map((o, i) => o + compOrders[i] > 0 ? (o / (o + compOrders[i]) * 100) : 0);
+  var monthHistory = getMonthHistory();
+  var ourOrders = monthHistory.map(function(d) { return getOurCompData(d).ourOrders; });
+  var compOrders = monthHistory.map(function(d) { return getOurCompData(d).compOrders; });
+  var shares = ourOrders.map(function(o, i) { return o + compOrders[i] > 0 ? (o / (o + compOrders[i]) * 100) : 0; });
 
-  const recent7 = ourOrders.slice(-7);
-  const prev7 = ourOrders.slice(-14, -7);
-  const avgOur = Math.round(recent7.reduce((a, b) => a + b, 0) / recent7.length);
-  const avgPrevOur = prev7.length > 0 ? Math.round(prev7.reduce((a, b) => a + b, 0) / prev7.length) : null;
-  const avgShare = shares.slice(-7).reduce((a, b) => a + b, 0) / Math.min(7, shares.slice(-7).length);
-  const avgComp = Math.round(compOrders.slice(-7).reduce((a, b) => a + b, 0) / Math.min(7, compOrders.slice(-7).length));
+  var recent7 = ourOrders.slice(-7);
+  var prev7 = ourOrders.slice(-14, -7);
+  var avgOur = Math.round(recent7.reduce(function(a, b) { return a + b; }, 0) / recent7.length);
+  var avgPrevOur = prev7.length > 0 ? Math.round(prev7.reduce(function(a, b) { return a + b; }, 0) / prev7.length) : null;
+  var avgShare = shares.slice(-7).reduce(function(a, b) { return a + b; }, 0) / Math.min(7, shares.slice(-7).length);
+  var avgComp = Math.round(compOrders.slice(-7).reduce(function(a, b) { return a + b; }, 0) / Math.min(7, compOrders.slice(-7).length));
 
-  let bestIdx = 0, worstIdx = 0;
-  ourOrders.forEach((o, i) => { if (o > ourOrders[bestIdx]) bestIdx = i; if (o < ourOrders[worstIdx]) worstIdx = i; });
+  var bestIdx = 0, worstIdx = 0;
+  ourOrders.forEach(function(o, i) { if (o > ourOrders[bestIdx]) bestIdx = i; if (o < ourOrders[worstIdx]) worstIdx = i; });
 
   document.getElementById('summaryKpiRow').innerHTML = [
     { label: '我方日均订单 (7日)', value: avgOur.toLocaleString(), change: avgPrevOur != null ? formatChange(avgOur, avgPrevOur) : '' },
     { label: '我方日均份额 (7日)', value: avgShare.toFixed(1) + '%', change: '' },
     { label: '竞对日均订单 (7日)', value: avgComp.toLocaleString(), change: '' },
-    { label: '最佳单日', value: HISTORY[bestIdx].date, change: '我方 ' + ourOrders[bestIdx].toLocaleString() + ' 单' },
-    { label: '最差单日', value: HISTORY[worstIdx].date, change: '我方 ' + ourOrders[worstIdx].toLocaleString() + ' 单' },
-  ].map(k => '<div class="kpi-card"><div class="label">' + k.label + '</div><div class="value">' + k.value + '</div><div class="change">' + k.change + '</div></div>').join('');
+    { label: '最佳单日', value: monthHistory[bestIdx].date, change: '我方 ' + ourOrders[bestIdx].toLocaleString() + ' 单' },
+    { label: '最差单日', value: monthHistory[worstIdx].date, change: '我方 ' + ourOrders[worstIdx].toLocaleString() + ' 单' },
+  ].map(function(k) { return '<div class="kpi-card"><div class="label">' + k.label + '</div><div class="value">' + k.value + '</div><div class="change">' + k.change + '</div></div>'; }).join('');
 }
 
 function renderDailyTrendChart() {
-  const dates = HISTORY.map(h => h.date);
-  const ourOrders = HISTORY.map(d => (d.type_summary && d.type_summary['我方']) ? d.type_summary['我方'].orders : 0);
-  const compOrders = HISTORY.map(d => (d.type_summary && d.type_summary['竞对']) ? d.type_summary['竞对'].orders : 0);
-  const shares = ourOrders.map((o, i) => o + compOrders[i] > 0 ? parseFloat((o / (o + compOrders[i]) * 100).toFixed(1)) : 0);
+  var monthHistory = getMonthHistory();
+  var dates = monthHistory.map(function(h) { return h.date; });
+  var ourOrders = monthHistory.map(function(d) { return getOurCompData(d).ourOrders; });
+  var compOrders = monthHistory.map(function(d) { return getOurCompData(d).compOrders; });
+  var shares = ourOrders.map(function(o, i) { return o + compOrders[i] > 0 ? parseFloat((o / (o + compOrders[i]) * 100).toFixed(1)) : 0; });
 
   if (dailyTrendChart) dailyTrendChart.destroy();
 
@@ -926,18 +967,19 @@ function renderDailyTable() {
 }
 
 function renderDailyInsights() {
-  if (HISTORY.length < 3) {
+  var monthHistory = getMonthHistory();
+  if (monthHistory.length < 3) {
     document.getElementById('dailyInsights').innerHTML = '<h3>关键洞察</h3><p style="color:#888;">数据不足，需要至少3天数据才能生成分析。</p>';
     return;
   }
 
   var lines = [];
-  var n = HISTORY.length;
+  var n = monthHistory.length;
 
-  var ourOrders = HISTORY.map(function(d) { return (d.type_summary && d.type_summary['我方']) ? d.type_summary['我方'].orders : 0; });
-  var compOrders = HISTORY.map(function(d) { return (d.type_summary && d.type_summary['竞对']) ? d.type_summary['竞对'].orders : 0; });
+  var ourOrders = monthHistory.map(function(d) { return getOurCompData(d).ourOrders; });
+  var compOrders = monthHistory.map(function(d) { return getOurCompData(d).compOrders; });
   var shares = ourOrders.map(function(o, i) { return o + compOrders[i] > 0 ? (o / (o + compOrders[i]) * 100) : 0; });
-  var ourRevenues = HISTORY.map(function(d) { return (d.type_summary && d.type_summary['我方']) ? d.type_summary['我方'].revenue : 0; });
+  var ourRevenues = monthHistory.map(function(d) { return getOurCompData(d).ourRevenue; });
 
   // 1. Share trend: first 3 vs last 3
   var first3Share = (shares[0] + shares[1] + shares[2]) / 3;
@@ -969,14 +1011,14 @@ function renderDailyInsights() {
   // 3. Best and worst days
   var bestIdx = 0, worstIdx = 0;
   ourOrders.forEach(function(o, i) { if (o > ourOrders[bestIdx]) bestIdx = i; if (o < ourOrders[worstIdx]) worstIdx = i; });
-  lines.push({ cls: 'neutral', text: '&#x1F3C6; 最佳单日：' + HISTORY[bestIdx].date + '，我方 ' + ourOrders[bestIdx].toLocaleString() + ' 单（份额 ' + shares[bestIdx].toFixed(1) + '%）。' });
-  lines.push({ cls: 'neutral', text: '&#x1F4AD; 最低单日：' + HISTORY[worstIdx].date + '，我方 ' + ourOrders[worstIdx].toLocaleString() + ' 单（份额 ' + shares[worstIdx].toFixed(1) + '%）。' });
+  lines.push({ cls: 'neutral', text: '&#x1F3C6; 最佳单日：' + monthHistory[bestIdx].date + '，我方 ' + ourOrders[bestIdx].toLocaleString() + ' 单（份额 ' + shares[bestIdx].toFixed(1) + '%）。' });
+  lines.push({ cls: 'neutral', text: '&#x1F4AD; 最低单日：' + monthHistory[worstIdx].date + '，我方 ' + ourOrders[worstIdx].toLocaleString() + ' 单（份额 ' + shares[worstIdx].toFixed(1) + '%）。' });
 
   // 4. Volatility: flag >5pp day-over-day share swings
   var bigSwings = [];
   for (var i = 1; i < shares.length; i++) {
     if (Math.abs(shares[i] - shares[i-1]) > 5) {
-      bigSwings.push({ date: HISTORY[i].date, delta: (shares[i] - shares[i-1]).toFixed(1) });
+      bigSwings.push({ date: monthHistory[i].date, delta: (shares[i] - shares[i-1]).toFixed(1) });
     }
   }
   if (bigSwings.length > 0) {
@@ -993,8 +1035,8 @@ function renderDailyInsights() {
   lines.push({ cls: 'neutral', text: '&#x1F4CA; 全周期汇总：' + n + '天，我方累计 ' + totalOur.toLocaleString() + ' 单（占比 ' + overallShare + '%），销售额 ' + formatCurrency(totalOurRev) + '，均价 ' + formatCurrency(ourAvgPrice) + '。' });
 
   // 6. Room count stability
-  var ourRoomsFirst = (HISTORY[0].type_summary && HISTORY[0].type_summary['我方']) ? HISTORY[0].type_summary['我方'].rooms : 0;
-  var ourRoomsLast = (HISTORY[n-1].type_summary && HISTORY[n-1].type_summary['我方']) ? HISTORY[n-1].type_summary['我方'].rooms : 0;
+  var ourRoomsFirst = getOurCompData(monthHistory[0]).ourRooms;
+  var ourRoomsLast = getOurCompData(monthHistory[n-1]).ourRooms;
   if (ourRoomsLast !== ourRoomsFirst) {
     lines.push({ cls: 'neutral', text: '&#x1F3EA; 我方直播间数量变化：从 ' + ourRoomsFirst + ' 间变为 ' + ourRoomsLast + ' 间。' });
   }
@@ -1257,9 +1299,10 @@ function renderTodayInsights() {
 
   // Yesterday comparison
   let dodHtml = '';
-  if (prev && prev.type_summary && prev.type_summary['我方']) {
-    const prevOur = prev.type_summary['我方'].orders;
-    const diff = our.orders - prevOur;
+  if (prev) {
+    var prevOurData = getOurCompData(prev);
+    var prevOur = prevOurData.ourOrders;
+    var diff = our.orders - prevOur;
     const pct = prevOur > 0 ? (diff / prevOur * 100).toFixed(1) : 0;
     const arrow = diff >= 0 ? '📈' : '📉';
     const color = diff >= 0 ? '#e74c3c' : '#27ae60';
