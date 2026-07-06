@@ -149,7 +149,7 @@ body::before { content: ''; position: fixed; inset: 0; background-image: radial-
 <div class="header">
   <h1>🎙️ 主播话术合规专项考试</h1>
   <p>考试重点：<span class="focus-badge">口播话术</span> <span class="focus-badge">前台操作</span> <span class="focus-badge">直播画面</span> <span class="focus-badge">互动规范</span></p>
-  <p class="subtitle">满分100分 · 及格线75分 · 考试时间45分钟 · 共30题</p>
+  <p class="subtitle">满分100分 · 及格线100分（必须满分过关） · 考试时间45分钟 · 共30题</p>
 </div>
 
 <div class="container">
@@ -916,18 +916,18 @@ function submitExam() {
   let grade, gradeClass;
   const pct = totalScore > 0 ? Math.round(earnedScore / totalScore * 100) : 0;
 
-  if (pct >= 90) { grade = '🏆 优秀 (A) — 话术合规意识很强，你是前台标杆！'; gradeClass = 'A'; }
-  else if (pct >= 75) { grade = '✅ 合格 (B) — 已通过，部分高危话术需巩固，建议再看一遍答案解析'; gradeClass = 'B'; }
-  else if (pct >= 60) { grade = '⚠️ 待提高 (C) — 未通过！需要重新学习违规案例，一周后补考'; gradeClass = 'C'; }
-  else { grade = '❌ 不合格 (D) — 话术合规风险极高，必须重新培训后才能上播'; gradeClass = 'D'; }
+  if (pct >= 100) { grade = '🏆 满分通过 — 话术合规意识扎实，可以放心上播！'; gradeClass = 'A'; }
+  else if (pct >= 90) { grade = '⚠️ 未通过 — 错失了少量分数，需重考至满分方可上播'; gradeClass = 'C'; }
+  else if (pct >= 75) { grade = '⚠️ 未通过 — 存在话术合规盲区，必须重新培训后补考'; gradeClass = 'C'; }
+  else { grade = '❌ 不合格 — 话术合规风险极高，暂停上播，重新培训'; gradeClass = 'D'; }
 
-  scoreNum.className = 'score-num ' + (pct >= 75 ? 'pass' : 'fail');
+  scoreNum.className = 'score-num ' + (pct >= 100 ? 'pass' : 'fail');
   gradeText.className = 'grade ' + gradeClass;
   gradeText.textContent = grade;
   scoreDetail.innerHTML = `
     答对 ${correctCount} 题 / 共 30 题 &nbsp;|&nbsp;
     正确率 ${pct}% &nbsp;|&nbsp;
-    及格线 75分 &nbsp;|&nbsp;
+    及格线 100分（满分过关） &nbsp;|&nbsp;
     满分 100分
   `;
 
@@ -941,7 +941,7 @@ function submitExam() {
     name, room,
     score: earnedScore, total: totalScore, pct,
     correct: correctCount, wrong: wrongCount,
-    grade: pct >= 90 ? 'A' : pct >= 75 ? 'B' : pct >= 60 ? 'C' : 'D',
+    grade: pct >= 100 ? 'A' : pct >= 90 ? 'B' : pct >= 75 ? 'C' : 'D',
     examType: '话术合规专项',
     time: new Date().toISOString()
   };
