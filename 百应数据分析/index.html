@@ -937,7 +937,7 @@
         <div class="side-panel">
           <div class="card">
             <h3>参考图上传区</h3>
-            <p>把千川后台截图拖进来或选择多张图片，系统会保留缩略图，方便复盘时和结论一起对照。</p>
+            <p>把千川后台截图拖进来或选择多张图片，系统会保留缩略图，方便复盘时和结论一起对照。当前版本截图只做预览，不会自动识别图中数据，分析仍以你录入的指标和分时数据为准。</p>
             <div class="upload-zone">
               <input id="imageUpload" type="file" accept="image/*" multiple />
             </div>
@@ -947,7 +947,7 @@
                 <div class="preview-meta">
                   <div class="preview-name">还没有上传截图</div>
                   <div class="preview-size">支持 png / jpg / webp，多张一起上传更适合复盘</div>
-                  <div class="mini-pill">截图会显示在这里</div>
+                  <div class="mini-pill">截图仅预览，不自动识别数据</div>
                 </div>
               </div>
             </div>
@@ -1836,23 +1836,98 @@
       return [firstSentence, secondSentence, thirdSentence, fourthSentence].join("");
     }
 
+    function summarizeSeriesWindow(metricState, labels) {
+      const series = metricState.series || [];
+      if (!series.length || labels.length !== series.length) {
+        return {
+          worstLabel: "待补充分时数据",
+          worstIndex: -1,
+          worstValue: metricState.value,
+          startLabel: labels[0] || "开场",
+          endLabel: labels[labels.length - 1] || "尾段"
+        };
+      }
+      const inverse = !!benchmarks[metricState.key].inverse;
+      let worstIndex = 0;
+      for (let i = 1; i < series.length; i += 1) {
+        const candidate = series[i];
+        const current = series[worstIndex];
+        if (inverse ? candidate > current : candidate < current) {
+          worstIndex = i;
+        }
+      }
+      return {
+        worstLabel: labels[worstIndex] || "该时段",
+        worstIndex,
+        worstValue: series[worstIndex],
+        startLabel: labels[0] || "开场",
+        endLabel: labels[labels.length - 1] || "尾段"
+      };
+    }
+
+    function uniqueText(list) {
+      return Array.from(new Set(list.filter(Boolean)));
+    }
+
     function buildChecklists(results) {
+      const labels = parseLabels();
+      const sorted = [...results].sort((a, b) => a.ratio - b.ratio);
+      const weakest = sorted[0];
+      const secondWeakest = sorted[1] || weakest;
+      const weakestCfg = benchmarks[weakest.key];
+      const secondCfg = benchmarks[secondWeakest.key];
+      const weakestWindow = summarizeSeriesWindow(weakest, labels);
+      const secondWindow = summarizeSeriesWindow(secondWeakest, labels);
+      const globalNote = document.getElementById("globalNote").value.trim();
+      const uploadedCount = state.uploads.length;
+      const tailFalling = weakest.trend.delta < 0;
+      const tailRising = weakest.trend.delta > 0;
       const weakMetrics = results.filter(item => item.level !== "good").map(item => benchmarks[item.key].label);
-      const host = [
-        "开场 30 秒先说人群、场景、福利，不要先堆参数。",
-        "每 90 秒主动抛一个低门槛互动问题，别等评论区冷掉。",
-        "每个核心卖点后立刻接“点购物车看规格/领券”的明确动作。"
-      ];
-      const ops = [
-        "记录每次曲线起峰前后 3 分钟在讲什么，沉淀高峰模板。",
-        "按主推款、对比款、福利款重排商品卡，减少用户点进后的选择成本。",
-        "开播前准备封面、标题、福利提示三套版本，前 15 分钟随数据快速切换。"
-      ];
-      const meeting = [
-        "先看" + (weakMetrics[0] || "停留时长") + "，确认问题到底出在开场、讲解还是福利承接。",
-        "对照截图找峰值和断崖点，逐段回放主播话术与上链接节奏。",
-        "复盘结论必须落到“下一场要改哪 3 句话、哪 2 个节奏点、哪 1 个商品卡动作”。"
-      ];
+
+      const host = uniqueText([
+        weakest.key === "avgStay"
+          ? "重点回看 " + weakestWindow.worstLabel + " 前后的开场承接，主播先讲人群、场景和现在买的理由，不要一上来堆参数。"
+          : weakest.key === "interactionRate"
+            ? "重点回看 " + weakestWindow.worstLabel + " 的评论区冷场段，每 60 到 90 秒主动抛一个低门槛互动问题。"
+            : weakest.key === "clickRate"
+              ? "重点回看 " + weakestWindow.worstLabel + " 的卖点讲解，讲完核心利益点就立刻接“点购物车看规格/领券”的明确动作。"
+              : weakest.key === "exposureRate"
+                ? "重点回看 " + weakestWindow.worstLabel + " 前后的进房承接，主播开口先给福利和利益点，不要让新进用户听半天还不知道重点。"
+                : "重点回看 " + weakestWindow.worstLabel + " 这段 " + weakestCfg.label + " 最弱的时段，主播动作要围绕这个指标单点修正。",
+        tailFalling
+          ? weakestCfg.label + " 从 " + weakestWindow.startLabel + " 到 " + weakestWindow.endLabel + " 尾段走弱，下半场要减少重复讲解，及时换话题或换主推角度。"
+          : tailRising
+            ? weakestCfg.label + " 尾段有回升，说明这类讲法有效，下一场可以把尾段拉升动作前置到中前段。"
+            : "把 " + weakestCfg.label + " 的有效动作做成固定模板，避免每场都临场发挥。",
+        secondWeakest.key === "clickRate"
+          ? secondCfg.label + " 也偏弱，主播讲参数时要同步告诉用户“适合谁、为什么现在买、点进去先看什么”。"
+          : secondWeakest.key === "interactionRate"
+            ? secondCfg.label + " 也偏弱，主播不能只单向输出，要把评论互动和卖点讲解连起来。"
+            : secondCfg.label + " 也是短板，建议下一场只额外盯住它在 " + secondWindow.worstLabel + " 的表现。"
+      ]).slice(0, 3);
+
+      const ops = uniqueText([
+        "运营先截取 " + weakestWindow.worstLabel + " 和 " + secondWindow.worstLabel + " 前后 3 分钟画面，对照主播话术、福袋、上链接动作逐项复盘。",
+        weakest.key === "exposureRate"
+          ? "当前最弱项是曝光率，运营下场要重点优化封面、标题和开播前 15 分钟互动信号，别只盯中后段。"
+          : weakest.key === "clickRate"
+            ? "当前最弱项是点击率，运营要重排商品卡顺序，把主推款、福利款、对比款的路径做得更清楚。"
+            : weakest.key === "interactionRate"
+              ? "当前最弱项是互动率，运营在场边要连续给主播递互动钩子，而不是等评论区冷掉才补。"
+              : "当前最弱项是" + weakestCfg.label + "，运营要围绕这个指标设计更直接的辅助动作和场控提醒。",
+        uploadedCount
+          ? "本次已上传 " + uploadedCount + " 张截图，建议把 " + weakestWindow.worstLabel + " 这段截图单独标记成“问题时段”，方便会后对照。"
+          : "建议把最弱时段单独截图存档，下次复盘时更容易对照曲线和现场动作。"
+      ]).slice(0, 3);
+
+      const meeting = uniqueText([
+        "先看" + (weakMetrics[0] || "停留时长") + "，重点讨论它在 " + weakestWindow.worstLabel + " 为什么掉到最低，是开场、讲解、福利还是商品承接出了问题。",
+        "再看 " + secondCfg.label + " 在 " + secondWindow.worstLabel + " 的表现，确认是不是同一段内容同时拖低了两个指标。",
+        globalNote
+          ? "结合现场备注逐条验证：“" + globalNote + "”，不要只看结论，要把问题落到具体时间点和具体动作。"
+          : "复盘会必须落到“下一场具体改哪 3 句话、哪 2 个节奏点、哪 1 个商品卡动作”，不能只停留在现象判断。"
+      ]).slice(0, 3);
+
       return { host, ops, meeting };
     }
 
@@ -1901,7 +1976,7 @@
       state.uploads = files;
       const wrap = document.getElementById("previewList");
       if (!files.length) {
-        wrap.innerHTML = '<div class="preview-item"><div class="preview-thumb"></div><div class="preview-meta"><div class="preview-name">还没有上传截图</div><div class="preview-size">支持 png / jpg / webp，多张一起上传更适合复盘</div><div class="mini-pill">截图会显示在这里</div></div></div>';
+        wrap.innerHTML = '<div class="preview-item"><div class="preview-thumb"></div><div class="preview-meta"><div class="preview-name">还没有上传截图</div><div class="preview-size">支持 png / jpg / webp，多张一起上传更适合复盘</div><div class="mini-pill">截图仅预览，不自动识别数据</div></div></div>';
         return;
       }
 
@@ -1918,7 +1993,7 @@
         meta.innerHTML = [
           '<div class="preview-name">' + file.name + '</div>',
           '<div class="preview-size">' + Math.round(file.size / 1024) + ' KB</div>',
-          '<div class="mini-pill">可作为复盘证据对照曲线变化</div>'
+          '<div class="mini-pill">作为复盘证据预览，需手动录入对应数据</div>'
         ].join("");
         item.appendChild(thumb);
         item.appendChild(meta);
