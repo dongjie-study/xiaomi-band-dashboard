@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>千川直播复盘大屏</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --panel: rgba(255, 255, 255, 0.88);
+      --panel-strong: #ffffff;
+      --panel-soft: rgba(244, 248, 255, 0.96);
+      --stroke: rgba(117, 145, 186, 0.2);
+      --text: #16304d;
+      --muted: #68809f;
+      --cyan: #2dd4f7;
+      --blue: #4d7cff;
+      --lime: #8ce95b;
+      --amber: #fdb940;
+      --orange: #ff7a1a;
+      --red: #ff6b6b;
+      --grid: rgba(128, 157, 210, 0.14);
+      --shadow: 0 18px 48px rgba(121, 149, 190, 0.18);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+      --radius-sm: 12px;
+      --font-display: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      --font-body: "Microsoft YaHei", "PingFang SC", sans-serif;
+      --font-mono: "Cascadia Mono", "Consolas", monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at top right, rgba(77, 124, 255, 0.14), transparent 28%),
+        radial-gradient(circle at 0% 15%, rgba(45, 212, 247, 0.14), transparent 25%),
+        linear-gradient(180deg, #f7fbff 0%, #eff5fb 50%, #edf3f9 100%);
+      color: var(--text);
+      font-family: var(--font-body);
+    }
+
+    body {
+      padding: 24px;
+    }
+
+    .shell {
+      max-width: 1500px;
+      margin: 0 auto;
+      display: grid;
+      gap: 20px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border: 1px solid var(--stroke);
+      border-radius: 34px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(242, 247, 255, 0.96)),
+        linear-gradient(90deg, rgba(45, 212, 247, 0.08), transparent 50%);
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -8% -120px auto;
+      width: 360px;
+      height: 360px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 174, 102, 0.26), rgba(255, 174, 102, 0));
+      pointer-events: none;
+    }
+
+    .hero-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(103, 134, 181, 0.12);
+      color: #59779d;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 14px rgba(45, 212, 247, 0.8);
+    }
+
+    h1 {
+      margin: 14px 0 8px;
+      font-family: var(--font-display);
+      font-size: clamp(30px, 5vw, 54px);
+      line-height: 1.04;
+      letter-spacing: -0.04em;
+    }
+
+    .hero-copy {
+      max-width: 760px;
+      color: #6b84a2;
+      font-size: 15px;
+      line-height: 1.8;
+      margin: 0;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .button,
+    button,
+    input,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    .button,
+    button {
+      border: 0;
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+
+    .primary-btn {
+      padding: 14px 22px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--cyan), #31a6ff);
+      color: #031321;
+      font-weight: 700;
+      box-shadow: 0 12px 30px rgba(45, 212, 247, 0.28);
+    }
+
+    .ghost-btn {
+      padding: 14px 18px;
+      border-radius: 14px;
+      background: rgba(108, 135, 184, 0.1);
+      color: #35506e;
+      border: 1px solid rgba(126, 155, 205, 0.18);
+    }
+
+    .primary-btn:hover,
+    .ghost-btn:hover,
+    .tab:hover,
+    .metric-toggle:hover {
+      transform: translateY(-1px);
+    }
+
+    .tabs {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 22px;
+    }
+
+    .tab {
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(240, 245, 252, 0.96);
+      color: #6a84a6;
+      border: 1px solid rgba(126, 155, 205, 0.12);
+    }
+
+    .tab.active {
+      color: var(--text);
+      background: linear-gradient(135deg, rgba(77, 124, 255, 0.18), rgba(45, 212, 247, 0.12));
+      border-color: rgba(83, 174, 255, 0.28);
+      box-shadow: inset 0 0 0 1px rgba(115, 190, 255, 0.14);
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: minmax(0, 1.45fr) minmax(330px, 0.72fr);
+      gap: 20px;
+    }
+
+    .panel {
+      position: relative;
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-xl);
+      background: linear-gradient(180deg, var(--panel) 0%, rgba(247, 250, 255, 0.98) 100%);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), transparent 30%);
+      pointer-events: none;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 24px 24px 8px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    .panel-subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .metric-switcher {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 0 24px 18px;
+    }
+
+    .metric-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(241, 246, 252, 0.95);
+      border: 1px solid rgba(126, 155, 205, 0.12);
+      color: #6a84a6;
+    }
+
+    .metric-toggle.active {
+      color: var(--text);
+      border-color: rgba(83, 174, 255, 0.28);
+      background: rgba(205, 228, 255, 0.55);
+    }
+
+    .metric-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+    }
+
+    .chart-wrap {
+      padding: 0 24px 24px;
+    }
+
+    .chart-stage {
+      position: relative;
+      min-height: 460px;
+      border-radius: 24px;
+      background:
+        linear-gradient(180deg, rgba(248, 251, 255, 0.98), rgba(238, 245, 252, 0.98)),
+        radial-gradient(circle at top, rgba(45, 212, 247, 0.06), transparent 40%);
+      border: 1px solid rgba(138, 167, 214, 0.18);
+      overflow: hidden;
+      padding: 20px;
+    }
+
+    .chart-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .chart-meta-label {
+      font-size: 13px;
+      color: #7087a2;
+    }
+
+    .chart-frame {
+      width: 100%;
+      height: 320px;
+      display: block;
+    }
+
+    .axis-labels {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 6px;
+      color: #6e86a2;
+      font-size: 12px;
+      font-family: var(--font-mono);
+    }
+
+    .insight-ribbon {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .ribbon-card {
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: rgba(247, 250, 255, 0.96);
+      border: 1px solid rgba(117, 145, 196, 0.14);
+    }
+
+    .ribbon-card h3 {
+      margin: 0 0 10px;
+      font-size: 13px;
+      color: #6f88a9;
+      font-weight: 600;
+    }
+
+    .ribbon-value {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 4px;
+    }
+
+    .ribbon-note {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .side-panel {
+      display: grid;
+      gap: 16px;
+      padding: 20px;
+    }
+
+    .card {
+      padding: 18px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 248, 253, 0.98));
+      border: 1px solid rgba(118, 148, 201, 0.14);
+    }
+
+    .card h3,
+    .card h4 {
+      margin: 0 0 10px;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .upload-zone {
+      position: relative;
+      margin-top: 12px;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px dashed rgba(117, 165, 235, 0.34);
+      background: rgba(246, 250, 255, 0.96);
+    }
+
+    .upload-zone input[type="file"] {
+      width: 100%;
+      color: var(--muted);
+    }
+
+    .preview-list {
+      margin-top: 14px;
+      display: grid;
+      gap: 12px;
+      max-height: 420px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .preview-item {
+      display: grid;
+      grid-template-columns: 92px minmax(0, 1fr);
+      gap: 12px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 16px;
+      background: rgba(252, 253, 255, 0.98);
+      border: 1px solid rgba(118, 148, 201, 0.12);
+    }
+
+    .preview-thumb {
+      width: 92px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 1px solid rgba(118, 148, 201, 0.14);
+      background: rgba(239, 245, 252, 0.96);
+    }
+
+    .preview-meta {
+      min-width: 0;
+    }
+
+    .preview-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .preview-size {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .mini-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: rgba(45, 212, 247, 0.08);
+      color: #3b7e99;
+      font-size: 12px;
+    }
+
+    .forms {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);
+      gap: 20px;
+    }
+
+    .section-body {
+      padding: 0 24px 24px;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .metric-card {
+      padding: 18px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 249, 255, 0.98));
+      border: 1px solid rgba(118, 148, 201, 0.14);
+    }
+
+    .metric-card header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .metric-card h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .metric-card.compact h3 {
+      font-size: 17px;
+    }
+
+    .benchmark {
+      color: #4d8f5f;
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(140, 233, 91, 0.12);
+      border: 1px solid rgba(140, 233, 91, 0.22);
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .field {
+      display: grid;
+      gap: 8px;
+    }
+
+    .field label {
+      font-size: 13px;
+      color: #6d86a5;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(118, 148, 201, 0.14);
+      background: rgba(255, 255, 255, 0.94);
+      color: var(--text);
+      padding: 12px 14px;
+      outline: none;
+    }
+
+    .field textarea {
+      min-height: 114px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus,
+    button:focus-visible {
+      border-color: rgba(45, 212, 247, 0.56);
+      box-shadow: 0 0 0 3px rgba(45, 212, 247, 0.12);
+    }
+
+    .span-2 {
+      grid-column: span 2;
+    }
+
+    .series-grid {
+      display: grid;
+      gap: 14px;
+    }
+
+    .series-card {
+      padding: 16px;
+      border-radius: 18px;
+      background: rgba(248, 251, 255, 0.98);
+      border: 1px solid rgba(118, 148, 201, 0.12);
+    }
+
+    .series-card h4 {
+      margin: 0 0 6px;
+      font-size: 16px;
+    }
+
+    .series-card p {
+      margin: 0 0 12px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .series-card textarea {
+      min-height: 88px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .actions-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .section-divider {
+      height: 1px;
+      margin: 22px 0 20px;
+      background: linear-gradient(90deg, rgba(118, 148, 201, 0), rgba(118, 148, 201, 0.22), rgba(118, 148, 201, 0));
+    }
+
+    .subsection-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .subsection-head h3 {
+      margin: 0 0 6px;
+      font-size: 19px;
+    }
+
+    .subsection-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.7;
+      max-width: 760px;
+    }
+
+    .extra-metrics-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .stack-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .danger-btn {
+      padding: 10px 14px;
+      border-radius: 12px;
+      background: rgba(255, 107, 107, 0.1);
+      color: #b65a5a;
+      border: 1px solid rgba(255, 107, 107, 0.18);
+    }
+
+    .report {
+      display: grid;
+      gap: 16px;
+    }
+
+    .summary-card {
+      padding: 22px;
+      border-radius: 22px;
+      border: 1px solid rgba(118, 148, 201, 0.14);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(241, 247, 255, 0.98)),
+        radial-gradient(circle at right top, rgba(45, 212, 247, 0.1), transparent 30%);
+    }
+
+    .summary-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .summary-title h2 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .health-badge {
+      padding: 9px 14px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .health-good {
+      background: rgba(140, 233, 91, 0.14);
+      color: #487751;
+    }
+
+    .health-mid {
+      background: rgba(253, 185, 64, 0.14);
+      color: #9d6a14;
+    }
+
+    .health-bad {
+      background: rgba(255, 107, 107, 0.14);
+      color: #b75757;
+    }
+
+    .summary-copy {
+      color: #49637f;
+      line-height: 1.8;
+      margin: 0;
+    }
+
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .analysis-card {
+      padding: 20px;
+      border-radius: 20px;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(245, 249, 255, 0.98));
+      border: 1px solid rgba(118, 148, 201, 0.12);
+    }
+
+    .analysis-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .analysis-head h3 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .status-pill {
+      padding: 8px 11px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .status-ok {
+      background: rgba(140, 233, 91, 0.14);
+      color: #467a4f;
+    }
+
+    .status-watch {
+      background: rgba(253, 185, 64, 0.14);
+      color: #9d6a14;
+    }
+
+    .status-alert {
+      background: rgba(255, 107, 107, 0.14);
+      color: #b75757;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .kv-item {
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(245, 249, 255, 0.98);
+      border: 1px solid rgba(118, 148, 201, 0.08);
+    }
+
+    .kv-label {
+      display: block;
+      font-size: 12px;
+      color: #6f87a4;
+      margin-bottom: 6px;
+    }
+
+    .kv-value {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .analysis-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .analysis-line {
+      display: grid;
+      gap: 6px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(249, 252, 255, 0.98);
+      border: 1px solid rgba(118, 148, 201, 0.08);
+    }
+
+    .analysis-line strong {
+      font-size: 13px;
+      color: #278ba5;
+    }
+
+    .analysis-line span {
+      color: #4d6783;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .checklist {
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .check-card {
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(250, 252, 255, 0.98);
+      border: 1px solid rgba(118, 148, 201, 0.12);
+    }
+
+    .check-card h4 {
+      margin: 0 0 10px;
+      font-size: 16px;
+    }
+
+    .check-card ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #4d6783;
+      line-height: 1.8;
+      font-size: 14px;
+    }
+
+    .footer-note {
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+      padding-bottom: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 1180px) {
+      .dashboard,
+      .forms,
+      .analysis-grid,
+      .checklist,
+      .extra-metrics-list {
+        grid-template-columns: 1fr;
+      }
+
+      .insight-ribbon {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      body {
+        padding: 12px;
+      }
+
+      .hero,
+      .panel {
+        border-radius: 24px;
+      }
+
+      .metric-switcher,
+      .chart-wrap,
+      .section-body,
+      .panel-header,
+      .side-panel {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .chart-stage {
+        padding: 14px;
+        min-height: 420px;
+      }
+
+      .metrics-grid,
+      .field-grid,
+      .kv,
+      .insight-ribbon {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-item {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-thumb {
+        width: 100%;
+        height: 140px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <span class="eyebrow">抖音千川直播间复盘工具</span>
+          <h1>小米可穿戴直播间<br />下播复盘分析大屏</h1>
+          <p class="hero-copy">
+            下播后和运营一起围绕曲线图复盘，重点盯平均停留时长、曝光率、浅层互动、产品点击率，系统会结合行业参考值和你录入的趋势数据，自动生成问题诊断、主播动作建议和下一场的修正方案。
+          </p>
+        </div>
+        <div class="hero-actions">
+          <button class="primary-btn" id="generateBtn" type="button">一键生成复盘结论</button>
+          <button class="ghost-btn" id="demoBtn" type="button">载入小米手环样例</button>
+        </div>
+      </div>
+      <div class="tabs" aria-label="页面导航">
+        <button class="tab active" type="button">综合趋势</button>
+        <button class="tab" type="button">流量分析</button>
+        <button class="tab" type="button">互动诊断</button>
+        <button class="tab" type="button">点击转化</button>
+        <button class="tab" type="button">复盘报告</button>
+      </div>
+    </section>
+
+    <section class="dashboard">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">直播曲线观察台</h2>
+            <p class="panel-subtitle">把分时数据录进来后，这里会即时生成大屏折线；旁边还能上传你截下来的千川趋势图作为复盘证据。</p>
+          </div>
+          <div class="mini-pill">建议按 5 分钟或 10 分钟一段录入</div>
+        </div>
+        <div class="metric-switcher" id="metricSwitcher"></div>
+        <div class="chart-wrap">
+          <div class="chart-stage">
+            <div class="chart-meta">
+              <div class="chart-meta-label" id="chartTitle">当前查看：平均停留时长</div>
+              <div class="chart-meta-label" id="chartRange">分时范围：18:00 - 19:55</div>
+            </div>
+            <svg class="chart-frame" id="chartSvg" viewBox="0 0 940 320" preserveAspectRatio="none" role="img" aria-label="直播趋势折线图"></svg>
+            <div class="axis-labels" id="axisLabels"></div>
+            <div class="insight-ribbon" id="chartInsights"></div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="panel">
+        <div class="side-panel">
+          <div class="card">
+            <h3>参考图上传区</h3>
+            <p>把千川后台截图拖进来或选择多张图片，系统会保留缩略图，方便复盘时和结论一起对照。</p>
+            <div class="upload-zone">
+              <input id="imageUpload" type="file" accept="image/*" multiple />
+            </div>
+            <div class="preview-list" id="previewList">
+              <div class="preview-item">
+                <div class="preview-thumb"></div>
+                <div class="preview-meta">
+                  <div class="preview-name">还没有上传截图</div>
+                  <div class="preview-size">支持 png / jpg / webp，多张一起上传更适合复盘</div>
+                  <div class="mini-pill">截图会显示在这里</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>复盘提醒</h3>
+            <p>复盘顺序建议先看停留和曝光，再看互动和点击，最后回看具体讲解段落、福袋节点、上链接节奏是否拉动了曲线。</p>
+          </div>
+
+          <div class="card">
+            <h3>行业参考值</h3>
+            <p>小米可穿戴品类直播间可先用以下基准：平均停留时长 55 秒、曝光率 8%、浅层互动率 6%、产品点击率 22%。后续你也可以根据团队实盘继续微调。</p>
+          </div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="forms">
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">核心指标录入</h2>
+            <p class="panel-subtitle">四项核心指标是复盘必看项，但不设上限。你们可以继续追加更多直播指标，一起放进报告。</p>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="subsection-head">
+            <div>
+              <h3>核心四项</h3>
+              <p>默认围绕平均停留时长、曝光率、浅层互动率、产品点击率展开，保证下播复盘有统一主线。</p>
+            </div>
+          </div>
+          <div class="metrics-grid">
+            <article class="metric-card">
+              <header>
+                <h3>平均停留时长</h3>
+                <span class="benchmark">行业参考 55 秒</span>
+              </header>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="avgStay">本场均值（秒）</label>
+                  <input id="avgStay" type="number" min="0" step="1" value="42" />
+                </div>
+                <div class="field">
+                  <label for="avgStayTrend">曲线状态</label>
+                  <select id="avgStayTrend">
+                    <option value="波动下滑">波动下滑</option>
+                    <option value="前低后高">前低后高</option>
+                    <option value="中段断崖">中段断崖</option>
+                    <option value="稳中有升">稳中有升</option>
+                  </select>
+                </div>
+                <div class="field span-2">
+                  <label for="avgStayNote">主播现场表现备注</label>
+                  <textarea id="avgStayNote">开场承接偏慢，卖点讲解用了很多参数词，前三分钟没有快速说清楚“为什么现在买小米手环/手表”。</textarea>
+                </div>
+              </div>
+            </article>
+
+            <article class="metric-card">
+              <header>
+                <h3>曝光率</h3>
+                <span class="benchmark">行业参考 8%</span>
+              </header>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="exposureRate">本场均值（%）</label>
+                  <input id="exposureRate" type="number" min="0" step="0.1" value="5.8" />
+                </div>
+                <div class="field">
+                  <label for="exposureTrend">曲线状态</label>
+                  <select id="exposureTrend">
+                    <option value="低位震荡">低位震荡</option>
+                    <option value="峰值短暂">峰值短暂</option>
+                    <option value="稳步抬升">稳步抬升</option>
+                    <option value="后段掉量">后段掉量</option>
+                  </select>
+                </div>
+                <div class="field span-2">
+                  <label for="exposureNote">流量表现备注</label>
+                  <textarea id="exposureNote">直播间封面和开场信号偏弱，进房后没有立刻形成“新品/福利/限时”强钩子，导致推荐流量承接不足。</textarea>
+                </div>
+              </div>
+            </article>
+
+            <article class="metric-card">
+              <header>
+                <h3>浅层互动率</h3>
+                <span class="benchmark">行业参考 6%</span>
+              </header>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="interactionRate">本场均值（%）</label>
+                  <input id="interactionRate" type="number" min="0" step="0.1" value="4.1" />
+                </div>
+                <div class="field">
+                  <label for="interactionTrend">曲线状态</label>
+                  <select id="interactionTrend">
+                    <option value="低位波动">低位波动</option>
+                    <option value="福利拉升后回落">福利拉升后回落</option>
+                    <option value="提问有效拉升">提问有效拉升</option>
+                    <option value="持续走强">持续走强</option>
+                  </select>
+                </div>
+                <div class="field span-2">
+                  <label for="interactionNote">互动现场备注</label>
+                  <textarea id="interactionNote">主播多为单向讲解，少用选择题、对比题、体验题带评论区，福袋点位能短暂拉升，但缺少持续互动设计。</textarea>
+                </div>
+              </div>
+            </article>
+
+            <article class="metric-card">
+              <header>
+                <h3>产品点击率</h3>
+                <span class="benchmark">行业参考 22%</span>
+              </header>
+              <div class="field-grid">
+                <div class="field">
+                  <label for="clickRate">本场均值（%）</label>
+                  <input id="clickRate" type="number" min="0" step="0.1" value="17.3" />
+                </div>
+                <div class="field">
+                  <label for="clickTrend">曲线状态</label>
+                  <select id="clickTrend">
+                    <option value="高点离散">高点离散</option>
+                    <option value="讲解后有抬升">讲解后有抬升</option>
+                    <option value="始终低迷">始终低迷</option>
+                    <option value="稳定偏高">稳定偏高</option>
+                  </select>
+                </div>
+                <div class="field span-2">
+                  <label for="clickNote">商品承接备注</label>
+                  <textarea id="clickNote">商品卡点击主要集中在福利提醒和口播“点购物车”的瞬间，但很多讲解段没有把核心卖点和使用场景直接绑定到点击动作。</textarea>
+                </div>
+              </div>
+            </article>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <div class="subsection-head">
+            <div>
+              <h3>扩展指标</h3>
+              <p>这里可以继续加成交金额、关注率、负反馈率、千次观看成交金额、成交件数、进房率等。扩展指标会一起进入右上曲线切换和复盘报告。</p>
+            </div>
+            <div class="stack-actions">
+              <button class="ghost-btn" id="addExtraMetricBtn" type="button">新增扩展指标</button>
+            </div>
+          </div>
+          <div class="extra-metrics-list" id="extraMetricsList"></div>
+
+          <div class="actions-row">
+            <button class="primary-btn" id="generateBtnBottom" type="button">更新复盘报告</button>
+            <button class="ghost-btn" id="copyBtn" type="button">复制报告文案</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-header">
+          <div>
+            <h2 class="panel-title">分时曲线数据</h2>
+            <p class="panel-subtitle">支持直接粘贴逗号分隔的序列。工具会按同一时间轴渲染折线，并用于判断波动、尾段承接和峰值质量。</p>
+          </div>
+        </div>
+        <div class="section-body">
+          <div class="series-grid">
+            <div class="series-card">
+              <h4>时间轴</h4>
+              <p>格式示例：18:00,18:05,18:10...</p>
+              <textarea id="timeSeries"></textarea>
+            </div>
+            <div class="series-card">
+              <h4>平均停留时长（秒）</h4>
+              <p>建议和时间轴长度一致。</p>
+              <textarea id="staySeries"></textarea>
+            </div>
+            <div class="series-card">
+              <h4>曝光率（%）</h4>
+              <textarea id="exposureSeries"></textarea>
+            </div>
+            <div class="series-card">
+              <h4>浅层互动率（%）</h4>
+              <textarea id="interactionSeries"></textarea>
+            </div>
+            <div class="series-card">
+              <h4>产品点击率（%）</h4>
+              <textarea id="clickSeries"></textarea>
+            </div>
+            <div class="series-card">
+              <h4>综合备注</h4>
+              <p>用于把讲解、福袋、场记、违规预警等现场信息一起纳入结论。</p>
+              <textarea id="globalNote">重点回看 18:35 后讲解节奏偏快、19:05 福袋之后互动回落、19:20 上链接时没有先铺垫场景需求。</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <div>
+          <h2 class="panel-title">自动复盘报告</h2>
+          <p class="panel-subtitle">输出内容默认围绕问题、原因、解决办法、下场执行动作四段展开，适合下播后主播和运营一起对照讨论。</p>
+        </div>
+      </div>
+      <div class="section-body report">
+        <div class="summary-card">
+          <div class="summary-title">
+            <h2>本场复盘总判断</h2>
+            <span class="health-badge health-mid" id="healthBadge">需要重点优化</span>
+          </div>
+          <p class="summary-copy" id="summaryText"></p>
+        </div>
+
+        <div class="analysis-grid" id="analysisGrid"></div>
+
+        <div class="checklist">
+          <section class="check-card">
+            <h4>主播下场动作</h4>
+            <ul id="hostActions"></ul>
+          </section>
+          <section class="check-card">
+            <h4>运营协同动作</h4>
+            <ul id="opsActions"></ul>
+          </section>
+          <section class="check-card">
+            <h4>复盘会议重点</h4>
+            <ul id="meetingActions"></ul>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <p class="footer-note">页面为纯前端单页，可直接部署到考试系统静态页面中使用，也可以本地双击打开。</p>
+  </div>
+
+  <script>
+    const coreMetricsOrder = ["avgStay", "exposureRate", "interactionRate", "clickRate"];
+    const colorPool = ["#2dd4f7", "#fdb940", "#ff7a1a", "#8ce95b", "#4d7cff", "#ff8cdb", "#7ee0c3", "#ffd54a"];
+
+    const benchmarks = {
+      avgStay: { label: "平均停留时长", target: 55, unit: "秒", color: "#fdb940", category: "core" },
+      exposureRate: { label: "曝光率", target: 8, unit: "%", color: "#ffe24d", category: "core" },
+      interactionRate: { label: "浅层互动率", target: 6, unit: "%", color: "#ff7a1a", category: "core" },
+      clickRate: { label: "产品点击率", target: 22, unit: "%", color: "#2dd4f7", category: "core" }
+    };
+
+    const state = {
+      activeMetric: "avgStay",
+      uploads: [],
+      extraMetricOrder: ["gmvRate", "followRate", "negativeRate"]
+    };
+
+    const fieldMap = {
+      avgStay: {
+        input: "avgStay",
+        trend: "avgStayTrend",
+        note: "avgStayNote",
+        series: "staySeries"
+      },
+      exposureRate: {
+        input: "exposureRate",
+        trend: "exposureTrend",
+        note: "exposureNote",
+        series: "exposureSeries"
+      },
+      interactionRate: {
+        input: "interactionRate",
+        trend: "interactionTrend",
+        note: "interactionNote",
+        series: "interactionSeries"
+      },
+      clickRate: {
+        input: "clickRate",
+        trend: "clickTrend",
+        note: "clickNote",
+        series: "clickSeries"
+      }
+    };
+
+    const extraMetricPresets = {
+      gmvRate: {
+        label: "千次观看成交金额",
+        target: 320,
+        unit: "元",
+        color: colorPool[4],
+        value: 268,
+        trendLabel: "冲高后回落",
+        note: "高转化讲解段不够连续，价格锚点有提及，但福利承接和主推款聚焦还不够。",
+        series: [280, 276, 270, 265, 258, 252, 246, 238, 232, 228, 224, 236, 248, 260, 278, 286, 280, 276, 268, 262, 258, 264, 272, 282]
+      },
+      followRate: {
+        label: "关注率",
+        target: 3.5,
+        unit: "%",
+        color: colorPool[5],
+        value: 2.4,
+        trendLabel: "低位震荡",
+        note: "主播对关注动作的引导偏少，直播间“关注后能得到什么”没有讲透。",
+        series: [2.9, 2.8, 2.7, 2.6, 2.6, 2.5, 2.4, 2.3, 2.2, 2.1, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.5, 2.4, 2.3, 2.3, 2.2, 2.3, 2.4, 2.5]
+      },
+      negativeRate: {
+        label: "负反馈率",
+        target: 1.2,
+        unit: "%",
+        color: colorPool[6],
+        value: 1.7,
+        trendLabel: "尾段抬升",
+        note: "后段重复讲解较多，节奏变慢后用户容易滑走或产生反感反馈。",
+        series: [1.0, 1.0, 1.1, 1.1, 1.2, 1.3, 1.3, 1.4, 1.4, 1.5, 1.6, 1.6, 1.7, 1.8, 1.8, 1.7, 1.7, 1.8, 1.9, 1.8, 1.8, 1.7, 1.7, 1.6],
+        inverse: true
+      }
+    };
+
+    const demo = {
+      timeSeries: ["18:00", "18:05", "18:10", "18:15", "18:20", "18:25", "18:30", "18:35", "18:40", "18:45", "18:50", "18:55", "19:00", "19:05", "19:10", "19:15", "19:20", "19:25", "19:30", "19:35", "19:40", "19:45", "19:50", "19:55"],
+      staySeries: [48, 46, 44, 43, 41, 40, 38, 37, 36, 34, 33, 35, 39, 44, 46, 45, 43, 42, 40, 39, 38, 41, 47, 49],
+      exposureSeries: [7.2, 6.8, 6.6, 6.1, 5.9, 5.5, 5.2, 4.9, 4.6, 4.2, 4.1, 4.4, 5.0, 5.4, 5.8, 5.6, 5.1, 4.8, 4.9, 5.2, 5.6, 5.9, 6.1, 6.5],
+      interactionSeries: [5.6, 5.1, 4.8, 4.5, 4.3, 4.2, 3.8, 3.7, 3.5, 3.3, 3.2, 3.4, 4.0, 4.6, 4.9, 4.8, 4.4, 4.0, 3.9, 3.8, 4.1, 4.5, 4.8, 5.0],
+      clickSeries: [19, 18.4, 18.1, 17.8, 17.3, 16.8, 16.2, 15.9, 15.6, 15.2, 15.0, 15.5, 16.1, 17.0, 17.8, 18.0, 17.6, 17.1, 16.8, 16.6, 16.9, 17.5, 18.1, 19.0]
+    };
+
+    const diagnosisCopy = {
+      avgStay: {
+        low: {
+          issue: "平均停留时长偏低，说明直播间开场承接和讲解留人力不足，新进观众很快流失。",
+          reasons: "常见原因是开场没有先抛出购买理由，讲解先讲参数后讲场景，主播语速偏平，3 分钟内没有形成明确的利益点。",
+          fix: "开场 30 秒先讲人群和场景，例如“通勤、减脂、睡眠监测”，再讲对应功能；每 2 到 3 分钟补一次购买理由和福利提醒。",
+          action: "主播把每个品做成“人群痛点-真实场景-功能结果-立刻下单理由”四句结构，减少纯参数堆砌。 "
+        },
+        mid: {
+          issue: "停留时长略低于行业线，说明部分讲解段能留人，但整体承接还不够稳定。",
+          reasons: "通常是中段节奏掉下去，场景讲解和福利点之间衔接弱，导致用户看完一段后没有继续留下来的理由。",
+          fix: "把中段拆成更短的讲解单元，每段都收口到一个明确动作，例如评论、点购物车、对比旧款差异。",
+          action: "主播每轮讲解结束都加一句“想看续航/睡眠/跑步功能的扣 1”，主动把停留转成互动。 "
+        },
+        good: {
+          issue: "停留表现达标，说明主播的承接和内容节奏基本在线。",
+          reasons: "已有一定留人能力，但仍要关注高峰时段是否来自福利刺激而不是内容本身。",
+          fix: "保留当前讲解结构，同时拆出拉停留最高的 2 段作为固定模板复用。",
+          action: "主播复盘时重点找出哪两段能最稳地留人，下场直接前置。 "
+        }
+      },
+      exposureRate: {
+        low: {
+          issue: "曝光率偏低，说明系统没有持续把直播间推给更大流量池，进房承接信号偏弱。",
+          reasons: "常见原因是封面标题不够有点击欲，开播前 10 分钟互动信号弱，进房后没有快速形成留人与互动。",
+          fix: "把封面标题写成明确利益点组合，如“手环/手表怎么选 + 现货福利”；开场 1 分钟内先抛问题和福利，再进产品讲解。",
+          action: "运营在开播前准备 3 套封面标题素材，开场前 15 分钟盯住互动率和停留，及时换节奏。 "
+        },
+        mid: {
+          issue: "曝光率低于参考值但仍有承接空间，说明流量偶尔起峰，但峰值停不住。",
+          reasons: "通常是某些福利点能带来短时抬升，但后续内容承接弱，算法看不到连续正反馈。",
+          fix: "每次起峰时立即补最强卖点和对比理由，把流量峰转成停留与点击，而不是只喊福利。",
+          action: "运营记录每个流量峰前后 3 分钟的动作，找到最容易丢量的口播段。 "
+        },
+        good: {
+          issue: "曝光表现较稳，说明直播间已有不错的推荐承接。",
+          reasons: "后续重点是放大优质流量段，避免因内容空档让系统重新降权。",
+          fix: "把高曝光段的脚本、节奏、福利节点固化成 SOP。",
+          action: "复盘时优先截图高曝光段，沉淀成固定开场模板。 "
+        }
+      },
+      interactionRate: {
+        low: {
+          issue: "浅层互动率不足，评论区不够活跃，系统拿到的正反馈偏少。",
+          reasons: "直播间容易出现单向输出，主播连续讲功能但不抛互动问题，用户没有参与入口。",
+          fix: "每个讲解段都设置低门槛互动动作，如“通勤党扣 1”“想看睡眠监测扣 2”“手环党还是手表党打在公屏”。",
+          action: "主播把互动话术写进提词卡，每 90 秒至少触发一次评论动作。 "
+        },
+        mid: {
+          issue: "互动率中等偏低，说明福利或提问偶尔有效，但缺少持续机制。",
+          reasons: "问题往往在于互动形式单一，只靠福袋或抽奖抬一波，没有把互动接回产品讲解。",
+          fix: "把互动设计成连续链路：提问-点名回应-顺势讲卖点-引导点击，减少单独的福利喊话。",
+          action: "运营在旁场同步给主播递“下一句互动钩子”，不要等评论区冷下来才补救。 "
+        },
+        good: {
+          issue: "互动表现不错，评论区能持续给系统反馈。",
+          reasons: "后续重点是把互动转成点击和成交，而不是只热闹不转化。",
+          fix: "高互动段直接接购物车动作和人群对号入座话术。",
+          action: "复盘时筛出互动最高的 2 个问题模板，下场继续复用。 "
+        }
+      },
+      clickRate: {
+        low: {
+          issue: "产品点击率偏低，说明观众被讲解留住了，但没有被成功推到商品卡。",
+          reasons: "常见原因是卖点展示后没有明确点击动作，或讲了功能却没有说“谁适合买、为什么现在买”。",
+          fix: "每轮讲解一定要做“卖点总结 + 适用人群 + 点击指令 + 当前福利”四连，引导用户顺手点购物车。",
+          action: "主播讲完一个核心卖点后马上落一句“点左下角先领券看规格”，不要等讲完全部内容再引导。 "
+        },
+        mid: {
+          issue: "点击率略低，说明用户对产品有兴趣，但商品承接还有缝隙。",
+          reasons: "通常是商品卡展示顺序、价格利益点、型号差异解释不够清楚，导致用户犹豫不点。",
+          fix: "把价格锚点和型号差异放在前面讲清楚，让用户点进商品卡时已经知道看什么。",
+          action: "运营同步优化商品卡排序，把主推款、对比款、福利款逻辑排清楚。 "
+        },
+        good: {
+          issue: "点击率达标，说明商品承接动作有效。",
+          reasons: "接下来要继续关注点击后是否能顺利进成交，避免高点击低转化。",
+          fix: "把高点击段和成交峰值对齐，继续优化商品卡与口播一致性。",
+          action: "复盘时重点追哪种卖点最能带来点击，形成主推脚本。 "
+        }
+      }
+    };
+
+    const defaultDiagnosisTemplates = {
+      normal: {
+        low: {
+          issue: "这个指标低于参考值，说明当前链路表现偏弱，已经影响直播间整体效率。",
+          reasons: "常见原因是主播动作、节奏承接、商品排序或运营辅助信号没有形成连续正反馈。",
+          fix: "先拆出该指标最低的时间段，对照当时话术、福利动作、上链接节奏逐项修正。",
+          action: "下场把这个指标列为重点盯盘项，出现下滑就及时换节奏，不要等整场结束才发现。"
+        },
+        mid: {
+          issue: "这个指标略低于参考值，说明直播间有基础，但还没有稳定跑到理想状态。",
+          reasons: "一般是有效动作出现了，但持续时间不够长，或者高峰段没有被及时放大。",
+          fix: "把拉升该指标的动作前置，并增加重复频次，让峰值段更稳定。",
+          action: "复盘时重点标记这个指标最好的 2 段，下一场优先复用。"
+        },
+        good: {
+          issue: "这个指标表现达标，说明对应链路已经具备可复制性。",
+          reasons: "后续重点不是大改，而是找出是哪类话术或节奏最稳定地支撑了结果。",
+          fix: "把高表现时段沉淀成模板，继续扩大稳定段占比。",
+          action: "下场保持主打法不变，只做微调优化。"
+        }
+      },
+      inverse: {
+        low: {
+          issue: "这个指标高于参考上限，说明负向信号偏重，已经开始伤害直播间表现。",
+          reasons: "常见原因是内容重复、节奏拖沓、讲解与需求不匹配，或用户预期和实际内容不一致。",
+          fix: "先缩短冗长讲解，减少重复口播，并在下滑段重新强调用户最关心的场景利益点。",
+          action: "下场把这个指标列为红线指标，一旦抬头就立刻切换讲解方式。"
+        },
+        mid: {
+          issue: "这个指标略高于理想区间，说明有风险但还可控。",
+          reasons: "一般是局部时段出现了用户疲劳或内容失焦，导致负向反馈上升。",
+          fix: "回看尾段和断崖段，缩短无效铺垫，让内容更快进入核心价值。",
+          action: "运营在现场盯这个指标，一旦连续抬升就提醒主播换品或换角度。"
+        },
+        good: {
+          issue: "这个指标控制得不错，说明负向信号没有明显压制直播间表现。",
+          reasons: "后续仍要关注个别时段是否会突增，避免局部问题拖累整体。",
+          fix: "保留当前节奏，同时复盘高峰段和尾段差异，继续压低风险。",
+          action: "把低风险时段的讲解结构固定下来，作为后续标准模板。"
+        }
+      }
+    };
+
+    function setDemo() {
+      document.getElementById("avgStay").value = 42;
+      document.getElementById("exposureRate").value = 5.8;
+      document.getElementById("interactionRate").value = 4.1;
+      document.getElementById("clickRate").value = 17.3;
+      document.getElementById("timeSeries").value = demo.timeSeries.join(",");
+      document.getElementById("staySeries").value = demo.staySeries.join(",");
+      document.getElementById("exposureSeries").value = demo.exposureSeries.join(",");
+      document.getElementById("interactionSeries").value = demo.interactionSeries.join(",");
+      document.getElementById("clickSeries").value = demo.clickSeries.join(",");
+      state.extraMetricOrder.forEach((key, index) => {
+        const preset = extraMetricPresets[key];
+        if (!preset) return;
+        ensureExtraMetricConfig(key, preset.color || colorPool[index % colorPool.length]);
+        const refs = fieldMap[key];
+        document.getElementById(refs.input).value = preset.value;
+        document.getElementById(refs.target).value = preset.target;
+        document.getElementById(refs.unit).value = preset.unit;
+        document.getElementById(refs.label).value = preset.label;
+        document.getElementById(refs.trend).value = preset.trendLabel;
+        document.getElementById(refs.note).value = preset.note;
+        document.getElementById(refs.series).value = preset.series.join(",");
+      });
+    }
+
+    function parseSeries(id) {
+      return document.getElementById(id).value
+        .split(/[,\n，]+/)
+        .map(item => item.trim())
+        .filter(Boolean)
+        .map(item => Number(item));
+    }
+
+    function parseLabels() {
+      return document.getElementById("timeSeries").value
+        .split(/[,\n，]+/)
+        .map(item => item.trim())
+        .filter(Boolean);
+    }
+
+    function formatValue(value, unit) {
+      if (!Number.isFinite(value)) {
+        return "--";
+      }
+      const fixed = Math.abs(value) >= 10 ? value.toFixed(1) : value.toFixed(1);
+      return unit === "%" ? fixed + unit : fixed.replace(".0", "") + unit;
+    }
+
+    function average(values) {
+      if (!values.length) return 0;
+      return values.reduce((sum, value) => sum + value, 0) / values.length;
+    }
+
+    function computeTrend(values) {
+      if (values.length < 3) {
+        return { delta: 0, volatility: 0, endVsStart: 0 };
+      }
+      const first = values[0];
+      const last = values[values.length - 1];
+      const diffs = [];
+      for (let i = 1; i < values.length; i += 1) {
+        diffs.push(Math.abs(values[i] - values[i - 1]));
+      }
+      const volatility = average(diffs);
+      return {
+        delta: last - first,
+        volatility,
+        endVsStart: first ? ((last - first) / first) * 100 : 0
+      };
+    }
+
+    function severityByRatio(ratio) {
+      if (ratio >= 0.95) return "good";
+      if (ratio >= 0.75) return "mid";
+      return "low";
+    }
+
+    function severityByInverseRatio(ratio) {
+      if (ratio <= 1.05) return "good";
+      if (ratio <= 1.35) return "mid";
+      return "low";
+    }
+
+    function statusLabel(level) {
+      if (level === "good") return { text: "表现达标", className: "status-ok" };
+      if (level === "mid") return { text: "有待加强", className: "status-watch" };
+      return { text: "重点问题", className: "status-alert" };
+    }
+
+    function overallHealth(levels) {
+      const scoreMap = { good: 2, mid: 1, low: 0 };
+      const score = levels.reduce((sum, level) => sum + scoreMap[level], 0);
+      if (score >= 6) {
+        return { text: "整体承接较稳", className: "health-badge health-good" };
+      }
+      if (score >= 3) {
+        return { text: "需要重点优化", className: "health-badge health-mid" };
+      }
+      return { text: "问题较集中", className: "health-badge health-bad" };
+    }
+
+    function normalizeMetric(value, key) {
+      const target = benchmarks[key].target;
+      return (value / target) * 100;
+    }
+
+    function extraMetricIds(key) {
+      return {
+        label: key + "Label",
+        input: key + "Value",
+        target: key + "Target",
+        unit: key + "Unit",
+        trend: key + "Trend",
+        note: key + "Note",
+        series: key + "Series"
+      };
+    }
+
+    function ensureExtraMetricConfig(key, color) {
+      if (!benchmarks[key]) {
+        benchmarks[key] = {
+          label: "扩展指标",
+          target: 0,
+          unit: "%",
+          color: color || colorPool[state.extraMetricOrder.length % colorPool.length],
+          category: "extra"
+        };
+      }
+      if (!fieldMap[key]) {
+        fieldMap[key] = extraMetricIds(key);
+      }
+    }
+
+    function getAllMetricKeys() {
+      return [...coreMetricsOrder, ...state.extraMetricOrder];
+    }
+
+    function createExtraMetricCard(key) {
+      const refs = fieldMap[key];
+      const config = benchmarks[key];
+      return [
+        '<article class="metric-card compact" data-extra-key="' + key + '">',
+        '<header>',
+        '<h3>扩展指标</h3>',
+        '<button class="danger-btn remove-extra-metric" type="button" data-remove-key="' + key + '">删除</button>',
+        '</header>',
+        '<div class="field-grid">',
+        '<div class="field"><label for="' + refs.label + '">指标名称</label><input id="' + refs.label + '" type="text" value="' + config.label + '" placeholder="例如：关注率" /></div>',
+        '<div class="field"><label for="' + refs.target + '">参考值</label><input id="' + refs.target + '" type="number" min="0" step="0.1" value="' + config.target + '" /></div>',
+        '<div class="field"><label for="' + refs.unit + '">单位</label><input id="' + refs.unit + '" type="text" value="' + config.unit + '" placeholder="% / 元 / 人" /></div>',
+        '<div class="field"><label for="' + refs.input + '">本场均值</label><input id="' + refs.input + '" type="number" min="0" step="0.1" value="0" /></div>',
+        '<div class="field"><label for="' + refs.trend + '">曲线状态</label><input id="' + refs.trend + '" type="text" value="低位波动" placeholder="例如：峰值短暂" /></div>',
+        '<div class="field"><label for="' + refs.series + '">分时序列</label><textarea id="' + refs.series + '" placeholder="例如：1,2,3,4"></textarea></div>',
+        '<div class="field span-2"><label for="' + refs.note + '">现场备注</label><textarea id="' + refs.note + '" placeholder="补充主播动作、运营动作、商品变化、负反馈等信息"></textarea></div>',
+        '</div>',
+        '</article>'
+      ].join("");
+    }
+
+    function bindMetricInputs(key) {
+      const refs = fieldMap[key];
+      [refs.input, refs.trend, refs.note, refs.series].forEach(id => {
+        const node = document.getElementById(id);
+        if (!node) return;
+        node.addEventListener("input", () => {
+          if (benchmarks[key].category === "extra") {
+            syncExtraMetricConfig(key);
+          }
+          renderChart();
+          renderReport();
+        });
+      });
+      if (benchmarks[key].category === "extra") {
+        [refs.label, refs.target, refs.unit].forEach(id => {
+          const node = document.getElementById(id);
+          if (!node) return;
+          node.addEventListener("input", () => {
+            syncExtraMetricConfig(key);
+            buildMetricToggles();
+            renderChart();
+            renderReport();
+          });
+        });
+      }
+    }
+
+    function syncExtraMetricConfig(key) {
+      const refs = fieldMap[key];
+      if (!refs || !benchmarks[key]) return;
+      benchmarks[key].label = document.getElementById(refs.label).value.trim() || "扩展指标";
+      benchmarks[key].target = Number(document.getElementById(refs.target).value || 0);
+      benchmarks[key].unit = document.getElementById(refs.unit).value.trim() || "%";
+    }
+
+    function renderExtraMetrics() {
+      const wrap = document.getElementById("extraMetricsList");
+      wrap.innerHTML = state.extraMetricOrder.map(createExtraMetricCard).join("");
+      state.extraMetricOrder.forEach(key => bindMetricInputs(key));
+      wrap.querySelectorAll(".remove-extra-metric").forEach(button => {
+        button.addEventListener("click", () => removeExtraMetric(button.dataset.removeKey));
+      });
+    }
+
+    function addExtraMetric(preset) {
+      const key = preset && preset.key ? preset.key : "extraMetric" + Date.now();
+      if (!state.extraMetricOrder.includes(key)) {
+        state.extraMetricOrder.push(key);
+      }
+      ensureExtraMetricConfig(key, preset && preset.color ? preset.color : colorPool[state.extraMetricOrder.length % colorPool.length]);
+      if (preset) {
+        benchmarks[key].label = preset.label;
+        benchmarks[key].target = preset.target;
+        benchmarks[key].unit = preset.unit;
+        if (preset.inverse) {
+          benchmarks[key].inverse = true;
+        }
+      }
+      renderExtraMetrics();
+      const refs = fieldMap[key];
+      if (preset) {
+        document.getElementById(refs.input).value = preset.value ?? 0;
+        document.getElementById(refs.target).value = preset.target ?? 0;
+        document.getElementById(refs.unit).value = preset.unit ?? "%";
+        document.getElementById(refs.label).value = preset.label ?? "扩展指标";
+        document.getElementById(refs.trend).value = preset.trendLabel ?? "低位波动";
+        document.getElementById(refs.note).value = preset.note ?? "";
+        document.getElementById(refs.series).value = Array.isArray(preset.series) ? preset.series.join(",") : "";
+        syncExtraMetricConfig(key);
+      }
+      buildMetricToggles();
+      renderChart();
+      renderReport();
+    }
+
+    function removeExtraMetric(key) {
+      state.extraMetricOrder = state.extraMetricOrder.filter(item => item !== key);
+      delete benchmarks[key];
+      delete fieldMap[key];
+      if (state.activeMetric === key) {
+        state.activeMetric = coreMetricsOrder[0];
+      }
+      renderExtraMetrics();
+      buildMetricToggles();
+      renderChart();
+      renderReport();
+    }
+
+    function readMetricState(key) {
+      const refs = fieldMap[key];
+      if (benchmarks[key].category === "extra") {
+        syncExtraMetricConfig(key);
+      }
+      const value = Number(document.getElementById(refs.input).value || 0);
+      const trendLabel = document.getElementById(refs.trend).value;
+      const note = document.getElementById(refs.note).value.trim();
+      const series = parseSeries(refs.series);
+      const ratio = benchmarks[key].target ? value / benchmarks[key].target : 0;
+      const level = benchmarks[key].inverse ? severityByInverseRatio(ratio) : severityByRatio(ratio);
+      const trend = computeTrend(series);
+      return { key, value, trendLabel, note, series, ratio, level, trend };
+    }
+
+    function buildMetricToggles() {
+      const wrap = document.getElementById("metricSwitcher");
+      wrap.innerHTML = "";
+      getAllMetricKeys().forEach(key => {
+        const config = benchmarks[key];
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "metric-toggle" + (key === state.activeMetric ? " active" : "");
+        button.dataset.metric = key;
+        button.innerHTML = '<span class="metric-dot" style="background:' + config.color + '"></span>' + config.label;
+        button.addEventListener("click", () => {
+          state.activeMetric = key;
+          buildMetricToggles();
+          renderChart();
+        });
+        wrap.appendChild(button);
+      });
+    }
+
+    function renderChart() {
+      const metric = state.activeMetric;
+      const config = benchmarks[metric];
+      const labels = parseLabels();
+      const { series, value, ratio } = readMetricState(metric);
+      const svg = document.getElementById("chartSvg");
+      const title = document.getElementById("chartTitle");
+      const range = document.getElementById("chartRange");
+      const axisLabels = document.getElementById("axisLabels");
+      const insightWrap = document.getElementById("chartInsights");
+
+      title.textContent = "当前查看：" + config.label;
+      if (labels.length > 1) {
+        range.textContent = "分时范围：" + labels[0] + " - " + labels[labels.length - 1];
+      } else {
+        range.textContent = "分时范围：待录入";
+      }
+
+      if (!series.length || !labels.length || labels.length !== series.length) {
+        svg.innerHTML = "";
+        axisLabels.innerHTML = "<span>请先录入完整的时间轴和对应曲线数据</span><span>当前需要同长度序列</span>";
+        insightWrap.innerHTML = "";
+        return;
+      }
+
+      const width = 940;
+      const height = 320;
+      const padding = { top: 16, right: 20, bottom: 34, left: 36 };
+      const target = config.target;
+      const maxData = Math.max(...series, target);
+      const minData = Math.min(...series, target, 0);
+      const max = maxData * 1.15 || 1;
+      const min = minData > 0 ? 0 : minData * 0.85;
+      const usableWidth = width - padding.left - padding.right;
+      const usableHeight = height - padding.top - padding.bottom;
+
+      const xAt = index => padding.left + (usableWidth * index) / Math.max(series.length - 1, 1);
+      const yAt = valueAt => padding.top + usableHeight - ((valueAt - min) / Math.max(max - min, 1)) * usableHeight;
+
+      const grid = [];
+      for (let i = 0; i < 5; i += 1) {
+        const y = padding.top + (usableHeight * i) / 4;
+        grid.push('<line x1="' + padding.left + '" y1="' + y + '" x2="' + (width - padding.right) + '" y2="' + y + '" stroke="' + "rgba(128,157,210,0.14)" + '" stroke-dasharray="5 7"/>');
+      }
+
+      const areaPath = series.map((item, index) => (index === 0 ? "M" : "L") + xAt(index) + " " + yAt(item)).join(" ");
+      const fillPath = areaPath + " L " + xAt(series.length - 1) + " " + (height - padding.bottom) + " L " + xAt(0) + " " + (height - padding.bottom) + " Z";
+      const targetY = yAt(target);
+      const targetLine = '<line x1="' + padding.left + '" y1="' + targetY + '" x2="' + (width - padding.right) + '" y2="' + targetY + '" stroke="' + "rgba(140,233,91,0.75)" + '" stroke-dasharray="8 8"/>';
+
+      const pointDots = series.map((item, index) => {
+        const cx = xAt(index);
+        const cy = yAt(item);
+        return '<circle cx="' + cx + '" cy="' + cy + '" r="3.2" fill="' + config.color + '" />';
+      }).join("");
+
+      const labelsMarkup = labels.map((label, index) => {
+        if (index !== 0 && index !== labels.length - 1 && index % Math.ceil(labels.length / 6) !== 0) {
+          return "";
+        }
+        return '<text x="' + xAt(index) + '" y="' + (height - 10) + '" fill="#8ea3c8" font-size="12" text-anchor="middle">' + label + "</text>";
+      }).join("");
+
+      svg.innerHTML = [
+        '<defs>',
+        '<linearGradient id="lineGradient" x1="0" x2="0" y1="0" y2="1">',
+        '<stop offset="0%" stop-color="' + config.color + '" stop-opacity="0.48"/>',
+        '<stop offset="100%" stop-color="' + config.color + '" stop-opacity="0.02"/>',
+        '</linearGradient>',
+        '</defs>',
+        grid.join(""),
+        targetLine,
+        '<path d="' + fillPath + '" fill="url(#lineGradient)" />',
+        '<path d="' + areaPath + '" fill="none" stroke="' + config.color + '" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>',
+        pointDots,
+        labelsMarkup,
+        '<text x="' + (width - padding.right) + '" y="' + (targetY - 10) + '" fill="#8ce95b" font-size="12" text-anchor="end">行业参考 ' + target + config.unit + "</text>"
+      ].join("");
+
+      const trend = computeTrend(series);
+      const peak = Math.max(...series);
+      const valley = Math.min(...series);
+      axisLabels.innerHTML = "<span>峰值 " + formatValue(peak, config.unit) + "</span><span>低点 " + formatValue(valley, config.unit) + "</span><span>当前均值 " + formatValue(value || average(series), config.unit) + "</span>";
+
+      const cards = [
+        {
+          title: "达成率",
+          value: normalizeMetric(value || average(series), metric).toFixed(0) + "%",
+          note: "相对行业参考线的完成度"
+        },
+        {
+          title: "尾段变化",
+          value: (trend.delta >= 0 ? "+" : "") + trend.delta.toFixed(1),
+          note: "最后一个点相对开场的变化"
+        },
+        {
+          title: "波动程度",
+          value: trend.volatility.toFixed(1),
+          note: "相邻时间段平均波动"
+        },
+        {
+          title: "曲线判断",
+          value: ratio >= 0.95 ? "稳" : ratio >= 0.75 ? "偏弱" : "告急",
+          note: "结合整体均值与尾段表现"
+        }
+      ];
+
+      insightWrap.innerHTML = cards.map(card => (
+        '<div class="ribbon-card"><h3>' + card.title + '</h3><div class="ribbon-value">' + card.value + '</div><div class="ribbon-note">' + card.note + '</div></div>'
+      )).join("");
+    }
+
+    function metricSummary(metricState) {
+      const config = benchmarks[metricState.key];
+      const templateGroup = diagnosisCopy[metricState.key] || (config.inverse ? defaultDiagnosisTemplates.inverse : defaultDiagnosisTemplates.normal);
+      const pack = templateGroup[metricState.level];
+      const cfg = benchmarks[metricState.key];
+      const status = statusLabel(metricState.level);
+      const avgFromSeries = metricState.series.length ? average(metricState.series) : metricState.value;
+      return {
+        title: cfg.label,
+        status,
+        value: metricState.value,
+        seriesValue: avgFromSeries,
+        target: cfg.target,
+        unit: cfg.unit,
+        issue: pack.issue,
+        reasons: pack.reasons + (metricState.note ? " 现场信号：" + metricState.note : ""),
+        fix: pack.fix,
+        action: pack.action + "当前曲线标签：" + metricState.trendLabel + "。"
+      };
+    }
+
+    function buildSummaryText(results, globalNote) {
+      const lows = results.filter(item => item.level === "low");
+      const mids = results.filter(item => item.level === "mid");
+      const good = results.filter(item => item.level === "good");
+      const weakest = [...results].sort((a, b) => a.ratio - b.ratio)[0];
+      const weakestLabel = benchmarks[weakest.key].label;
+      const extraCount = results.filter(item => benchmarks[item.key].category === "extra").length;
+      const firstSentence = lows.length >= 2
+        ? "这场直播的核心问题比较集中，当前更像“流量承接和转化双弱”场。"
+        : mids.length + lows.length >= 2
+          ? "这场直播有一定成交基础，但中段承接和转化动作还不够稳定。"
+          : "这场直播整体不差，重点是把有效动作固化成可复制模板。";
+      const secondSentence = extraCount
+        ? "本场纳入了核心指标和扩展指标，当前最需要优先盯的是" + weakestLabel + "，因为它和参考值的差距最大。"
+        : "四项核心指标里，最需要优先盯的是" + weakestLabel + "，因为它和行业参考值的差距最大。";
+      const thirdSentence = globalNote
+        ? "结合现场备注看，" + globalNote
+        : "建议复盘时重点回看高峰前后 3 分钟的主播话术、场控动作和商品卡顺序。";
+      const fourthSentence = good.length >= 2
+        ? "可以保留表现较好的环节，再把短板段落拆开优化，下一场更容易看到明显抬升。"
+        : "下场不要同时改太多动作，先集中修正 1 到 2 个最弱链路，效果会更清楚。";
+      return [firstSentence, secondSentence, thirdSentence, fourthSentence].join("");
+    }
+
+    function buildChecklists(results) {
+      const weakMetrics = results.filter(item => item.level !== "good").map(item => benchmarks[item.key].label);
+      const host = [
+        "开场 30 秒先说人群、场景、福利，不要先堆参数。",
+        "每 90 秒主动抛一个低门槛互动问题，别等评论区冷掉。",
+        "每个核心卖点后立刻接“点购物车看规格/领券”的明确动作。"
+      ];
+      const ops = [
+        "记录每次曲线起峰前后 3 分钟在讲什么，沉淀高峰模板。",
+        "按主推款、对比款、福利款重排商品卡，减少用户点进后的选择成本。",
+        "开播前准备封面、标题、福利提示三套版本，前 15 分钟随数据快速切换。"
+      ];
+      const meeting = [
+        "先看" + (weakMetrics[0] || "停留时长") + "，确认问题到底出在开场、讲解还是福利承接。",
+        "对照截图找峰值和断崖点，逐段回放主播话术与上链接节奏。",
+        "复盘结论必须落到“下一场要改哪 3 句话、哪 2 个节奏点、哪 1 个商品卡动作”。"
+      ];
+      return { host, ops, meeting };
+    }
+
+    function renderReport() {
+      const results = getAllMetricKeys().map(readMetricState);
+      const summaries = results.map(metricSummary);
+      const levels = results.map(item => item.level);
+      const health = overallHealth(levels);
+      const globalNote = document.getElementById("globalNote").value.trim();
+
+      const badge = document.getElementById("healthBadge");
+      badge.className = health.className;
+      badge.textContent = health.text;
+
+      document.getElementById("summaryText").textContent = buildSummaryText(results, globalNote);
+
+      const grid = document.getElementById("analysisGrid");
+      grid.innerHTML = summaries.map(item => (
+        '<article class="analysis-card">' +
+          '<div class="analysis-head">' +
+            '<h3>' + item.title + '</h3>' +
+            '<span class="status-pill ' + item.status.className + '">' + item.status.text + '</span>' +
+          '</div>' +
+          '<div class="kv">' +
+            '<div class="kv-item"><span class="kv-label">本场数据</span><span class="kv-value">' + formatValue(item.value, item.unit) + '</span></div>' +
+            '<div class="kv-item"><span class="kv-label">行业参考</span><span class="kv-value">' + formatValue(item.target, item.unit) + '</span></div>' +
+            '<div class="kv-item"><span class="kv-label">分时均值</span><span class="kv-value">' + formatValue(item.seriesValue, item.unit) + '</span></div>' +
+          '</div>' +
+          '<div class="analysis-list">' +
+            '<div class="analysis-line"><strong>存在问题</strong><span>' + item.issue + '</span></div>' +
+            '<div class="analysis-line"><strong>可能原因</strong><span>' + item.reasons + '</span></div>' +
+            '<div class="analysis-line"><strong>解决办法</strong><span>' + item.fix + '</span></div>' +
+            '<div class="analysis-line"><strong>下场动作</strong><span>' + item.action + '</span></div>' +
+          '</div>' +
+        '</article>'
+      )).join("");
+
+      const checklist = buildChecklists(results);
+      document.getElementById("hostActions").innerHTML = checklist.host.map(item => "<li>" + item + "</li>").join("");
+      document.getElementById("opsActions").innerHTML = checklist.ops.map(item => "<li>" + item + "</li>").join("");
+      document.getElementById("meetingActions").innerHTML = checklist.meeting.map(item => "<li>" + item + "</li>").join("");
+    }
+
+    function handleUpload(event) {
+      const files = Array.from(event.target.files || []);
+      state.uploads = files;
+      const wrap = document.getElementById("previewList");
+      if (!files.length) {
+        wrap.innerHTML = '<div class="preview-item"><div class="preview-thumb"></div><div class="preview-meta"><div class="preview-name">还没有上传截图</div><div class="preview-size">支持 png / jpg / webp，多张一起上传更适合复盘</div><div class="mini-pill">截图会显示在这里</div></div></div>';
+        return;
+      }
+
+      wrap.innerHTML = "";
+      files.forEach(file => {
+        const item = document.createElement("div");
+        item.className = "preview-item";
+        const thumb = document.createElement("img");
+        thumb.className = "preview-thumb";
+        thumb.alt = file.name;
+        thumb.src = URL.createObjectURL(file);
+        const meta = document.createElement("div");
+        meta.className = "preview-meta";
+        meta.innerHTML = [
+          '<div class="preview-name">' + file.name + '</div>',
+          '<div class="preview-size">' + Math.round(file.size / 1024) + ' KB</div>',
+          '<div class="mini-pill">可作为复盘证据对照曲线变化</div>'
+        ].join("");
+        item.appendChild(thumb);
+        item.appendChild(meta);
+        wrap.appendChild(item);
+      });
+    }
+
+    function buildCopyText() {
+      const summary = document.getElementById("summaryText").textContent.trim();
+      const cards = Array.from(document.querySelectorAll(".analysis-card")).map(card => {
+        const title = card.querySelector("h3").textContent;
+        const lines = Array.from(card.querySelectorAll(".analysis-line")).map(line => {
+          const label = line.querySelector("strong").textContent;
+          const value = line.querySelector("span").textContent;
+          return label + "：" + value;
+        }).join("\n");
+        return "【" + title + "】\n" + lines;
+      });
+      return ["本场复盘总判断：", summary, "", ...cards].join("\n");
+    }
+
+    function copyReport() {
+      const text = buildCopyText();
+      navigator.clipboard.writeText(text).then(() => {
+        const button = document.getElementById("copyBtn");
+        const previous = button.textContent;
+        button.textContent = "已复制";
+        setTimeout(() => {
+          button.textContent = previous;
+        }, 1600);
+      }).catch(() => {
+        alert("当前浏览器未允许复制，请手动复制报告内容。");
+      });
+    }
+
+    function bindEvents() {
+      document.getElementById("generateBtn").addEventListener("click", () => {
+        renderChart();
+        renderReport();
+      });
+      document.getElementById("generateBtnBottom").addEventListener("click", () => {
+        renderChart();
+        renderReport();
+      });
+      document.getElementById("demoBtn").addEventListener("click", () => {
+        setDemo();
+        renderChart();
+        renderReport();
+      });
+      document.getElementById("addExtraMetricBtn").addEventListener("click", () => {
+        addExtraMetric({
+          key: "extraMetric" + Date.now(),
+          label: "新增指标",
+          target: 10,
+          unit: "%",
+          color: colorPool[state.extraMetricOrder.length % colorPool.length],
+          value: 0,
+          trendLabel: "待观察",
+          note: "",
+          series: []
+        });
+      });
+      document.getElementById("copyBtn").addEventListener("click", copyReport);
+      document.getElementById("imageUpload").addEventListener("change", handleUpload);
+
+      coreMetricsOrder.forEach(bindMetricInputs);
+
+      document.getElementById("timeSeries").addEventListener("input", renderChart);
+      document.getElementById("timeSeries").addEventListener("input", renderReport);
+      document.getElementById("globalNote").addEventListener("input", renderReport);
+    }
+
+    state.extraMetricOrder.forEach((key, index) => {
+      const preset = extraMetricPresets[key];
+      ensureExtraMetricConfig(key, preset && preset.color ? preset.color : colorPool[index % colorPool.length]);
+    });
+    renderExtraMetrics();
+    setDemo();
+    buildMetricToggles();
+    bindEvents();
+    renderChart();
+    renderReport();
+  </script>
+</body>
+</html>

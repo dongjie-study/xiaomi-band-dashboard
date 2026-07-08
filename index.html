@@ -36,6 +36,7 @@
     --clr-streamer:   #ec4899;
     --clr-monthly:    #1da85c;
     --clr-event:      #f59e0b;
+    --clr-baiying:    #6366f1;
 
     --clr-sales-bg:      #fff7ed;
     --clr-violations-bg: #fef2f2;
@@ -48,6 +49,7 @@
     --clr-streamer-bg:   #fdf2f8;
     --clr-monthly-bg:    #ecfdf5;
     --clr-event-bg:      #fffbeb;
+    --clr-baiying-bg:    #eef2ff;
   }
 
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -169,6 +171,7 @@
   .sidebar-nav a.streamer::after   { background: var(--clr-streamer); }
   .sidebar-nav a.monthlySummary::after { background: var(--clr-monthly); }
   .sidebar-nav a.eventSummary::after   { background: var(--clr-event); }
+  .sidebar-nav a.baiying::after       { background: var(--clr-baiying); }
 
   .sidebar-nav a:hover {
     background: var(--sidebar-hover);
@@ -219,6 +222,7 @@
   .sidebar-nav a.streamer .nav-dot   { background: var(--clr-streamer); }
   .sidebar-nav a.monthlySummary .nav-dot { background: var(--clr-monthly); }
   .sidebar-nav a.eventSummary .nav-dot   { background: var(--clr-event); }
+  .sidebar-nav a.baiying .nav-dot       { background: var(--clr-baiying); }
 
   .sidebar-nav a .badge-nav {
     font-size: .64em;
@@ -454,6 +458,7 @@
   .module-card.streamer::before   { background: linear-gradient(90deg, var(--clr-streamer), #f9a8d4); }
   .module-card.monthlySummary::before { background: linear-gradient(90deg, var(--clr-monthly), #6ee7b7); }
   .module-card.eventSummary::before   { background: linear-gradient(90deg, var(--clr-event), #fcd34d); }
+  .module-card.baiying::before       { background: linear-gradient(90deg, var(--clr-baiying), #a5b4fc); }
 
   .module-card .mod-icon {
     width: 46px; height: 46px;
@@ -482,6 +487,7 @@
   .module-card.streamer .mod-icon   { background: var(--clr-streamer-bg); }
   .module-card.monthlySummary .mod-icon { background: var(--clr-monthly-bg); }
   .module-card.eventSummary .mod-icon   { background: var(--clr-event-bg); }
+  .module-card.baiying .mod-icon      { background: var(--clr-baiying-bg); }
 
   .module-card h3 {
     font-size: .95em;
@@ -502,6 +508,7 @@
   .module-card.streamer:hover h3   { color: var(--clr-streamer); }
   .module-card.monthlySummary:hover h3 { color: var(--clr-monthly); }
   .module-card.eventSummary:hover h3   { color: var(--clr-event); }
+  .module-card.baiying:hover h3      { color: var(--clr-baiying); }
 
   .module-card p {
     font-size: .8em;
@@ -533,6 +540,7 @@
   .module-card.streamer .mod-tag   { background: var(--clr-streamer-bg); color: var(--clr-streamer); }
 	  .module-card.monthlySummary .mod-tag { background: var(--clr-monthly-bg); color: var(--clr-monthly); }
 	  .module-card.eventSummary .mod-tag   { background: var(--clr-event-bg); color: var(--clr-event); }
+  .module-card.baiying .mod-tag       { background: var(--clr-baiying-bg); color: var(--clr-baiying); }
 
   .module-card:hover .mod-tag {
     filter: brightness(.97);
