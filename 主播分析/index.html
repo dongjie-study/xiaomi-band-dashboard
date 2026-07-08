@@ -6,6 +6,7 @@
     <title>主播能力分析 - 小米穿戴</title>
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
+        [v-cloak] { display: none !important; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Microsoft YaHei', sans-serif; background: #f0f2f5; }
         .main { padding: 20px; }
@@ -109,7 +110,7 @@
     </style>
 </head>
 <body>
-    <div id="app">
+    <div id="app" v-cloak>
             <div class="main">
                 <div class="btns" style="margin-bottom:15px;">
                     <button class="btn btn-primary" @click="showAdd=true">+ 新增主播</button>
