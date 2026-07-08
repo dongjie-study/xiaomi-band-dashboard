@@ -777,38 +777,51 @@ function buildModuleRegistry(config) {
   });
 }
 
+var iframePanel = null;
+function getIframe() {
+  if (!iframePanel) iframePanel = document.getElementById('iframePanel');
+  return iframePanel;
+}
+
+function killIframe() {
+  var iframe = getIframe();
+  iframe.classList.remove('show');
+  iframe.src = 'about:blank';
+}
+
+function clearActiveLinks() {
+  document.querySelectorAll('.sidebar-nav > a.active, .sub-menu a.active, .month-item.active, .period-item.active').forEach(function(a) { a.classList.remove('active'); });
+}
+
 // ----- 打开模块（iframe 加载） -----
 function openModule(el) {
   var m = el.dataset.module;
   var info = modules[m];
   if (!info || !info.url) return;
 
-  // Clear all active
-  document.querySelectorAll('.sidebar-nav > a, .sub-menu a, .month-item, .period-item').forEach(function(a) { a.classList.remove('active'); });
+  clearActiveLinks();
   var sideLink = document.querySelector('.sidebar-nav > a[data-module="' + m + '"]');
   if (sideLink) sideLink.classList.add('active');
-
-  // Collapse all sub-menus
   collapseAllSubs();
 
-  // Switch to iframe
+  killIframe();
   document.getElementById('overview').classList.add('hidden');
-  var iframe = document.getElementById('iframePanel');
-  iframe.src = info.url;
-  iframe.classList.add('show');
 
-  // Update topbar
+  var iframe = getIframe();
+  requestAnimationFrame(function() {
+    iframe.src = info.url;
+    iframe.classList.add('show');
+  });
+
   document.getElementById('breadcrumb').innerHTML = '首页 / <span>' + info.title + '</span>';
 }
 
 // ----- 回到首页 -----
 function goHome() {
-  document.querySelectorAll('.sidebar-nav > a, .sub-menu a, .month-item, .period-item').forEach(function(a) { a.classList.remove('active'); });
+  clearActiveLinks();
   collapseAllSubs();
+  killIframe();
   document.getElementById('overview').classList.remove('hidden');
-  var iframe = document.getElementById('iframePanel');
-  iframe.classList.remove('show');
-  iframe.src = 'about:blank';
   document.getElementById('breadcrumb').innerHTML = '首页 / <span>工作台</span>';
 }
 
@@ -891,40 +904,42 @@ function openSubModule(el) {
   var parentId = el.dataset.parent;
   if (!url) return;
 
-  document.querySelectorAll('.sidebar-nav > a, .sub-menu a, .month-item, .period-item').forEach(function(a) { a.classList.remove('active'); });
+  clearActiveLinks();
   var parentLink = document.querySelector('.sidebar-nav > a[data-module="' + parentId + '"]');
   if (parentLink) parentLink.classList.add('active');
   el.classList.add('active');
 
+  killIframe();
   document.getElementById('overview').classList.add('hidden');
-  var iframe = document.getElementById('iframePanel');
-  iframe.src = url;
-  iframe.classList.add('show');
+
+  var iframe = getIframe();
+  requestAnimationFrame(function() {
+    iframe.src = url;
+    iframe.classList.add('show');
+  });
 
   document.getElementById('breadcrumb').innerHTML = '首页 / <span>' + title + '</span>';
 }
 
 // ----- 打开每日数据 -----
 function openSalesDate(date, el) {
-  document.querySelectorAll('.sidebar-nav > a, .sub-menu a, .month-item').forEach(function(a) { a.classList.remove('active'); });
+  clearActiveLinks();
   var salesLink = document.querySelector('.sidebar-nav > a[data-module="sales"]');
   if (salesLink) salesLink.classList.add('active');
-  // Also highlight the month item
   var monthPrefix = date.substring(0, 7);
   var monthItem = document.querySelector('.month-item[onclick*="' + monthPrefix + '"]');
   if (monthItem) monthItem.classList.add('active');
   if (el) el.classList.add('active');
 
+  killIframe();
   document.getElementById('overview').classList.add('hidden');
-  var iframe = document.getElementById('iframePanel');
-  iframe.classList.add('show');
 
+  var iframe = getIframe();
   var targetUrl = 'sales_analysis/index.html#' + date;
-  if (iframe.src && iframe.src.indexOf('sales_analysis/index.html') !== -1) {
-    try { iframe.contentWindow.location.hash = '#' + date; } catch(e) { iframe.src = targetUrl; }
-  } else {
+  requestAnimationFrame(function() {
     iframe.src = targetUrl;
-  }
+    iframe.classList.add('show');
+  });
   document.getElementById('breadcrumb').innerHTML = '首页 / <span>销售分析</span> / ' + date;
 }
 
