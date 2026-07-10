@@ -1,29 +1,15 @@
 import json
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from formatters import fmt, fmt_wan, fmt_yuan, fmt_gsv, diff_str, diff_class
 
 with open('618_analysis_data.json', 'r', encoding='utf-8') as f:
     D = json.load(f)
-
-def fmt(n):
-    return f"{n:,}"
-
-def fmt_wan(n):
-    return f"¥{n:,.1f}万"
-
-def fmt_yuan(n):
-    return f"¥{n:,.0f}"
-
-def fmt_gsv(n):
-    return f"¥{n:,.0f}"
-
-def diff_str(d):
-    if d > 0: return f'我方+{fmt(d)}'
-    elif d < 0: return f'竞对+{fmt(abs(d))}'
-    return '持平'
-
-def diff_class(d):
-    if d > 0: return 'var(--clr-green)'
-    elif d < 0: return 'var(--clr-red)'
-    return ''
 
 teams = D['teams']
 our = teams['我方']
@@ -110,16 +96,6 @@ core_prods_rows = prod_table_rows(['小米手环10', 'REDMI Watch 6', '小米手
 secondary_rows = prod_table_rows(['小米手环9 Pro', '小米手表 S系列'])
 headphone_rows = prod_table_rows(['Xiaomi 开放式耳机', 'REDMI Buds 8 Pro', 'REDMI Buds 8', 'REDMI Buds 8 活力版', 'REDMI Buds 8 青春版'])
 all_prod_rows = prod_table_rows(key_prods)
-
-# Live-only product rows
-live_core = prod_table_rows(['小米手环10', 'REDMI Watch 6', '小米手环10 Pro'])
-live_sec = prod_table_rows(['小米手环9 Pro', '小米手表 S系列'])
-live_hp = prod_table_rows(['Xiaomi 开放式耳机', 'REDMI Buds 8 Pro', 'REDMI Buds 8', 'REDMI Buds 8 活力版', 'REDMI Buds 8 青春版'])
-
-# Card-only product rows
-card_core = prod_table_rows(['小米手环10', 'REDMI Watch 6', '小米手环10 Pro'])
-card_sec = prod_table_rows(['小米手环9 Pro', '小米手表 S系列'])
-card_hp = prod_table_rows(['Xiaomi 开放式耳机', 'REDMI Buds 8 Pro', 'REDMI Buds 8', 'REDMI Buds 8 活力版', 'REDMI Buds 8 青春版'])
 
 def make_prod_row(p, bg=''):
     d = D.get(f'prod_{p}', {})

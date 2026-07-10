@@ -198,7 +198,7 @@ for v in all_violations:
     if v['time']:
         try:
             month = v['time'][:7]  # YYYY-MM
-        except:
+        except (ValueError, IndexError, TypeError, KeyError):
             month = '未知'
     else:
         month = '未知'

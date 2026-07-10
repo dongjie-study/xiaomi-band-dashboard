@@ -6,6 +6,7 @@ Usage:
 """
 import sys
 import os
+import shutil
 import subprocess
 from pathlib import Path
 
@@ -26,7 +27,6 @@ def run_sales(excel_path, our_path=None):
     subprocess.run(cmd, check=True)
 
     # Copy outputs to shared output
-    import shutil
     for f in ["index.html", "dashboard.png", "room_comparison.png", "comparison.png"]:
         src = SALES_DIR / f
         dst = OUTPUT_DIR / f

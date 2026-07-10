@@ -9,108 +9,48 @@ import pandas as pd
 import json
 import os
 import sys
-from datetime import datetime
+from pathlib import Path
+
+# Ensure project root is in Python path for shared module imports
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from team_config import TEAM_MAP, classify_room, ALL_TEAMS, OUR_TEAM
+from product_classifier import classify_product as shorten_product
+from utils import detect_excel_columns
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(DATA_DIR, 'history.json')
 
-# Team classification
-TEAM_MAP = {
-    # 我司
-    '小米官方手表': '我司', '小米官方手环直播间': '我司', '小米数码旗舰店': '我司',
-    '小米官方耳机直播间': '我司', '小米手环10Pro直播间': '我司', '小米官旗手表直播间': '我司',
-    # 机械空间
-    '小米智能穿戴国补号': '机械空间', '小米智能穿戴授权号': '机械空间',
-    # 纵横
-    '小米官方手表直播号': '纵横',
-    # 凝云
-    '小米手环官方直播间': '凝云', '小米手环新品直播间': '凝云', '小米手环直播间': '凝云',
-}
-# Everything else → 良米
-
-def classify_room(room_name):
-    return TEAM_MAP.get(room_name, '良米')
-
-# Teams we want to highlight
-OUR_TEAM = '我司'
-ALL_TEAMS = ['我司', '机械空间', '纵横', '凝云', '良米']
-
-
-def shorten_product(name):
-    name = str(name)
-    if '10Pro' in name or '10 Pro' in name:
-        return '小米手环10 Pro'
-    elif '10' in name and 'Pro' not in name and '9' not in name:
-        return '小米手环10'
-    elif '9 Pro' in name or '9Pro' in name:
-        return '小米手环9 Pro'
-    elif 'REDMI Watch 6' in name:
-        return 'REDMI Watch 6'
-    elif 'REDMI 手' in name:
-        return 'REDMI 手环 3'
-    elif 'Type-C' in name or '充电' in name:
-        return '充电配件'
-    elif 'Xiaomi Buds 6' in name:
-        return 'Xiaomi Buds 6'
-    elif 'Xiaomi Buds 5' in name:
-        return 'Xiaomi Buds 5 Pro'
-    elif '骨传导耳机' in name:
-        return '小米骨传导耳机2'
-    elif '开放式耳机' in name or '耳夹式耳机' in name:
-        return 'Xiaomi 开放式耳机'
-    elif 'Buds 8 Pro' in name:
-        return 'REDMI Buds 8 Pro'
-    elif 'Buds 8 青春' in name:
-        return 'REDMI Buds 8 青春版'
-    elif 'Buds 8 活力' in name:
-        return 'REDMI Buds 8 活力版'
-    elif 'Buds 8' in name:
-        return 'REDMI Buds 8'
-    elif 'Buds 7S' in name:
-        return 'REDMI Buds 7S'
-    elif 'Buds 6 活力' in name:
-        return 'REDMI Buds 6 活力版'
-    elif 'Buds 6' in name:
-        return 'REDMI Buds 6'
-    elif '颈挂式耳机' in name:
-        return 'Xiaomi 颈挂式耳机2'
-    elif '头戴' in name:
-        return '头戴式耳机'
-    elif '耳机' in name or 'Buds' in name:
-        return '耳机配件'
-    elif 'AI眼镜' in name or 'AI 眼镜' in name:
-        return '小米AI眼镜'
-    elif '手环8' in name or 'Band 8' in name:
-        return '小米手环8'
-    elif '插线板' in name or '插座' in name:
-        return '插线板/配件'
-    else:
-        return name[:25]
-
 
 def load_and_clean(filepath):
-    df = pd.read_excel(filepath)
-    # Detect column roles by name patterns
-    col_map = {}
-    for i, col in enumerate(df.columns):
-        name = str(col)
-        if any(kw in name for kw in ['商品', '产品', 'product']):
-            col_map['product'] = i
-        elif any(kw in name for kw in ['金额', '价格', 'price', '应付']):
-            col_map['price'] = i
-        elif any(kw in name for kw in ['时间', '提交', 'time', 'date']):
-            col_map['time'] = i
-        elif any(kw in name for kw in ['直播', '房间', 'room', '达人', '昵称']):
-            col_map['room'] = i
-        elif any(kw in name for kw in ['类型', '我方', '竞对', 'type']):
-            col_map['type'] = i
+    """
+    Load and clean an Excel file of live stream orders.
+
+    Auto-detects column roles by keyword matching, standardizes column names,
+    parses dates, classifies products and teams.
+
+    Args:
+        filepath: Path to Excel file.
+
+    Returns:
+        Cleaned DataFrame with columns: product, price, time, room, type,
+        date, hour, product_short.
+    """
+    try:
+        df = pd.read_excel(filepath)
+    except FileNotFoundError:
+        print(f"Error: File not found — {filepath}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: Failed to read Excel file — {e}")
+        sys.exit(1)
+    col_map = detect_excel_columns(df)
 
     cols = []
     for key in ['product', 'price', 'time', 'room', 'type']:
-        if key in col_map:
-            cols.append(df.columns[col_map[key]])
-        else:
-            cols.append(None)
+        cols.append(col_map.get(key))
 
     df = df.iloc[:, :len(df.columns)]  # keep all
     new_names = {}
@@ -420,7 +360,7 @@ def update(filepath, our_filepath=None):
     save_history(history)
     print(f"History updated: {len(history)} days saved to {HISTORY_FILE}")
 
-    # Generate charts
+    # Generate charts (import at function level to avoid circular dependency with build_html)
     from generate_dashboard import generate_dashboard, generate_room_comparison, generate_comparison_report
     dashboard_path = generate_dashboard(df)
     print(f"Overall dashboard: {dashboard_path}")
@@ -436,8 +376,8 @@ def update(filepath, our_filepath=None):
         print(f"Day-over-day comparison: {comparison_path}")
 
     # Build HTML
-    from build_html import main as build_html
-    build_html()
+    import subprocess as _sp
+    _sp.run([sys.executable, str(ROOT / 'build_html.py')], check=True)
 
     # Generate stats_data.js for root index.html overview
     _write_stats_js(history)

@@ -2,57 +2,23 @@ import pandas as pd
 import numpy as np
 import json
 import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from utils import to_num, load_video_data as load_data
+from formatters import fmt_money, fmt_num, fmt_roi, fmt_pct
+from report_builder import (
+    CSS, AUTH_SCRIPT, compute_metrics,
+    gen_header, gen_kpi_cards, gen_overview_chart,
+    gen_channel_charts, gen_product_charts, gen_roi_dist_chart,
+    gen_source_table, gen_product_table, gen_top10_table,
+    gen_dark_table, gen_roi_stats_table,
+)
+
 sys.stdout.reconfigure(encoding='utf-8')
-
-def to_num(s):
-    if isinstance(s, str):
-        return float(s.replace(',', '').replace('%', ''))
-    return float(s) if pd.notna(s) else np.nan
-
-def load_data(path):
-    df = pd.read_excel(path)
-    clean = pd.DataFrame()
-    clean['name'] = df.iloc[:, 0]
-    clean['source'] = df.iloc[:, 5]
-    clean['tag'] = df.iloc[:, 6]
-    clean['roi'] = df.iloc[:, 7].apply(to_num)
-    clean['orders'] = pd.to_numeric(df.iloc[:, 8], errors='coerce')
-    clean['deal_amt'] = df.iloc[:, 9].apply(to_num)
-    clean['avg_price'] = pd.to_numeric(df.iloc[:, 10], errors='coerce')
-    clean['impressions'] = df.iloc[:, 11].apply(to_num)
-    clean['clicks'] = df.iloc[:, 12].apply(to_num)
-    clean['ctr'] = df.iloc[:, 13].apply(to_num)
-    clean['cvr'] = df.iloc[:, 14].apply(to_num)
-    clean['cost'] = df.iloc[:, 15].apply(to_num)
-    clean['pay_roi'] = df.iloc[:, 17].apply(to_num)
-    clean['pay_amt'] = df.iloc[:, 18].apply(to_num)
-    clean['pay_orders'] = pd.to_numeric(df.iloc[:, 19], errors='coerce')
-    clean['cpc'] = pd.to_numeric(df.iloc[:, 22], errors='coerce')
-    clean['cpm'] = df.iloc[:, 23].apply(to_num)
-    clean['likes'] = pd.to_numeric(df.iloc[:, 27], errors='coerce')
-    clean['new_fans'] = pd.to_numeric(df.iloc[:, 28], errors='coerce')
-    clean['avg_watch_time'] = pd.to_numeric(df.iloc[:, 29], errors='coerce')
-    clean['plays'] = df.iloc[:, 30].apply(to_num)
-    clean['completion'] = df.iloc[:, 31].apply(to_num)
-    clean['comments'] = pd.to_numeric(df.iloc[:, 32], errors='coerce')
-    clean['play_2s'] = df.iloc[:, 33].apply(to_num)
-    clean['play_3s'] = df.iloc[:, 34].apply(to_num)
-    clean['play_5s'] = df.iloc[:, 35].apply(to_num)
-    clean['play_10s'] = df.iloc[:, 36].apply(to_num)
-    clean['plays'] = clean['plays'].fillna(0)
-    return clean
-
-def classify_product(name):
-    name = str(name)
-    if '手环' in name:
-        return 'Xiaomi Band'
-    if 'watch' in name.lower() or 'Watch' in name:
-        return 'Redmi Watch6'
-    if '耳机' in name or 'Buds' in name or 'buds' in name:
-        return 'Earphones'
-    if 'AIGC' in name or 'aigc' in name:
-        return 'AIGC Collection'
-    return 'Other/General'
 
 def compute_metrics(clean):
     hc = clean[clean['cost'] > 0].copy()

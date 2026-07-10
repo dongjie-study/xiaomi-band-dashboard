@@ -5,6 +5,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import json
 import os
+import sys
+from pathlib import Path
+
+# Ensure project root is in Python path for shared module imports
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from product_classifier import classify_product as shorten_product
+from team_config import TEAM_MAP, classify_room, OUR_TEAM
+from utils import detect_excel_columns
 
 plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'DejaVu Sans']
 plt.rcParams['axes.unicode_minus'] = False
@@ -13,70 +24,19 @@ plt.rcParams['font.family'] = 'sans-serif'
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(DATA_DIR, 'history.json')
 
-OUR_ROOMS = {
-    '小米数码旗舰店', '小米官方手表', '小米官方手环直播间',
-    '小米官方耳机直播间', '小米手环10Pro直播间',
-}
-
 COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
           '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9']
 ROOM_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD']
 
 
-def shorten_product(name):
-    name = str(name)
-    if '10Pro' in name or '10 Pro' in name:
-        return '小米手环10 Pro'
-    elif '10系' in name or ('10 ' in name and 'Pro' not in name and '9' not in name):
-        return '小米手环10'
-    elif '10 标准' in name:
-        return '小米手环10 标准'
-    elif '10 陶瓷' in name or '10陶瓷' in name or '陶瓷白' in name:
-        return '小米手环10 陶瓷版'
-    elif '9 Pro' in name:
-        return '小米手环9 Pro'
-    elif 'REDMI Watch 6' in name:
-        return 'REDMI Watch 6'
-    elif 'REDMI 手' in name:
-        return 'REDMI 手环 3'
-    elif 'Type-C' in name or '充电' in name:
-        return '充电配件'
-    elif '耳机' in name or 'Buds' in name:
-        return '耳机配件'
-    elif 'AI眼镜' in name or 'AI 眼镜' in name:
-        return '小米AI眼镜'
-    elif '手环8' in name or 'Band 8' in name:
-        return '小米手环8'
-    elif '头戴' in name:
-        return '头戴式耳机'
-    elif '插线板' in name or '插座' in name:
-        return '插线板/配件'
-    else:
-        return name[:25]
-
-
 def analyze_data(filepath):
+    """Load and clean Excel data for chart generation. Uses shared utils."""
     df = pd.read_excel(filepath)
-    col_map = {}
-    for i, col in enumerate(df.columns):
-        name = str(col)
-        if any(kw in name for kw in ['商品', '产品', 'product']):
-            col_map['product'] = i
-        elif any(kw in name for kw in ['金额', '价格', 'price', '应付']):
-            col_map['price'] = i
-        elif any(kw in name for kw in ['时间', '提交', 'time', 'date']):
-            col_map['time'] = i
-        elif any(kw in name for kw in ['直播', '房间', 'room', '达人']):
-            col_map['room'] = i
-        elif any(kw in name for kw in ['类型', '我方', '竞对', 'type']):
-            col_map['type'] = i
+    col_map = detect_excel_columns(df)
 
     cols = []
     for key in ['product', 'price', 'time', 'room', 'type']:
-        if key in col_map:
-            cols.append(df.columns[col_map[key]])
-        else:
-            cols.append(None)
+        cols.append(col_map.get(key))
 
     new_names = {}
     for key, col in zip(['product', 'price', 'time', 'room', 'type'], cols):
@@ -101,7 +61,7 @@ def analyze_data(filepath):
     df['hour'] = df['time'].dt.hour
     df['product_short'] = df['product'].apply(shorten_product)
     df['room'] = df['room'].astype(str).str.strip()
-    df['type'] = df['room'].apply(lambda r: '我方' if r in OUR_ROOMS else '竞对')
+    df['type'] = df['room'].apply(classify_room)
     return df
 
 
@@ -247,7 +207,7 @@ def generate_room_comparison(df, our_rooms=None, output_path=None):
         if rtype == '我方' and room not in our_rooms:
             our_rooms.append(room)
 
-    is_ours = lambda r: room_type.get(r) == '我方'
+    is_ours = lambda r: room_type.get(r) == OUR_TEAM
 
     fig = plt.figure(figsize=(22, 16))
     title = f'直播间竞对分析 - {date_str}'

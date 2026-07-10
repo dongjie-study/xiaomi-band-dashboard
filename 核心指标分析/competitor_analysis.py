@@ -1,14 +1,17 @@
 import pandas as pd
 import numpy as np
 import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from utils import to_num
+
 sys.stdout.reconfigure(encoding='utf-8')
 
 df = pd.read_excel(r'C:\Users\Administrator\Downloads\良米6.1-6.7千川视频数据.xlsx')
-
-def to_num(s):
-    if isinstance(s, str):
-        return float(s.replace(',', '').replace('%', ''))
-    return float(s) if pd.notna(s) else np.nan
 
 clean = pd.DataFrame()
 clean['name'] = df.iloc[:, 0]
