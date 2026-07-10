@@ -375,9 +375,9 @@ def update(filepath, our_filepath=None):
         comparison_path = generate_comparison_report(history)
         print(f"Day-over-day comparison: {comparison_path}")
 
-    # Build HTML
-    import subprocess as _sp
-    _sp.run([sys.executable, str(ROOT / 'build_html.py')], check=True)
+    # Build HTML dashboard (sales_analysis/build_html.py)
+    from sales_analysis.build_html import main as build_html
+    build_html()
 
     # Generate stats_data.js for root index.html overview
     _write_stats_js(history)
