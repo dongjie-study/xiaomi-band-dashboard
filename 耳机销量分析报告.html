@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>耳机品类销量分析报告 · 小米手环直播间</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root {
+  --bg: #f0f4f8; --surface: #ffffff; --text: #0f172a; --text-secondary: #64748b;
+  --text-muted: #9ca3af; --border: #e8ecf1;
+  --shadow-md: 0 4px 16px rgba(0,0,0,.06); --shadow-lg: 0 8px 30px rgba(0,0,0,.10);
+  --radius: 14px; --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --clr-ours: #1E90FF; --clr-comp: #FF6B35; --clr-orange: #ff6900;
+  --clr-green: #1da85c; --clr-red: #FF4757; --clr-purple: #7c6ff7;
+  --clr-up: #1da85c; --clr-down: #FF4757;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(circle, rgba(148,163,184,.10) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.nav-bar {
+  display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+  padding: 10px 16px; background: rgba(255,255,255,.9);
+  backdrop-filter: blur(14px); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,.03);
+}
+.nav-btn {
+  padding: 7px 18px; border-radius: 20px; border: 1.5px solid #dde1e6;
+  background: #fff; color: #555; font-size: 12.5px; cursor: pointer;
+  text-decoration: none; transition: all var(--transition); font-family: inherit; font-weight: 500;
+}
+.nav-btn:hover { border-color: var(--clr-orange); color: var(--clr-orange); background: #fff7ed; }
+.nav-btn.active { background: linear-gradient(135deg, var(--clr-orange), #ff8c42); color: #fff; border-color: transparent; font-weight: 600; box-shadow: 0 2px 8px rgba(255,105,0,.2); }
+.hero {
+  position: relative; z-index: 1;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  color: white; padding: 48px 20px 40px; text-align: center;
+  box-shadow: 0 4px 24px rgba(15,52,96,.15);
+}
+.hero h1 { font-size: 36px; font-weight: 800; letter-spacing: -.02em; }
+.hero h1 .mi { color: var(--clr-orange); }
+.hero p { font-size: 15px; opacity: 0.85; margin-top: 8px; }
+.hero .badge-row { margin-top: 16px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.hero .badge { padding: 5px 16px; border-radius: 16px; font-size: 12px; font-weight: 600; letter-spacing: .03em; }
+.badge.green { background: rgba(29,168,92,.18); color: #5ddf8a; }
+.badge.warn { background: rgba(255,105,0,.18); color: #ffa366; }
+.badge.info { background: rgba(30,144,255,.18); color: #80c8ff; }
+.badge.purple { background: rgba(124,111,247,.18); color: #b5a8ff; }
+.kpi-row {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  max-width: 1200px; margin: -28px auto 0; padding: 0 20px; position: relative; z-index: 10;
+}
+@media (max-width: 800px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+.kpi-card {
+  background: var(--surface); border-radius: var(--radius); padding: 18px 14px; text-align: center;
+  box-shadow: var(--shadow-md); border: 1px solid var(--border);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.kpi-card .label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+.kpi-card .value { font-size: 28px; font-weight: 800; letter-spacing: -.02em; }
+.kpi-card .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.kpi-card.ours .value { color: var(--clr-ours); }
+.kpi-card.green .value { color: var(--clr-green); }
+.kpi-card.red .value { color: var(--clr-red); }
+.section {
+  max-width: 1200px; margin: 28px auto; padding: 0 20px; position: relative; z-index: 1;
+}
+.section-title {
+  font-size: 20px; font-weight: 700; margin-bottom: 14px; display: flex; align-items: center; gap: 10px;
+}
+.section-title .icon { font-size: 22px; }
+.table-wrap {
+  background: var(--surface); border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow-md); border: 1px solid var(--border);
+}
+table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+thead th {
+  background: #f8fafc; padding: 10px 12px; text-align: left; font-weight: 600;
+  color: var(--text-secondary); font-size: 11px; text-transform: uppercase; letter-spacing: .04em;
+  border-bottom: 2px solid var(--border);
+}
+thead th.center { text-align: center; }
+tbody td {
+  padding: 9px 12px; border-bottom: 1px solid #f1f5f9;
+}
+tbody td.center { text-align: center; }
+tbody td.right { text-align: right; font-variant-numeric: tabular-nums; }
+tbody tr:hover { background: #fafbfd; }
+tbody tr.our { background: #f0f7ff; }
+tbody tr.highlight { background: #fffdf0; }
+.amount { font-weight: 600; }
+.up { color: var(--clr-up); font-weight: 600; }
+.down { color: var(--clr-down); font-weight: 600; }
+.chart-container {
+  background: var(--surface); border-radius: var(--radius);
+  box-shadow: var(--shadow-md); border: 1px solid var(--border);
+  padding: 20px; margin-bottom: 20px;
+}
+.chart-box { width: 100%; height: 400px; }
+.chart-box.tall { height: 500px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+.summary-box {
+  background: var(--surface); border-radius: var(--radius); padding: 24px 28px;
+  box-shadow: var(--shadow-md); border: 1px solid var(--border); line-height: 1.9;
+}
+.summary-box h3 { font-size: 16px; margin-bottom: 12px; color: var(--clr-orange); }
+.summary-box ul { padding-left: 20px; }
+.summary-box li { margin-bottom: 6px; font-size: 13.5px; }
+.summary-box .highlight { background: linear-gradient(180deg, transparent 60%, #fff3cd 60%); padding: 0 3px; }
+.tag-ours { display:inline-block; background:#e6f0ff; color:var(--clr-ours); padding:1px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+.tag-comp { display:inline-block; background:#ffe8e0; color:var(--clr-comp); padding:1px 8px; border-radius:10px; font-size:11px; font-weight:600; }
+footer {
+  text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 12px;
+}
+</style>
+</head>
+<body>
+
+<div class="nav-bar">
+  <a href="index.html" class="nav-btn">首页</a>
+  <a href="sales_analysis/index.html" class="nav-btn">每日看板</a>
+  <a href="六月销量分析.html" class="nav-btn">6月销量</a>
+  <a href="七月销量分析.html" class="nav-btn">7月销量</a>
+  <a href="#" class="nav-btn active">🎧 耳机专报</a>
+</div>
+
+<div class="hero">
+  <h1><span class="mi">小米</span>直播间 · 耳机品类销量分析报告</h1>
+  <p>2026年6月—7月 耳机品类全渠道销售数据汇总 | 含开放式耳机、头戴式耳机、REDMI Buds系列、Xiaomi Buds系列等</p>
+  <div class="badge-row">
+    <span class="badge green">6月30天 + 7月10天</span>
+    <span class="badge info">12个耳机SKU</span>
+    <span class="badge warn">全渠道四队竞争</span>
+    <span class="badge purple">耳机品类专项分析</span>
+  </div>
+</div>
+
+<!-- KPI Row -->
+<div class="kpi-row">
+  <div class="kpi-card">
+    <div class="label">📦 6月耳机订单</div>
+    <div class="value">6,043</div>
+    <div class="sub">日均 201 单 · 占全渠道 6.9%</div>
+  </div>
+  <div class="kpi-card ours">
+    <div class="label">💰 6月耳机销售额</div>
+    <div class="value">¥192万</div>
+    <div class="sub">¥1,920,257 · 均价¥318</div>
+  </div>
+  <div class="kpi-card">
+    <div class="label">📦 7月耳机订单 (10天)</div>
+    <div class="value">2,185</div>
+    <div class="sub">日均 218 单 · 占全渠道 10.8%</div>
+  </div>
+  <div class="kpi-card ours">
+    <div class="label">💰 7月耳机销售额 (10天)</div>
+    <div class="value">¥46.6万</div>
+    <div class="sub">¥466,322 · 均价¥213</div>
+  </div>
+</div>
+
+<!-- ===== 6月 vs 7月 总览对比 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">📊</span> 6月 vs 7月 耳机品类总览对比</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>指标</th><th class="center">6月 (30天)</th><th class="center">7月 (10天)</th>
+        <th class="center">日均6月</th><th class="center">日均7月</th><th class="center">日均变化</th>
+      </tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>全渠道总订单</strong></td>
+          <td class="center">87,152</td>
+          <td class="center">20,239</td>
+          <td class="center">2,905</td>
+          <td class="center">2,024</td>
+          <td class="center down">-30.3%</td>
+        </tr>
+        <tr>
+          <td><strong>全渠道总销售额</strong></td>
+          <td class="center">¥33,357,256</td>
+          <td class="center">¥8,142,313</td>
+          <td class="center">¥1,111,909</td>
+          <td class="center">¥814,231</td>
+          <td class="center down">-26.8%</td>
+        </tr>
+        <tr class="highlight">
+          <td><strong>🎧 耳机品类订单</strong></td>
+          <td class="center"><strong>6,043</strong></td>
+          <td class="center"><strong>2,185</strong></td>
+          <td class="center">201</td>
+          <td class="center">218</td>
+          <td class="center up">+8.5%</td>
+        </tr>
+        <tr class="highlight">
+          <td><strong>🎧 耳机品类销售额</strong></td>
+          <td class="center"><strong>¥1,920,257</strong></td>
+          <td class="center"><strong>¥466,322</strong></td>
+          <td class="center">¥64,009</td>
+          <td class="center">¥46,632</td>
+          <td class="center down">-27.1%</td>
+        </tr>
+        <tr>
+          <td><strong>耳机占全渠道订单比</strong></td>
+          <td class="center">6.9%</td>
+          <td class="center">10.8%</td>
+          <td class="center" colspan="3">7月耳机占比提升 <span class="up">+3.9pp</span></td>
+        </tr>
+        <tr>
+          <td><strong>耳机品类均价</strong></td>
+          <td class="center">¥318</td>
+          <td class="center">¥213</td>
+          <td class="center" colspan="3">均价下降 <span class="down">-¥105</span>，低端Buds占比上升拉低均价</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== 产品细分对比 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">🎧</span> 耳机产品线细分对比 (按6月销售额排序)</div>
+  <div class="table-wrap">
+    <table>
+      <thead><tr>
+        <th>产品线</th><th class="center">6月订单</th><th class="center">6月销售额</th><th class="center">6月均价</th>
+        <th class="center">7月订单</th><th class="center">7月销售额</th><th class="center">7月均价</th>
+        <th class="center">日均订单变化</th>
+      </tr></thead>
+      <tbody>
+        <tr class="highlight">
+          <td><strong>Xiaomi 开放式耳机</strong></td>
+          <td class="center">1,004</td><td class="center amount">¥841,757</td><td class="center">¥838</td>
+          <td class="center">187</td><td class="center amount">¥142,834</td><td class="center">¥764</td>
+          <td class="center down">-44.1%</td>
+        </tr>
+        <tr class="highlight">
+          <td><strong>头戴式耳机</strong></td>
+          <td class="center">1,650</td><td class="center amount">¥481,902</td><td class="center">¥292</td>
+          <td class="center">406</td><td class="center amount">¥122,128</td><td class="center">¥301</td>
+          <td class="center down">-26.2%</td>
+        </tr>
+        <tr class="highlight">
+          <td><strong>REDMI Buds 8 Pro</strong></td>
+          <td class="center">604</td><td class="center amount">¥210,085</td><td class="center">¥348</td>
+          <td class="center">111</td><td class="center amount">¥40,117</td><td class="center">¥361</td>
+          <td class="center down">-44.9%</td>
+        </tr>
+        <tr class="highlight">
+          <td><strong>REDMI Buds 8 青春版</strong></td>
+          <td class="center">996</td><td class="center amount">¥126,932</td><td class="center">¥127</td>
+          <td class="center">368</td><td class="center amount">¥50,288</td><td class="center">¥137</td>
+          <td class="center up">+10.8%</td>
+        </tr>
+        <tr class="highlight">
+          <td><strong>REDMI Buds 8 活力版</strong></td>
+          <td class="center">900</td><td class="center amount">¥71,182</td><td class="center">¥79</td>
+          <td class="center">924</td><td class="center amount">¥66,464</td><td class="center">¥72</td>
+          <td class="center up">+208.0%</td>
+        </tr>
+        <tr class="">
+          <td><strong>Xiaomi Buds 6</strong></td>
+          <td class="center">80</td><td class="center amount">¥46,604</td><td class="center">¥583</td>
+          <td class="center">18</td><td class="center amount">¥11,072</td><td class="center">¥615</td>
+          <td class="center down">-32.5%</td>
+        </tr>
+        <tr class="">
+          <td><strong>REDMI Buds 8</strong></td>
+          <td class="center">344</td><td class="center amount">¥45,225</td><td class="center">¥131</td>
+          <td class="center">92</td><td class="center amount">¥12,435</td><td class="center">¥135</td>
+          <td class="center down">-19.8%</td>
+        </tr>
+        <tr class="">
+          <td><strong>Xiaomi Buds 5 Pro</strong></td>
+          <td class="center">34</td><td class="center amount">¥29,136</td><td class="center">¥857</td>
+          <td class="center">10</td><td class="center amount">¥9,030</td><td class="center">¥903</td>
+          <td class="center down">-11.8%</td>
+        </tr>
+        <tr class="">
+          <td><strong>耳机配件</strong></td>
+          <td class="center">126</td><td class="center amount">¥22,873</td><td class="center">¥182</td>
+          <td class="center">9</td><td class="center amount">¥1,151</td><td class="center">¥128</td>
+          <td class="center down">-78.6%</td>
+        </tr>
+        <tr class="">
+          <td><strong>REDMI Buds 7S</strong></td>
+          <td class="center">91</td><td class="center amount">¥15,805</td><td class="center">¥174</td>
+          <td class="center">30</td><td class="center amount">¥5,205</td><td class="center">¥173</td>
+          <td class="center down">-1.1%</td>
+        </tr>
+        <tr class="">
+          <td><strong>小米骨传导耳机2</strong></td>
+          <td class="center">30</td><td class="center amount">¥15,316</td><td class="center">¥511</td>
+          <td class="center">6</td><td class="center amount">¥3,550</td><td class="center">¥592</td>
+          <td class="center down">-40.0%</td>
+        </tr>
+        <tr class="">
+          <td><strong>REDMI Buds 6 活力版</strong></td>
+          <td class="center">184</td><td class="center amount">¥13,441</td><td class="center">¥73</td>
+          <td class="center">24</td><td class="center amount">¥2,049</td><td class="center">¥85</td>
+          <td class="center down">-60.9%</td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== 团队竞争格局 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">⚔️</span> 耳机品类团队竞争格局</div>
+  <div class="grid-2">
+    <div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th colspan="3" style="text-align:center;background:#f0f7ff;">6月团队耳机销量</th></tr>
+          <tr><th>团队</th><th class="center">订单数</th><th class="center">销售额</th></tr></thead>
+          <tbody>
+            <tr class="our">
+              <td>★ <strong>我司</strong></td>
+              <td class="center">1,644 (27.2%)</td>
+              <td class="center amount">¥758,298</td>
+            </tr>
+            <tr class="">
+              <td>◆ <strong>机械空间</strong></td>
+              <td class="center">451 (7.5%)</td>
+              <td class="center amount">¥42,639</td>
+            </tr>
+            <tr class="">
+              <td>▲ <strong>纵横</strong></td>
+              <td class="center">8 (0.1%)</td>
+              <td class="center amount">¥1,062</td>
+            </tr>
+            <tr class="">
+              <td>· <strong>良米</strong></td>
+              <td class="center">3,940 (65.2%)</td>
+              <td class="center amount">¥1,118,258</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th colspan="3" style="text-align:center;background:#f0f7ff;">7月团队耳机销量 (10天)</th></tr>
+          <tr><th>团队</th><th class="center">订单数</th><th class="center">销售额</th></tr></thead>
+          <tbody>
+            <tr class="our">
+              <td>★ <strong>我司</strong></td>
+              <td class="center">584 (26.7%)</td>
+              <td class="center amount">¥140,411</td>
+            </tr>
+            <tr class="">
+              <td>◆ <strong>机械空间</strong></td>
+              <td class="center">264 (12.1%)</td>
+              <td class="center amount">¥19,647</td>
+            </tr>
+            <tr class="">
+              <td>· <strong>良米</strong></td>
+              <td class="center">1,337 (61.2%)</td>
+              <td class="center amount">¥306,264</td>
+            </tr>
+
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 每日趋势图 ===== -->
+<div class="section">
+  <div class="grid-2">
+    <div class="chart-container"><div class="chart-box" id="chartDailyOrders"></div></div>
+    <div class="chart-container"><div class="chart-box" id="chartDailyRevenue"></div></div>
+  </div>
+  <div class="chart-container"><div class="chart-box tall" id="chartProductComp"></div></div>
+</div>
+
+<!-- ===== 耳机品类占全渠道比趋势 ===== -->
+<div class="section">
+  <div class="chart-container"><div class="chart-box" id="chartShare"></div></div>
+</div>
+
+<!-- ===== 我司耳机号表现 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">🏪</span> 我司耳机直播间表现</div>
+  <div class="grid-2">
+    <div class="chart-container"><div class="chart-box" id="chartOurRoom"></div></div>
+    <div class="summary-box">
+      <h3>📋 小米官方耳机直播间 关键数据</h3>
+      <ul>
+        <li>6月累计: <span class="highlight">1,167单</span>, 销售额 <span class="highlight">¥647,632</span>, 出勤27天</li>
+        <li>7月累计(10天): <span class="highlight">231单</span>, 销售额 <span class="highlight">¥94,441</span>, 出勤10天</li>
+        <li>6月日均: 43单, ¥23,986 (出勤日)</li>
+        <li>7月日均: 23单, ¥9,444 (出勤日)</li>
+        <li>耳机号贡献我司耳机销量: 6月 71% | 7月 40%</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 总结 ===== -->
+<div class="section">
+  <div class="section-title"><span class="icon">📝</span> 耳机品类综合分析</div>
+  <div class="summary-box">
+    <h3>一、市场规模与趋势</h3>
+    <ul>
+      <li>耳机品类6月全渠道<span class="highlight">6,043单 / ¥1,920,257</span>，占全渠道6.9%。日均201单。</li>
+      <li>7月前10天耳机品类<span class="highlight">2,185单 / ¥466,322</span>，占全渠道10.8%。日均218单。</li>
+      <li>日均订单环比<span class="up">+8.5%</span>，耳机品类在全渠道占比从6.9%提升至10.8%，品类重要性上升。</li>
+    </ul>
+
+    <h3>二、产品结构分析</h3>
+    <ul>
+      <li><strong>TOP2品类（开放式耳机+头戴式耳机）</strong>占耳机总销售额的68.9%（6月）→ 56.8%（7月），高端品类占比下降。开放式耳机从¥838均价降至¥764，头戴式从¥292升至¥301。</li>
+      <li><strong>REDMI Buds 8系列</strong>（含标准版/Pro/活力版/青春版）6月合计2,844单 / ¥453,424。7月10天合计1,495单，日均从95单提升至150单。</li>
+      <li><strong>高端产品线</strong>（Xiaomi Buds 5 Pro / Buds 6 / 骨传导耳机）体量较小，合计不足5%份额，但有高客单价优势（¥500—¥900）。</li>
+      <li><strong>6月30日耳机爆发日</strong>：当日耳机1,776单 / ¥506,383，占当日全渠道的46%，疑似新品首发或大促活动。</li>
+    </ul>
+
+    <h3>三、竞争格局</h3>
+    <ul>
+      <li>耳机品类<span class="tag-comp">良米</span>以65.2%（6月）→ 61.2%（7月）的订单份额领先，但其产品集中在低端Buds系列，均价偏低。</li>
+      <li>我司以<span class="tag-ours">27.2%</span>（6月）→ <span class="tag-ours">26.7%</span>（7月）份额位居第二，但在高端耳机（开放式、头戴式）上有明显优势。</li>
+      <li><strong>机械空间</strong>耳机份额从7.5%提升至12.1%，主要在Buds 8活力版等低端品类增长，需关注其是否会向上渗透。</li>
+      <li>我司耳机直播间贡献了我司耳机销量的71%（6月），7月其他我司直播间耳机销量占比上升，说明耳机品类在我司各直播间的渗透率提高。</li>
+    </ul>
+
+    <h3>四、关键发现</h3>
+    <ul>
+      <li>🔴 <strong>均价下行风险</strong>：耳机品类均价从¥318降至¥213，Buds 8活力版/青春版等低价SKU放量，侵蚀高客单价品类份额。</li>
+      <li>🟡 <strong>开放式耳机护城河</strong>：我司在开放式耳机品类优势明显（6月约64%份额），且均价¥800+，是高利润品类，需重点守护。</li>
+      <li>🟢 <strong>品类占比提升</strong>：耳机从6月占全渠道6.9%升至7月10.8%，说明耳机品类在直播间的权重在增长，值得投入更多资源。</li>
+      <li>🔴 <strong>头戴式耳机短板</strong>：6月我司仅占头戴式耳机14.6%，良米占85.4%。头戴式耳机是全渠道第二大耳机品类（¥48万/月），我司参与度严重不足。</li>
+      <li>🟡 <strong>耳机号产能波动大</strong>：日单量从5单到248单波动极大（6月CV≈95%），需稳定日常运营节奏。</li>
+    </ul>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="icon">💡</span> 改进建议</div>
+  <div class="summary-box">
+    <h3>🔴 短期 (7月内)</h3>
+    <ul>
+      <li><strong>稳定耳机号日播节奏：</strong>7月前10天耳机号日均仅23单，较6月日均43单下降47%。需排查是排班问题还是品类结构调整导致。</li>
+      <li><strong>头戴式耳机破局：</strong>全渠道头戴式耳机6月月均55单/天，我司仅占14.6%。在耳机号+数码旗舰店增加头戴式耳机曝光频次。</li>
+      <li><strong>高端Buds 5 Pro/Buds 6推广：</strong>虽然体量小但均价¥583-¥857，可作为差异化产品在黄金时段推广。</li>
+    </ul>
+    <h3>🟡 中期 (8月)</h3>
+    <ul>
+      <li><strong>耳机号品类定位明确：</strong>确定以开放式耳机（高客单高利润）为核心品类，Buds系列为走量补充，头戴式为增长品类。</li>
+      <li><strong>跨直播间耳机渗透：</strong>手环号、手表号可适当插入耳机SKU，利用现有流量做交叉销售。</li>
+      <li><strong>跟踪机械空间耳机动向：</strong>机械空间耳机份额从7.5%→12.1%，关注其是否会增加耳机品类布局。</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  数据来源：抖音直播间订单 · 分析周期：2026年6月1日—7月10日 · 自动生成于2026年7月11日<br>
+  我司 = 小米官方手环直播间 / 小米数码旗舰店 / 小米官方手表 / 小米官方耳机直播间 / 小米官旗手表直播间 / 小米手环10Pro直播间<br>
+  ★ 耳机品类定义：含REDMI Buds系列、Xiaomi Buds系列、开放式耳机、头戴式耳机、骨传导耳机及耳机配件
+</footer>
+
+<script>
+const D = {"june_dates": ["06-01", "06-02", "06-03", "06-04", "06-05", "06-06", "06-07", "06-08", "06-09", "06-10", "06-11", "06-12", "06-13", "06-14", "06-15", "06-16", "06-17", "06-18", "06-19", "06-20", "06-21", "06-22", "06-23", "06-24", "06-25", "06-26", "06-27", "06-28", "06-29", "06-30"], "july_dates": ["07-01", "07-02", "07-03", "07-04", "07-05", "07-06", "07-07", "07-08", "07-09", "07-10"], "june_hp_orders": [16, 33, 20, 264, 234, 232, 260, 245, 152, 158, 204, 139, 185, 188, 88, 101, 126, 166, 105, 121, 179, 164, 119, 143, 176, 161, 118, 86, 84, 1776], "july_hp_orders": [139, 155, 204, 246, 196, 196, 318, 173, 203, 355], "june_hp_rev": [5696.68, 7080.78, 3729.9, 132141.3, 70412.45999999999, 70120.33, 73843.13, 79855.76000000001, 47745.770000000004, 57288.82, 83807.6, 55395.59, 68375.09, 72705.03, 36153.09, 36544.57, 43191.189999999995, 49657.340000000004, 35422.3, 55426.32, 61811.14, 44832.880000000005, 30415.7, 33549.53, 60424.22, 45457.009999999995, 21471.14, 14594.25, 16725.87, 506382.56], "july_hp_rev": [21800.829999999998, 27432.62, 43667.04, 57352.28, 52482.82, 49160.94, 70789.09, 33272.96, 53034.38, 57329.53], "june_hp_share": [0.4, 1.4, 0.9, 10.5, 10.0, 7.4, 8.9, 10.2, 8.5, 5.8, 5.9, 4.2, 6.8, 7.2, 3.5, 4.3, 3.2, 2.2, 4.9, 5.6, 8.1, 12.2, 7.0, 5.5, 2.5, 7.2, 5.6, 3.7, 3.9, 46.2], "july_hp_share": [7.5, 7.1, 9.0, 11.5, 10.1, 10.2, 14.9, 8.9, 11.3, 17.1], "june_room_orders": [0, 0, 0, 42, 37, 40, 53, 60, 26, 32, 56, 32, 36, 41, 42, 64, 78, 25, 28, 51, 24, 21, 18, 24, 33, 31, 12, 5, 8, 248], "july_room_orders": [15, 14, 16, 32, 25, 19, 38, 18, 46, 8], "june_room_rev": [0, 0, 0, 79577.0, 24693.41, 27519.8, 31472.41, 38568.1, 14822.51, 18627.67, 37499.55, 19759.13, 21685.54, 24039.01, 25684.81, 30889.52, 34634.96, 12346.47, 17607.68, 34800.7, 11588.44, 8324.41, 8638.0, 13081.64, 18487.39, 13761.58, 4064.24, 2605.0, 3050.9, 69801.76], "july_room_rev": [3810.36, 2220.0, 5608.24, 7729.67, 10112.4, 10017.0, 21338.94, 7406.6, 24438.08, 1759.6], "prod_names": ["Xiaomi 开放式耳机", "头戴式耳机", "REDMI Buds 8 Pro", "REDMI Buds 8 青春版", "REDMI Buds 8 活力版", "Xiaomi Buds 6", "REDMI Buds 8", "Xiaomi Buds 5 Pro"], "prod_june_rev": [841756.5000000001, 481901.85, 210085.45, 126931.52999999997, 71181.60000000002, 46604.19, 45225.22, 29135.79], "prod_july_rev": [142833.88, 122128.23000000003, 40116.869999999995, 50287.520000000004, 66464.37, 11072.0, 12435.24, 9030.0], "june_avg_share": 6.9};
+
+function fmt(n) { return n.toLocaleString('zh-CN'); }
+function fmtRMB(n) { return '¥' + Math.round(n).toLocaleString('zh-CN'); }
+
+(function() {
+  const allDates = D.june_dates.concat(D.july_dates);
+
+  const c1 = echarts.init(document.getElementById('chartDailyOrders'));
+  c1.setOption({
+    title: { text: '每日耳机订单趋势 (6月+7月)', left: 'center', textStyle: {fontSize:15,fontWeight:600} },
+    tooltip: { trigger: 'axis' },
+    legend: { bottom: 0, data: ['耳机订单'] },
+    grid: { left: 45, right: 20, top: 50, bottom: 35 },
+    xAxis: { type: 'category', data: allDates, axisLabel: {rotate:45,fontSize:10} },
+    yAxis: { type: 'value', name: '订单数' },
+    series: [
+      { name: '耳机订单', type: 'bar', data: D.june_hp_orders.concat(D.july_hp_orders),
+         itemStyle: {color:'#7c6ff7'}, barWidth:'60%' },
+    ]
+  });
+
+  const c2 = echarts.init(document.getElementById('chartDailyRevenue'));
+  c2.setOption({
+    title: { text: '每日耳机销售额趋势', left: 'center', textStyle: {fontSize:15,fontWeight:600} },
+    tooltip: { trigger: 'axis', valueFormatter: function(v) { return '¥' + (v/10000).toFixed(2) + '万'; } },
+    legend: { bottom: 0, data: ['销售额'] },
+    grid: { left: 55, right: 20, top: 50, bottom: 35 },
+    xAxis: { type: 'category', data: allDates, axisLabel: {rotate:45,fontSize:10} },
+    yAxis: { type: 'value', name: '万元', axisLabel: {formatter: function(v) { return (v/10000).toFixed(0)+'w'; } } },
+    series: [
+      { name: '销售额', type: 'line',
+         data: D.june_hp_rev.concat(D.july_hp_rev),
+         smooth: true, lineStyle: {color:'#7c6ff7',width:2.5}, symbol:'circle', symbolSize:4,
+         areaStyle: {color:'rgba(124,111,247,0.1)'} },
+    ]
+  });
+
+  const c3 = echarts.init(document.getElementById('chartProductComp'));
+  c3.setOption({
+    title: { text: 'TOP8 耳机产品销售额对比 (6月 vs 7月10天)', left: 'center', textStyle: {fontSize:15,fontWeight:600} },
+    tooltip: { trigger: 'axis', valueFormatter: function(v) { return '¥' + fmt(v); } },
+    legend: { bottom: 0, data: ['6月(30天)', '7月(10天)'] },
+    grid: { left: 100, right: 40, top: 50, bottom: 35 },
+    xAxis: { type: 'category', data: D.prod_names, axisLabel: {fontSize:10} },
+    yAxis: { type: 'value', name: '销售额', axisLabel: {formatter: function(v) { return (v/10000).toFixed(0)+'w'; } } },
+    series: [
+      { name: '6月(30天)', type: 'bar', data: D.prod_june_rev, itemStyle: {color:'#1E90FF'} },
+      { name: '7月(10天)', type: 'bar', data: D.prod_july_rev, itemStyle: {color:'#FF6B35'} },
+    ]
+  });
+
+  const c4 = echarts.init(document.getElementById('chartShare'));
+  const shareData = D.june_hp_share.concat(D.july_hp_share);
+  c4.setOption({
+    title: { text: '耳机品类占全渠道订单比例 (%)', left: 'center', textStyle: {fontSize:15,fontWeight:600} },
+    tooltip: { trigger: 'axis', formatter: function(p) { return p[0].name + '<br/>耳机占比: <b>' + p[0].value + '%</b>'; } },
+    grid: { left: 45, right: 20, top: 50, bottom: 35 },
+    xAxis: { type: 'category', data: allDates, axisLabel: {rotate:45,fontSize:10} },
+    yAxis: { type: 'value', name: '%', axisLabel: {formatter:'{value}%'} },
+    series: [
+      { name: '耳机占比', type: 'line', data: shareData, smooth: true,
+         lineStyle: {color:'#ff6900',width:2.5}, symbol:'circle', symbolSize:4,
+         areaStyle: {color:'rgba(255,105,0,0.12)'},
+         markLine: { silent:true, symbol:'none',
+           data:[{yAxis:D.june_avg_share, name:'6月均值', label:{formatter:'6月\\n{c}%'}}],
+           lineStyle:{color:'#94a3b8',type:'dashed'} }
+      },
+    ]
+  });
+
+  const c5 = echarts.init(document.getElementById('chartOurRoom'));
+  const roomOrders = D.june_room_orders.concat(D.july_room_orders);
+  const roomRev = D.june_room_rev.concat(D.july_room_rev);
+  c5.setOption({
+    title: { text: '小米官方耳机直播间 每日表现', left: 'center', textStyle: {fontSize:15,fontWeight:600} },
+    tooltip: { trigger: 'axis' },
+    legend: { bottom: 0, data: ['订单', '销售额'] },
+    grid: { left: 55, right: 55, top: 50, bottom: 35 },
+    xAxis: { type: 'category', data: allDates, axisLabel: {rotate:45,fontSize:10} },
+    yAxis: [
+      { type: 'value', name: '订单数' },
+      { type: 'value', name: '销售额', axisLabel: {formatter: function(v) { return (v/10000).toFixed(0)+'w'; } } }
+    ],
+    series: [
+      { name: '订单', type: 'bar', data: roomOrders, itemStyle: {color:'#1E90FF'} },
+      { name: '销售额', type: 'line', yAxisIndex:1, data: roomRev, lineStyle: {color:'#1da85c',width:2.5}, symbol:'diamond', symbolSize:6 },
+    ]
+  });
+
+  window.addEventListener('resize', function() { c1.resize(); c2.resize(); c3.resize(); c4.resize(); c5.resize(); });
+})();
+</script>
+
+</body>
+</html>
