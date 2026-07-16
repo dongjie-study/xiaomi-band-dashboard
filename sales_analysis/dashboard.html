@@ -371,7 +371,7 @@ function renderRoomSelector(d) {
 function switchRoom(room) {
   currentRoom = room;
   const d = HISTORY.find(h => h.date === currentDate);
-  if (d) renderAll(d);
+  if (d) { renderAll(d); renderDailySummary(); }
 }
 
 function formatCurrency(n) { return '¥' + Number(n).toLocaleString('zh-CN', {minimumFractionDigits: 0, maximumFractionDigits: 0}); }
@@ -726,7 +726,6 @@ function renderAll(d, prev) {
   renderHourlyBreakdown(data);
   renderProdRoomHourly(d);
   renderRoomDetailHourly(d);
-  renderDailySummary();
 }
 
 function renderHourlyBreakdown(data) {
@@ -1294,8 +1293,10 @@ function renderTodayInsights() {
   const container = document.getElementById('todayInsights');
   if (!DATA || HISTORY.length < 1) { container.innerHTML = ''; return; }
 
-  const today = DATA;
-  const prev = HISTORY.length > 1 ? HISTORY[HISTORY.length - 2] : null;
+  // 使用当前选中日期的数据，而非始终取最新一天
+  const today = HISTORY.find(function(h) { return h.date === currentDate; }) || DATA;
+  const todayIdx = HISTORY.findIndex(function(h) { return h.date === today.date; });
+  const prev = todayIdx > 0 ? HISTORY[todayIdx - 1] : null;
   const dateLabel = today.date;
 
   // Team totals
