@@ -937,20 +937,29 @@ function renderDailyTable() {
 
   thead.innerHTML = '<tr><th>日期</th><th>总订单</th><th>我方订单</th><th>环比</th><th>竞对订单</th><th>我方份额</th><th>我方销售额</th><th>竞对销售额</th><th>我方直播间</th><th>竞对直播间</th></tr>';
 
-  var ourOrders = HISTORY.map(function(d) { return (d.type_summary && d.type_summary['我方']) ? d.type_summary['我方'].orders : 0; });
+  var ourOrders = HISTORY.map(function(d) { return (d.type_summary && d.type_summary['我司']) ? d.type_summary['我司'].orders : 0; });
 
   var bestOur = Math.max.apply(null, ourOrders);
   var worstOur = Math.min.apply(null, ourOrders);
 
   tbody.innerHTML = HISTORY.map(function(d, i) {
-    var our = (d.type_summary && d.type_summary['我方']) || {orders:0, revenue:0, rooms:0};
-    var comp = (d.type_summary && d.type_summary['竞对']) || {orders:0, revenue:0, rooms:0};
+    var our = (d.type_summary && d.type_summary['我司']) || {orders:0, revenue:0, rooms:0};
+    var comp = {orders:0, revenue:0, rooms:0};
+    if (d.type_summary) {
+      ['机械空间', '纵横', '良米', '凝云'].forEach(function(t) {
+        if (d.type_summary[t]) {
+          comp.orders += d.type_summary[t].orders || 0;
+          comp.revenue += d.type_summary[t].revenue || 0;
+          comp.rooms += d.type_summary[t].rooms || 0;
+        }
+      });
+    }
     var total = our.orders + comp.orders;
     var share = total > 0 ? (our.orders / total * 100).toFixed(1) : '0.0';
 
     var dodHtml = '-';
     if (i > 0) {
-      var prevOur = (HISTORY[i-1].type_summary && HISTORY[i-1].type_summary['我方']) || {orders:0};
+      var prevOur = (HISTORY[i-1].type_summary && HISTORY[i-1].type_summary['我司']) || {orders:0};
       var diff = our.orders - prevOur.orders;
       var pct = prevOur.orders > 0 ? (diff / prevOur.orders * 100) : 0;
       var cls = diff >= 0 ? 'change-up' : 'change-down';
@@ -1291,7 +1300,7 @@ function renderTodayInsights() {
 
   // Team totals
   const typeSummary = today.type_summary || {};
-  const our = typeSummary['我方'] || {orders:0, revenue:0, avg_price:0, rooms:0};
+  const our = typeSummary['我司'] || {orders:0, revenue:0, avg_price:0, rooms:0};
   const jx = typeSummary['机械空间'] || {orders:0, revenue:0, avg_price:0, rooms:0};
   const zh = typeSummary['纵横'] || {orders:0, revenue:0, avg_price:0, rooms:0};
   const lm = typeSummary['良米'] || {orders:0, revenue:0, avg_price:0, rooms:0};
