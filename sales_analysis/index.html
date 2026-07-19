@@ -445,8 +445,68 @@ function groupProduct(name) {
   if (/Tag|定位|追踪/i.test(clean)) return 'Xiaomi Tag';
   // 水浸
   if (/水浸/i.test(clean)) return '小米水浸卫士';
+  // 体重秤/体脂秤
+  if (/体重秤|体脂秤|电子秤/i.test(clean)) return '体重秤';
+  // 摄像机/监控
+  if (/摄像|监控/i.test(clean)) return '智能摄像机';
+  // 路由器
+  if (/路由/i.test(clean)) return '路由器';
+  // 门铃
+  if (/门铃/i.test(clean)) return '智能门铃';
+  // 平板/键盘
+  if (/Pad|平板/i.test(clean)) return '平板/配件';
+  if (/键盘/i.test(clean)) return '键盘/配件';
+  // 风扇
+  if (/风扇/i.test(clean)) return '手持风扇';
+  // 台灯/灯具
+  if (/台灯|吸顶灯|灯泡/i.test(clean)) return '台灯/灯具';
+  // 鱼缸
+  if (/鱼缸/i.test(clean)) return '鱼缸配件';
+  // 儿童手表/米兔
+  if (/米兔|儿童.*(?:手表|电话)/i.test(clean)) return '儿童手表';
+  // 智能门锁
+  if (/门锁|指纹锁/i.test(clean)) return '智能门锁';
+  // 传感器
+  if (/传感/i.test(clean)) return '传感器';
+  // 螺丝刀/工具
+  if (/螺丝刀|扳手|工具/i.test(clean)) return '工具配件';
+  // 腕带/表带/配件
+  if (/腕带|表带|链/i.test(clean)) return '腕带/表带';
+  // 保护壳/膜
+  if (/壳|膜|保护套/i.test(clean)) return '保护壳/膜';
+  // 箱包/背包
+  if (/背包|双肩|箱包|斜挎/i.test(clean)) return '箱包';
+  // 个人护理（剃须刀/牙刷/吹风机）
+  if (/剃须|牙刷|吹风|洁面|美容/i.test(clean)) return '个人护理';
+  // 空气净化/加湿器
+  if (/净化|加湿|除湿/i.test(clean)) return '环境电器';
+  // 音箱/音响
+  if (/音箱|音响|Sound|Speaker/i.test(clean)) return '音箱';
+  // 手机
+  if (/手机|Phone/i.test(clean) && !/手环|手表/i.test(clean)) return '手机';
+  // 笔记本/电脑
+  if (/笔记本|电脑|Book|Laptop/i.test(clean)) return '笔记本';
+  // 电视
+  if (/电视|TV/i.test(clean)) return '电视';
+  // 滑板车/平衡车
+  if (/滑板|平衡车|电动.*车/i.test(clean)) return '出行工具';
+  // 汽车用品
+  if (/车载|汽车/i.test(clean)) return '汽车用品';
 
-  // 未匹配的保留清理后的名称
+  // 通用缩短: 对于未匹配的长名称，尝试截取品牌+型号部分
+  if (clean.length > 14) {
+    // 尝试匹配型号模式：S200, 4C, 7A, 7X, AX3000T, Pro, 2 等
+    var m = clean.match(/([A-Z]{1,2}\d{2,4}[A-Z]?\d*)/i);
+    if (m && m.index > 1) {
+      var cut = m.index + m[0].length;
+      if (cut > 4 && cut < clean.length) {
+        clean = clean.substring(0, cut);
+      }
+    }
+  }
+  // 仍然太长就截断
+  if (clean.length > 18) clean = clean.substring(0, 18);
+
   return clean || name;
 }
 
