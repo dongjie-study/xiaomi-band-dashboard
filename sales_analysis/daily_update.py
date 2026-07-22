@@ -22,6 +22,7 @@ from utils import detect_excel_columns
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(DATA_DIR, 'history.json')
+HOURLY_DIR = os.path.join(DATA_DIR, 'hourly')
 
 
 def load_and_clean(filepath):
@@ -204,6 +205,20 @@ def load_history():
 
 
 def save_history(history):
+    os.makedirs(HOURLY_DIR, exist_ok=True)
+    for day in history:
+        date_str = day['date']
+        day_has_hourly = '_hourly_stats' in day and day['_hourly_stats']
+        rooms_have_hourly = any('_hourly_stats' in r and r['_hourly_stats'] for r in day.get('rooms', {}).values())
+        if day_has_hourly or rooms_have_hourly:
+            hourly_data = {'date': date_str, 'rooms': {}, '_hourly_stats': day.pop('_hourly_stats', {})}
+            for rname, rinfo in day.get('rooms', {}).items():
+                room_hourly = rinfo.pop('_hourly_stats', None)
+                if room_hourly:
+                    hourly_data['rooms'][rname] = {'_hourly_stats': room_hourly}
+            hourly_path = os.path.join(HOURLY_DIR, f'{date_str}.json')
+            with open(hourly_path, 'w', encoding='utf-8') as f:
+                json.dump(hourly_data, f, ensure_ascii=False, separators=(',', ':'))
     with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
         json.dump(history, f, ensure_ascii=False, separators=(',', ':'))
 

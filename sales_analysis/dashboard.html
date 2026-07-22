@@ -312,6 +312,34 @@ let HISTORY = [];
 let currentDate = null;
 let currentRoom = '__all__';
 let dataReady = false;
+const HOURLY_CACHE = {};
+
+// Lazy-load hourly stats for a day and merge into the day object
+async function ensureHourly(day) {
+  if (!day || day._hourly_stats) return;
+  const date = day.date;
+  if (HOURLY_CACHE[date]) {
+    const hdata = HOURLY_CACHE[date];
+    day._hourly_stats = hdata._hourly_stats || {};
+    Object.keys(hdata.rooms || {}).forEach(function(r) {
+      if (day.rooms && day.rooms[r]) day.rooms[r]._hourly_stats = hdata.rooms[r]._hourly_stats || {};
+    });
+    return;
+  }
+  try {
+    var cacheKey = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    var resp = await fetch('./hourly/' + date + '.json?_=' + cacheKey);
+    if (!resp.ok) return;
+    var hdata = await resp.json();
+    HOURLY_CACHE[date] = hdata;
+    day._hourly_stats = hdata._hourly_stats || {};
+    Object.keys(hdata.rooms || {}).forEach(function(r) {
+      if (day.rooms && day.rooms[r]) day.rooms[r]._hourly_stats = hdata.rooms[r]._hourly_stats || {};
+    });
+  } catch(e) {
+    console.warn('Hourly data not available for ' + date);
+  }
+}
 
 // Async data loading — fetches history.json for better caching and faster initial render
 (async function loadData() {
@@ -322,6 +350,7 @@ let dataReady = false;
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     HISTORY = await resp.json();
     DATA = HISTORY[HISTORY.length - 1];
+    await ensureHourly(DATA);
     dataReady = true;
   } catch(e) {
     // Fallback: try inline placeholders (legacy deployment)
@@ -1492,9 +1521,10 @@ function renderDailySummary() {
 
 // Init — read date from URL hash (set by root sidebar) or default to latest
 function initDashboard() {
-  function loadDate(date) {
+  async function loadDate(date) {
     const d = HISTORY.find(h => h.date === date);
     if (!d) return;
+    await ensureHourly(d);
     currentDate = date;
     const idx = HISTORY.findIndex(h => h.date === date);
     const prev = idx > 0 ? HISTORY[idx - 1] : null;
