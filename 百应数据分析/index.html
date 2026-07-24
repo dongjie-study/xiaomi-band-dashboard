@@ -935,13 +935,9 @@
         <div class="side-panel">
           <div class="card">
             <h3>📸 截图智能分析区</h3>
-            <p>上传千川后台趋势截图，AI 直接看图分析曲线波动并给出诊断。<br><strong>API Key 就是调用 AI 的密码</strong>，DeepSeek / Anthropic 都支持，仅存浏览器本地。</p>
-            <div style="display:flex;gap:8px;margin-bottom:12px;align-items:center;">
-              <select id="apiProvider" style="width:120px;border-radius:14px;border:1px solid rgba(118,148,201,0.14);background:rgba(255,255,255,0.94);padding:12px;font-size:13px;">
-                <option value="deepseek">DeepSeek</option>
-                <option value="anthropic">Anthropic</option>
-              </select>
-              <input id="apiKeyInput" type="password" placeholder="粘贴 API Key（sk-...）" style="flex:1;font-size:12px;font-family:monospace;border-radius:14px;border:1px solid rgba(118,148,201,0.14);background:rgba(255,255,255,0.94);padding:12px;" />
+            <p>上传千川后台趋势截图，Claude 直接看图分析曲线波动并给出诊断。<br>需要 <a href="https://console.anthropic.com/settings/keys" target="_blank" style="color:#4d7cff;">Anthropic API Key</a>（新用户免费 $5 额度），Key 仅存浏览器本地。<br><small style="color:#999;">注：DeepSeek 不支持图片识别，截图分析必须用 Anthropic。你日常的文字对话不受影响。</small></p>
+            <div class="field" style="margin-bottom:12px;">
+              <input id="apiKeyInput" type="password" placeholder="粘贴 Anthropic API Key（sk-ant-api03-...）" style="font-size:12px;font-family:monospace;border-radius:14px;border:1px solid rgba(118,148,201,0.14);background:rgba(255,255,255,0.94);padding:12px;" />
             </div>
             <div class="upload-zone">
               <input id="imageUpload" type="file" accept="image/*" multiple />
@@ -2184,10 +2180,9 @@
     }
 
         async function analyzeWithAI(files) {
-      const provider = document.getElementById("apiProvider").value;
       const apiKey = getApiKey();
       if (!apiKey) {
-        alert("请先粘贴 API Key（DeepSeek 或 Anthropic 的秘钥）");
+        alert("请先粘贴 Anthropic API Key（从 console.anthropic.com/settings/keys 获取）");
         document.getElementById("apiKeyInput").focus();
         return;
       }
@@ -2199,33 +2194,23 @@
       const statusEl = document.getElementById("uploadStatus");
       statusEl.style.display = "block";
       statusEl.style.color = "#4d7cff";
-      const providerName = provider === "deepseek" ? "DeepSeek" : "Claude";
-      statusEl.textContent = "🔍 " + providerName + " 正在分析 " + files.length + " 张截图...";
+      statusEl.textContent = "🔍 Claude 正在分析 " + files.length + " 张截图...";
       document.getElementById("aiReport").classList.remove("hidden");
       document.getElementById("aiHealthBadge").textContent = "分析中...";
       document.getElementById("aiHealthBadge").className = "health-badge health-mid";
-      document.getElementById("aiSummary").textContent = "AI 正在识别趋势曲线、波峰波谷、行业参考线差距...";
+      document.getElementById("aiSummary").textContent = "Claude 正在识别趋势曲线、波峰波谷、行业参考线差距...";
       document.getElementById("aiAnalysisGrid").innerHTML = "";
       document.getElementById("aiTimelineList").innerHTML =
-        '<div class="analysis-line"><span>⏳ 正在分析截图，预计 10-30 秒...</span></div>';
+        '<div class="analysis-line"><span>⏳ 正在通过 Claude Vision 分析截图，预计 10-30 秒...</span></div>';
 
       try {
-        let responseData;
-        if (provider === "deepseek") {
-          responseData = await callDeepSeek(apiKey, files.slice(0, 5));
-        } else {
-          responseData = await callAnthropic(apiKey, files.slice(0, 5));
-        }
+        const responseData = await callAnthropic(apiKey, files.slice(0, 5));
 
         statusEl.textContent = "✅ 分析完成！";
 
         let text = "";
-        if (provider === "deepseek") {
-          text = responseData.choices?.[0]?.message?.content || "";
-        } else {
-          for (const block of responseData.content || []) {
-            if (block.type === "text") text += block.text;
-          }
+        for (const block of responseData.content || []) {
+          if (block.type === "text") text += block.text;
         }
 
         text = text.trim();
@@ -2266,33 +2251,6 @@
       if (statusEl.style.color === "#ff6b6b") {
         setTimeout(() => { statusEl.style.display = "none"; statusEl.style.color = "#4d7cff"; }, 5000);
       }
-    }
-
-    async function callDeepSeek(apiKey, files) {
-      const content = [{ type: "text", text: AI_USER_PROMPT }];
-      for (const file of files) {
-        const dataUrl = await fileToBase64(file);
-        content.push({ type: "image_url", image_url: { url: dataUrl, detail: "high" } });
-      }
-      const res = await fetch("https://api.deepseek.com/chat/completions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + apiKey },
-        body: JSON.stringify({
-          model: "deepseek-chat",
-          messages: [
-            { role: "system", content: AI_SYSTEM_PROMPT },
-            { role: "user", content: content }
-          ],
-          max_tokens: 4096, temperature: 0.4
-        })
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        if (res.status === 401) throw new Error("Key 无效，请检查 DeepSeek API Key");
-        if (res.status === 429) throw new Error("请求太频繁，稍后重试");
-        throw new Error(err.error?.message || "DeepSeek 请求失败 (" + res.status + ")");
-      }
-      return res.json();
     }
 
     async function callAnthropic(apiKey, files) {
