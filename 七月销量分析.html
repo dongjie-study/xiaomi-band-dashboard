@@ -134,7 +134,7 @@ footer {
 }
 .footnote { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
 
-    /* ── Wristband Analysis Styles ── */
+    /* === Wristband Analysis === */
     .band-hero {
       background: linear-gradient(135deg, #1a1a2e 0%, #2d1b4e 40%, #4a1a6b 100%);
       color: white; padding: 32px 20px; text-align: center; border-radius: var(--radius);
@@ -151,21 +151,22 @@ footer {
       background: var(--surface); border-radius: var(--radius); padding: 16px 12px; text-align: center;
       box-shadow: var(--shadow-md); border: 1px solid var(--border);
     }
+    .band-kpi:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
     .band-kpi .label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 4px; }
     .band-kpi .value { font-size: 26px; font-weight: 800; }
     .band-kpi .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
     .band-kpi.our .value { color: var(--clr-ours); }
     .band-kpi.lm .value { color: var(--clr-comp); }
-    .band-kpi.warn .value { color: var(--clr-orange); }
     .band-kpi.green .value { color: var(--clr-green); }
-    .band-compare-table td { text-align: center; }
+    .band-compare-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .band-compare-table td { text-align: center; padding: 10px 14px; border-bottom: 1px solid #f1f5f9; }
     .band-compare-table td:first-child { text-align: left; font-weight: 600; }
+    .band-compare-table thead th { background: #f8fafc; padding: 11px 14px; text-align: center; font-weight: 600; color: var(--text-secondary); font-size: 11.5px; border-bottom: 2px solid var(--border); }
+    .band-compare-table thead th:first-child { text-align: left; }
     .band-compare-table tr.our-row { background: #f0f7ff; }
+    .band-compare-table tr.our-row:hover { background: #e6f1fc; }
     .band-compare-table tr.lm-row { background: #fff7ed; }
-    .band-section-title {
-      font-size: 18px; font-weight: 700; margin-bottom: 12px;
-      display: flex; align-items: center; gap: 8px; color: #7c3aed;
-    }
+    .band-compare-table tr.lm-row:hover { background: #ffe8d6; }
     .band-summary-grid {
       display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;
     }
@@ -281,83 +282,36 @@ footer {
     <h2>📺 直播间手环销量对比</h2>
     <p>7.1-7.24 直播间渠道 · 我司 vs 良米 · 按手环品类拆分</p>
   </div>
-
   <div class="grid-2">
-    <div class="chart-container">
-      <div class="chart-box" id="chartBandDaily"></div>
-    </div>
-    <div class="chart-container">
-      <div class="chart-box" id="chartBandProportion"></div>
-    </div>
+    <div class="chart-container"><div class="chart-box" id="chartBandDaily"></div></div>
+    <div class="chart-container"><div class="chart-box" id="chartBandProportion"></div></div>
   </div>
-
-  <div class="chart-container">
-    <div class="chart-box tall" id="chartBandCompare"></div>
-  </div>
-
-  <div class="table-wrap" style="margin-top:16px">
-    <table class="band-compare-table">
-      <thead><tr>
-        <th style="width:18%">直播间渠道</th>
-        <th style="width:18%">小米手环10</th>
-        <th style="width:18%">小米手环10 Pro</th>
-        <th style="width:14%">其他手环</th>
-        <th style="width:14%">手环总计</th>
-        <th style="width:18%">手环占全品类比</th>
-      </tr></thead>
-      <tbody id="bandRoomTable"></tbody>
-    </table>
+  <div class="chart-container"><div class="chart-box tall" id="chartBandCompare"></div></div>
+  <div class="table-wrap" style="margin-top:16px"><table class="band-compare-table">
+    <thead><tr><th>直播间渠道</th><th>小米手环10</th><th>小米手环10 Pro</th><th>其他手环</th><th>手环总计</th><th>手环占比</th></tr></thead>
+    <tbody id="bandRoomTable"></tbody></table>
   </div>
 
   <div class="band-hero" style="background:linear-gradient(135deg, #1a2e1a 0%, #1b4e2d 40%, #1a6b4a 100%); margin-top:32px">
     <h2>🛒 商品卡手环销量对比</h2>
     <p>7.1-7.24 商品卡渠道 · 我司商品卡 vs 良米商品卡 · 按手环品类拆分</p>
   </div>
-
-  <div class="chart-container">
-    <div class="chart-box" id="chartCardCompare"></div>
-  </div>
-
-  <div class="table-wrap" style="margin-top:16px">
-    <table class="band-compare-table">
-      <thead><tr>
-        <th style="width:18%">商品卡渠道</th>
-        <th style="width:18%">小米手环10</th>
-        <th style="width:18%">小米手环10 Pro</th>
-        <th style="width:14%">其他手环</th>
-        <th style="width:14%">手环总计</th>
-        <th style="width:18%">10 vs 10Pro 比</th>
-      </tr></thead>
-      <tbody id="bandCardTable"></tbody>
-    </table>
+  <div class="chart-container"><div class="chart-box" id="chartCardCompare"></div></div>
+  <div class="table-wrap" style="margin-top:16px"><table class="band-compare-table">
+    <thead><tr><th>商品卡渠道</th><th>小米手环10</th><th>小米手环10 Pro</th><th>其他手环</th><th>手环总计</th><th>10 vs 10Pro 比</th></tr></thead>
+    <tbody id="bandCardTable"></tbody></table>
   </div>
 
   <div class="band-hero" style="background:linear-gradient(135deg, #1a1a2e 0%, #4e1b2d 40%, #6b1a4a 100%); margin-top:32px">
     <h2>📊 手环总销量汇总 (直播间 + 商品卡)</h2>
     <p>7.1-7.24 全渠道汇总 · 我司 vs 良米</p>
   </div>
-
   <div class="band-summary-grid" id="bandSummaryGrid"></div>
-
-  <div class="chart-container" style="margin-top:20px">
-    <div class="chart-box tall" id="chartTotalBand"></div>
+  <div class="chart-container" style="margin-top:20px"><div class="chart-box tall" id="chartTotalBand"></div></div>
+  <div class="table-wrap" style="margin-top:16px"><table class="band-compare-table">
+    <thead><tr><th>全渠道汇总</th><th>小米手环10</th><th>小米手环10 Pro</th><th>其他手环</th><th>手环总订单</th><th>手环总销售额</th><th>10:10Pro 比</th></tr></thead>
+    <tbody id="bandTotalTable"></tbody></table>
   </div>
-
-  <div class="table-wrap" style="margin-top:16px">
-    <table class="band-compare-table">
-      <thead><tr>
-        <th style="width:14%">全渠道汇总</th>
-        <th style="width:16%">小米手环10</th>
-        <th style="width:16%">小米手环10 Pro</th>
-        <th style="width:12%">其他手环</th>
-        <th style="width:14%">手环总订单</th>
-        <th style="width:14%">手环总销售额</th>
-        <th style="width:14%">10:10Pro 比</th>
-      </tr></thead>
-      <tbody id="bandTotalTable"></tbody>
-    </table>
-  </div>
-
   <div class="summary-box" style="margin-top:20px" id="bandInsightBox"></div>
 </div>
 
@@ -730,142 +684,126 @@ function fmtPct(n) { return n.toFixed(1) + '%'; }
     ]
   });
 
-  
+  window.addEventListener('resize', () => { chart1.resize(); chart2.resize(); chart3.resize(); chart4.resize(); });
+})();
+
 // ===== 手环分析模块 =====
 (function renderBandAnalysis() {
-  const BD = BAND_DATA;
-
-  function fmt(n) { return n.toLocaleString('zh-CN'); }
-  function fmtRMB(n) { return '¥' + Math.round(n).toLocaleString('zh-CN'); }
-  function fmtPct(n) { return n.toFixed(1) + '%'; }
+  var BD = BAND_DATA;
+  function f(n) { return n.toLocaleString('zh-CN'); }
+  function fr(n) { return '¥' + Math.round(n).toLocaleString('zh-CN'); }
+  function fp(n) { return n.toFixed(1) + '%'; }
 
   var our = BD.team_band['我司'];
   var lm = BD.team_band['良米'];
-  var ourPC = BD.product_card['我司'];
-  var lmPC = BD.product_card['良米'];
-  var ourC = BD.combined['我司'];
-  var lmC = BD.combined['良米'];
+  var oP = BD.product_card['我司'];
+  var lP = BD.product_card['良米'];
+  var oC = BD.combined['我司'];
+  var lC = BD.combined['良米'];
 
-  // KPI Row
-  var bandKPIs = [
-    { label: '我司直播间手环订单', value: fmt(our.total_band_orders), sub: fmtRMB(our.total_band_rev), cls: 'our' },
-    { label: '我司手环10订单', value: fmt(our.band10_orders), sub: '占我司手环 ' + fmtPct(our.band10_orders/our.total_band_orders*100), cls: 'our' },
-    { label: '我司手环10 Pro订单', value: fmt(our.band10pro_orders), sub: '均价' + fmtRMB(our.band10pro_rev/our.band10pro_orders), cls: 'our' },
-    { label: '良米直播间手环订单', value: fmt(lm.total_band_orders), sub: fmtRMB(lm.total_band_rev), cls: 'lm' },
-    { label: '良米手环10订单', value: fmt(lm.band10_orders), sub: '10Pro: ' + fmt(lm.band10pro_orders) + '单', cls: 'lm' },
-    { label: '我司 vs 良米 (手环)', value: our.total_band_orders > lm.total_band_orders ? '领先' : '落后', sub: '差距: ' + fmt(Math.abs(our.total_band_orders - lm.total_band_orders)) + '单', cls: 'green' }
+  // KPI cards
+  var kpis = [
+    { l: '我司直播间手环', v: f(our.total_band_orders), s: fr(our.total_band_rev), c: 'our' },
+    { l: '我司手环10', v: f(our.band10_orders), s: '占手环 ' + fp(our.band10_orders/our.total_band_orders*100), c: 'our' },
+    { l: '我司手环10 Pro', v: f(our.band10pro_orders), s: '均价' + fr(our.band10pro_rev/our.band10pro_orders), c: 'our' },
+    { l: '良米直播间手环', v: f(lm.total_band_orders), s: fr(lm.total_band_rev), c: 'lm' },
+    { l: '良米手环10 Pro', v: f(lm.band10pro_orders), s: '手环10: ' + f(lm.band10_orders) + '单', c: 'lm' },
+    { l: '我司 vs 良米(手环)', v: our.total_band_orders > lm.total_band_orders ? '领先' : '落后', s: '差距' + f(Math.abs(our.total_band_orders - lm.total_band_orders)) + '单', c: 'green' }
   ];
-  document.getElementById('bandKpiRow').innerHTML = bandKPIs.map(function(c) {
-    return '<div class="band-kpi ' + c.cls + '"><div class="label">' + c.label + '</div><div class="value">' + c.value + '</div><div class="sub">' + c.sub + '</div></div>';
+  document.getElementById('bandKpiRow').innerHTML = kpis.map(function(c) {
+    return '<div class="band-kpi ' + c.c + '"><div class="label">' + c.l + '</div><div class="value">' + c.v + '</div><div class="sub">' + c.s + '</div></div>';
   }).join('');
 
   // Room band table
-  var totalBand = our.total_band_orders + lm.total_band_orders;
+  var tB = our.total_band_orders + lm.total_band_orders;
   document.getElementById('bandRoomTable').innerHTML =
-    '<tr class="our-row">' +
-      '<td><strong>我司直播间</strong></td>' +
-      '<td><strong>' + fmt(our.band10_orders) + '单</strong><br><small>' + fmtRMB(our.band10_rev) + '</small></td>' +
-      '<td><strong>' + fmt(our.band10pro_orders) + '单</strong><br><small>' + fmtRMB(our.band10pro_rev) + '</small></td>' +
-      '<td>' + fmt(our.band_other_orders) + '单<br><small>' + fmtRMB(our.band_other_rev) + '</small></td>' +
-      '<td><strong style="font-size:16px;color:#1E90FF">' + fmt(our.total_band_orders) + '单</strong><br><small>' + fmtRMB(our.total_band_rev) + '</small></td>' +
-      '<td><span style="color:#1E90FF;font-weight:700">' + fmtPct(our.total_band_orders/totalBand*100) + '</span></td>' +
-    '</tr>' +
-    '<tr class="lm-row">' +
-      '<td><strong>良米直播间</strong></td>' +
-      '<td><strong>' + fmt(lm.band10_orders) + '单</strong><br><small>' + fmtRMB(lm.band10_rev) + '</small></td>' +
-      '<td><strong>' + fmt(lm.band10pro_orders) + '单</strong><br><small>' + fmtRMB(lm.band10pro_rev) + '</small></td>' +
-      '<td>' + fmt(lm.band_other_orders) + '单<br><small>' + fmtRMB(lm.band_other_rev) + '</small></td>' +
-      '<td><strong style="font-size:16px;color:#FF6B35">' + fmt(lm.total_band_orders) + '单</strong><br><small>' + fmtRMB(lm.total_band_rev) + '</small></td>' +
-      '<td><span style="color:#FF6B35;font-weight:700">' + fmtPct(lm.total_band_orders/totalBand*100) + '</span></td>' +
-    '</tr>';
+    '<tr class="our-row"><td><strong>我司直播间</strong></td>' +
+    '<td><strong>' + f(our.band10_orders) + '单</strong><br><small>' + fr(our.band10_rev) + '</small></td>' +
+    '<td><strong>' + f(our.band10pro_orders) + '单</strong><br><small>' + fr(our.band10pro_rev) + '</small></td>' +
+    '<td>' + f(our.band_other_orders) + '单<br><small>' + fr(our.band_other_rev) + '</small></td>' +
+    '<td><strong style="font-size:16px;color:#1E90FF">' + f(our.total_band_orders) + '单</strong><br><small>' + fr(our.total_band_rev) + '</small></td>' +
+    '<td><span style="color:#1E90FF;font-weight:700">' + fp(our.total_band_orders/tB*100) + '</span></td></tr>' +
+    '<tr class="lm-row"><td><strong>良米直播间</strong></td>' +
+    '<td><strong>' + f(lm.band10_orders) + '单</strong><br><small>' + fr(lm.band10_rev) + '</small></td>' +
+    '<td><strong>' + f(lm.band10pro_orders) + '单</strong><br><small>' + fr(lm.band10pro_rev) + '</small></td>' +
+    '<td>' + f(lm.band_other_orders) + '单<br><small>' + fr(lm.band_other_rev) + '</small></td>' +
+    '<td><strong style="font-size:16px;color:#FF6B35">' + f(lm.total_band_orders) + '单</strong><br><small>' + fr(lm.total_band_rev) + '</small></td>' +
+    '<td><span style="color:#FF6B35;font-weight:700">' + fp(lm.total_band_orders/tB*100) + '</span></td></tr>';
 
   // Card table
   document.getElementById('bandCardTable').innerHTML =
-    '<tr class="our-row">' +
-      '<td><strong>我司商品卡</strong></td>' +
-      '<td><strong>' + fmt(ourPC.band10) + '单</strong><br><small>' + fmtRMB(ourPC.band10_rev) + '</small></td>' +
-      '<td><strong>' + fmt(ourPC.band10pro) + '单</strong><br><small>' + fmtRMB(ourPC.band10pro_rev) + '</small></td>' +
-      '<td>' + fmt(ourPC.band_other) + '单<br><small>' + fmtRMB(ourPC.band_other_rev) + '</small></td>' +
-      '<td><strong style="font-size:16px;color:#1E90FF">' + fmt(ourPC.total) + '单</strong><br><small>' + fmtRMB(ourPC.total_rev) + '</small></td>' +
-      '<td>10:10Pro = <strong>' + (ourPC.band10/ourPC.band10pro).toFixed(2) + ':1</strong></td>' +
-    '</tr>' +
-    '<tr class="lm-row">' +
-      '<td><strong>良米商品卡</strong></td>' +
-      '<td><strong>' + fmt(lmPC.band10) + '单</strong><br><small>' + fmtRMB(lmPC.band10_rev) + '</small></td>' +
-      '<td><strong>' + fmt(lmPC.band10pro) + '单</strong><br><small>' + fmtRMB(lmPC.band10pro_rev) + '</small></td>' +
-      '<td>' + fmt(lmPC.band_other) + '单<br><small>' + fmtRMB(lmPC.band_other_rev) + '</small></td>' +
-      '<td><strong style="font-size:16px;color:#FF6B35">' + fmt(lmPC.total) + '单</strong><br><small>' + fmtRMB(lmPC.total_rev) + '</small></td>' +
-      '<td>10:10Pro = <strong>' + (lmPC.band10/lmPC.band10pro).toFixed(2) + ':1</strong></td>' +
-    '</tr>';
+    '<tr class="our-row"><td><strong>我司商品卡</strong></td>' +
+    '<td><strong>' + f(oP.band10) + '单</strong><br><small>' + fr(oP.band10_rev) + '</small></td>' +
+    '<td><strong>' + f(oP.band10pro) + '单</strong><br><small>' + fr(oP.band10pro_rev) + '</small></td>' +
+    '<td>' + f(oP.band_other) + '单<br><small>' + fr(oP.band_other_rev) + '</small></td>' +
+    '<td><strong style="font-size:16px;color:#1E90FF">' + f(oP.total) + '单</strong><br><small>' + fr(oP.total_rev) + '</small></td>' +
+    '<td>10:10Pro = <strong>' + (oP.band10/oP.band10pro).toFixed(2) + ':1</strong></td></tr>' +
+    '<tr class="lm-row"><td><strong>良米商品卡</strong></td>' +
+    '<td><strong>' + f(lP.band10) + '单</strong><br><small>' + fr(lP.band10_rev) + '</small></td>' +
+    '<td><strong>' + f(lP.band10pro) + '单</strong><br><small>' + fr(lP.band10pro_rev) + '</small></td>' +
+    '<td>' + f(lP.band_other) + '单<br><small>' + fr(lP.band_other_rev) + '</small></td>' +
+    '<td><strong style="font-size:16px;color:#FF6B35">' + f(lP.total) + '单</strong><br><small>' + fr(lP.total_rev) + '</small></td>' +
+    '<td>10:10Pro = <strong>' + (lP.band10/lP.band10pro).toFixed(2) + ':1</strong></td></tr>';
 
   // Summary grid
-  var totalAll = ourC.total_band + lmC.total_band;
-  var totalAllRev = ourC.total_band_rev + lmC.total_band_rev;
-
+  var tA = oC.total_band + lC.total_band;
+  var tAR = oC.total_band_rev + lC.total_band_rev;
   document.getElementById('bandSummaryGrid').innerHTML =
     '<div class="band-stat-card" style="border-left:4px solid #1E90FF">' +
-      '<h4>我司全渠道手环</h4>' +
-      '<div class="big" style="color:#1E90FF">' + fmt(ourC.total_band) + '<span style="font-size:16px">单</span></div>' +
-      '<div style="color:#64748b;margin-bottom:10px">' + fmtRMB(ourC.total_band_rev) + ' · 占总数 ' + fmtPct(ourC.total_band/totalAll*100) + '</div>' +
-      '<div class="stat-row"><span>小米手环10</span><span><strong>' + fmt(ourC.band10) + '单</strong> ' + fmtRMB(ourC.band10_rev) + '</span></div>' +
-      '<div class="stat-row"><span>小米手环10 Pro</span><span><strong>' + fmt(ourC.band10pro) + '单</strong> ' + fmtRMB(ourC.band10pro_rev) + '</span></div>' +
-      '<div class="stat-row"><span>其他手环</span><span>' + fmt(ourC.band_other) + '单 ' + fmtRMB(ourC.band_other_rev) + '</span></div>' +
-      '<div class="stat-row" style="margin-top:6px;font-weight:700"><span>10 vs 10Pro 比例</span><span>' + (ourC.band10/ourC.band10pro).toFixed(2) + ' : 1</span></div>' +
+    '<h4>我司全渠道手环</h4>' +
+    '<div class="big" style="color:#1E90FF">' + f(oC.total_band) + '<span style="font-size:16px">单</span></div>' +
+    '<div style="color:#64748b;margin-bottom:10px">' + fr(oC.total_band_rev) + ' · 占总数 ' + fp(oC.total_band/tA*100) + '</div>' +
+    '<div class="stat-row"><span>小米手环10</span><span><strong>' + f(oC.band10) + '单</strong> ' + fr(oC.band10_rev) + '</span></div>' +
+    '<div class="stat-row"><span>小米手环10 Pro</span><span><strong>' + f(oC.band10pro) + '单</strong> ' + fr(oC.band10pro_rev) + '</span></div>' +
+    '<div class="stat-row"><span>其他手环</span><span>' + f(oC.band_other) + '单 ' + fr(oC.band_other_rev) + '</span></div>' +
+    '<div class="stat-row" style="margin-top:6px;font-weight:700"><span>10 vs 10Pro</span><span>' + (oC.band10/oC.band10pro).toFixed(2) + ' : 1</span></div>' +
     '</div>' +
     '<div class="band-stat-card" style="border-left:4px solid #FF6B35">' +
-      '<h4>良米全渠道手环</h4>' +
-      '<div class="big" style="color:#FF6B35">' + fmt(lmC.total_band) + '<span style="font-size:16px">单</span></div>' +
-      '<div style="color:#64748b;margin-bottom:10px">' + fmtRMB(lmC.total_band_rev) + ' · 占总数 ' + fmtPct(lmC.total_band/totalAll*100) + '</div>' +
-      '<div class="stat-row"><span>小米手环10</span><span><strong>' + fmt(lmC.band10) + '单</strong> ' + fmtRMB(lmC.band10_rev) + '</span></div>' +
-      '<div class="stat-row"><span>小米手环10 Pro</span><span><strong>' + fmt(lmC.band10pro) + '单</strong> ' + fmtRMB(lmC.band10pro_rev) + '</span></div>' +
-      '<div class="stat-row"><span>其他手环</span><span>' + fmt(lmC.band_other) + '单 ' + fmtRMB(lmC.band_other_rev) + '</span></div>' +
-      '<div class="stat-row" style="margin-top:6px;font-weight:700"><span>10 vs 10Pro 比例</span><span>' + (lmC.band10/lmC.band10pro).toFixed(2) + ' : 1</span></div>' +
+    '<h4>良米全渠道手环</h4>' +
+    '<div class="big" style="color:#FF6B35">' + f(lC.total_band) + '<span style="font-size:16px">单</span></div>' +
+    '<div style="color:#64748b;margin-bottom:10px">' + fr(lC.total_band_rev) + ' · 占总数 ' + fp(lC.total_band/tA*100) + '</div>' +
+    '<div class="stat-row"><span>小米手环10</span><span><strong>' + f(lC.band10) + '单</strong> ' + fr(lC.band10_rev) + '</span></div>' +
+    '<div class="stat-row"><span>小米手环10 Pro</span><span><strong>' + f(lC.band10pro) + '单</strong> ' + fr(lC.band10pro_rev) + '</span></div>' +
+    '<div class="stat-row"><span>其他手环</span><span>' + f(lC.band_other) + '单 ' + fr(lC.band_other_rev) + '</span></div>' +
+    '<div class="stat-row" style="margin-top:6px;font-weight:700"><span>10 vs 10Pro</span><span>' + (lC.band10/lC.band10pro).toFixed(2) + ' : 1</span></div>' +
     '</div>';
 
   // Total table
   document.getElementById('bandTotalTable').innerHTML =
-    '<tr class="our-row">' +
-      '<td><strong>我司 全渠道</strong></td>' +
-      '<td><strong>' + fmt(ourC.band10) + '单</strong><br><small>' + fmtRMB(ourC.band10_rev) + '</small></td>' +
-      '<td><strong>' + fmt(ourC.band10pro) + '单</strong><br><small>' + fmtRMB(ourC.band10pro_rev) + '</small></td>' +
-      '<td>' + fmt(ourC.band_other) + '单<br><small>' + fmtRMB(ourC.band_other_rev) + '</small></td>' +
-      '<td><strong style="font-size:16px;color:#1E90FF">' + fmt(ourC.total_band) + '单</strong></td>' +
-      '<td><strong style="color:#1E90FF">' + fmtRMB(ourC.total_band_rev) + '</strong></td>' +
-      '<td>' + (ourC.band10/ourC.band10pro).toFixed(2) + ':1</td>' +
-    '</tr>' +
-    '<tr class="lm-row">' +
-      '<td><strong>良米 全渠道</strong></td>' +
-      '<td><strong>' + fmt(lmC.band10) + '单</strong><br><small>' + fmtRMB(lmC.band10_rev) + '</small></td>' +
-      '<td><strong>' + fmt(lmC.band10pro) + '单</strong><br><small>' + fmtRMB(lmC.band10pro_rev) + '</small></td>' +
-      '<td>' + fmt(lmC.band_other) + '单<br><small>' + fmtRMB(lmC.band_other_rev) + '</small></td>' +
-      '<td><strong style="font-size:16px;color:#FF6B35">' + fmt(lmC.total_band) + '单</strong></td>' +
-      '<td><strong style="color:#FF6B35">' + fmtRMB(lmC.total_band_rev) + '</strong></td>' +
-      '<td>' + (lmC.band10/lmC.band10pro).toFixed(2) + ':1</td>' +
-    '</tr>' +
-    '<tr style="background:#f8fafc;font-weight:700">' +
-      '<td><strong>合计</strong></td>' +
-      '<td><strong>' + fmt(ourC.band10+lmC.band10) + '单</strong></td>' +
-      '<td><strong>' + fmt(ourC.band10pro+lmC.band10pro) + '单</strong></td>' +
-      '<td>' + fmt(ourC.band_other+lmC.band_other) + '单</td>' +
-      '<td><strong style="font-size:16px">' + fmt(totalAll) + '单</strong></td>' +
-      '<td><strong>' + fmtRMB(totalAllRev) + '</strong></td>' +
-      '<td>' + ((ourC.band10+lmC.band10)/(ourC.band10pro+lmC.band10pro)).toFixed(2) + ':1</td>' +
-    '</tr>';
+    '<tr class="our-row"><td><strong>我司 全渠道</strong></td>' +
+    '<td><strong>' + f(oC.band10) + '单</strong><br><small>' + fr(oC.band10_rev) + '</small></td>' +
+    '<td><strong>' + f(oC.band10pro) + '单</strong><br><small>' + fr(oC.band10pro_rev) + '</small></td>' +
+    '<td>' + f(oC.band_other) + '单<br><small>' + fr(oC.band_other_rev) + '</small></td>' +
+    '<td><strong style="font-size:16px;color:#1E90FF">' + f(oC.total_band) + '单</strong></td>' +
+    '<td><strong style="color:#1E90FF">' + fr(oC.total_band_rev) + '</strong></td>' +
+    '<td>' + (oC.band10/oC.band10pro).toFixed(2) + ':1</td></tr>' +
+    '<tr class="lm-row"><td><strong>良米 全渠道</strong></td>' +
+    '<td><strong>' + f(lC.band10) + '单</strong><br><small>' + fr(lC.band10_rev) + '</small></td>' +
+    '<td><strong>' + f(lC.band10pro) + '单</strong><br><small>' + fr(lC.band10pro_rev) + '</small></td>' +
+    '<td>' + f(lC.band_other) + '单<br><small>' + fr(lC.band_other_rev) + '</small></td>' +
+    '<td><strong style="font-size:16px;color:#FF6B35">' + f(lC.total_band) + '单</strong></td>' +
+    '<td><strong style="color:#FF6B35">' + fr(lC.total_band_rev) + '</strong></td>' +
+    '<td>' + (lC.band10/lC.band10pro).toFixed(2) + ':1</td></tr>' +
+    '<tr style="background:#f8fafc;font-weight:700"><td><strong>合计</strong></td>' +
+    '<td><strong>' + f(oC.band10+lC.band10) + '单</strong></td>' +
+    '<td><strong>' + f(oC.band10pro+lC.band10pro) + '单</strong></td>' +
+    '<td>' + f(oC.band_other+lC.band_other) + '单</td>' +
+    '<td><strong style="font-size:16px">' + f(tA) + '单</strong></td>' +
+    '<td><strong>' + fr(tAR) + '</strong></td>' +
+    '<td>' + ((oC.band10+lC.band10)/(oC.band10pro+lC.band10pro)).toFixed(2) + ':1</td></tr>';
 
   // Insights
-  var ourBandShare = ourC.total_band / totalAll * 100;
-  var our10Share = ourC.band10 / (ourC.band10 + lmC.band10) * 100;
-  var our10ProShare = ourC.band10pro / (ourC.band10pro + lmC.band10pro) * 100;
-
+  var oS = oC.total_band / tA * 100;
+  var o10S = oC.band10 / (oC.band10 + lC.band10) * 100;
+  var oPS = oC.band10pro / (oC.band10pro + lC.band10pro) * 100;
   document.getElementById('bandInsightBox').innerHTML =
-    '<h3>手环销量核心洞察</h3>' +
-    '<ul>' +
-      '<li><strong>手环总盘子：</strong>7.1-7.24全渠道手环总订单 <span class="highlight">' + fmt(totalAll) + '单</span>，销售额 <span class="highlight">' + fmtRMB(totalAllRev) + '</span>。</li>' +
-      '<li><strong>我司手环份额：</strong>我司全渠道手环 <span class="highlight">' + fmt(ourC.total_band) + '单 (' + fmtPct(ourBandShare) + ')</span>，领先良米 ' + fmt(ourC.total_band - lmC.total_band) + '单。</li>' +
-      '<li><strong>小米手环10：</strong>我司 <span class="highlight">' + fmt(ourC.band10) + '单 (份额' + fmtPct(our10Share) + ')</span> vs 良米 ' + fmt(lmC.band10) + '单 — <span style="color:' + (our10Share > 50 ? '#1da85c' : '#FF4757') + '">' + (our10Share > 50 ? '领先' : '落后') + ' ' + fmt(Math.abs(ourC.band10 - lmC.band10)) + '单</span>。</li>' +
-      '<li><strong>小米手环10 Pro：</strong>我司 <span class="highlight">' + fmt(ourC.band10pro) + '单 (份额' + fmtPct(our10ProShare) + ')</span> vs 良米 ' + fmt(lmC.band10pro) + '单 — <span style="color:' + (our10ProShare > 50 ? '#1da85c' : '#FF4757') + '">' + (our10ProShare > 50 ? '领先' : '落后') + ' ' + fmt(Math.abs(ourC.band10pro - lmC.band10pro)) + '单</span>。</li>' +
-      '<li><strong>10 vs 10Pro 比例：</strong>我司 10:10Pro = ' + (ourC.band10/ourC.band10pro).toFixed(2) + ':1，良米 10:10Pro = ' + (lmC.band10/lmC.band10pro).toFixed(2) + ':1。良米10 Pro占比更高。</li>' +
-      '<li><strong>商品卡差异：</strong>我司商品卡手环10销量(' + fmt(ourPC.band10) + '单)远超良米(' + fmt(lmPC.band10) + '单)，但良米商品卡10Pro(' + fmt(lmPC.band10pro) + '单)略超我司(' + fmt(ourPC.band10pro) + '单)。</li>' +
+    '<h3>手环销量核心洞察</h3><ul>' +
+    '<li><strong>手环总盘子：</strong>7.1-7.24全渠道手环总订单 <span class="highlight">' + f(tA) + '单</span>，销售额 <span class="highlight">' + fr(tAR) + '</span>。</li>' +
+    '<li><strong>我司手环份额：</strong>我司全渠道手环 <span class="highlight">' + f(oC.total_band) + '单 (' + fp(oS) + ')</span>，领先良米 ' + f(oC.total_band - lC.total_band) + '单。</li>' +
+    '<li><strong>小米手环10：</strong>我司 <span class="highlight">' + f(oC.band10) + '单 (份额' + fp(o10S) + ')</span> vs 良米 ' + f(lC.band10) + '单 — <span style="color:' + (o10S > 50 ? '#1da85c' : '#FF4757') + '">' + (o10S > 50 ? '领先' : '落后') + ' ' + f(Math.abs(oC.band10 - lC.band10)) + '单</span>。</li>' +
+    '<li><strong>小米手环10 Pro：</strong>我司 <span class="highlight">' + f(oC.band10pro) + '单 (份额' + fp(oPS) + ')</span> vs 良米 ' + f(lC.band10pro) + '单 — <span style="color:' + (oPS > 50 ? '#1da85c' : '#FF4757') + '">' + (oPS > 50 ? '领先' : '落后') + ' ' + f(Math.abs(oC.band10pro - lC.band10pro)) + '单</span>。</li>' +
+    '<li><strong>10 vs 10Pro 比例：</strong>我司 10:10Pro = ' + (oC.band10/oC.band10pro).toFixed(2) + ':1，良米 10:10Pro = ' + (lC.band10/lC.band10pro).toFixed(2) + ':1。良米10 Pro占比更高。</li>' +
+    '<li><strong>商品卡差异：</strong>我司商品卡手环10销量(' + f(oP.band10) + '单)远超良米(' + f(lP.band10) + '单)，良米商品卡10Pro(' + f(lP.band10pro) + '单)略超我司(' + f(oP.band10pro) + '单)。</li>' +
     '</ul>';
 
   // Charts
@@ -873,101 +811,112 @@ function fmtPct(n) { return n.toFixed(1) + '%'; }
   var dates = daily.map(function(d) { return d.date; });
 
   // Chart 1: Daily band orders
-  var chartBandDaily = echarts.init(document.getElementById('chartBandDaily'));
-  chartBandDaily.setOption({
-    title: { text: '直播间每日手环订单趋势 (我司 vs 良米)', left: 'center', textStyle: { fontSize: 14, fontWeight: 600 } },
-    tooltip: { trigger: 'axis' },
-    legend: { bottom: 0, data: ['我司手环', '良米手环'] },
-    grid: { left: 50, right: 20, top: 50, bottom: 40 },
-    xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45, fontSize: 9 } },
-    yAxis: { type: 'value', name: '订单数' },
-    series: [
-      { name: '我司手环', type: 'line', smooth: true, data: daily.map(function(d) { return d.our_band10 + d.our_band10pro + d.our_band_other; }),
-        lineStyle: { color: '#1E90FF', width: 2.5 }, symbol: 'circle', symbolSize: 4,
-        areaStyle: { color: 'rgba(30,144,255,0.1)' } },
-      { name: '良米手环', type: 'line', smooth: true, data: daily.map(function(d) { return d.liangmi_band10 + d.liangmi_band10pro + d.liangmi_band_other; }),
-        lineStyle: { color: '#FF6B35', width: 2.5 }, symbol: 'circle', symbolSize: 4,
-        areaStyle: { color: 'rgba(255,107,53,0.08)' } }
-    ]
-  });
-
-  // Chart 2: Pie chart
-  var chartBandProp = echarts.init(document.getElementById('chartBandProportion'));
-  chartBandProp.setOption({
-    title: { text: '直播间手环品类份额 (我司 vs 良米)', left: 'center', textStyle: { fontSize: 14, fontWeight: 600 } },
-    tooltip: { trigger: 'item', formatter: '{b}: {c}单 ({d}%)' },
-    legend: { bottom: 0 },
-    series: [{
-      type: 'pie', radius: ['35%', '65%'], center: ['50%', '48%'],
-      label: { formatter: '{b}\n{d}%', fontSize: 10 },
-      data: [
-        { name: '我司手环10', value: our.band10_orders, itemStyle: { color: '#1E90FF' } },
-        { name: '我司手环10Pro', value: our.band10pro_orders, itemStyle: { color: '#4da8ff' } },
-        { name: '良米手环10', value: lm.band10_orders, itemStyle: { color: '#FF6B35' } },
-        { name: '良米手环10Pro', value: lm.band10pro_orders, itemStyle: { color: '#ff9a75' } }
+  (function() {
+    var c = echarts.init(document.getElementById('chartBandDaily'));
+    c.setOption({
+      title: { text: '直播间每日手环订单趋势 (我司 vs 良米)', left: 'center', textStyle: { fontSize: 14 } },
+      tooltip: { trigger: 'axis' },
+      legend: { bottom: 0, data: ['我司手环', '良米手环'] },
+      grid: { left: 50, right: 20, top: 50, bottom: 40 },
+      xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45, fontSize: 9 } },
+      yAxis: { type: 'value', name: '订单数' },
+      series: [
+        { name: '我司手环', type: 'line', smooth: true,
+          data: daily.map(function(d) { return d.our_band10 + d.our_band10pro + d.our_band_other; }),
+          lineStyle: { color: '#1E90FF', width: 2.5 }, symbol: 'circle', symbolSize: 4,
+          areaStyle: { color: 'rgba(30,144,255,0.1)' } },
+        { name: '良米手环', type: 'line', smooth: true,
+          data: daily.map(function(d) { return d.liangmi_band10 + d.liangmi_band10pro + d.liangmi_band_other; }),
+          lineStyle: { color: '#FF6B35', width: 2.5 }, symbol: 'circle', symbolSize: 4,
+          areaStyle: { color: 'rgba(255,107,53,0.08)' } }
       ]
-    }]
-  });
+    });
+    window.addEventListener('resize', function() { c.resize(); });
+  })();
 
-  // Chart 3: 10 vs 10Pro stacked
-  var chartBandCompare = echarts.init(document.getElementById('chartBandCompare'));
-  chartBandCompare.setOption({
-    title: { text: '直播间手环 10 vs 10Pro 日趋势对比', left: 'center', textStyle: { fontSize: 14, fontWeight: 600 } },
-    tooltip: { trigger: 'axis' },
-    legend: { bottom: 0, data: ['我司手环10', '我司手环10Pro', '良米手环10', '良米手环10Pro'] },
-    grid: { left: 50, right: 20, top: 50, bottom: 45 },
-    xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45, fontSize: 9 } },
-    yAxis: { type: 'value', name: '订单数' },
-    series: [
-      { name: '我司手环10', type: 'bar', stack: 'our', data: daily.map(function(d) { return d.our_band10; }), itemStyle: { color: '#1E90FF' }, barWidth: '70%' },
-      { name: '我司手环10Pro', type: 'bar', stack: 'our', data: daily.map(function(d) { return d.our_band10pro; }), itemStyle: { color: '#80c8ff' } },
-      { name: '良米手环10', type: 'bar', stack: 'lm', data: daily.map(function(d) { return d.liangmi_band10; }), itemStyle: { color: '#FF6B35' } },
-      { name: '良米手环10Pro', type: 'bar', stack: 'lm', data: daily.map(function(d) { return d.liangmi_band10pro; }), itemStyle: { color: '#ffb899' } }
-    ]
-  });
+  // Chart 2: Pie
+  (function() {
+    var c = echarts.init(document.getElementById('chartBandProportion'));
+    c.setOption({
+      title: { text: '直播间手环品类份额', left: 'center', textStyle: { fontSize: 14 } },
+      tooltip: { trigger: 'item', formatter: '{b}: {c}单 ({d}%)' },
+      legend: { bottom: 0 },
+      series: [{
+        type: 'pie', radius: ['35%', '65%'], center: ['50%', '48%'],
+        label: { formatter: '{b}\n{d}%', fontSize: 10 },
+        data: [
+          { name: '我司手环10', value: our.band10_orders, itemStyle: { color: '#1E90FF' } },
+          { name: '我司手环10Pro', value: our.band10pro_orders, itemStyle: { color: '#4da8ff' } },
+          { name: '良米手环10', value: lm.band10_orders, itemStyle: { color: '#FF6B35' } },
+          { name: '良米手环10Pro', value: lm.band10pro_orders, itemStyle: { color: '#ff9a75' } }
+        ]
+      }]
+    });
+    window.addEventListener('resize', function() { c.resize(); });
+  })();
+
+  // Chart 3: Stacked 10 vs 10Pro
+  (function() {
+    var c = echarts.init(document.getElementById('chartBandCompare'));
+    c.setOption({
+      title: { text: '直播间手环 10 vs 10Pro 日趋势', left: 'center', textStyle: { fontSize: 14 } },
+      tooltip: { trigger: 'axis' },
+      legend: { bottom: 0, data: ['我司手环10', '我司手环10Pro', '良米手环10', '良米手环10Pro'] },
+      grid: { left: 50, right: 20, top: 50, bottom: 45 },
+      xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45, fontSize: 9 } },
+      yAxis: { type: 'value', name: '订单数' },
+      series: [
+        { name: '我司手环10', type: 'bar', stack: 'our', data: daily.map(function(d) { return d.our_band10; }), itemStyle: { color: '#1E90FF' }, barWidth: '70%' },
+        { name: '我司手环10Pro', type: 'bar', stack: 'our', data: daily.map(function(d) { return d.our_band10pro; }), itemStyle: { color: '#80c8ff' } },
+        { name: '良米手环10', type: 'bar', stack: 'lm', data: daily.map(function(d) { return d.liangmi_band10; }), itemStyle: { color: '#FF6B35' } },
+        { name: '良米手环10Pro', type: 'bar', stack: 'lm', data: daily.map(function(d) { return d.liangmi_band10pro; }), itemStyle: { color: '#ffb899' } }
+      ]
+    });
+    window.addEventListener('resize', function() { c.resize(); });
+  })();
 
   // Chart 4: Card comparison
-  var chartCard = echarts.init(document.getElementById('chartCardCompare'));
-  chartCard.setOption({
-    title: { text: '商品卡手环销量对比 (我司 vs 良米)', left: 'center', textStyle: { fontSize: 14, fontWeight: 600 } },
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    legend: { bottom: 0, data: ['我司商品卡', '良米商品卡'] },
-    grid: { left: 50, right: 20, top: 50, bottom: 35 },
-    xAxis: { type: 'category', data: ['小米手环10', '小米手环10 Pro', '其他手环'] },
-    yAxis: { type: 'value', name: '订单数' },
-    series: [
-      { name: '我司商品卡', type: 'bar', data: [ourPC.band10, ourPC.band10pro, ourPC.band_other],
-        itemStyle: { color: '#1E90FF' }, barWidth: '40%', label: { show: true, position: 'top', fontSize: 12, fontWeight: 600 } },
-      { name: '良米商品卡', type: 'bar', data: [lmPC.band10, lmPC.band10pro, lmPC.band_other],
-        itemStyle: { color: '#FF6B35' }, barWidth: '40%', label: { show: true, position: 'top', fontSize: 12, fontWeight: 600 } }
-    ]
-  });
+  (function() {
+    var c = echarts.init(document.getElementById('chartCardCompare'));
+    c.setOption({
+      title: { text: '商品卡手环销量对比', left: 'center', textStyle: { fontSize: 14 } },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      legend: { bottom: 0, data: ['我司商品卡', '良米商品卡'] },
+      grid: { left: 50, right: 20, top: 50, bottom: 35 },
+      xAxis: { type: 'category', data: ['小米手环10', '小米手环10 Pro', '其他手环'] },
+      yAxis: { type: 'value', name: '订单数' },
+      series: [
+        { name: '我司商品卡', type: 'bar', data: [oP.band10, oP.band10pro, oP.band_other],
+          itemStyle: { color: '#1E90FF' }, barWidth: '40%', label: { show: true, position: 'top', fontSize: 12, fontWeight: 600 } },
+        { name: '良米商品卡', type: 'bar', data: [lP.band10, lP.band10pro, lP.band_other],
+          itemStyle: { color: '#FF6B35' }, barWidth: '40%', label: { show: true, position: 'top', fontSize: 12, fontWeight: 600 } }
+      ]
+    });
+    window.addEventListener('resize', function() { c.resize(); });
+  })();
 
   // Chart 5: Total combined
-  var chartTotal = echarts.init(document.getElementById('chartTotalBand'));
-  chartTotal.setOption({
-    title: { text: '全渠道手环总销量对比 (直播间+商品卡)', left: 'center', textStyle: { fontSize: 14, fontWeight: 600 } },
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    legend: { bottom: 0, data: ['我司全渠道', '良米全渠道'] },
-    grid: { left: 60, right: 30, top: 55, bottom: 40 },
-    xAxis: { type: 'category', data: ['小米手环10', '小米手环10 Pro'] },
-    yAxis: { type: 'value', name: '订单数' },
-    series: [
-      { name: '我司全渠道', type: 'bar', data: [ourC.band10, ourC.band10pro],
-        itemStyle: { color: '#1E90FF' }, barWidth: '35%', label: { show: true, position: 'top', fontSize: 12, fontWeight: 600 } },
-      { name: '良米全渠道', type: 'bar', data: [lmC.band10, lmC.band10pro],
-        itemStyle: { color: '#FF6B35' }, barWidth: '35%', label: { show: true, position: 'top', fontSize: 12, fontWeight: 600 } }
-    ]
-  });
-
-  window.addEventListener('resize', function() {
-    chartBandDaily.resize(); chartBandProp.resize(); chartBandCompare.resize();
-    chartCard.resize(); chartTotal.resize();
-  });
+  (function() {
+    var c = echarts.init(document.getElementById('chartTotalBand'));
+    c.setOption({
+      title: { text: '全渠道手环总销量对比 (直播间+商品卡)', left: 'center', textStyle: { fontSize: 14 } },
+      tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+      legend: { bottom: 0, data: ['我司全渠道', '良米全渠道'] },
+      grid: { left: 60, right: 30, top: 55, bottom: 40 },
+      xAxis: { type: 'category', data: ['小米手环10', '小米手环10 Pro'] },
+      yAxis: { type: 'value', name: '订单数' },
+      series: [
+        { name: '我司全渠道', type: 'bar', data: [oC.band10, oC.band10pro],
+          itemStyle: { color: '#1E90FF' }, barWidth: '35%', label: { show: true, position: 'top', fontSize: 12, fontWeight: 600 } },
+        { name: '良米全渠道', type: 'bar', data: [lC.band10, lC.band10pro],
+          itemStyle: { color: '#FF6B35' }, barWidth: '35%', label: { show: true, position: 'top', fontSize: 12, fontWeight: 600 } }
+      ]
+    });
+    window.addEventListener('resize', function() { c.resize(); });
+  })();
 })();
 
-  window.addEventListener('resize', () => { chart1.resize(); chart2.resize(); chart3.resize(); chart4.resize(); });
-})();
+
 </script>
 
 </body>
