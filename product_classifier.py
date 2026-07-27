@@ -18,7 +18,11 @@ def classify_product(name):
     Returns:
         Canonical product category name (str).
     """
+    import re
     name = str(name)
+    # Strip trailing SKU codes like -(71610) to prevent SKU digits
+    # from being matched as product model numbers (e.g. '10' in 71610)
+    name = re.sub(r'-\(\d+\)\s*$', '', name)
     if '10Pro' in name or '10 Pro' in name:
         return '小米手环10 Pro'
     elif '10' in name and 'Pro' not in name and '9' not in name:
