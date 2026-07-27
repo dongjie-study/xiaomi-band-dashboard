@@ -511,14 +511,29 @@ document.body.style.display='';
 })();
 </script>'''
 
-NAV_W5 = '''<div class="nav-bar">
+def gen_w5_nav(active_page='hub'):
+    """Generate W5 navigation bar. active_page: 'hub', 'video', 'title', 'room'"""
+    pages = [
+        ('hub', '千川视频分析_W5.html', '🏠 W5 总览'),
+        ('video', '千川视频分析_W5_视频数据.html', '📹 视频数据'),
+        ('title', '千川视频分析_W5_标题数据.html', '📝 标题数据'),
+        ('room', '千川视频分析_W5_画面数据.html', '🎬 画面数据'),
+    ]
+    links = ''
+    for key, url, label in pages:
+        cls = 'nav-btn w5 active' if key == active_page else 'nav-btn'
+        links += f'<a class="{cls}" href="{url}">{label}</a>\n'
+    return f'''<div class="nav-bar">
 <a class="nav-btn" href="../index.html">🏠 首页</a>
+{links}
+<span style="color:#ccc;margin:0 4px;">|</span>
 <a class="nav-btn" href="核心指标报告_W4.html">W4 我司</a>
 <a class="nav-btn" href="竞对数据报告_W4.html">W4 竞对</a>
 <a class="nav-btn" href="竞对对比报告_W4.html">W4 对比</a>
-<a class="nav-btn w5 active" href="千川视频分析_W5.html">🔥 W5 7.1-7.26</a>
 <a class="nav-btn" href="周度总结对比.html">📊 周度总结</a>
 </div>'''
+
+NAV_W5 = gen_w5_nav('hub')  # Keep backward compat for any existing reference
 
 
 # ===== HTML Generator Functions =====
@@ -1086,6 +1101,182 @@ ROI：{roi_better}领先 {abs(round(o['roi']-c['roi'],1))} | 1h退款率：{refu
 </div>'''
 
 
+
+# ===== W5 PAGE BUILDERS =====
+
+def build_w5_hub(m_v_our, m_v_comp, t_our, t_comp, r_our, r_comp):
+    """Build W5 hub/navigation page with three module cards"""
+    cards = ''
+    # Video card
+    if m_v_our and m_v_comp:
+        roi_leader = '我司' if m_v_our['roi'] > m_v_comp['roi'] else '良米'
+        roi_gap = abs(m_v_our['roi'] - m_v_comp['roi'])
+        cards += f'''<a href="千川视频分析_W5_视频数据.html" style="text-decoration:none;display:block;">
+<div class="section" style="cursor:pointer;border-left:4px solid #1E90FF;transition:all 0.3s;">
+<h2 style="border-bottom:none;margin-bottom:12px;">📹 模块一：视频数据分析</h2>
+<p style="color:var(--text-secondary);margin-bottom:14px;">千川视频投放核心指标 | 渠道·产品·ROI分布·TOP视频</p>
+<div class="grid-3">
+<div class="kpi-card"><div class="value" style="color:#1E90FF;">{m_v_our['roi']:.1f}</div><div class="label">我司 ROI</div></div>
+<div class="kpi-card"><div class="value" style="color:#FF6B35;">{m_v_comp['roi']:.1f}</div><div class="label">良米 ROI</div></div>
+<div class="kpi-card"><div class="value" style="color:{'#2ED573' if m_v_our['roi'] > m_v_comp['roi'] else '#FF4757'};">{roi_leader} +{roi_gap:.1f}</div><div class="label">ROI领先方</div></div>
+</div></div></a>\n'''
+
+    # Title card
+    if t_our and t_comp:
+        roi_leader = '我司' if t_our['roi'] > t_comp['roi'] else '良米'
+        roi_gap = abs(t_our['roi'] - t_comp['roi'])
+        cards += f'''<a href="千川视频分析_W5_标题数据.html" style="text-decoration:none;display:block;">
+<div class="section" style="cursor:pointer;border-left:4px solid #FF6B35;transition:all 0.3s;">
+<h2 style="border-bottom:none;margin-bottom:12px;">📝 模块二：视频标题数据分析</h2>
+<p style="color:var(--text-secondary);margin-bottom:14px;">标题ROI分布 | 高频关键词 | TOP高消耗/高ROI标题</p>
+<div class="grid-3">
+<div class="kpi-card"><div class="value" style="color:#1E90FF;">{t_our['roi']:.1f}</div><div class="label">我司 标题ROI</div></div>
+<div class="kpi-card"><div class="value" style="color:#FF6B35;">{t_comp['roi']:.1f}</div><div class="label">良米 标题ROI</div></div>
+<div class="kpi-card"><div class="value" style="color:{'#2ED573' if t_our['roi'] > t_comp['roi'] else '#FF4757'};">{roi_leader} +{roi_gap:.1f}</div><div class="label">ROI领先方</div></div>
+</div></div></a>\n'''
+
+    # Room card
+    if r_our and r_comp:
+        roi_leader = '我司' if r_our['roi'] > r_comp['roi'] else '良米'
+        roi_gap = abs(r_our['roi'] - r_comp['roi'])
+        cards += f'''<a href="千川视频分析_W5_画面数据.html" style="text-decoration:none;display:block;">
+<div class="section" style="cursor:pointer;border-left:4px solid #2ED573;transition:all 0.3s;">
+<h2 style="border-bottom:none;margin-bottom:12px;">🎬 模块三：直播间画面数据分析</h2>
+<p style="color:var(--text-secondary);margin-bottom:14px;">画面投放ROI | 每日趋势 | 按直播间逐一拆分</p>
+<div class="grid-3">
+<div class="kpi-card"><div class="value" style="color:#1E90FF;">{r_our['roi']:.1f}</div><div class="label">我司 画面ROI</div></div>
+<div class="kpi-card"><div class="value" style="color:#FF6B35;">{r_comp['roi']:.1f}</div><div class="label">良米 画面ROI</div></div>
+<div class="kpi-card"><div class="value" style="color:{'#2ED573' if r_our['roi'] > r_comp['roi'] else '#FF4757'};">{roi_leader} +{roi_gap:.1f}</div><div class="label">ROI领先方</div></div>
+</div></div></a>\n'''
+
+    return f'''<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>千川视频数据 - W5总览 (7.1-7.26)</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+{CSS}
+</head><body style="display:none">
+{AUTH_SCRIPT}
+{gen_w5_nav('hub')}
+{gen_header('千川视频数据 — W5 综合分析', '2026年7月1日 - 7月26日 | 我司 vs 良米 | 三大维度深度对比', '#667eea 0%, #764ba2 100%', '7.1 - 7.26 W5')}
+<div class="container" style="max-width:900px;">
+<div style="text-align:center;padding:40px 0 20px;">
+<p style="font-size:16px;color:var(--text-secondary);">选择一个模块查看详细分析：</p>
+</div>
+{cards}
+<div class="footer">数据来源：千川后台导出 | 分析周期：2026.7.1 - 2026.7.26 | 我司 vs 良米（竞对）</div>
+</div>
+</body></html>'''
+
+
+def build_w5_video_page(m_our, m_comp):
+    """Build standalone video data page (我司 + 良米 + 对比)"""
+    OUR_COLORS = {'cost': '#FF4757', 'deal': '#2ED573', 'roi': '#1E90FF', 'plays': '#FF6B35', 'ctr': '#A855F7', 'orders': '#FFA502', 'accent': '#1E90FF', 'bar': '#1E90FF', 'line': '#1E90FF'}
+    COMP_COLORS = {'cost': '#FF4757', 'deal': '#2ED573', 'roi': '#FF6B35', 'plays': '#FF6B35', 'ctr': '#FFA502', 'orders': '#FFA502', 'accent': '#FF6B35', 'bar': '#FF6B35', 'line': '#FF6B35'}
+
+    charts_js = ''
+    if m_our:
+        charts_js += build_video_charts_js(m_our, 'our-video', OUR_COLORS)
+    if m_comp:
+        charts_js += build_video_charts_js(m_comp, 'comp-video', COMP_COLORS)
+
+    # Comparison charts
+    if m_our and m_comp:
+        charts_js += f'''
+(function(){{
+  var chart = echarts.init(document.getElementById('chart-comp-bar-video'));
+  chart.setOption({{
+    tooltip:{{trigger:'axis'}},
+    legend:{{data:['我司','良米'],top:0}},
+    grid:{{left:20,right:20,top:40,bottom:50}},
+    xAxis:{{type:'category',data:['消耗(¥)','成交金额(¥)','订单数','播放量'],axisLabel:{{fontSize:12,rotate:15}}}},
+    yAxis:{{type:'value',splitLine:{{lineStyle:{{color:'#eee'}}}}}},
+    series:[
+      {{name:'我司',type:'bar',data:[{m_our['total_cost']},{m_our['total_deal']},{m_our['total_orders']},{m_our['total_plays']}],itemStyle:{{color:'#1E90FF'}},barWidth:30,label:{{show:true,position:'top',fontSize:11,formatter:function(p){{var v=p.value;if(v>=1000000)return(v/1000000).toFixed(1)+'M';if(v>=10000)return(v/10000).toFixed(1)+'万';return v;}}}}}},
+      {{name:'良米',type:'bar',data:[{m_comp['total_cost']},{m_comp['total_deal']},{m_comp['total_orders']},{m_comp['total_plays']}],itemStyle:{{color:'#FF6B35'}},barWidth:30,label:{{show:true,position:'top',fontSize:11,formatter:function(p){{var v=p.value;if(v>=1000000)return(v/1000000).toFixed(1)+'M';if(v>=10000)return(v/10000).toFixed(1)+'万';return v;}}}}}}
+    ]
+  }});
+  window.addEventListener('resize',function(){{chart.resize();}});
+}})();
+(function(){{
+  var chart = echarts.init(document.getElementById('chart-comp-radar-video'));
+  chart.setOption({{
+    tooltip:{{}},
+    legend:{{data:['我司','良米'],bottom:0}},
+    radar:{{indicator:[{{name:'ROI',max:{max(m_our['roi'], m_comp['roi'])*1.3:.0f}}},{{name:'CTR(%)',max:{max(m_our['ctr'], m_comp['ctr'])*1.3:.0f}}},{{name:'CVR(%)',max:{max(m_our['cvr'], m_comp['cvr'])*1.3:.0f}}},{{name:'播放/元',max:{max(m_our['plays_per_yuan'], m_comp['plays_per_yuan'])*1.3:.0f}}},{{name:'ROI>1%',max:{max(m_our['roi_gt1_pct'], m_comp['roi_gt1_pct'])*1.3:.0f}}}]}},
+    series:[
+      {{name:'我司',type:'radar',data:[{{value:[{m_our['roi']},{m_our['ctr']},{m_our['cvr']},{m_our['plays_per_yuan']},{m_our['roi_gt1_pct']}],name:'我司'}}],itemStyle:{{color:'#1E90FF'}},lineStyle:{{color:'#1E90FF'}},areaStyle:{{color:'rgba(30,144,255,.2)'}}}},
+      {{name:'良米',type:'radar',data:[{{value:[{m_comp['roi']},{m_comp['ctr']},{m_comp['cvr']},{m_comp['plays_per_yuan']},{m_comp['roi_gt1_pct']}],name:'良米'}}],itemStyle:{{color:'#FF6B35'}},lineStyle:{{color:'#FF6B35'}},areaStyle:{{color:'rgba(255,107,53,.2)'}}}}
+    ]
+  }});
+  window.addEventListener('resize',function(){{chart.resize();}});
+}})();'''
+
+    return f'''<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>千川视频数据 - 视频分析 (7.1-7.26)</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+{CSS}
+</head><body style="display:none">
+{AUTH_SCRIPT}
+{gen_w5_nav('video')}
+{gen_header('千川视频数据 — 视频投放分析', '2026年7月1日 - 7月26日 | 视频素材核心指标 | 渠道·产品·ROI分布', '#1E90FF 0%, #00BFFF 100%', '7.1 - 7.26 W5')}
+<div class="container">
+<!-- Our Video Data -->
+<h2 style="margin-top:32px;margin-bottom:16px;color:#1E90FF;font-size:22px;">🔵 我司视频数据</h2>
+{build_video_subsection(m_our, '我司', OUR_COLORS, 'our-video') if m_our else '<p>暂无数据</p>'}
+<div style="margin-top:40px;"></div>
+<!-- Comp Video Data -->
+<h2 style="margin-bottom:16px;color:#FF6B35;font-size:22px;">🟠 良米视频数据</h2>
+{build_video_subsection(m_comp, '良米', COMP_COLORS, 'comp-video') if m_comp else '<p>暂无数据</p>'}
+<div style="margin-top:40px;"></div>
+<!-- Comparison -->
+{build_video_compare_section(m_our, m_comp) if m_our and m_comp else ''}
+<div class="footer">数据来源：千川后台导出 | 分析周期：2026.7.1 - 2026.7.26 | 我司 vs 良米（竞对）</div>
+</div>
+<script>{charts_js}</script>
+</body></html>'''
+
+
+def build_w5_title_page(t_our, t_comp):
+    """Build standalone title data page (我司 + 良米 + 对比)"""
+    return f'''<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>千川视频数据 - 标题分析 (7.1-7.26)</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+{CSS}
+</head><body style="display:none">
+{AUTH_SCRIPT}
+{gen_w5_nav('title')}
+{gen_header('千川视频数据 — 标题素材分析', '2026年7月1日 - 7月26日 | 标题ROI分布 | 高频关键词 | TOP标题', '#FF6B35 0%, #FF4757 100%', '7.1 - 7.26 W5')}
+<div class="container">
+<h2 style="margin-top:32px;margin-bottom:16px;color:#1E90FF;font-size:22px;">🔵 我司标题数据</h2>
+{gen_title_section(t_our, '(我司)', f'<p style="color:var(--text-secondary);font-size:13px;">共 {t_our["total_titles"] if t_our else 0:,} 条标题，有消耗 {t_our["cost_titles"] if t_our else 0:,} 条</p>') if t_our else '<p>暂无数据</p>'}
+<div style="margin-top:40px;"></div>
+<h2 style="margin-bottom:16px;color:#FF6B35;font-size:22px;">🟠 良米标题数据</h2>
+{gen_title_section(t_comp, '(良米)', f'<p style="color:var(--text-secondary);font-size:13px;">共 {t_comp["total_titles"] if t_comp else 0:,} 条标题，有消耗 {t_comp["cost_titles"] if t_comp else 0:,} 条</p>') if t_comp else '<p>暂无数据</p>'}
+<div style="margin-top:40px;"></div>
+{build_title_compare_section(t_our, t_comp) if t_our and t_comp else ''}
+<div class="footer">数据来源：千川后台导出 | 分析周期：2026.7.1 - 2026.7.26 | 我司 vs 良米（竞对）</div>
+</div>
+</body></html>'''
+
+
+def build_w5_room_page(r_our, r_comp):
+    """Build standalone live room screen data page (我司 + 良米 + 对比)"""
+    return f'''<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>千川视频数据 - 画面分析 (7.1-7.26)</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+{CSS}
+</head><body style="display:none">
+{AUTH_SCRIPT}
+{gen_w5_nav('room')}
+{gen_header('千川视频数据 — 直播间画面分析', '2026年7月1日 - 7月26日 | 画面投放ROI | 每日趋势 | 按直播间拆分', '#2ED573 0%, #0891b2 100%', '7.1 - 7.26 W5')}
+<div class="container">
+<h2 style="margin-top:32px;margin-bottom:16px;color:#1E90FF;font-size:22px;">🔵 我司直播间画面数据</h2>
+{gen_liveroom_section(r_our, '(我司)') if r_our else '<p>暂无数据</p>'}
+<div style="margin-top:40px;"></div>
+<h2 style="margin-bottom:16px;color:#FF6B35;font-size:22px;">🟠 良米直播间画面数据</h2>
+{gen_liveroom_section(r_comp, '(良米)') if r_comp else '<p>暂无数据</p>'}
+<div style="margin-top:40px;"></div>
+{build_room_compare_section(r_our, r_comp) if r_our and r_comp else ''}
+<div class="footer">数据来源：千川后台导出 | 分析周期：2026.7.1 - 2026.7.26 | 我司 vs 良米（竞对）</div>
+</div>
+</body></html>'''
+
+
 # ===== MAIN =====
 if __name__ == '__main__':
     print("=" * 60)
@@ -1130,167 +1321,41 @@ if __name__ == '__main__':
     OUR_COLORS = {'cost': '#FF4757', 'deal': '#2ED573', 'roi': '#1E90FF', 'plays': '#FF6B35', 'ctr': '#A855F7', 'orders': '#FFA502', 'accent': '#1E90FF', 'bar': '#1E90FF', 'line': '#1E90FF'}
     COMP_COLORS = {'cost': '#FF4757', 'deal': '#2ED573', 'roi': '#FF6B35', 'plays': '#FF6B35', 'ctr': '#FFA502', 'orders': '#FFA502', 'accent': '#FF6B35', 'bar': '#FF6B35', 'line': '#FF6B35'}
 
-    # ===== BUILD HTML =====
-    html = f'''<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><title>千川视频数据 - 综合分析 (7.1-7.26)</title>
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-    {CSS}
-    </head><body style="display:none">
-    {AUTH_SCRIPT}
-    {NAV_W5}
-    {gen_header('千川视频数据 — 综合分析报告', '2026年7月1日 - 7月26日 | 我司 vs 良米 | 视频+标题+画面三维度深度对比', '#667eea 0%, #764ba2 100%', '7.1 - 7.26 W5')}
-    <div class="container">
+    base = r'C:\Users\Administrator\Desktop\小米手环直播间销量分析\核心指标分析'
 
-    <!-- ===== MODULE 1: VIDEO DATA ===== -->
-    <div class="divider"></div>
-    {gen_module_header('📹 模块一：视频数据分析', '千川视频投放核心指标 | 渠道·产品·ROI分布·TOP视频', '#1E90FF 0%, #00BFFF 100%')}
-    <div class="container">
+    # ===== Generate 4 HTML files =====
+    print(f"\n{'=' * 60}")
+    print("Generating W5 reports (4 pages)...")
+    print(f"{'=' * 60}")
 
-    <!-- Our Video Data -->
-    <h2 style="margin-top:32px;margin-bottom:16px;color:#1E90FF;font-size:22px;">🔵 我司视频数据</h2>
-    {build_video_subsection(m_v_our, '我司', OUR_COLORS, 'our-video')}
+    # 1. Hub page
+    hub_html = build_w5_hub(m_v_our, m_v_comp, t_our, t_comp, r_our, r_comp)
+    hub_path = f'{base}\\千川视频分析_W5.html'
+    with open(hub_path, 'w', encoding='utf-8') as f:
+        f.write(hub_html)
+    print(f"✓ Hub page: {hub_path} ({len(hub_html):,} bytes)")
 
-    <!-- Comp Video Data -->
-    <div style="margin-top:40px;"></div>
-    <h2 style="margin-bottom:16px;color:#FF6B35;font-size:22px;">🟠 良米视频数据</h2>
-    {build_video_subsection(m_v_comp, '良米', COMP_COLORS, 'comp-video')}
+    # 2. Video data page
+    video_html = build_w5_video_page(m_v_our, m_v_comp)
+    video_path = f'{base}\\千川视频分析_W5_视频数据.html'
+    with open(video_path, 'w', encoding='utf-8') as f:
+        f.write(video_html)
+    print(f"✓ Video page: {video_path} ({len(video_html):,} bytes)")
 
-    <!-- Video Comparison -->
-    <div style="margin-top:40px;"></div>
-    {build_video_compare_section(m_v_our, m_v_comp)}
+    # 3. Title data page
+    title_html = build_w5_title_page(t_our, t_comp)
+    title_path = f'{base}\\千川视频分析_W5_标题数据.html'
+    with open(title_path, 'w', encoding='utf-8') as f:
+        f.write(title_html)
+    print(f"✓ Title page: {title_path} ({len(title_html):,} bytes)")
 
-    </div>
-
-    <!-- ===== MODULE 2: TITLE DATA ===== -->
-    <div class="divider"></div>
-    {gen_module_header('📝 模块二：视频标题数据分析', '标题ROI分布 | 高频关键词 | TOP高消耗/高ROI标题', '#FF6B35 0%, #FF4757 100%')}
-    <div class="container">
-
-    <!-- Our Title Data -->
-    <h2 style="margin-top:32px;margin-bottom:16px;color:#1E90FF;font-size:22px;">🔵 我司标题数据</h2>
-    {gen_title_section(t_our, '(我司)', f'<p style="color:var(--text-secondary);font-size:13px;">共 {t_our["total_titles"] if t_our else 0:,} 条标题，有消耗 {t_our["cost_titles"] if t_our else 0:,} 条</p>')}
-
-    <!-- Comp Title Data -->
-    <div style="margin-top:40px;"></div>
-    <h2 style="margin-bottom:16px;color:#FF6B35;font-size:22px;">🟠 良米标题数据</h2>
-    {gen_title_section(t_comp, '(良米)', f'<p style="color:var(--text-secondary);font-size:13px;">共 {t_comp["total_titles"] if t_comp else 0:,} 条标题，有消耗 {t_comp["cost_titles"] if t_comp else 0:,} 条</p>')}
-
-    <!-- Title Comparison -->
-    <div style="margin-top:40px;"></div>
-    {build_title_compare_section(t_our, t_comp)}
-
-    </div>
-
-    <!-- ===== MODULE 3: LIVE ROOM DATA ===== -->
-    <div class="divider"></div>
-    {gen_module_header('🎬 模块三：直播间画面数据分析', '画面投放ROI | 每日趋势 | 按直播间逐一拆分', '#2ED573 0%, #0891b2 100%')}
-    <div class="container">
-
-    <!-- Our Room Data -->
-    <h2 style="margin-top:32px;margin-bottom:16px;color:#1E90FF;font-size:22px;">🔵 我司直播间画面数据</h2>
-    {gen_liveroom_section(r_our, '(我司)')}
-
-    <!-- Comp Room Data -->
-    <div style="margin-top:40px;"></div>
-    <h2 style="margin-bottom:16px;color:#FF6B35;font-size:22px;">🟠 良米直播间画面数据</h2>
-    {gen_liveroom_section(r_comp, '(良米)')}
-
-    <!-- Room Comparison -->
-    <div style="margin-top:40px;"></div>
-    {build_room_compare_section(r_our, r_comp)}
-
-    </div>
-
-    <!-- ===== COMPREHENSIVE CONCLUSION ===== -->
-    <div class="divider"></div>
-    <div class="section"><h2>🏆 7.1-7.26 综合分析总结</h2>
-    <div class="grid-3">'''
-
-    # Build summary cards
-    if m_v_our and m_v_comp:
-        html += f'''
-    <div class="summary-card">
-    <h3>📹 视频投放 (26天)</h3>
-    <div style="margin-top:8px;font-size:13px;line-height:2;">
-    <div>🔵 我司：消耗 {fmt_money(m_v_our['total_cost'])} | 成交 {fmt_money(m_v_our['total_deal'])} | ROI {m_v_our['roi']:.2f} | {m_v_our['cost_videos']:,}条</div>
-    <div>🟠 良米：消耗 {fmt_money(m_v_comp['total_cost'])} | 成交 {fmt_money(m_v_comp['total_deal'])} | ROI {m_v_comp['roi']:.2f} | {m_v_comp['cost_videos']:,}条</div>
-    <div style="font-weight:600;color:{'#2ED573' if m_v_our['roi'] > m_v_comp['roi'] else '#FF4757'};">ROI领先：{'我司' if m_v_our['roi'] > m_v_comp['roi'] else '良米'} (+{abs(m_v_our['roi']-m_v_comp['roi']):.1f})</div>
-    </div></div>'''
-
-    if t_our and t_comp:
-        html += f'''
-    <div class="summary-card">
-    <h3>📝 标题素材 (26天)</h3>
-    <div style="margin-top:8px;font-size:13px;line-height:2;">
-    <div>🔵 我司：消耗 {fmt_money(t_our['total_cost'])} | 成交 {fmt_money(t_our['total_pay'])} | ROI {t_our['roi']:.2f} | {t_our['cost_titles']:,}条</div>
-    <div>🟠 良米：消耗 {fmt_money(t_comp['total_cost'])} | 成交 {fmt_money(t_comp['total_pay'])} | ROI {t_comp['roi']:.2f} | {t_comp['cost_titles']:,}条</div>
-    <div style="font-weight:600;color:{'#2ED573' if t_our['roi'] > t_comp['roi'] else '#FF4757'};">标题ROI领先：{'我司' if t_our['roi'] > t_comp['roi'] else '良米'} (+{abs(t_our['roi']-t_comp['roi']):.1f})</div>
-    </div></div>'''
-
-    if r_our and r_comp:
-        html += f'''
-    <div class="summary-card">
-    <h3>🎬 直播间画面 (26天)</h3>
-    <div style="margin-top:8px;font-size:13px;line-height:2;">
-    <div>🔵 我司：消耗 {fmt_money(r_our['total_cost'])} | 成交 {fmt_money(r_our['total_deal'])} | ROI {r_our['roi']:.2f} | {r_our['total_screens']}组画面</div>
-    <div>🟠 良米：消耗 {fmt_money(r_comp['total_cost'])} | 成交 {fmt_money(r_comp['total_deal'])} | ROI {r_comp['roi']:.2f} | {r_comp['total_screens']}组画面</div>
-    <div style="font-weight:600;color:{'#2ED573' if r_our['roi'] > r_comp['roi'] else '#FF4757'};">画面ROI领先：{'我司' if r_our['roi'] > r_comp['roi'] else '良米'} (+{abs(r_our['roi']-r_comp['roi']):.1f})</div>
-    </div></div>'''
-
-    html += '''
-    </div></div>
-
-    <div class="footer">数据来源：千川后台导出 | 分析周期：2026.7.1 - 2026.7.26 | 我司 vs 良米（竞对）| 26天全量数据</div>
-    </div>
-
-    <script>
-    '''
-
-    # Add all chart JS
-    html += build_video_charts_js(m_v_our, 'our-video', OUR_COLORS)
-    html += build_video_charts_js(m_v_comp, 'comp-video', COMP_COLORS)
-
-    # Add video comparison charts
-    if m_v_our and m_v_comp:
-        html += f'''
-    (function(){{
-      var chart = echarts.init(document.getElementById('chart-comp-bar-video'));
-      chart.setOption({{
-        tooltip:{{trigger:'axis'}},
-        legend:{{data:['我司','良米'],top:0}},
-        grid:{{left:20,right:20,top:40,bottom:50}},
-        xAxis:{{type:'category',data:['消耗(¥)','成交金额(¥)','订单数','播放量'],axisLabel:{{fontSize:12,rotate:15}}}},
-        yAxis:{{type:'value',splitLine:{{lineStyle:{{color:'#eee'}}}}}},
-        series:[
-          {{name:'我司',type:'bar',data:[{m_v_our['total_cost']},{m_v_our['total_deal']},{m_v_our['total_orders']},{m_v_our['total_plays']}],itemStyle:{{color:'#1E90FF'}},barWidth:30,label:{{show:true,position:'top',fontSize:11,formatter:function(p){{var v=p.value;if(v>=1000000)return(v/1000000).toFixed(1)+'M';if(v>=10000)return(v/10000).toFixed(1)+'万';return v;}}}}}},
-          {{name:'良米',type:'bar',data:[{m_v_comp['total_cost']},{m_v_comp['total_deal']},{m_v_comp['total_orders']},{m_v_comp['total_plays']}],itemStyle:{{color:'#FF6B35'}},barWidth:30,label:{{show:true,position:'top',fontSize:11,formatter:function(p){{var v=p.value;if(v>=1000000)return(v/1000000).toFixed(1)+'M';if(v>=10000)return(v/10000).toFixed(1)+'万';return v;}}}}}}
-        ]
-      }});
-      window.addEventListener('resize',function(){{chart.resize();}});
-    }})();
-    (function(){{
-      var chart = echarts.init(document.getElementById('chart-comp-radar-video'));
-      chart.setOption({{
-        tooltip:{{}},
-        legend:{{data:['我司','良米'],bottom:0}},
-        radar:{{indicator:[{{name:'ROI',max:{max(m_v_our['roi'], m_v_comp['roi'])*1.3:.0f}}},{{name:'CTR(%)',max:{max(m_v_our['ctr'], m_v_comp['ctr'])*1.3:.0f}}},{{name:'CVR(%)',max:{max(m_v_our['cvr'], m_v_comp['cvr'])*1.3:.0f}}},{{name:'播放/元',max:{max(m_v_our['plays_per_yuan'], m_v_comp['plays_per_yuan'])*1.3:.0f}}},{{name:'ROI>1%',max:{max(m_v_our['roi_gt1_pct'], m_v_comp['roi_gt1_pct'])*1.3:.0f}}}]}},
-        series:[
-          {{name:'我司',type:'radar',data:[{{value:[{m_v_our['roi']},{m_v_our['ctr']},{m_v_our['cvr']},{m_v_our['plays_per_yuan']},{m_v_our['roi_gt1_pct']}],name:'我司'}}],itemStyle:{{color:'#1E90FF'}},lineStyle:{{color:'#1E90FF'}},areaStyle:{{color:'rgba(30,144,255,.2)'}}}},
-          {{name:'良米',type:'radar',data:[{{value:[{m_v_comp['roi']},{m_v_comp['ctr']},{m_v_comp['cvr']},{m_v_comp['plays_per_yuan']},{m_v_comp['roi_gt1_pct']}],name:'良米'}}],itemStyle:{{color:'#FF6B35'}},lineStyle:{{color:'#FF6B35'}},areaStyle:{{color:'rgba(255,107,53,.2)'}}}}
-        ]
-      }});
-      window.addEventListener('resize',function(){{chart.resize();}});
-    }})();'''
-
-    html += '''
-    </script>
-    </body></html>'''
-
-    # Write output
-    output_path = r'C:\Users\Administrator\Desktop\小米手环直播间销量分析\核心指标分析\千川视频分析_W5.html'
-    with open(output_path, 'w', encoding='utf-8') as f:
-        f.write(html)
+    # 4. Room data page
+    room_html = build_w5_room_page(r_our, r_comp)
+    room_path = f'{base}\\千川视频分析_W5_画面数据.html'
+    with open(room_path, 'w', encoding='utf-8') as f:
+        f.write(room_html)
+    print(f"✓ Room page: {room_path} ({len(room_html):,} bytes)")
 
     print(f"\n{'=' * 60}")
-    print(f"✓ Report generated: {output_path}")
-    print(f"  File size: {len(html):,} bytes")
+    print("All W5 reports generated successfully!")
     print(f"{'=' * 60}")
