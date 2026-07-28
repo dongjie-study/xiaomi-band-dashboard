@@ -37,6 +37,7 @@
     --clr-monthly:    #1da85c;
     --clr-event:      #f59e0b;
     --clr-baiying:    #6366f1;
+    --clr-exam:       #7c3aed;
 
     --clr-sales-bg:      #fff7ed;
     --clr-violations-bg: #fef2f2;
@@ -50,6 +51,7 @@
     --clr-monthly-bg:    #ecfdf5;
     --clr-event-bg:      #fffbeb;
     --clr-baiying-bg:    #eef2ff;
+    --clr-exam-bg:       #f5f3ff;
   }
 
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
@@ -172,6 +174,7 @@
   .sidebar-nav a.monthlySummary::after { background: var(--clr-monthly); }
   .sidebar-nav a.eventSummary::after   { background: var(--clr-event); }
   .sidebar-nav a.baiying::after       { background: var(--clr-baiying); }
+  .sidebar-nav a.exam::after          { background: var(--clr-exam); }
 
   .sidebar-nav a:hover {
     background: var(--sidebar-hover);
@@ -223,6 +226,7 @@
   .sidebar-nav a.monthlySummary .nav-dot { background: var(--clr-monthly); }
   .sidebar-nav a.eventSummary .nav-dot   { background: var(--clr-event); }
   .sidebar-nav a.baiying .nav-dot       { background: var(--clr-baiying); }
+  .sidebar-nav a.exam .nav-dot          { background: var(--clr-exam); }
 
   .sidebar-nav a .badge-nav {
     font-size: .64em;
@@ -763,6 +767,12 @@ function renderSidebar(config) {
         if (mod.badge) html += '<span class="badge-nav">' + mod.badge + '</span>';
         html += '<span class="sub-arrow">&#x25B8;</span></a>';
         html += '<div class="sub-menu" id="salesSubMenu" style="display:none;"></div>';
+      } else if (mod.external) {
+        // External link → open in new tab
+        html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" data-external="true" onclick="openExternalModule(this)" class="' + cls + '" target="_blank">';
+        html += '<span class="nav-dot"></span> ' + mod.title;
+        if (mod.badge) html += '<span class="badge-nav">' + mod.badge + '</span>';
+        html += '</a>';
       } else {
         html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" onclick="openModule(this)" class="' + cls + '">';
         html += '<span class="nav-dot"></span> ' + mod.title + '</a>';
@@ -779,7 +789,8 @@ function renderModuleCards(config) {
   var html = '';
   config.sections.forEach(function(section) {
     section.modules.forEach(function(mod) {
-      html += '<div class="module-card ' + mod.id + '" data-module="' + mod.id + '" onclick="openModule(this)">';
+      var clickHandler = mod.external ? 'openExternalModule(this)' : 'openModule(this)';
+      html += '<div class="module-card ' + mod.id + '" data-module="' + mod.id + '" data-url="' + mod.url + '" onclick="' + clickHandler + '">';
       html += '<div class="mod-icon">' + mod.icon + '</div>';
       html += '<h3>' + mod.title + '</h3>';
       html += '<p>' + mod.description + '</p>';
@@ -868,6 +879,12 @@ function promptPassword(moduleId, callback) {
   overlay.querySelector('.pw-cancel').addEventListener('click', function() { overlay.remove(); });
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
   input.addEventListener('keydown', function(e) { if (e.key === 'Enter') submit(); });
+}
+
+// ----- 打开外部模块（新标签页） -----
+function openExternalModule(el) {
+  var url = el.dataset.url;
+  if (url) window.open(url, '_blank');
 }
 
 // ----- 打开模块（iframe 加载） -----
