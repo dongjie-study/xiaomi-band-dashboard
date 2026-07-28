@@ -1,17 +1,15 @@
-"""Build the HTML dashboard — template copy (data loaded via fetch at runtime)."""
+"""Build the HTML dashboard — index.html loads data via fetch at runtime, no template needed."""
 import os
-import shutil
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def main():
-    src = os.path.join(DATA_DIR, 'dashboard.html')
     out_path = os.path.join(DATA_DIR, 'index.html')
-
-    # Simple copy — data is loaded asynchronously via fetch('./history.json') at runtime
-    shutil.copy2(src, out_path)
-    print(f'HTML dashboard built: {out_path} (data loaded via fetch at runtime)')
+    if os.path.exists(out_path):
+        print(f'HTML dashboard ready: {out_path} (data loaded via fetch at runtime)')
+    else:
+        print(f'Warning: index.html not found at {out_path}')
 
 
 if __name__ == '__main__':
