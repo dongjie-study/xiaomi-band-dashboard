@@ -561,14 +561,12 @@
     border: 1px solid #f0c070;
     border-left: 4px solid #f97316;
     border-radius: var(--radius);
-    padding: 20px 28px;
+    padding: 24px 32px 18px;
     margin-bottom: 24px;
     overflow: hidden;
-    min-height: 76px;
-    display: flex;
-    align-items: center;
     cursor: default;
     box-shadow: 0 1px 3px rgba(249,115,22,.08);
+    text-align: center;
     transition: box-shadow var(--transition), border-color var(--transition);
   }
   .quote-carousel:hover {
@@ -577,87 +575,95 @@
     border-left-color: #e06000;
   }
 
-  /* Ambient glow in the corner */
+  /* Ambient glow — top right */
   .quote-carousel::before {
     content: '';
     position: absolute;
-    top: -20px; right: -20px;
-    width: 100px; height: 100px;
-    background: radial-gradient(circle, rgba(249,115,22,.12) 0%, transparent 70%);
+    top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(249,115,22,.10) 0%, transparent 70%);
     border-radius: 50%;
     pointer-events: none;
   }
 
-  /* Left accent strip */
-  .quote-carousel::after {
-    display: none;
-  }
-
-  /* Lei Jun avatar */
+  /* Quote icon line — Lei Jun silhouette area */
   .quote-carousel .quote-avatar {
-    width: 42px; height: 42px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #ff6900, #e05800);
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.2em;
-    font-weight: 700;
-    color: #fff;
-    flex-shrink: 0;
-    margin-right: 16px;
-    box-shadow: 0 2px 10px rgba(249,115,22,.3);
+    gap: 5px;
+    margin-bottom: 10px;
+    font-size: .75em;
+    font-weight: 600;
+    color: #b45309;
+    letter-spacing: .04em;
     user-select: none;
+  }
+  .quote-carousel .quote-avatar .avatar-dot {
+    display: inline-block;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff6900, #e05800);
+    box-shadow: 0 1px 6px rgba(249,115,22,.25);
+    vertical-align: middle;
   }
 
   .quote-carousel .quote-content {
-    flex: 1;
     position: relative;
     z-index: 1;
-    min-width: 0;
   }
 
   .quote-carousel .quote-text {
-    font-size: .95em;
-    font-weight: 600;
+    font-size: 1.15em;
+    font-weight: 700;
     color: #3d2000;
-    line-height: 1.6;
-    letter-spacing: .01em;
-    transition: opacity .45s ease, transform .45s ease;
+    line-height: 1.7;
+    letter-spacing: .02em;
+    padding: 0 16px;
+    transition: opacity .4s ease, transform .4s ease;
   }
 
   .quote-carousel .quote-text.fade-out {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-6px);
   }
 
   .quote-carousel .quote-author {
-    font-size: .72em;
+    font-size: .78em;
     color: #b45309;
     font-weight: 500;
-    margin-top: 4px;
+    margin-top: 6px;
     letter-spacing: .03em;
   }
 
-  /* Quote mark decoration */
+  /* Large decorative quote marks */
   .quote-carousel .quote-mark {
     position: absolute;
-    font-size: 4em;
-    color: rgba(249,115,22,.06);
+    font-size: 5em;
+    color: rgba(249,115,22,.05);
     font-family: Georgia, 'Times New Roman', serif;
     line-height: 1;
     pointer-events: none;
     user-select: none;
+    z-index: 0;
   }
-  .quote-carousel .quote-mark.open  { top: -8px; left: 58px; }
-  .quote-carousel .quote-mark.close { bottom: -28px; right: 16px; }
+  .quote-carousel .quote-mark.open  { top: -6px;  left: 28px; }
+  .quote-carousel .quote-mark.close { bottom: -18px; right: 28px; }
 
-  /* Dots */
+  /* Bottom bar: author + dots */
+  .quote-carousel .quote-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 14px;
+    position: relative;
+    z-index: 1;
+  }
+
   .quote-carousel .quote-dots {
     display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-    margin-left: 14px;
+    gap: 5px;
   }
   .quote-carousel .quote-dot {
     width: 6px; height: 6px;
@@ -675,11 +681,10 @@
   .quote-carousel .quote-dot:hover { background: #e07b30; }
 
   @media (max-width: 700px) {
-    .quote-carousel { padding: 16px 18px; min-height: 60px; }
-    .quote-carousel .quote-avatar { width: 32px; height: 32px; font-size: .9em; margin-right: 10px; }
-    .quote-carousel .quote-text { font-size: .8em; }
+    .quote-carousel { padding: 16px 16px 14px; }
+    .quote-carousel .quote-text { font-size: .95em; padding: 0 4px; }
     .quote-carousel .quote-mark { display: none; }
-    .quote-carousel .quote-dots { display: none; }
+    .quote-carousel .quote-footer { flex-direction: column; gap: 6px; }
   }
 
   @keyframes quoteSlideIn {
@@ -808,14 +813,16 @@
     <div class="overview" id="overview">
       <!-- Lei Jun Quote Carousel -->
       <div class="quote-carousel" id="quoteCarousel">
-        <div class="quote-avatar">雷</div>
         <div class="quote-mark open">"</div>
         <div class="quote-mark close">"</div>
+        <div class="quote-avatar"><span class="avatar-dot"></span> 雷军名言</div>
         <div class="quote-content">
           <div class="quote-text" id="quoteText">站在风口上，猪都能飞起来</div>
-          <div class="quote-author" id="quoteAuthor">— 雷军</div>
         </div>
-        <div class="quote-dots" id="quoteDots"></div>
+        <div class="quote-footer">
+          <div class="quote-author" id="quoteAuthor">— 雷军</div>
+          <div class="quote-dots" id="quoteDots"></div>
+        </div>
       </div>
 
       <h1>概览</h1>
