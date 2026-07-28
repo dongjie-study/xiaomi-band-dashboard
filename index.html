@@ -553,6 +553,124 @@
     transform: translateY(-1px);
   }
 
+  /* ===== LEI JUN QUOTE CAROUSEL ===== */
+  .quote-carousel {
+    position: relative;
+    background: linear-gradient(135deg, #fff 0%, #fff9f0 40%, #fff5e6 100%);
+    border: 1px solid #fcd59f;
+    border-radius: var(--radius);
+    padding: 20px 28px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    cursor: default;
+    transition: box-shadow var(--transition), border-color var(--transition);
+  }
+  .quote-carousel:hover {
+    box-shadow: var(--shadow-md);
+    border-color: #f9a825;
+  }
+
+  /* Ambient glow in the corner */
+  .quote-carousel::before {
+    content: '';
+    position: absolute;
+    top: -20px; right: -20px;
+    width: 100px; height: 100px;
+    background: radial-gradient(circle, rgba(249,115,22,.1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* Lei Jun avatar */
+  .quote-carousel .quote-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff6900, #f97316);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1em;
+    flex-shrink: 0;
+    margin-right: 16px;
+    box-shadow: 0 2px 8px rgba(249,115,22,.25);
+    user-select: none;
+  }
+
+  .quote-carousel .quote-content {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+    min-width: 0;
+  }
+
+  .quote-carousel .quote-text {
+    font-size: .92em;
+    font-weight: 600;
+    color: #2d1a00;
+    line-height: 1.6;
+    letter-spacing: .01em;
+    transition: opacity .5s ease, transform .5s ease;
+  }
+
+  .quote-carousel .quote-text.fade-out {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+
+  .quote-carousel .quote-author {
+    font-size: .72em;
+    color: #b45309;
+    font-weight: 500;
+    margin-top: 4px;
+    letter-spacing: .03em;
+  }
+
+  /* Quote mark */
+  .quote-carousel .quote-mark {
+    position: absolute;
+    font-size: 4em;
+    color: rgba(249,115,22,.07);
+    font-family: Georgia, 'Times New Roman', serif;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+  .quote-carousel .quote-mark.open  { top: -8px; left: 58px; }
+  .quote-carousel .quote-mark.close { bottom: -28px; right: 16px; }
+
+  /* Dots */
+  .quote-carousel .quote-dots {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+    margin-left: 14px;
+  }
+  .quote-carousel .quote-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #d4c4a8;
+    cursor: pointer;
+    transition: all .35s ease;
+  }
+  .quote-carousel .quote-dot.active {
+    background: #f97316;
+    width: 18px;
+    border-radius: 10px;
+    box-shadow: 0 0 6px rgba(249,115,22,.3);
+  }
+  .quote-carousel .quote-dot:hover { background: #e07b30; }
+
+  @media (max-width: 700px) {
+    .quote-carousel { padding: 16px 18px; min-height: 60px; }
+    .quote-carousel .quote-avatar { width: 32px; height: 32px; font-size: .9em; margin-right: 10px; }
+    .quote-carousel .quote-text { font-size: .8em; }
+    .quote-carousel .quote-mark { display: none; }
+    .quote-carousel .quote-dots { display: none; }
+  }
+
   /* Iframe panel */
   .iframe-panel {
     width: 100%;
@@ -672,6 +790,18 @@
   <div class="content">
     <!-- Overview panel -->
     <div class="overview" id="overview">
+      <!-- Lei Jun Quote Carousel -->
+      <div class="quote-carousel" id="quoteCarousel">
+        <div class="quote-avatar">⚡</div>
+        <div class="quote-mark open">"</div>
+        <div class="quote-mark close">"</div>
+        <div class="quote-content">
+          <div class="quote-text" id="quoteText"></div>
+          <div class="quote-author" id="quoteAuthor"></div>
+        </div>
+        <div class="quote-dots" id="quoteDots"></div>
+      </div>
+
       <h1>概览</h1>
 
       <div class="stats-row" id="statsRow">
@@ -1098,6 +1228,85 @@ function collapseSalesSub() {
   cards[2].querySelector('.stat-sub').textContent = '我方 ' + s.our_rooms + ' 间 · 竞对 ' + s.comp_rooms + ' 间';
   cards[3].querySelector('.stat-value').textContent = s.days + ' 天';
   cards[3].querySelector('.stat-sub').textContent = s.first_date + ' ~ ' + s.date;
+})();
+
+// ===== 雷军名言轮播 =====
+(function(){
+  var quotes = [
+    { text: '站在风口上，猪都能飞起来', author: '雷军' },
+    { text: '专注、极致、口碑、快', author: '雷军 · 互联网七字诀' },
+    { text: '永远相信美好的事情即将发生', author: '雷军' },
+    { text: '梦想还是要有的，万一实现了呢', author: '雷军' },
+    { text: '做感动人心、价格厚道的好产品', author: '雷军 · 小米使命' },
+    { text: '创新决定我们能飞多高，品质决定我们能走多远', author: '雷军' },
+    { text: '厚道的人运气不会太差', author: '雷军' },
+    { text: '人生是一场马拉松，不是百米冲刺', author: '雷军' }
+  ];
+
+  var textEl   = document.getElementById('quoteText');
+  var authorEl = document.getElementById('quoteAuthor');
+  var dotsEl   = document.getElementById('quoteDots');
+  var current  = 0;
+  var timer    = null;
+  var interval = 5000; // 5s
+
+  // Build dots
+  quotes.forEach(function(_, i) {
+    var dot = document.createElement('span');
+    dot.className = 'quote-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', function(){ goTo(i); });
+    dotsEl.appendChild(dot);
+  });
+
+  function goTo(i) {
+    if (i === current) return;
+    // Fade out current
+    textEl.classList.add('fade-out');
+    setTimeout(function() {
+      textEl.textContent = quotes[i].text;
+      authorEl.textContent = '— ' + quotes[i].author;
+      textEl.classList.remove('fade-out');
+      // Update dots
+      var dots = dotsEl.querySelectorAll('.quote-dot');
+      dots[current].classList.remove('active');
+      dots[i].classList.add('active');
+      current = i;
+    }, 250);
+    resetTimer();
+  }
+
+  function next() {
+    var n = (current + 1) % quotes.length;
+    // Fade out
+    textEl.classList.add('fade-out');
+    setTimeout(function() {
+      textEl.textContent = quotes[n].text;
+      authorEl.textContent = '— ' + quotes[n].author;
+      textEl.classList.remove('fade-out');
+      var dots = dotsEl.querySelectorAll('.quote-dot');
+      dots[current].classList.remove('active');
+      dots[n].classList.add('active');
+      current = n;
+    }, 250);
+    resetTimer();
+  }
+
+  function resetTimer() {
+    clearInterval(timer);
+    timer = setInterval(next, interval);
+  }
+
+  // Show first quote
+  textEl.textContent = quotes[0].text;
+  authorEl.textContent = '— ' + quotes[0].author;
+
+  // Start auto-rotate
+  timer = setInterval(next, interval);
+
+  // Pause on hover
+  var carousel = document.getElementById('quoteCarousel');
+  carousel.addEventListener('mouseenter', function(){ clearInterval(timer); });
+  carousel.addEventListener('mouseleave', function(){ timer = setInterval(next, interval); });
 })();
 </script>
 </body>
