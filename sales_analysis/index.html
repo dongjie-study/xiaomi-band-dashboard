@@ -327,7 +327,8 @@ async function ensureHourly(day) {
     return;
   }
   try {
-    var cacheKey = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    var nowH = new Date();
+    var cacheKey = nowH.getFullYear() + ('0' + (nowH.getMonth() + 1)).slice(-2) + ('0' + nowH.getDate()).slice(-2);
     var resp = await fetch('./hourly/' + date + '.json?_=' + cacheKey);
     if (!resp.ok) return;
     var hdata = await resp.json();
@@ -344,11 +345,17 @@ async function ensureHourly(day) {
 // Async data loading — fetches history.json for better caching and faster initial render
 (async function loadData() {
   try {
-    // Daily cache-busting: refreshed once per day when data changes
-    const cacheKey = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    // Daily cache-busting: refreshed once per day when data changes (local date, UTC+8 safe)
+    var now = new Date();
+    var cacheKey = now.getFullYear() + ('0' + (now.getMonth() + 1)).slice(-2) + ('0' + now.getDate()).slice(-2);
     const resp = await fetch('./history.json?_=' + cacheKey);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     HISTORY = await resp.json();
+    if (!HISTORY || !HISTORY.length) {
+      document.getElementById('loadingOverlay').innerHTML =
+        '<div style="color:#e74c3c;font-size:14px;">⚠️ 暂无历史数据，请先导入订单数据</div>';
+      return;
+    }
     DATA = HISTORY[HISTORY.length - 1];
     await ensureHourly(DATA);
     dataReady = true;
@@ -602,6 +609,9 @@ function renderRoomCards(d) {
   cards.innerHTML = sorted.map((r, i) => {
     const pct = (r.orders / totalOrders * 100).toFixed(1);
     const topProd = Object.entries(r.products).sort((a, b) => b[1].orders - a[1].orders)[0];
+    const topProdHtml = topProd
+      ? '<div class="stat-row"><span class="stat-label">销冠产品</span><span class="stat-value">' + topProd[0] + ' (' + topProd[1].orders + '单)</span></div>'
+      : '';
     return `
     <div class="room-card" style="border-left: 4px solid ${['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4'][i % 4]}">
       <div class="room-name">
@@ -612,7 +622,7 @@ function renderRoomCards(d) {
       <div class="stat-row"><span class="stat-label">销售额</span><span class="stat-value">${formatCurrency(r.revenue)}</span></div>
       <div class="stat-row"><span class="stat-label">平均单价</span><span class="stat-value">${formatCurrency(r.avg_price)}</span></div>
       <div class="stat-row"><span class="stat-label">SKU数</span><span class="stat-value">${Object.keys(r.products).length}</span></div>
-      <div class="stat-row"><span class="stat-label">销冠产品</span><span class="stat-value">${topProd[0]} (${topProd[1].orders}单)</span></div>
+      ${topProdHtml}
     </div>`;
   }).join('');
 }
@@ -930,16 +940,18 @@ function getMonthHistory() {
 
 function renderSummaryKPIs() {
   var monthHistory = getMonthHistory();
+  if (!monthHistory.length) { document.getElementById('summaryKpiRow').innerHTML = ''; return; }
   var ourOrders = monthHistory.map(function(d) { return getOurCompData(d).ourOrders; });
   var compOrders = monthHistory.map(function(d) { return getOurCompData(d).compOrders; });
   var shares = ourOrders.map(function(o, i) { return o + compOrders[i] > 0 ? (o / (o + compOrders[i]) * 100) : 0; });
 
   var recent7 = ourOrders.slice(-7);
   var prev7 = ourOrders.slice(-14, -7);
-  var avgOur = Math.round(recent7.reduce(function(a, b) { return a + b; }, 0) / recent7.length);
+  var avgOur = recent7.length > 0 ? Math.round(recent7.reduce(function(a, b) { return a + b; }, 0) / recent7.length) : 0;
   var avgPrevOur = prev7.length > 0 ? Math.round(prev7.reduce(function(a, b) { return a + b; }, 0) / prev7.length) : null;
-  var avgShare = shares.slice(-7).reduce(function(a, b) { return a + b; }, 0) / Math.min(7, shares.slice(-7).length);
-  var avgComp = Math.round(compOrders.slice(-7).reduce(function(a, b) { return a + b; }, 0) / Math.min(7, compOrders.slice(-7).length));
+  var avgShare = shares.slice(-7).length > 0 ? (shares.slice(-7).reduce(function(a, b) { return a + b; }, 0) / shares.slice(-7).length) : 0;
+  var compSlice = compOrders.slice(-7);
+  var avgComp = compSlice.length > 0 ? Math.round(compSlice.reduce(function(a, b) { return a + b; }, 0) / compSlice.length) : 0;
 
   var bestIdx = 0, worstIdx = 0;
   ourOrders.forEach(function(o, i) { if (o > ourOrders[bestIdx]) bestIdx = i; if (o < ourOrders[worstIdx]) worstIdx = i; });

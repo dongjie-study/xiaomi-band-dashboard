@@ -94,9 +94,9 @@ def generate_html(june_summary, july_summary):
     jd = june_summary
     jld = july_summary
 
-    june_daily_hp = jd['total_hp_orders'] / 30 if jd['days'] > 0 else 0
+    june_daily_hp = jd['total_hp_orders'] / jd['days'] if jd['days'] > 0 else 0
     july_daily_hp = jld['total_hp_orders'] / jld['days'] if jld['days'] > 0 else 0
-    june_daily_hp_rev = jd['total_hp_revenue'] / 30 if jd['days'] > 0 else 0
+    june_daily_hp_rev = jd['total_hp_revenue'] / jd['days'] if jd['days'] > 0 else 0
     july_daily_hp_rev = jld['total_hp_revenue'] / jld['days'] if jld['days'] > 0 else 0
 
     all_prods = {}

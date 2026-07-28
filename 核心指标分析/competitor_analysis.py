@@ -169,8 +169,8 @@ for prod in ['Xiaomi Band', 'Redmi Watch6', 'Earphones', 'AIGC Collection', 'Oth
 
 print("\n[5] ROI DISTRIBUTION COMPARISON")
 print("-" * 70)
-their_roi_gt1_pct = (has_cost['roi'] > 1).sum() / len(has_cost) * 100
-their_roi_eq0_pct = (has_cost['roi'] == 0).sum() / len(has_cost) * 100
+their_roi_gt1_pct = (has_cost['roi'] > 1).sum() / len(has_cost) * 100 if len(has_cost) > 0 else 0
+their_roi_eq0_pct = (has_cost['roi'] == 0).sum() / len(has_cost) * 100 if len(has_cost) > 0 else 0
 our_roi_gt1_pct = 21.5
 our_median_roi = 0.00
 their_median_roi = has_cost['roi'].median()

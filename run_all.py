@@ -17,23 +17,25 @@ OUTPUT_DIR.mkdir(exist_ok=True)
 
 
 def run_sales(excel_path, our_path=None):
-    os.chdir(SALES_DIR)
-    print("=" * 60)
-    print("  更新直播间销量数据")
-    print("=" * 60)
-    cmd = [sys.executable, "daily_update.py", excel_path]
-    if our_path:
-        cmd.append(our_path)
-    subprocess.run(cmd, check=True)
+    try:
+        os.chdir(SALES_DIR)
+        print("=" * 60)
+        print("  更新直播间销量数据")
+        print("=" * 60)
+        cmd = [sys.executable, "daily_update.py", excel_path]
+        if our_path:
+            cmd.append(our_path)
+        subprocess.run(cmd, check=True)
 
-    # Copy outputs to shared output
-    for f in ["index.html", "dashboard.png", "room_comparison.png", "comparison.png"]:
-        src = SALES_DIR / f
-        dst = OUTPUT_DIR / f
-        if src.exists():
-            shutil.copy2(src, dst)
-    print(f"\nOutputs copied to: {OUTPUT_DIR}")
-    os.chdir(ROOT)
+        # Copy outputs to shared output
+        for f in ["index.html", "dashboard.png", "room_comparison.png", "comparison.png"]:
+            src = SALES_DIR / f
+            dst = OUTPUT_DIR / f
+            if src.exists():
+                shutil.copy2(src, dst)
+        print(f"\nOutputs copied to: {OUTPUT_DIR}")
+    finally:
+        os.chdir(ROOT)
 
 
 def print_usage():

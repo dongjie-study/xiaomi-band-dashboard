@@ -286,6 +286,8 @@
     padding: 5px 14px 5px 58px !important;
     font-size: .74em !important;
   }
+
+  .sidebar-footer {
     padding: 14px 20px;
     border-top: 1px solid var(--border-light);
     font-size: .72em;
@@ -830,6 +832,7 @@ function getIframe() {
 
 function killIframe() {
   var iframe = getIframe();
+  if (!iframe) return;
   iframe.classList.remove('show');
   iframe.src = 'about:blank';
 }
@@ -961,8 +964,8 @@ function toggleMonthDates(el, monthKey, datesId) {
     el.classList.remove('expanded');
     return;
   }
-  // Close other month date lists
-  document.querySelectorAll('.month-dates').forEach(function(m) { m.style.display = 'none'; });
+  // Close other month date lists and nested sub-menus
+  document.querySelectorAll('.nested-dates, .month-dates').forEach(function(m) { m.style.display = 'none'; });
   document.querySelectorAll('.month-item.expanded, .period-item.expanded').forEach(function(a) { a.classList.remove('expanded'); });
   // Populate dates if empty
   if (!datesDiv.children.length) {

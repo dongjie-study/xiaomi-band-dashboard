@@ -121,7 +121,6 @@ def classify_product(name):
     # Generic shortening for unmatched products
     else:
         # Try to find model number pattern and truncate after it
-        import re
         m = re.search(r'[A-Z]{1,2}\d{2,4}[A-Z]?\d*', name, re.IGNORECASE)
         if m and m.start() > 1:
             cut = m.end()

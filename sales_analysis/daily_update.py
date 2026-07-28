@@ -91,7 +91,7 @@ def summarize_room(grp):
             products[pname] = {
                 'orders': int(len(pgrp)),
                 'revenue': float(round(pgrp['price'].sum(), 2)),
-                'room_pct': round(len(pgrp) / len(hgrp) * 100, 1)
+                'room_pct': round(len(pgrp) / len(hgrp) * 100, 1) if len(hgrp) > 0 else 0
             }
         hourly_stats[str(hour)] = {
             'orders': int(len(hgrp)),
@@ -157,7 +157,7 @@ def summarize_day(df):
             products[pname] = {
                 'orders': int(len(pgrp)),
                 'revenue': float(round(pgrp['price'].sum(), 2)),
-                'room_pct': round(len(pgrp) / len(grp) * 100, 1)
+                'room_pct': round(len(pgrp) / len(grp) * 100, 1) if len(grp) > 0 else 0
             }
         hourly_stats[str(hour)] = {
             'orders': int(len(grp)),
