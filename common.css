@@ -1,0 +1,407 @@
+/* ============================================================
+   common.css — 小米手环直播间竞对分析平台 · 共享样式系统
+   所有页面的设计令牌、重置、通用组件集中管理
+   ============================================================ */
+
+/* ----- Design Tokens ----- */
+:root {
+  /* Surface */
+  --bg:            #f6f7f9;
+  --surface:       #ffffff;
+  --surface-warm:  #fffbf5;
+
+  /* Text */
+  --text:          #111827;
+  --text-secondary:#6b7280;
+  --text-muted:    #9ca3af;
+
+  /* Border */
+  --border:        #dde1e6;
+  --border-light:  #e8ecf1;
+
+  /* Radius */
+  --radius:        12px;
+  --radius-sm:     8px;
+  --radius-lg:     16px;
+
+  /* Shadow */
+  --shadow-sm:     0 1px 2px rgba(0,0,0,.03);
+  --shadow-md:     0 4px 12px rgba(0,0,0,.05), 0 1px 3px rgba(0,0,0,.04);
+  --shadow-lg:     0 12px 28px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04);
+
+  /* Transition */
+  --transition:    .25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ===== Brand Colors ===== */
+  --mi-orange:     #ff6900;
+  --mi-orange-dark:#e05800;
+  --mi-orange-light:#fff7ed;
+
+  /* ===== Semantic Colors ===== */
+  --clr-sales:     #f97316;
+  --clr-green:     #1da85c;
+  --clr-red:       #ef4444;
+  --clr-blue:      #3b82f6;
+  --clr-purple:    #8b5cf6;
+  --clr-gold:      #c8960c;
+  --clr-cyan:      #0891b2;
+  --clr-pink:      #ec4899;
+
+  /* Semantic backgrounds */
+  --clr-sales-bg:  #fff7ed;
+  --clr-green-bg:  #f0faf3;
+  --clr-red-bg:    #fef2f2;
+  --clr-blue-bg:   #eff6ff;
+  --clr-purple-bg: #f5f3ff;
+  --clr-gold-bg:   #fffbeb;
+  --clr-cyan-bg:   #ecfeff;
+  --clr-pink-bg:   #fdf2f8;
+
+  /* ===== Sidebar ===== */
+  --sidebar-w:     240px;
+  --sidebar-bg:    #bcc3ce;
+  --sidebar-text:  #23272d;
+  --sidebar-active:#03050a;
+  --sidebar-hover: #afb7c3;
+}
+
+/* ----- Reset ----- */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ambient dot-grid background (subtle) */
+body.has-dot-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(circle, rgba(148,163,184,.10) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+
+/* Ambient gradient background (for dashboard) */
+body.has-gradient-bg::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background: radial-gradient(ellipse 80% 60% at 30% 20%, rgba(59,130,246,.025) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 50% at 80% 80%, rgba(249,115,22,.02) 0%, transparent 60%);
+}
+
+/* ----- Focus & Accessibility ----- */
+:focus-visible {
+  outline: 2px solid var(--mi-orange);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+}
+
+/* ----- Utility: Screen Reader Only ----- */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ===== Common Top Navigation Bar =====
+   Used by: 六月销量分析, 七月销量分析, 618复盘总结, 话术模块,
+            四月份复盘总结, 视频提升方案, 耳机销量分析, 7月手环10Pro占比 */
+.nav-bar {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 10px 16px;
+  background: rgba(255,255,255,.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 3px rgba(0,0,0,.03);
+}
+
+.nav-btn {
+  padding: 7px 18px;
+  border-radius: 20px;
+  border: 1.5px solid #dde1e6;
+  background: #fff;
+  color: #555;
+  font-size: 12.5px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all var(--transition);
+  font-family: inherit;
+  font-weight: 500;
+}
+.nav-btn:hover {
+  border-color: var(--mi-orange);
+  color: var(--mi-orange);
+  background: var(--mi-orange-light);
+}
+.nav-btn.active {
+  background: linear-gradient(135deg, var(--mi-orange), #ff8c42);
+  color: #fff;
+  border-color: transparent;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(255,105,0,.2);
+}
+
+/* ===== Common Card ===== */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 24px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition);
+}
+.card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ===== Common Section Heading ===== */
+.section-heading {
+  font-size: 1.25em;
+  font-weight: 700;
+  margin-bottom: 16px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-heading::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 48px;
+  height: 3px;
+  background: var(--mi-orange);
+  border-radius: 2px;
+}
+
+/* ===== Common Back-to-Home Link ===== */
+.back-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: .82em;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all var(--transition);
+  border: 1px solid transparent;
+}
+.back-home:hover {
+  color: var(--mi-orange);
+  background: var(--mi-orange-light);
+  border-color: #fed7aa;
+}
+
+/* ===== Common Hero Banner =====
+   Used by: 六月销量分析, 七月销量分析, 618复盘总结 */
+.hero {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  color: white;
+  padding: 48px 20px 40px;
+  text-align: center;
+  box-shadow: 0 4px 24px rgba(15,52,96,.15);
+}
+.hero h1 {
+  font-size: 2em;
+  font-weight: 800;
+  letter-spacing: -.02em;
+}
+.hero h1 .mi { color: var(--mi-orange); }
+.hero p {
+  font-size: .9em;
+  opacity: 0.85;
+  margin-top: 8px;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.hero .badge-row {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.hero .badge {
+  padding: 5px 16px;
+  border-radius: 16px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .03em;
+}
+.badge.green  { background: rgba(29,168,92,.18); color: #5ddf8a; }
+.badge.warn  { background: rgba(255,105,0,.18); color: #ffa366; }
+.badge.info  { background: rgba(59,130,246,.18); color: #80c8ff; }
+.badge.purple{ background: rgba(139,92,246,.18); color: #b5a8ff; }
+.badge.card  { background: rgba(200,150,12,.18); color: #e8c840; }
+
+/* ===== KPI Card Grid ===== */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+.kpi-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 18px 16px;
+  text-align: center;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--border);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+.kpi-card .kpi-value {
+  font-size: 1.6em;
+  font-weight: 800;
+  line-height: 1.2;
+}
+.kpi-card .kpi-label {
+  font-size: .7em;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  font-weight: 500;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+
+/* ===== Content Container ===== */
+.container {
+  max-width: 1500px;
+  margin: 32px auto;
+  padding: 0 20px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ===== Common Section ===== */
+.section {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 28px 32px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+  scroll-margin-top: 70px;
+  transition: box-shadow var(--transition);
+}
+.section:hover { box-shadow: var(--shadow-md); }
+
+/* ===== Insight Cards ===== */
+.insight-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 8px 0;
+}
+.insight {
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  font-size: .8em;
+  line-height: 1.6;
+  border-left: 4px solid;
+}
+.insight.good   { border-color: var(--clr-green); background: var(--clr-green-bg); }
+.insight.warn   { border-color: var(--mi-orange); background: #fffdf0; }
+.insight.info   { border-color: var(--clr-blue);  background: var(--clr-blue-bg); }
+.insight.danger { border-color: var(--clr-red);   background: var(--clr-red-bg); }
+
+/* ===== Highlight Box ===== */
+.hl-box {
+  padding: 14px 20px;
+  border-radius: var(--radius-sm);
+  font-size: .82em;
+  line-height: 1.6;
+}
+.hl-box.hl-blue   { background: var(--clr-blue-bg);  border: 1px solid #bfdbfe; }
+.hl-box.hl-green  { background: var(--clr-green-bg); border: 1px solid #bbf7d0; }
+.hl-box.hl-orange { background: #fffdf0;             border: 1px solid #fed7aa; }
+
+/* ===== Score Bar ===== */
+.score-bar { margin: 10px 0; }
+.score-bar .s-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: .75em;
+  margin-bottom: 4px;
+}
+.score-bar .s-track {
+  height: 8px;
+  border-radius: 4px;
+  background: #e8ecf1;
+  overflow: hidden;
+}
+.score-bar .s-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+.score-bar .s-fill.ours { background: var(--clr-blue); }
+.score-bar .s-fill.comp { background: var(--clr-sales); }
+
+/* ===== Responsive Breakpoints ===== */
+@media (max-width: 1100px) {
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 900px) {
+  .insight-row { grid-template-columns: 1fr; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .section { padding: 20px 16px; }
+}
+@media (max-width: 700px) {
+  .hero h1 { font-size: 1.4em; }
+  .hero { padding: 32px 16px 28px; }
+  .kpi-row { grid-template-columns: 1fr 1fr; }
+  .container { padding: 0 12px; margin: 20px auto; }
+}
+@media (max-width: 480px) {
+  .kpi-row { grid-template-columns: 1fr; }
+  .nav-bar { gap: 3px; padding: 8px 10px; }
+  .nav-btn { padding: 5px 12px; font-size: 11px; }
+}

@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>直播间小时级出单分析工具</title>
+<title>小时数据分析 · 小米手环直播间</title>
+<link rel="icon" type="image/png" href="../xiaomi-logo.png">
+<link rel="stylesheet" href="../common.css">
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
@@ -20,7 +22,6 @@
   --radius: 14px;
   --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
-*{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(circle,rgba(148,163,184,.12) 1px,transparent 1px);background-size:24px 24px;pointer-events:none;z-index:0}
 .header{position:relative;z-index:1;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:28px 36px;box-shadow:0 4px 20px rgba(102,126,234,.2)}
@@ -85,6 +86,8 @@ th.sticky-col{background:#f8f9fc;z-index:3}
 </style>
 </head>
 <body>
+<a href="../index.html" class="back-home" id="backHome" style="display:none;position:fixed;top:12px;left:16px;z-index:999;">← 返回工作台</a>
+<script>if(window.top===window.self)document.getElementById('backHome').style.display='inline-flex';</script>
 
 <div class="header">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">

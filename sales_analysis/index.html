@@ -3,30 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>小米手环直播间竞对分析仪表盘</title>
+<title>销售分析 · 小米手环直播间竞对仪表盘</title>
+<meta name="description" content="小米手环直播间每日销量追踪、竞对对比、小时分布分析">
+<link rel="icon" type="image/png" href="../xiaomi-logo.png">
+<link rel="stylesheet" href="../common.css">
 <script src="chart.umd.min.js"></script>
 <style>
   :root {
     --accent: #4ECDC4;
     --accent-gold: #FFD700;
-    --text: #0f172a;
-    --text-secondary: #64748b;
-    --text-muted: #9ca3af;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,.04);
-    --shadow-md: 0 4px 16px rgba(0,0,0,.06);
-    --shadow-lg: 0 8px 30px rgba(0,0,0,.10);
-    --radius: 14px;
-    --radius-sm: 8px;
-    --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    --border-light: #bcc3ce;
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     background: #f0f4f8;
-    color: var(--text);
-    -webkit-font-smoothing: antialiased;
   }
 
   /* ===== TOPBAR ===== */
@@ -185,7 +174,9 @@ return;
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 <!-- ===== TOPBAR ===== -->
 <div class="content-topbar">
+  <a href="../index.html" class="back-home" id="backHome" style="display:none;">← 返回工作台</a>
   <h1>小米手环直播间竞对分析仪表盘</h1>
+  <script>if(window.top===window.self)document.getElementById('backHome').style.display='inline-flex';</script>
   <select id="roomSelector" onchange="switchRoom(this.value)">
     <option value="__all__">全部直播间（汇总）</option>
   </select>

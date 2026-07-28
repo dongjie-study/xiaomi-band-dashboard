@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>分析平台</title>
+<title>小米手环直播间 · 竞对分析平台</title>
+<meta name="description" content="小米手环直播间每日销量追踪、竞对对比、视频分析、主播管理一站式数据平台">
+<link rel="icon" type="image/png" href="xiaomi-logo.png">
+<link rel="stylesheet" href="common.css">
 <style>
   :root {
     --sidebar-w: 240px;
@@ -53,8 +56,6 @@
     --clr-baiying-bg:    #eef2ff;
     --clr-exam-bg:       #f5f3ff;
   }
-
-  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -796,7 +797,7 @@
   </nav>
 
   <div class="sidebar-footer">
-    <span class="live-dot"></span> <span>系统运行中</span>
+    <span class="live-dot"></span> <span id="footerUpdate">数据加载中...</span>
   </div>
 </aside>
 
@@ -1251,6 +1252,8 @@ function collapseSalesSub() {
   cards[2].querySelector('.stat-sub').textContent = '我方 ' + s.our_rooms + ' 间 · 竞对 ' + s.comp_rooms + ' 间';
   cards[3].querySelector('.stat-value').textContent = s.days + ' 天';
   cards[3].querySelector('.stat-sub').textContent = s.first_date + ' ~ ' + s.date;
+  var fu = document.getElementById('footerUpdate');
+  if (fu) fu.textContent = '数据更新至 ' + s.date;
 })();
 
 // ===== 雷军名言轮播 =====
