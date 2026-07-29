@@ -217,7 +217,11 @@ function classifyProduct(name) {
     if (baseCat === '手表') {
         for (const m of ['Watch 6','Watch6','Watch 5','Watch5','Watch S5','WatchS5','Watch S4','WatchS4']) {
             const c = m.replace(' ','');
-            if (name.includes(m)) return m.startsWith('Watch S') ? `Xiaomi ${m}` : `REDMI ${c}`;
+            if (name.includes(m)) {
+                if (m.startsWith('Watch S') || m.startsWith('WatchS')) return `Xiaomi ${m}`;
+                if (m.includes('Watch 5') || m.includes('Watch5')) return `Xiaomi ${m}`;
+                return `REDMI ${c}`;
+            }
         }
         const m = name.match(/Watch\s*(\w?\d+)/);
         if (m) return `Watch ${m[1]}`;
@@ -252,6 +256,10 @@ function extractProductName(raw) {
     let clean = raw.replace(/【[^】]+】/g, '');
     // Remove trailing -SKU
     clean = clean.replace(/-\(\d+\)$/,'').trim();
+    // Normalize XIaomI → Xiaomi
+    clean = clean.replace(/XIaomI/gi, 'Xiaomi').replace(/XIaomi/gi, 'Xiaomi');
+    // Strip Chinese marketing prefixes
+    clean = clean.replace(/^(平台活动|平台自营|自营活动|直播专享|直播爆款|品牌闪购|品牌新品|品牌套装|限时优惠\d*%?|学生优惠|以旧换新|品牌日)[：:]\s*/i, '').trim();
     const parts = clean.split('-');
     return parts[0].trim();
 }

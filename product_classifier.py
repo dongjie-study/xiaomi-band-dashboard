@@ -20,9 +20,15 @@ def classify_product(name):
     """
     import re
     name = str(name)
+    # Normalize XIaomI → Xiaomi (common OCR typo in raw data)
+    name = name.replace('XIaomI', 'Xiaomi').replace('XIaomi', 'Xiaomi')
     # Strip trailing SKU codes like -(71610) to prevent SKU digits
     # from being matched as product model numbers (e.g. '10' in 71610)
     name = re.sub(r'-\(\d+\)\s*$', '', name)
+    # Strip Chinese marketing prefixes (before classification)
+    name = re.sub(r'^(平台活动|平台自营|自营活动|直播专享|直播爆款|品牌闪购|品牌新品|品牌套装|限时优惠\d*%?|学生优惠|以旧换新|品牌日)[：:]\s*', '', name)
+    # Strip standalone 【...】 bracket tags and clean up
+    name = re.sub(r'【[^】]*】', '', name).strip()
     if '10Pro' in name or '10 Pro' in name:
         return '小米手环10 Pro'
     elif '10' in name and 'Pro' not in name and '9' not in name:
@@ -31,6 +37,12 @@ def classify_product(name):
         return '小米手环9 Pro'
     elif 'REDMI Watch 6' in name:
         return 'REDMI Watch 6'
+    elif 'Watch S5' in name or 'WatchS5' in name:
+        return 'Xiaomi Watch S5'
+    elif 'Watch S4' in name or 'WatchS4' in name:
+        return 'Xiaomi Watch S4'
+    elif 'Watch 5' in name or 'Watch5' in name:
+        return 'Xiaomi Watch 5'
     elif 'REDMI 手' in name:
         return 'REDMI 手环 3'
     elif 'Type-C' in name or '充电' in name:

@@ -417,6 +417,8 @@ function groupProduct(name) {
   var clean = name.replace(/【[^】]*】/g, '').replace(/\s+/g, ' ').trim();
   // 2. 去除末尾的 "-默认-(xxx)" 等后缀
   clean = clean.replace(/-.*$/, '').trim();
+  // 2.5. 去除中文营销前缀（平台活动/自营/直播专享等）
+  clean = clean.replace(/^(平台活动|平台自营|自营活动|直播专享|直播爆款|品牌闪购|品牌新品|品牌套装|限时优惠\d*%?|学生优惠|以旧换新|品牌日)[：:]\s*/i, '').trim();
   // 3. 处理分隔符（/、-等），取第一部分核心品名
   // 4. 统一大小写
   clean = clean.replace(/XIaomI/i, 'Xiaomi').replace(/XIaomi/i, 'Xiaomi');
