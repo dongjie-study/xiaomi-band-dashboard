@@ -1,0 +1,1350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多直播间业绩管理 · 周环比与排名看板</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
+    </script>
+    <style>
+        :root {
+            --bg: #f5f6fa;
+            --card-bg: #ffffff;
+            --primary: #4f6ef7;
+            --primary-dark: #3b54d4;
+            --text: #1a1a2e;
+            --text-secondary: #5a5a7a;
+            --border: #e8ecf1;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+            --shadow-lg: 0 8px 28px rgba(0, 0, 0, 0.08);
+            --radius: 16px;
+            --radius-sm: 10px;
+            --transition: 0.2s ease;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --rank-gold: #f59e0b;
+            --rank-silver: #94a3b8;
+            --rank-bronze: #f97316;
+            --up-color: #16a34a;
+            --down-color: #dc2626;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .quote-carousel {
+            width: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+            color: #fff;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            z-index: 101;
+        }
+        .quote-carousel .quote-icon {
+            font-size: 1.3rem;
+            margin-right: 10px;
+            flex-shrink: 0;
+        }
+        .quote-carousel .quote-text {
+            font-weight: 500;
+            letter-spacing: 0.3px;
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            white-space: nowrap;
+            text-align: center;
+        }
+        .quote-carousel .quote-author {
+            font-weight: 300;
+            opacity: 0.8;
+            margin-left: 8px;
+            font-size: 0.85rem;
+        }
+
+        .navbar {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 0 24px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+        .navbar .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.15rem;
+            color: var(--primary);
+        }
+        .navbar .logo .icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #4f6ef7, #8b5cf6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.1rem;
+        }
+        .navbar .update-badge {
+            font-size: 0.8rem;
+            background: #f0f3ff;
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 20px 20px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .filter-panel {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+        .filter-panel .filter-label {
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-right: 2px;
+            white-space: nowrap;
+        }
+        .filter-btn {
+            padding: 7px 14px;
+            border-radius: 18px;
+            border: 1.5px solid var(--border);
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            white-space: nowrap;
+            user-select: none;
+        }
+        .filter-btn:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+            background: #f8f9ff;
+        }
+        .filter-btn.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(79, 110, 247, 0.25);
+        }
+        .filter-panel input[type="date"] {
+            padding: 7px 12px;
+            border-radius: 18px;
+            border: 1.5px solid var(--border);
+            font-size: 0.8rem;
+            font-family: inherit;
+            outline: none;
+            background: #fff;
+        }
+        .filter-panel .date-sep {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        .filter-panel .apply-btn {
+            padding: 7px 18px;
+            border-radius: 18px;
+            border: none;
+            background: var(--primary);
+            color: #fff;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        .filter-panel .apply-btn:hover {
+            background: var(--primary-dark);
+        }
+        .room-select,
+        .month-select {
+            padding: 7px 28px 7px 12px;
+            border-radius: 18px;
+            border: 1.5px solid var(--border);
+            font-size: 0.85rem;
+            font-weight: 500;
+            background: #fff;
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 12 12"><path fill="%235a5a7a" d="M6 8L1 3h10z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+        }
+
+        .overview-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .overview-card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px 18px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            transition: var(--transition);
+        }
+        .overview-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-1px);
+        }
+        .overview-card .card-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        .overview-card .card-icon.sales {
+            background: #eef2ff;
+            color: #4f6ef7;
+        }
+        .overview-card .card-icon.anchors {
+            background: #ecfdf5;
+            color: #22c55e;
+        }
+        .overview-card .card-value {
+            font-size: 1.7rem;
+            font-weight: 700;
+            letter-spacing: -0.4px;
+            color: var(--text);
+        }
+        .overview-card .card-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .content-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+        .panel {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .panel-header {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border);
+            font-weight: 700;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #fafbfc;
+            flex-wrap: wrap;
+        }
+        .panel-header .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--primary);
+            flex-shrink: 0;
+        }
+        .panel-body {
+            padding: 12px 16px;
+            overflow-x: auto;
+            max-height: 520px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            min-width: 600px;
+        }
+        table thead th {
+            background: #f8f9fb;
+            padding: 10px 10px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--text-secondary);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+        }
+        table tbody td {
+            padding: 9px 10px;
+            border-bottom: 1px solid #f1f3f6;
+            white-space: nowrap;
+            color: var(--text);
+        }
+        table tbody tr:hover {
+            background: #fafbff;
+        }
+        .badge-room {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #fff;
+        }
+        .badge-shift {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            background: #f0f3ff;
+            color: var(--primary);
+            letter-spacing: 0.5px;
+        }
+        .rank-cell {
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        .rank-1 {
+            color: var(--rank-gold);
+        }
+        .rank-2 {
+            color: var(--rank-silver);
+        }
+        .rank-3 {
+            color: var(--rank-bronze);
+        }
+        .highlight-sales {
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .trend-up {
+            color: var(--up-color);
+            font-weight: 600;
+        }
+        .trend-down {
+            color: var(--down-color);
+            font-weight: 600;
+        }
+        .trend-icon {
+            font-size: 0.9rem;
+            margin-right: 2px;
+        }
+
+        .week-compare-header,
+        .month-summary-header,
+        .refund-mgmt-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .view-toggle {
+            display: flex;
+            gap: 4px;
+            background: #f1f3f6;
+            border-radius: 20px;
+            padding: 3px;
+            margin-left: auto;
+        }
+        .view-toggle button {
+            padding: 5px 14px;
+            border-radius: 18px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .view-toggle button.active {
+            background: #fff;
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        .week-period-badge,
+        .month-period-badge {
+            font-size: 0.75rem;
+            background: #eef2ff;
+            color: var(--primary);
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-weight: 600;
+        }
+
+        .refund-rate-input {
+            width: 70px;
+            padding: 4px 8px;
+            border: 1.5px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-family: inherit;
+            text-align: center;
+            background: #fffef5;
+            transition: var(--transition);
+            outline: none;
+        }
+        .refund-rate-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 110, 247, 0.1);
+            background: #fff;
+        }
+        .save-hint {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            opacity: 0.7;
+            margin-left: 6px;
+        }
+
+        .chart-panel {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+            height: 340px;
+        }
+        .chart-wrapper canvas {
+            width: 100% !important;
+            height: 100% !important;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            opacity: 0.7;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 1024px) {
+            .content-row {
+                grid-template-columns: 1fr;
+            }
+            .chart-wrapper {
+                height: 280px;
+            }
+        }
+        @media (max-width: 640px) {
+            .navbar {
+                padding: 0 12px;
+            }
+            .container {
+                padding: 10px 8px 20px;
+                gap: 10px;
+            }
+            .filter-panel {
+                padding: 10px;
+                gap: 6px;
+            }
+            .filter-btn {
+                padding: 5px 10px;
+                font-size: 0.72rem;
+            }
+            .room-select,
+            .month-select {
+                padding: 6px 24px 6px 10px;
+                font-size: 0.78rem;
+            }
+            .overview-card {
+                padding: 12px;
+            }
+            .overview-card .card-value {
+                font-size: 1.3rem;
+            }
+            table {
+                font-size: 0.72rem;
+                min-width: 500px;
+            }
+            .view-toggle button {
+                padding: 4px 10px;
+                font-size: 0.7rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="quote-carousel" id="quoteCarousel">
+        <span class="quote-icon">💬</span>
+        <span class="quote-text" id="quoteText">站在风口上，猪都能飞起来</span>
+        <span class="quote-author" id="quoteAuthor">—— 雷军</span>
+    </div>
+
+    <nav class="navbar">
+        <div class="logo">
+            <div class="icon">📡</div>
+            <span>直播业绩中心</span>
+        </div>
+        <div class="update-badge" id="lastUpdateLabel">最新数据：--</div>
+    </nav>
+
+    <div class="container">
+        <!-- ==================== 筛选栏 ==================== -->
+        <div class="filter-panel" id="filterPanel">
+            <span class="filter-label">📅 时间</span>
+            <button class="filter-btn active" data-range="7">近7天</button>
+            <button class="filter-btn" data-range="14">近14天</button>
+            <button class="filter-btn" data-range="30">近30天</button>
+            <button class="filter-btn" data-range="all">全部</button>
+            <input type="date" id="dateStart" title="开始日期">
+            <span class="date-sep">至</span>
+            <input type="date" id="dateEnd" title="结束日期">
+            <button class="apply-btn" id="applyCustomRange">应用</button>
+            <span style="margin-left:12px;" class="filter-label">🎙️ 直播间</span>
+            <select class="room-select" id="roomSelect">
+                <option value="all">全部直播间</option>
+            </select>
+        </div>
+
+        <!-- ==================== 概览卡片 ==================== -->
+        <div class="overview-row" id="overviewCards">
+            <div class="overview-card">
+                <div class="card-icon sales">💰</div>
+                <div class="card-value" id="totalSales">¥0</div>
+                <div class="card-label">总销售额 (净业绩)</div>
+            </div>
+            <div class="overview-card">
+                <div class="card-icon anchors">👥</div>
+                <div class="card-value" id="activeAnchors">0</div>
+                <div class="card-label">出镜主播</div>
+            </div>
+        </div>
+
+        <!-- ==================== 月度退款比率管理面板 ==================== -->
+        <div class="panel" id="refundMgmtPanel">
+            <div class="panel-header refund-mgmt-header">
+                <span class="dot" style="background:#f59e0b;"></span>
+                <span>⚙️ 月度退款比率管理（按直播间统一设置）</span>
+                <select class="month-select" id="refundMonthSelect" style="margin-left:auto;"></select>
+                <span class="save-hint">💡 修改后自动应用到该月所有主播业绩</span>
+            </div>
+            <div class="panel-body" style="max-height:300px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>直播间</th>
+                            <th>退款比率 (%)</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody id="refundMgmtBody">
+                        <tr><td colspan="3" style="text-align:center;padding:24px;color:#999;">暂无数据</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ==================== 月度主播业绩汇总面板 ==================== -->
+        <div class="panel" id="monthlySummaryPanel">
+            <div class="panel-header month-summary-header">
+                <span class="dot" style="background:#22c55e;"></span>
+                <span>📆 月主播业绩汇总（分直播间，已扣退款）</span>
+                <span class="month-period-badge" id="monthPeriodLabel">本月 2026-07</span>
+                <select class="month-select" id="summaryMonthSelect" style="margin-left:auto;"></select>
+            </div>
+            <div class="panel-body" style="max-height:400px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>主播</th>
+                            <th>直播间</th>
+                            <th>月销售额</th>
+                            <th>退款比率</th>
+                            <th>退款金额</th>
+                            <th>净有效业绩</th>
+                        </tr>
+                    </thead>
+                    <tbody id="monthlySummaryBody">
+                        <tr><td colspan="6" style="text-align:center;padding:24px;color:#999;">暂无数据</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ==================== 周环比面板 ==================== -->
+        <div class="panel" id="weekComparePanel">
+            <div class="panel-header week-compare-header">
+                <span class="dot" style="background:#f59e0b;"></span>
+                <span>📊 本周 vs 上周业绩对比</span>
+                <span class="week-period-badge" id="weekPeriodLabel">本周 07/27-08/02</span>
+                <div class="view-toggle" id="viewToggle">
+                    <button class="active" data-mode="anchor">按主播</button>
+                    <button data-mode="room">按直播间</button>
+                </div>
+            </div>
+            <div class="panel-body" style="max-height:400px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th id="weekColName">主播</th>
+                            <th>本周销售额</th>
+                            <th>上周销售额</th>
+                            <th>环比增长</th>
+                        </tr>
+                    </thead>
+                    <tbody id="weekCompareBody">
+                        <tr><td colspan="4" style="text-align:center;padding:24px;color:#999;">暂无数据</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ==================== 双列详情 ==================== -->
+        <div class="content-row">
+            <!-- 左：直播间每日明细 -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="dot"></span> 📋 <span id="detailTitle">直播间每日业绩明细</span>
+                </div>
+                <div class="panel-body" id="detailTableWrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>主播</th>
+                                <th>班次</th>
+                                <th>销售额</th>
+                                <th>当日排名</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailTableBody">
+                            <tr><td colspan="5" style="text-align:center;padding:32px;color:#999;">请选择直播间查看明细</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 右：总业绩排名 -->
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="dot" style="background:#f59e0b;"></span> 🏆 总业绩排名（所有直播间）
+                </div>
+                <div class="panel-body" id="totalRankWrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>直播间</th>
+                                <th>主播</th>
+                                <th>累计销售额</th>
+                            </tr>
+                        </thead>
+                        <tbody id="totalRankBody">
+                            <tr><td colspan="4" style="text-align:center;padding:32px;color:#999;">暂无数据</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 趋势图 ==================== -->
+        <div class="chart-panel">
+            <div style="font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:8px;">
+                <span style="width:8px;height:18px;background:var(--primary);border-radius:2px;display:inline-block;"></span>
+                📈 直播间销售额趋势
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="trendChart"></canvas>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            💡 数据更新：在 <code>DAILY_RECORDS</code> 中按日期添加记录（格式：<code>{ roomId, shift, anchor, sales }</code>）。退款比率在"月度退款比率管理"面板统一设置。
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ==================== 雷军名言轮播 ====================
+            const quotes = [
+                "站在风口上，猪都能飞起来",
+                "永远相信美好的事情即将发生",
+                "专注、极致、口碑、快",
+                "创业就是要做自己最擅长的事情",
+                "让每个人都能享受科技的乐趣",
+                "梦想还是要有的，万一实现了呢",
+                "我最大的感受是顺势而为",
+                "厚道的人运气不会太差",
+                "只有认知的突破，才能带来真正的成长",
+                "创新决定我们能飞多高，质量决定我们能走多远"
+            ];
+            const quoteTextEl = document.getElementById('quoteText');
+            const quoteAuthorEl = document.getElementById('quoteAuthor');
+            let currentQuoteIndex = 0;
+            let quoteInterval;
+
+            function showQuote(index) {
+                quoteTextEl.style.opacity = '0';
+                quoteTextEl.style.transform = 'translateY(8px)';
+                setTimeout(() => {
+                    quoteTextEl.textContent = quotes[index];
+                    quoteAuthorEl.textContent = '—— 雷军';
+                    quoteTextEl.style.opacity = '1';
+                    quoteTextEl.style.transform = 'translateY(0)';
+                }, 300);
+            }
+
+            function nextQuote() {
+                currentQuoteIndex = (currentQuoteIndex + 1) % quotes.length;
+                showQuote(currentQuoteIndex);
+            }
+            const carousel = document.getElementById('quoteCarousel');
+            carousel.addEventListener('mouseenter', () => clearInterval(quoteInterval));
+            carousel.addEventListener('mouseleave', () => {
+                quoteInterval = setInterval(nextQuote, 5000);
+            });
+            showQuote(0);
+            quoteInterval = setInterval(nextQuote, 5000);
+
+            // ==================== 📌 数据配置区（日常更新只需修改此处） ====================
+            /**
+             * 直播间配置
+             * id: 唯一标识
+             * name: 直播间名称
+             * color: 主题色
+             */
+            const ROOMS = [
+                { id: 'room_xiaomi_digital', name: '小米数码旗舰店', color: '#4f6ef7' },
+                { id: 'room_xiaomi_band', name: '小米官方手环直播间', color: '#f472b6' },
+                { id: 'room_xiaomi_watch', name: '小米官方手表', color: '#22c55e' },
+                { id: 'room_xiaomi_watch_flagship', name: '小米官旗手表直播间', color: '#8b5cf6' },
+                { id: 'room_xiaomi_earphone', name: '小米官方耳机直播间', color: '#f59e0b' },
+                // 可按需新增直播间，例如：
+                // { id: 'room_xiaomi_tv', name: '小米电视直播间', color: '#ef4444' },
+            ];
+
+            /**
+             * 月度退款比率（按月份 -> 直播间ID -> 百分比数值）
+             * 页面上的"月度退款比率管理"面板可实时修改，修改后自动应用
+             */
+            let monthlyRefundRates = {};
+
+            /**
+             * 每日业绩数据
+             * 格式：'YYYY-MM-DD': [ { 房间ID, 班次(A/B/C/D/E), 主播名, 销售额, 订单数, 观看人数, 时长(小时) }, ... ]
+             */
+            /**
+             * 每日业绩数据
+             * 格式：'YYYY-MM-DD': [ { roomId, shift(A/B/C/D/E), anchor, sales }, ... ]
+             * sales = 当日该主播总GSV
+             */
+            const DAILY_RECORDS = {
+                '2026-07-01': [
+                    { roomId: 'room_xiaomi_digital', shift: 'A', anchor: '宋紫茹', sales: 13415.67 },
+                    { roomId: 'room_xiaomi_digital', shift: 'B', anchor: '张蓬元', sales: 21806.25 },
+                    { roomId: 'room_xiaomi_digital', shift: 'C', anchor: '秦雨琪', sales: 22489.53 },
+                    { roomId: 'room_xiaomi_digital', shift: 'D', anchor: '申琰', sales: 19336.16 },
+                    { roomId: 'room_xiaomi_digital', shift: 'E', anchor: '付慧娴', sales: 2324.0 },
+                    { roomId: 'room_xiaomi_band', shift: 'A', anchor: '周亚锦', sales: 11531.99 },
+                    { roomId: 'room_xiaomi_band', shift: 'B', anchor: '朱弘颖', sales: 19236.7 },
+                    { roomId: 'room_xiaomi_band', shift: 'C', anchor: '欧阳硕果', sales: 11484.5 },
+                    { roomId: 'room_xiaomi_band', shift: 'D', anchor: '周家会', sales: 7956.13 },
+                    { roomId: 'room_xiaomi_band', shift: 'E', anchor: '梁思雅', sales: 2455.08 },
+                    { roomId: 'room_xiaomi_watch', shift: 'A', anchor: '郭孟航', sales: 15469.16 },
+                    { roomId: 'room_xiaomi_watch', shift: 'B', anchor: '王嘉琦', sales: 23138.4 },
+                    { roomId: 'room_xiaomi_watch', shift: 'C', anchor: '高智敏', sales: 7180.1 },
+                    { roomId: 'room_xiaomi_watch', shift: 'D', anchor: '高珊珊', sales: 4791.8 },
+                    { roomId: 'room_xiaomi_watch', shift: 'E', anchor: '牛萌萌', sales: 1737.1 },
+                    { roomId: 'room_xiaomi_watch_flagship', shift: 'A', anchor: '刘卓凡', sales: 1585.09 },
+                    { roomId: 'room_xiaomi_watch_flagship', shift: 'B', anchor: '刘垚', sales: 1497.0 },
+                    { roomId: 'room_xiaomi_watch_flagship', shift: 'C', anchor: '马琪', sales: 657.0 },
+                    { roomId: 'room_xiaomi_watch_flagship', shift: 'D', anchor: '李牧遥', sales: 1564.1 },
+                    { roomId: 'room_xiaomi_earphone', shift: 'A', anchor: '范金蝶', sales: 0 },
+                    { roomId: 'room_xiaomi_earphone', shift: 'B', anchor: '刘子源', sales: 339.0 },
+                    { roomId: 'room_xiaomi_earphone', shift: 'C', anchor: '李晓洋', sales: 702.36 },
+                    { roomId: 'room_xiaomi_earphone', shift: 'D', anchor: '王瑞', sales: 2471.0 },
+                    { roomId: 'room_xiaomi_earphone', shift: 'E', anchor: '陈依雨', sales: 0 },
+                ],
+                // 按日期添加新数据，格式同上
+            };
+
+            // ==================== 辅助函数 ====================
+            const getRoomById = (id) => ROOMS.find(r => r.id === id) || { name: id, color: '#999' };
+            const getAllDates = () => Object.keys(DAILY_RECORDS).sort();
+
+            function formatMoney(num) {
+                if (num >= 10000) return '¥' + (num / 10000).toFixed(2) + '万';
+                return '¥' + num.toLocaleString('zh-CN');
+            }
+
+            function formatPercentVal(current, previous) {
+                if (!previous || previous === 0) return '--';
+                const change = ((current - previous) / previous) * 100;
+                const sign = change >= 0 ? '+' : '';
+                const cls = change >= 0 ? 'trend-up' : 'trend-down';
+                const icon = change >= 0 ? '↑' : '↓';
+                return `<span class="${cls}"><span class="trend-icon">${icon}</span>${sign}${change.toFixed(1)}%</span>`;
+            }
+
+            function getWeekRanges() {
+                const allDates = getAllDates();
+                if (!allDates.length) return { thisWeek: null, lastWeek: null };
+                const latestDateStr = allDates[allDates.length - 1];
+                const latestDate = new Date(latestDateStr + 'T00:00:00');
+                const dayOfWeek = latestDate.getDay();
+                const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+                const thisMonday = new Date(latestDate);
+                thisMonday.setDate(latestDate.getDate() + mondayOffset);
+                const thisSunday = new Date(thisMonday);
+                thisSunday.setDate(thisMonday.getDate() + 6);
+                const lastMonday = new Date(thisMonday);
+                lastMonday.setDate(thisMonday.getDate() - 7);
+                const lastSunday = new Date(thisSunday);
+                lastSunday.setDate(thisSunday.getDate() - 7);
+                const format = (d) => d.toISOString().slice(0, 10);
+                return {
+                    thisWeek: { start: format(thisMonday), end: format(thisSunday) },
+                    lastWeek: { start: format(lastMonday), end: format(lastSunday) }
+                };
+            }
+
+            function sumRecordsInRange(startDate, endDate, groupBy, roomId) {
+                const map = new Map();
+                const allDates = getAllDates().filter(d => d >= startDate && d <= endDate);
+                allDates.forEach(date => {
+                    const dayArr = DAILY_RECORDS[date] || [];
+                    dayArr.forEach(rec => {
+                        if (roomId && roomId !== 'all' && rec.roomId !== roomId) return;
+                        let key;
+                        if (groupBy === 'anchor') key = rec.anchor;
+                        else if (groupBy === 'room') key = rec.roomId;
+                        else key = rec.roomId + '||' + rec.anchor;
+                        if (!map.has(key)) map.set(key, { sales: 0, roomId: rec.roomId, anchor: rec.anchor });
+                        const entry = map.get(key);
+                        entry.sales += rec.sales || 0;
+                    });
+                });
+                return Array.from(map.entries()).map(([key, val]) => ({ key, ...val }));
+            }
+
+            function getAvailableMonths() {
+                const months = new Set();
+                getAllDates().forEach(date => {
+                    months.add(date.slice(0, 7));
+                });
+                return Array.from(months).sort().reverse();
+            }
+
+            function ensureRefundRatesForMonth(month) {
+                if (!monthlyRefundRates[month]) {
+                    monthlyRefundRates[month] = {};
+                }
+                ROOMS.forEach(room => {
+                    if (monthlyRefundRates[month][room.id] === undefined) {
+                        monthlyRefundRates[month][room.id] = 5.0;
+                    }
+                });
+            }
+
+            function getRefundRate(month, roomId) {
+                ensureRefundRatesForMonth(month);
+                return monthlyRefundRates[month][roomId] || 5.0;
+            }
+
+            function setRefundRate(month, roomId, rate) {
+                ensureRefundRatesForMonth(month);
+                monthlyRefundRates[month][roomId] = parseFloat(rate) || 0;
+            }
+
+            // ==================== UI 元素引用 ====================
+            const elements = {
+                lastUpdateLabel: document.getElementById('lastUpdateLabel'),
+                totalSales: document.getElementById('totalSales'),
+                activeAnchors: document.getElementById('activeAnchors'),
+                detailTitle: document.getElementById('detailTitle'),
+                detailTableBody: document.getElementById('detailTableBody'),
+                totalRankBody: document.getElementById('totalRankBody'),
+                roomSelect: document.getElementById('roomSelect'),
+                trendChart: document.getElementById('trendChart'),
+                weekCompareBody: document.getElementById('weekCompareBody'),
+                weekPeriodLabel: document.getElementById('weekPeriodLabel'),
+                weekColName: document.getElementById('weekColName'),
+            };
+
+            let trendChartInstance = null;
+            let currentWeekMode = 'anchor';
+
+            // ==================== 面板更新函数 ====================
+
+            // 退款比率管理面板
+            function updateRefundMgmtPanel() {
+                const monthSelect = document.getElementById('refundMonthSelect');
+                const selectedMonth = monthSelect.value;
+                if (!selectedMonth) {
+                    document.getElementById('refundMgmtBody').innerHTML =
+                        '<tr><td colspan="3" style="text-align:center;padding:24px;color:#999;">请选择月份</td></tr>';
+                    return;
+                }
+                ensureRefundRatesForMonth(selectedMonth);
+                const tbody = document.getElementById('refundMgmtBody');
+                tbody.innerHTML = ROOMS.map(room => {
+                    const rate = getRefundRate(selectedMonth, room.id);
+                    return `
+                        <tr>
+                            <td><span class="badge-room" style="background:${room.color};">${room.name}</span></td>
+                            <td>
+                                <input type="number" 
+                                       class="refund-rate-input" 
+                                       value="${rate.toFixed(1)}" 
+                                       step="0.1" 
+                                       min="0" 
+                                       max="100"
+                                       data-month="${selectedMonth}"
+                                       data-room="${room.id}"
+                                       title="修改${room.name}退款比率">
+                                <span style="font-size:0.75rem;">%</span>
+                            </td>
+                            <td style="font-size:0.75rem;color:var(--text-secondary);">该比率应用于该月此直播间所有主播</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                tbody.querySelectorAll('.refund-rate-input').forEach(input => {
+                    input.addEventListener('input', function() {
+                        const month = this.dataset.month;
+                        const roomId = this.dataset.room;
+                        const newRate = parseFloat(this.value);
+                        if (isNaN(newRate) || newRate < 0) return;
+                        setRefundRate(month, roomId, newRate);
+                        // 同步汇总面板的月份选择器，确保上下比率一致
+                        document.getElementById('summaryMonthSelect').value = month;
+                        updateMonthlySummary(elements.roomSelect.value);
+                    });
+                });
+            }
+
+            // 月度主播业绩汇总面板
+            function updateMonthlySummary(roomId) {
+                const monthSelect = document.getElementById('summaryMonthSelect');
+                const selectedMonth = monthSelect.value;
+                if (!selectedMonth) {
+                    document.getElementById('monthlySummaryBody').innerHTML =
+                        '<tr><td colspan="6" style="text-align:center;padding:24px;color:#999;">暂无月份数据</td></tr>';
+                    return;
+                }
+                document.getElementById('monthPeriodLabel').textContent = '月份 ' + selectedMonth;
+                ensureRefundRatesForMonth(selectedMonth);
+
+                const map = new Map();
+                getAllDates().forEach(date => {
+                    if (!date.startsWith(selectedMonth)) return;
+                    const dayArr = DAILY_RECORDS[date] || [];
+                    dayArr.forEach(rec => {
+                        if (roomId && roomId !== 'all' && rec.roomId !== roomId) return;
+                        const key = rec.anchor + '||' + rec.roomId;
+                        if (!map.has(key)) {
+                            map.set(key, { anchor: rec.anchor, roomId: rec.roomId, sales: 0 });
+                        }
+                        map.get(key).sales += rec.sales || 0;
+                    });
+                });
+
+                const rows = Array.from(map.values()).map(item => {
+                    const room = getRoomById(item.roomId);
+                    const refundRatePercent = getRefundRate(selectedMonth, item.roomId);
+                    const refundAmount = item.sales * (refundRatePercent / 100);
+                    const netSales = item.sales - refundAmount;
+                    return {
+                        anchor: item.anchor,
+                        roomName: room.name,
+                        roomColor: room.color,
+                        sales: item.sales,
+                        refundRatePercent: refundRatePercent,
+                        refundAmount: refundAmount,
+                        netSales: netSales
+                    };
+                }).sort((a, b) => b.netSales - a.netSales);
+
+                const tbody = document.getElementById('monthlySummaryBody');
+                if (rows.length === 0) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="6" style="text-align:center;padding:24px;color:#999;">该月份暂无数据</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = rows.map(r => `
+                    <tr>
+                        <td><strong>${r.anchor}</strong></td>
+                        <td><span class="badge-room" style="background:${r.roomColor};">${r.roomName}</span></td>
+                        <td>${formatMoney(r.sales)}</td>
+                        <td>${r.refundRatePercent.toFixed(1)}%</td>
+                        <td>${formatMoney(r.refundAmount)}</td>
+                        <td class="highlight-sales">${formatMoney(r.netSales)}</td>
+                    </tr>
+                `).join('');
+            }
+
+            // 周环比面板
+            function updateWeekCompare(roomId) {
+                const ranges = getWeekRanges();
+                if (!ranges.thisWeek) {
+                    elements.weekCompareBody.innerHTML =
+                        '<tr><td colspan="4" style="text-align:center;padding:24px;color:#999;">暂无足够数据</td></tr>';
+                    return;
+                }
+                const { thisWeek, lastWeek } = ranges;
+                elements.weekPeriodLabel.textContent = `本周 ${thisWeek.start.slice(5)} - ${thisWeek.end.slice(5)}`;
+                const thisData = sumRecordsInRange(thisWeek.start, thisWeek.end, currentWeekMode, roomId);
+                const lastData = sumRecordsInRange(lastWeek.start, lastWeek.end, currentWeekMode, roomId);
+                const lastMap = new Map(lastData.map(item => [item.key, item]));
+                const combined = thisData.map(item => {
+                    const lastItem = lastMap.get(item.key) || { sales: 0 };
+                    return {
+                        key: item.key,
+                        name: currentWeekMode === 'anchor' ? item.key : getRoomById(item.key).name,
+                        roomColor: currentWeekMode === 'room' ? getRoomById(item.key).color : '#888',
+                        thisSales: item.sales,
+                        lastSales: lastItem.sales,
+                    };
+                }).sort((a, b) => b.thisSales - a.thisSales);
+                elements.weekColName.textContent = currentWeekMode === 'anchor' ? '主播' : '直播间';
+                if (combined.length === 0) {
+                    elements.weekCompareBody.innerHTML =
+                        '<tr><td colspan="4" style="text-align:center;padding:24px;color:#999;">本周暂无数据</td></tr>';
+                    return;
+                }
+                elements.weekCompareBody.innerHTML = combined.map(item => {
+                    const nameHtml = currentWeekMode === 'anchor' ?
+                        `<strong>${item.name}</strong>` :
+                        `<span class="badge-room" style="background:${item.roomColor};">${item.name}</span>`;
+                    return `<tr>
+                        <td>${nameHtml}</td>
+                        <td class="highlight-sales">${formatMoney(item.thisSales)}</td>
+                        <td>${formatMoney(item.lastSales)}</td>
+                        <td>${formatPercentVal(item.thisSales, item.lastSales)}</td>
+                    </tr>`;
+                }).join('');
+            }
+
+            // 筛选记录
+            function getFilteredRecords(daysBack, startDate, endDate, roomId) {
+                const allDates = getAllDates();
+                let dates = [...allDates];
+                if (daysBack && daysBack !== 'all') {
+                    const n = parseInt(daysBack);
+                    dates = allDates.slice(-n);
+                } else if (startDate || endDate) {
+                    dates = dates.filter(d => (!startDate || d >= startDate) && (!endDate || d <= endDate));
+                }
+                const records = [];
+                dates.forEach(date => {
+                    const dayArr = DAILY_RECORDS[date] || [];
+                    dayArr.forEach(rec => {
+                        if (roomId && roomId !== 'all' && rec.roomId !== roomId) return;
+                        const room = getRoomById(rec.roomId);
+                        records.push({
+                            date,
+                            roomId: rec.roomId,
+                            roomName: room.name,
+                            roomColor: room.color,
+                            shift: rec.shift || '',
+                            anchor: rec.anchor,
+                            sales: rec.sales || 0,
+                        });
+                    });
+                });
+                return { dates, records };
+            }
+
+            // 附加每日排名
+            function attachDailyRanks(records) {
+                const groups = {};
+                records.forEach(r => {
+                    const key = r.date + '||' + r.roomId;
+                    if (!groups[key]) groups[key] = [];
+                    groups[key].push(r);
+                });
+                Object.values(groups).forEach(group => {
+                    group.sort((a, b) => b.sales - a.sales);
+                    group.forEach((rec, idx) => { rec.dailyRank = idx + 1; });
+                });
+                records.forEach(r => { if (r.dailyRank === undefined) r.dailyRank = '-'; });
+            }
+
+            // 计算总排名
+            function computeTotalRanking(records) {
+                const map = new Map();
+                records.forEach(r => {
+                    const key = r.roomId + '||' + r.anchor;
+                    if (!map.has(key)) {
+                        map.set(key, {
+                            roomId: r.roomId,
+                            roomName: r.roomName,
+                            roomColor: r.roomColor,
+                            anchor: r.anchor,
+                            totalSales: 0,
+                        });
+                    }
+                    const entry = map.get(key);
+                    entry.totalSales += r.sales;
+                });
+                const list = Array.from(map.values());
+                list.sort((a, b) => b.totalSales - a.totalSales);
+                list.forEach((item, idx) => item.rank = idx + 1);
+                return list;
+            }
+
+            // 概览卡片
+            function updateOverview(records) {
+                const totalSales = records.reduce((s, r) => s + r.sales, 0);
+                const anchorSet = new Set(records.map(r => r.roomId + '||' + r.anchor));
+                elements.totalSales.textContent = formatMoney(totalSales);
+                elements.activeAnchors.textContent = anchorSet.size;
+                elements.lastUpdateLabel.textContent = '最新数据：' + (getAllDates().slice(-1)[0] || '--');
+            }
+
+            // 每日明细表格
+            function updateDetailTable(records, selectedRoomId) {
+                const tbody = elements.detailTableBody;
+                if (!records.length) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="5" style="text-align:center;padding:32px;color:#999;">暂无匹配数据</td></tr>';
+                    return;
+                }
+                attachDailyRanks(records);
+                const sorted = [...records].sort((a, b) => {
+                    if (a.date !== b.date) return b.date.localeCompare(a.date);
+                    if (a.roomId !== b.roomId && selectedRoomId === 'all') return a.roomName.localeCompare(b.roomName);
+                    return (a.dailyRank || 999) - (b.dailyRank || 999);
+                });
+                tbody.innerHTML = sorted.map(r => {
+                    let rankHtml = '';
+                    if (r.dailyRank === 1) rankHtml = '<span class="rank-cell rank-1">🥇1</span>';
+                    else if (r.dailyRank === 2) rankHtml = '<span class="rank-cell rank-2">🥈2</span>';
+                    else if (r.dailyRank === 3) rankHtml = '<span class="rank-cell rank-3">🥉3</span>';
+                    else rankHtml = `<span class="rank-cell">${r.dailyRank}</span>`;
+                    return `<tr>
+                        <td><strong>${r.date}</strong></td>
+                        <td>${r.anchor}</td>
+                        <td><span class="badge-shift">${r.shift}</span></td>
+                        <td class="highlight-sales">${formatMoney(r.sales)}</td>
+                        <td>${rankHtml}</td>
+                    </tr>`;
+                }).join('');
+                elements.detailTitle.textContent = selectedRoomId === 'all' ?
+                    '全部直播间每日明细' :
+                    getRoomById(selectedRoomId).name + ' · 每日业绩明细';
+            }
+
+            // 总排名表格
+            function updateTotalRankTable(records) {
+                const ranking = computeTotalRanking(records);
+                const tbody = elements.totalRankBody;
+                if (!ranking.length) {
+                    tbody.innerHTML =
+                        '<tr><td colspan="4" style="text-align:center;padding:32px;color:#999;">暂无排名数据</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = ranking.map(r => {
+                    let rankBadge = '';
+                    if (r.rank === 1) rankBadge = '<span class="rank-cell rank-1">🥇 1</span>';
+                    else if (r.rank === 2) rankBadge = '<span class="rank-cell rank-2">🥈 2</span>';
+                    else if (r.rank === 3) rankBadge = '<span class="rank-cell rank-3">🥉 3</span>';
+                    else rankBadge = `<span class="rank-cell">${r.rank}</span>`;
+                    return `<tr>
+                        <td>${rankBadge}</td>
+                        <td><span class="badge-room" style="background:${r.roomColor};">${r.roomName}</span></td>
+                        <td><strong>${r.anchor}</strong></td>
+                        <td class="highlight-sales">${formatMoney(r.totalSales)}</td>
+                    </tr>`;
+                }).join('');
+            }
+
+            // 趋势图
+            function updateTrendChart(records, dates, selectedRoomId) {
+                if (trendChartInstance) trendChartInstance.destroy();
+                const ctx = elements.trendChart.getContext('2d');
+                if (!dates.length) {
+                    trendChartInstance = new Chart(ctx, {
+                        type: 'line',
+                        data: { labels: [], datasets: [] },
+                        options: { responsive: true, maintainAspectRatio: false }
+                    });
+                    return;
+                }
+                const roomIds = selectedRoomId === 'all' ? ROOMS.map(r => r.id) : [selectedRoomId];
+                const datasets = roomIds.map(roomId => {
+                    const room = getRoomById(roomId);
+                    const data = dates.map(date => {
+                        const dayRecords = (DAILY_RECORDS[date] || []).filter(r => r.roomId === roomId);
+                        return dayRecords.reduce((sum, r) => sum + (r.sales || 0), 0);
+                    });
+                    return {
+                        label: room.name,
+                        data,
+                        borderColor: room.color,
+                        backgroundColor: room.color + '20',
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointHoverRadius: 7,
+                        tension: 0.3,
+                        fill: false,
+                    };
+                });
+                trendChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: { labels: dates.map(d => d.slice(5)), datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: { usePointStyle: true, padding: 16, font: { size: 11 } }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: false,
+                                ticks: { callback: v => '¥' + (v / 10000).toFixed(1) + '万' },
+                                grid: { color: '#eee' }
+                            },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+            }
+
+            // ==================== 全局刷新 ====================
+            function refreshAll() {
+                const activeBtn = document.querySelector('#filterPanel .filter-btn.active');
+                let daysBack = activeBtn ? activeBtn.dataset.range : '7';
+                const startDate = document.getElementById('dateStart').value;
+                const endDate = document.getElementById('dateEnd').value;
+                const roomId = elements.roomSelect.value;
+                const { dates, records } = getFilteredRecords(
+                    (startDate || endDate) ? null : daysBack,
+                    startDate || null,
+                    endDate || null,
+                    roomId
+                );
+                updateOverview(records);
+                updateDetailTable(records, roomId);
+                updateTotalRankTable(records);
+                updateTrendChart(records, dates, roomId);
+                updateWeekCompare(roomId);
+                updateMonthlySummary(roomId);
+                updateRefundMgmtPanel();
+            }
+
+            // ==================== 初始化 ====================
+            function initRoomSelect() {
+                const sel = elements.roomSelect;
+                sel.innerHTML = '<option value="all">全部直播间</option>';
+                ROOMS.forEach(room => {
+                    const opt = document.createElement('option');
+                    opt.value = room.id;
+                    opt.textContent = room.name;
+                    sel.appendChild(opt);
+                });
+                sel.value = 'all';
+            }
+
+            function initMonthSelects() {
+                const months = getAvailableMonths();
+                const refundSelect = document.getElementById('refundMonthSelect');
+                const summarySelect = document.getElementById('summaryMonthSelect');
+                refundSelect.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+                summarySelect.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+                if (months.length > 0) {
+                    refundSelect.value = months[0];
+                    summarySelect.value = months[0];
+                }
+                refundSelect.addEventListener('change', updateRefundMgmtPanel);
+                summarySelect.addEventListener('change', () => updateMonthlySummary(elements.roomSelect.value));
+            }
+
+            function bindEvents() {
+                const filterBtns = document.querySelectorAll('#filterPanel .filter-btn');
+                filterBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        filterBtns.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        document.getElementById('dateStart').value = '';
+                        document.getElementById('dateEnd').value = '';
+                        refreshAll();
+                    });
+                });
+                document.getElementById('applyCustomRange').addEventListener('click', () => {
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    refreshAll();
+                });
+                elements.roomSelect.addEventListener('change', refreshAll);
+
+                const toggleBtns = document.querySelectorAll('#viewToggle button');
+                toggleBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        toggleBtns.forEach(b => b.classList.remove('active'));
+                        this.classList.add('active');
+                        currentWeekMode = this.dataset.mode;
+                        updateWeekCompare(elements.roomSelect.value);
+                    });
+                });
+
+                const allDates = getAllDates();
+                if (allDates.length) {
+                    document.getElementById('dateStart').value = allDates[0];
+                    document.getElementById('dateEnd').value = allDates[allDates.length - 1];
+                }
+            }
+
+            // 启动
+            initRoomSelect();
+            initMonthSelects();
+            bindEvents();
+            refreshAll();
+        })();
+    </script>
+</body>
+</html>
