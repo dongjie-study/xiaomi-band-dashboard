@@ -22,6 +22,7 @@ from utils import detect_excel_columns
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(DATA_DIR, 'history.json')
+B10PRO_FILE = os.path.join(DATA_DIR, 'b10pro_history.json')
 HOURLY_DIR = os.path.join(DATA_DIR, 'hourly')
 
 
@@ -397,6 +398,10 @@ def update(filepath, our_filepath=None):
     # Generate stats_data.js for root index.html overview
     _write_stats_js(history)
 
+    # Extract and save 10Pro comparison data
+    b10pro_day = _extract_b10pro(df)
+    _save_b10pro_history(b10pro_day)
+
     return today, history
 
 
@@ -427,6 +432,42 @@ def _write_stats_js(history):
     with open(path, 'w', encoding='utf-8') as f:
         f.write(js)
     print(f"Stats data: {path}")
+
+
+def _extract_b10pro(df):
+    """Extract 10Pro comparison data: 我司 vs 良米, live vs card."""
+    b10p = df[df['product'].str.contains('10Pro|10 Pro', na=False)].copy()
+    b10p['team'] = b10p['room'].apply(lambda x: TEAM_MAP.get(str(x).strip(), '良米'))
+    b10p['is_card'] = b10p['room'].str.contains('商品卡', na=False)
+
+    result = {'date': str(df['date'].iloc[0])}
+    for team, key in [('我司', 'our'), ('良米', 'lm')]:
+        t = b10p[b10p['team'] == team]
+        live = t[~t['is_card']]
+        card = t[t['is_card']]
+        result[key] = {
+            'live_o': int(len(live)), 'live_a': round(float(live['price'].sum()), 2),
+            'card_o': int(len(card)), 'card_a': round(float(card['price'].sum()), 2),
+        }
+    return result
+
+
+def _save_b10pro_history(b10pro_day):
+    """Save/update b10pro_history.json with new day's data."""
+    history = []
+    if os.path.exists(B10PRO_FILE):
+        with open(B10PRO_FILE, 'r', encoding='utf-8') as f:
+            history = json.load(f)
+    # Upsert
+    existing = [i for i, d in enumerate(history) if d['date'] == b10pro_day['date']]
+    if existing:
+        history[existing[0]] = b10pro_day
+    else:
+        history.append(b10pro_day)
+    history.sort(key=lambda x: x['date'])
+    with open(B10PRO_FILE, 'w', encoding='utf-8') as f:
+        json.dump(history, f, ensure_ascii=False, separators=(',', ':'))
+    print(f"10Pro data saved: {B10PRO_FILE} ({len(history)} days)")
 
 
 if __name__ == '__main__':

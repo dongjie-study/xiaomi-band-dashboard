@@ -154,6 +154,31 @@
     .kpi-row { grid-template-columns: 1fr; }
     .charts-row { grid-template-columns: 1fr; }
   }
+
+  /* ===== 10Pro 对比模块 ===== */
+  .b10pro-section { margin: 20px 0; }
+  .b10pro-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
+  .b10pro-kpi { background: #fff; border-radius: var(--radius); padding: 16px 14px; border: 1px solid #e8ecf1; text-align: center; }
+  .b10pro-kpi .bk-title { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; }
+  .b10pro-kpi .bk-vs { display: flex; justify-content: center; align-items: center; gap: 12px; }
+  .b10pro-kpi .bk-side { text-align: center; }
+  .b10pro-kpi .bk-val { font-size: 1.25rem; font-weight: 700; }
+  .b10pro-kpi .bk-lbl { font-size: 0.68rem; color: var(--text-secondary); }
+  .b10pro-kpi .bk-sub { font-size: 0.62rem; color: #999; }
+  .b10pro-kpi .bk-divider { font-size: 0.8rem; font-weight: 700; color: #ccc; }
+  .b10pro-kpi .bk-bar-wrap { margin-top: 8px; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; display: flex; }
+  .b10pro-kpi .bk-bar-o { height: 100%; background: linear-gradient(90deg, #4f6ef7, #6b8aff); border-radius: 3px; transition: width 0.6s ease; }
+  .b10pro-kpi .bk-bar-l { height: 100%; background: linear-gradient(90deg, #94a3b8, #b0bcc8); border-radius: 3px; transition: width 0.6s ease; }
+  .b10pro-kpi .bk-pct { font-size: 0.65rem; color: var(--text-secondary); margin-top: 4px; }
+  .b10pro-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+  .b10pro-table th, .b10pro-table td { padding: 6px 8px; text-align: center; border-bottom: 1px solid #f0f2f5; white-space: nowrap; }
+  .b10pro-table th { background: #f8f9fc; font-size: 0.68rem; font-weight: 600; color: var(--text-secondary); }
+  .b10pro-table tbody tr:hover { background: #f8fafc; }
+  .b10pro-table .col-our { color: #4f6ef7; font-weight: 600; }
+  .b10pro-table .col-lm { color: #94a3b8; font-weight: 600; }
+  .b10pro-table .col-win { background: #f0f3ff; }
+  .b10pro-table .hl-row { background: #fffdf0; }
+  @media (max-width: 768px) { .b10pro-kpis { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -259,6 +284,32 @@ return;
     <div id="prodRoomPanels"></div>
   </div>
 
+  <!-- ===== 小米手环10Pro 我司 vs 良米 销量对比 ===== -->
+  <div class="chart-card full-width b10pro-section" id="b10proSection" style="display:none;">
+    <h2>⌚ 小米手环10Pro · 我司 vs 良米 销量对比</h2>
+    <div class="b10pro-kpis" id="b10proKpis"></div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3>📺 直播端10Pro销量趋势（单量）</h3>
+        <div class="chart-container"><canvas id="chartB10proLive"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>🛒 商品卡端10Pro销量趋势（单量）</h3>
+        <div class="chart-container"><canvas id="chartB10proCard"></canvas></div>
+      </div>
+    </div>
+    <div style="overflow-x:auto;margin-top:8px;">
+      <table class="b10pro-table" id="b10proTable">
+        <thead><tr>
+          <th>日期</th><th>我司<br>直播单量</th><th>良米<br>直播单量</th><th>直播<br>合计</th>
+          <th>我司<br>商品卡</th><th>良米<br>商品卡</th><th>商品卡<br>合计</th>
+          <th>我司<br>总计</th><th>良米<br>总计</th><th>总计</th><th>我司<br>占比</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- ===== 各直播间详细数据 -- 分小时分品类 + 环比 ===== -->
   <div class="chart-card full-width" id="roomDetailSection" style="margin:16px 0;">
     <h2>各直播间详细数据 — 分小时分品类 + 环比</h2>
@@ -350,6 +401,7 @@ async function ensureHourly(day) {
     DATA = HISTORY[HISTORY.length - 1];
     await ensureHourly(DATA);
     dataReady = true;
+    B10PRO_PROMISE = loadB10proData();
   } catch(e) {
     // Fallback: try inline placeholders (legacy deployment)
     if (typeof __DATA_PLACEHOLDER__ !== 'undefined' && String(__DATA_PLACEHOLDER__) !== '__DATA_PLACEHOLDER__') {
@@ -1524,6 +1576,134 @@ function renderDailySummary() {
   renderDailyInsights();
 }
 
+// ==================== 10Pro 对比模块 ====================
+let B10PRO_DATA = null;
+let B10PRO_PROMISE = null;
+let b10proLiveChart = null;
+let b10proCardChart = null;
+
+async function loadB10proData() {
+  try {
+    var now = new Date();
+    var cacheKey = now.getFullYear() + ('0' + (now.getMonth() + 1)).slice(-2) + ('0' + now.getDate()).slice(-2);
+    var resp = await fetch('./b10pro_history.json?_=' + cacheKey);
+    if (!resp.ok) return;
+    B10PRO_DATA = await resp.json();
+  } catch(e) { B10PRO_DATA = null; }
+}
+
+function renderB10proModule() {
+  var section = document.getElementById('b10proSection');
+  if (!B10PRO_DATA || B10PRO_DATA.length < 1) { section.style.display = 'none'; return; }
+  // Only show when all rooms selected
+  if (currentRoom !== '__all__') { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  var latest = B10PRO_DATA[B10PRO_DATA.length - 1];
+  var d = latest;
+  var our = d.our, lm = d.lm;
+  var tLive = our.live_o + lm.live_o;
+  var tCard = our.card_o + lm.card_o;
+  var tAll = our.live_o + our.card_o + lm.live_o + lm.card_o;
+  var lpO = tLive > 0 ? (our.live_o / tLive * 100) : 0;
+  var lpL = tLive > 0 ? (lm.live_o / tLive * 100) : 0;
+  var cpO = tCard > 0 ? (our.card_o / tCard * 100) : 0;
+  var cpL = tCard > 0 ? (lm.card_o / tCard * 100) : 0;
+  var apO = tAll > 0 ? ((our.live_o + our.card_o) / tAll * 100) : 0;
+  var apL = tAll > 0 ? ((lm.live_o + lm.card_o) / tAll * 100) : 0;
+
+  function fmt(n) { return n >= 10000 ? '¥' + (n / 10000).toFixed(2) + '万' : '¥' + n.toLocaleString(); }
+
+  document.getElementById('b10proKpis').innerHTML =
+    '<div class="b10pro-kpi">' +
+      '<div class="bk-title">📺 直播端 10Pro 销量对比（' + latest.date + '）</div>' +
+      '<div class="bk-vs">' +
+        '<div class="bk-side"><div class="bk-val" style="color:#4f6ef7;">' + our.live_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">⭐ 我司</div><div class="bk-sub">' + fmt(our.live_a) + '</div></div>' +
+        '<div class="bk-divider">VS</div>' +
+        '<div class="bk-side"><div class="bk-val" style="color:#94a3b8;">' + lm.live_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">良米</div><div class="bk-sub">' + fmt(lm.live_a) + '</div></div>' +
+      '</div>' +
+      '<div class="bk-bar-wrap"><div class="bk-bar-o" style="width:' + lpO + '%;"></div><div class="bk-bar-l" style="width:' + lpL + '%;"></div></div>' +
+      '<div class="bk-pct">我司 ' + lpO.toFixed(1) + '% | 良米 ' + lpL.toFixed(1) + '%</div>' +
+    '</div>' +
+    '<div class="b10pro-kpi">' +
+      '<div class="bk-title">🛒 商品卡 10Pro 销量对比（' + latest.date + '）</div>' +
+      '<div class="bk-vs">' +
+        '<div class="bk-side"><div class="bk-val" style="color:#4f6ef7;">' + our.card_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">⭐ 我司</div><div class="bk-sub">' + fmt(our.card_a) + '</div></div>' +
+        '<div class="bk-divider">VS</div>' +
+        '<div class="bk-side"><div class="bk-val" style="color:#94a3b8;">' + lm.card_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">良米</div><div class="bk-sub">' + fmt(lm.card_a) + '</div></div>' +
+      '</div>' +
+      '<div class="bk-bar-wrap"><div class="bk-bar-o" style="width:' + cpO + '%;"></div><div class="bk-bar-l" style="width:' + cpL + '%;"></div></div>' +
+      '<div class="bk-pct">我司 ' + cpO.toFixed(1) + '% | 良米 ' + cpL.toFixed(1) + '%</div>' +
+    '</div>' +
+    '<div class="b10pro-kpi">' +
+      '<div class="bk-title">📦 10Pro 总销量占比（' + latest.date + '）</div>' +
+      '<div class="bk-vs">' +
+        '<div class="bk-side"><div class="bk-val" style="color:#4f6ef7;">' + (our.live_o + our.card_o) + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">⭐ 我司</div><div class="bk-sub">' + fmt(our.live_a + our.card_a) + '</div></div>' +
+        '<div class="bk-divider">VS</div>' +
+        '<div class="bk-side"><div class="bk-val" style="color:#94a3b8;">' + (lm.live_o + lm.card_o) + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">良米</div><div class="bk-sub">' + fmt(lm.live_a + lm.card_a) + '</div></div>' +
+      '</div>' +
+      '<div class="bk-bar-wrap"><div class="bk-bar-o" style="width:' + apO + '%;"></div><div class="bk-bar-l" style="width:' + apL + '%;"></div></div>' +
+      '<div class="bk-pct">我司 ' + apO.toFixed(1) + '% | 良米 ' + apL.toFixed(1) + '%</div>' +
+    '</div>';
+
+  // Charts
+  var labels = B10PRO_DATA.map(function(x) { return x.date.slice(5); });
+  var ourLive = B10PRO_DATA.map(function(x) { return x.our.live_o || 0; });
+  var lmLive = B10PRO_DATA.map(function(x) { return x.lm.live_o || 0; });
+  var ourCard = B10PRO_DATA.map(function(x) { return x.our.card_o || 0; });
+  var lmCard = B10PRO_DATA.map(function(x) { return x.lm.card_o || 0; });
+
+  function makeBar(canvasId, instVar, ourD, lmD) {
+    var ctx = document.getElementById(canvasId).getContext('2d');
+    if (window[instVar]) window[instVar].destroy();
+    window[instVar] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: '我司', data: ourD, backgroundColor: '#4f6ef7', borderRadius: 4, barPercentage: 0.6 },
+          { label: '良米', data: lmD, backgroundColor: '#94a3b8', borderRadius: 4, barPercentage: 0.6 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, font: { size: 11 } } } },
+        scales: {
+          y: { beginAtZero: true, ticks: { callback: function(v) { return v + '单'; } }, grid: { color: '#eee' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+  makeBar('chartB10proLive', 'b10proLiveChart', ourLive, lmLive);
+  makeBar('chartB10proCard', 'b10proCardChart', ourCard, lmCard);
+
+  // Table
+  var reversed = B10PRO_DATA.slice().reverse();
+  var tbody = document.querySelector('#b10proTable tbody');
+  tbody.innerHTML = reversed.map(function(r) {
+    var o = r.our, l = r.lm;
+    var tL = o.live_o + l.live_o, tC = o.card_o + l.card_o;
+    var tA = o.live_o + o.card_o + l.live_o + l.card_o;
+    var oPct = tA > 0 ? ((o.live_o + o.card_o) / tA * 100) : 0;
+    var oLiveW = o.live_o > l.live_o, oCardW = o.card_o > l.card_o;
+    var oAllW = (o.live_o + o.card_o) > (l.live_o + l.card_o);
+    return '<tr class="' + (r.date === latest.date ? 'hl-row' : '') + '">' +
+      '<td style="font-weight:600;">' + r.date.slice(5) + '</td>' +
+      '<td class="col-our' + (oLiveW ? ' col-win' : '') + '">' + o.live_o + '<br><span style="font-size:0.6rem;font-weight:400;">' + fmt(o.live_a) + '</span></td>' +
+      '<td>' + l.live_o + '<br><span style="font-size:0.6rem;color:#999;">' + fmt(l.live_a) + '</span></td>' +
+      '<td>' + (tL || '-') + '</td>' +
+      '<td class="col-our' + (oCardW ? ' col-win' : '') + '">' + o.card_o + '<br><span style="font-size:0.6rem;font-weight:400;">' + fmt(o.card_a) + '</span></td>' +
+      '<td>' + l.card_o + '<br><span style="font-size:0.6rem;color:#999;">' + fmt(l.card_a) + '</span></td>' +
+      '<td>' + (tC || '-') + '</td>' +
+      '<td class="col-our' + (oAllW ? ' col-win' : '') + '">' + (o.live_o + o.card_o) + '<br><span style="font-size:0.6rem;font-weight:400;">' + fmt(o.live_a + o.card_a) + '</span></td>' +
+      '<td>' + (l.live_o + l.card_o) + '<br><span style="font-size:0.6rem;color:#999;">' + fmt(l.live_a + l.card_a) + '</span></td>' +
+      '<td>' + tA + '</td>' +
+      '<td class="' + (oAllW ? 'col-our' : 'col-lm') + '" style="font-weight:700;">' + oPct.toFixed(1) + '%</td>' +
+      '</tr>';
+  }).join('');
+}
+
 // Init — read date from URL hash (set by root sidebar) or default to latest
 function initDashboard() {
   async function loadDate(date) {
@@ -1536,6 +1716,8 @@ function initDashboard() {
     renderAll(d, prev);
     renderRoomSelector(d);
     renderDailySummary();
+    if (B10PRO_PROMISE) { await B10PRO_PROMISE; }
+    renderB10proModule();
   }
 
   const hashDate = window.location.hash.replace('#', '');
