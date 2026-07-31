@@ -576,28 +576,26 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
 // Improvement suggestions
 (function renderImprovements() {{
   const d = DATA;
-  const w4 = d.weeks['W4'], w1 = d.weeks['W1'];
-  const share_improve = w4 && w1 ? (w4.our_orders/w4.total_orders*100 - w1.our_orders/w1.total_orders*100).toFixed(1) : 0;
+  const our = d.team_totals['我司'], jx = d.team_totals['机械空间'], lm = d.team_totals['良米'];
+  const ourShare = d.our_share;
+  const topOurRoom = d.our_rooms_ranked[0];
+  const topProd = d.prods_ranked[0];
+  const topCompRoom = [...d.jixie_rooms, ...d.liangmi_rooms].sort((a,b) => b[1].revenue - a[1].revenue)[0];
 
   document.getElementById('improvementSuggestions').innerHTML = `
-    <h3>🔴 短期紧急 (7月第一周)</h3>
+    <h3>📊 7月核心数据总结</h3>
     <ul>
-      <li><strong>手环号稳量：</strong>7月初数据${{d.days_count}}天，密切关注每日单量变化趋势，排查是否有异常下滑。如为运营问题，需紧急调整排班和话术。</li>
-      <li><strong>10 Pro品类攻坚：</strong>检查我司手环号/数码旗舰店的10 Pro曝光占比、链接权重、价格竞争力，提升10 Pro品类份额。</li>
-      <li><strong>Watch 6与机械空间拉开差距：</strong>利用手表号+官旗手表号双号协同，加大Watch 6推品力度。</li>
+      <li><strong>总量：</strong>7月全渠道 ${{fmt(d.all_orders)}}单，销售额 ${{fmtRMB(d.all_rev)}}（¥${{(d.all_rev/10000).toFixed(0)}}万），日均 ${{Math.round(d.all_orders/31)}}单。</li>
+      <li><strong>我司：</strong>${{our.rooms}}个直播间 ${{fmt(our.orders)}}单（份额 ${{fmtPct(ourShare)}}），销售额 ${{fmtRMB(our.revenue)}}，均价 ¥${{our.avg_price}}。</li>
+      <li><strong>最佳直播间：</strong>${{topOurRoom[0]}} — ${{fmt(topOurRoom[1].orders)}}单，${{fmtRMB(topOurRoom[1].revenue)}}。</li>
+      <li><strong>最大竞对：</strong>良米 ${{lm.rooms}}个直播间 ${{fmt(lm.orders)}}单，${{fmtRMB(lm.revenue)}}；机械空间 ${{jx.rooms}}个直播间 ${{fmt(jx.orders)}}单，${{fmtRMB(jx.revenue)}}。</li>
+      <li><strong>热销品类：</strong>${{d.prods_ranked.slice(0,5).map(([n,i]) => n + ' ' + fmt(i.orders) + '单').join(' | ')}}</li>
     </ul>
-    <h3>🟡 中期改进 (7月)</h3>
+    <h3>🔴 8月重点方向</h3>
     <ul>
-      <li><strong>搭建穿戴授权号对标机械空间：</strong>机械空间2个号（授权号+国补号）以¥641万的销售额成为穿戴赛道第二极，我司缺乏类似"授权号"形态的直播间。考虑新增或改造一个直播间走授权/国补路线。</li>
-      <li><strong>手表号矩阵优化：</strong>目前手表号+官旗手表号+纵横手表直播号三个手表相关号，需明确分工：一个主打Watch 6，一个主攻S5高客单，一个做新品首发。</li>
-      <li><strong>耳机品类定位清晰化：</strong>开放式耳机领先(64.3%)但头戴式(14.6%)和青春版(8.6%)极弱。耳机号需明确重点品类——是守开放式优势还是攻头戴增量。</li>
-      <li><strong>提高10 Pro客单价转化：</strong>我司10 Pro均价¥395（vs手环10 ¥296），客单价优势明显。增加10 Pro在高峰时段(9-11点、20-22点)的曝光权重。</li>
-    </ul>
-    <h3>🟢 数据驱动运营</h3>
-    <ul>
-      <li><strong>份额仪表盘：</strong>每周一跟踪我司在10/10 Pro/Watch 6三大核心品类的份额变化，设定10 Pro 30%、Watch 6 35%为7月目标。</li>
-      <li><strong>出单时段优化：</strong>我司10:00仅219单（全渠道1,167单），高峰时段渗透不足。增加9-11点的推品频次和库存准备。</li>
-      <li><strong>日均目标：</strong>7月我司日均目标${{Math.round(our.orders/d.days_count*1.1)}}单(+10%)，重点提升工作日(周一至周四)的均值。</li>
+      <li><strong>提升我司份额：</strong>7月我司份额${{fmtPct(ourShare)}}，8月目标突破40%。重点提升工作日和高峰时段单量。</li>
+      <li><strong>Watch 6品类攻坚：</strong>全渠道最大单品，需加大推品力度，尤其在手表号+官旗手表号双号协同。</li>
+      <li><strong>竞对监控：</strong>密切关注良米直播间动态，机械空间穿戴授权号是我司缺乏的渠道形态。</li>
     </ul>
   `;
 }})();
@@ -605,42 +603,32 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
 // Future direction
 (function renderFuture() {{
   const d = DATA;
+  const our = d.team_totals['我司'];
   document.getElementById('futureDirection').innerHTML = `
-    <h3>7月战略方向</h3>
+    <h3>8月战略方向</h3>
     <table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:13px">
       <tr style="background:#f8fafc"><th style="padding:10px;text-align:left;width:15%">方向</th><th style="padding:10px;text-align:left;width:25%">目标</th><th style="padding:10px;text-align:left">具体动作</th></tr>
       <tr>
-        <td style="padding:10px;vertical-align:top">🔴<br>手环号回升</td>
-        <td style="padding:10px;vertical-align:top">日单量恢复至280+</td>
-        <td style="padding:10px">① 每日跟踪手环号单量，发现异常及时排查（数据/运营/竞争）<br>② 优化高峰时段排班（9-11点双主播）<br>③ 增加10 Pro链接在黄金时段的排品权重<br>④ 与数码旗舰店错品运营，减少内部竞争</td>
+        <td style="padding:10px;vertical-align:top">🔴<br>提升份额</td>
+        <td style="padding:10px;vertical-align:top">我司份额从${{(our.orders/d.all_orders*100).toFixed(1)}}%→40%+</td>
+        <td style="padding:10px">① 增开直播间或延长高峰时段（9-11点、20-22点双主播）<br>② 优化手环号+数码旗舰店错品运营<br>③ 加大10 Pro等高客单品类推品力度</td>
       </tr>
       <tr>
         <td style="padding:10px;vertical-align:top">🟡<br>Watch 6突破</td>
-        <td style="padding:10px;vertical-align:top">品类份额提升至35%</td>
-        <td style="padding:10px">① 手表号+官旗手表号双号分工：一个日播、一个高峰补位<br>② Watch 6话术更新：突出"澎湃OS 3""心率血氧""长续航"三大卖点<br>③ 对标机械空间授权号的定价策略（机械均价¥437 vs 我司¥461）</td>
+        <td style="padding:10px;vertical-align:top">Watch 6品类份额提升</td>
+        <td style="padding:10px">① 手表号+官旗手表号双号分工<br>② 对标竞对定价策略<br>③ 突出"澎湃OS""心率血氧""长续航"卖点</td>
       </tr>
       <tr>
-        <td style="padding:10px;vertical-align:top">🟢<br>10 Pro渗透</td>
-        <td style="padding:10px;vertical-align:top">品类份额从23.6%→30%</td>
-        <td style="padding:10px">① 在所有我司直播间增加10 Pro曝光频次<br>② 制作10 Pro vs 10对比话术（¥395 vs ¥296，强调HRV/睡眠/游戏模式升级价值）<br>③ 争取平台补贴资源，缩小与良米链接的价格差距</td>
-      </tr>
-      <tr>
-        <td style="padding:10px;vertical-align:top">🔵<br>团队扩张</td>
-        <td style="padding:10px;vertical-align:top">新开1-2个直播间</td>
-        <td style="padding:10px">① 方案A：新增"国补号/授权号"对标机械空间，切入穿戴低价段<br>② 方案B：新增"耳机专号"承接耳机新品，释放现有耳机号产能<br>③ 优先方案A（机械空间¥641万/月是已被验证的模式）</td>
-      </tr>
-      <tr>
-        <td style="padding:10px;vertical-align:top">🟣<br>数据能力</td>
-        <td style="padding:10px;vertical-align:top">建立日/周/月三级分析体系</td>
-        <td style="padding:10px">① 每日：自动化日报（已就绪）→ 关注异常值<br>② 每周：周报对比（我司 vs 机械空间 vs 良米 核心品类份额）<br>③ 每月：月度复盘（新增直播间评估、品类结构优化、竞对动态追踪）</td>
+        <td style="padding:10px;vertical-align:top">🟢<br>数据驱动</td>
+        <td style="padding:10px;vertical-align:top">建立日/周/月三级分析</td>
+        <td style="padding:10px">① 每日：自动化数据更新 → 关注异常值<br>② 每周：我司 vs 竞对核心品类份额对比<br>③ 每月：月度复盘（品类结构、竞对动态、新增直播间评估）</td>
       </tr>
     </table>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-      <strong>🎯 7月核心KPI：</strong>
-      我司日均 <span class="highlight">${{Math.round(our.orders/d.days_count*1.1)}}单</span>（较当前+10%）|
-      品类份额 手环10 Pro ≥<span class="highlight">30%</span> |
-      Watch 6 ≥<span class="highlight">35%</span> |
-      新开<span class="highlight">1个</span>直播间
+      <strong>🎯 8月核心KPI：</strong>
+      我司日均 <span class="highlight">${{Math.round(our.orders/31*1.1)}}单</span>（较7月+10%）|
+      品类份额 10 Pro ≥<span class="highlight">30%</span> |
+      Watch 6 ≥<span class="highlight">35%</span>
     </div>
   `;
 }})();
