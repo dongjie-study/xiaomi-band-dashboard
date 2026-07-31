@@ -9,108 +9,50 @@ import pandas as pd
 import json
 import os
 import sys
-from datetime import datetime
+from pathlib import Path
+
+# Ensure project root is in Python path for shared module imports
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from team_config import TEAM_MAP, classify_room, ALL_TEAMS, OUR_TEAM
+from product_classifier import classify_product as shorten_product
+from utils import detect_excel_columns
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(DATA_DIR, 'history.json')
-
-# Team classification
-TEAM_MAP = {
-    # 我司
-    '小米官方手表': '我司', '小米官方手环直播间': '我司', '小米数码旗舰店': '我司',
-    '小米官方耳机直播间': '我司', '小米手环10Pro直播间': '我司', '小米官旗手表直播间': '我司',
-    # 机械空间
-    '小米智能穿戴国补号': '机械空间', '小米智能穿戴授权号': '机械空间',
-    # 纵横
-    '小米官方手表直播号': '纵横',
-    # 凝云
-    '小米手环官方直播间': '凝云', '小米手环新品直播间': '凝云', '小米手环直播间': '凝云',
-}
-# Everything else → 良米
-
-def classify_room(room_name):
-    return TEAM_MAP.get(room_name, '良米')
-
-# Teams we want to highlight
-OUR_TEAM = '我司'
-ALL_TEAMS = ['我司', '机械空间', '纵横', '凝云', '良米']
-
-
-def shorten_product(name):
-    name = str(name)
-    if '10Pro' in name or '10 Pro' in name:
-        return '小米手环10 Pro'
-    elif '10' in name and 'Pro' not in name and '9' not in name:
-        return '小米手环10'
-    elif '9 Pro' in name or '9Pro' in name:
-        return '小米手环9 Pro'
-    elif 'REDMI Watch 6' in name:
-        return 'REDMI Watch 6'
-    elif 'REDMI 手' in name:
-        return 'REDMI 手环 3'
-    elif 'Type-C' in name or '充电' in name:
-        return '充电配件'
-    elif 'Xiaomi Buds 6' in name:
-        return 'Xiaomi Buds 6'
-    elif 'Xiaomi Buds 5' in name:
-        return 'Xiaomi Buds 5 Pro'
-    elif '骨传导耳机' in name:
-        return '小米骨传导耳机2'
-    elif '开放式耳机' in name or '耳夹式耳机' in name:
-        return 'Xiaomi 开放式耳机'
-    elif 'Buds 8 Pro' in name:
-        return 'REDMI Buds 8 Pro'
-    elif 'Buds 8 青春' in name:
-        return 'REDMI Buds 8 青春版'
-    elif 'Buds 8 活力' in name:
-        return 'REDMI Buds 8 活力版'
-    elif 'Buds 8' in name:
-        return 'REDMI Buds 8'
-    elif 'Buds 7S' in name:
-        return 'REDMI Buds 7S'
-    elif 'Buds 6 活力' in name:
-        return 'REDMI Buds 6 活力版'
-    elif 'Buds 6' in name:
-        return 'REDMI Buds 6'
-    elif '颈挂式耳机' in name:
-        return 'Xiaomi 颈挂式耳机2'
-    elif '头戴' in name:
-        return '头戴式耳机'
-    elif '耳机' in name or 'Buds' in name:
-        return '耳机配件'
-    elif 'AI眼镜' in name or 'AI 眼镜' in name:
-        return '小米AI眼镜'
-    elif '手环8' in name or 'Band 8' in name:
-        return '小米手环8'
-    elif '插线板' in name or '插座' in name:
-        return '插线板/配件'
-    else:
-        return name[:25]
+B10PRO_FILE = os.path.join(DATA_DIR, 'b10pro_history.json')
+HOURLY_DIR = os.path.join(DATA_DIR, 'hourly')
 
 
 def load_and_clean(filepath):
-    df = pd.read_excel(filepath)
-    # Detect column roles by name patterns
-    col_map = {}
-    for i, col in enumerate(df.columns):
-        name = str(col)
-        if any(kw in name for kw in ['商品', '产品', 'product']):
-            col_map['product'] = i
-        elif any(kw in name for kw in ['金额', '价格', 'price', '应付']):
-            col_map['price'] = i
-        elif any(kw in name for kw in ['时间', '提交', 'time', 'date']):
-            col_map['time'] = i
-        elif any(kw in name for kw in ['直播', '房间', 'room', '达人', '昵称']):
-            col_map['room'] = i
-        elif any(kw in name for kw in ['类型', '我方', '竞对', 'type']):
-            col_map['type'] = i
+    """
+    Load and clean an Excel file of live stream orders.
+
+    Auto-detects column roles by keyword matching, standardizes column names,
+    parses dates, classifies products and teams.
+
+    Args:
+        filepath: Path to Excel file.
+
+    Returns:
+        Cleaned DataFrame with columns: product, price, time, room, type,
+        date, hour, product_short.
+    """
+    try:
+        df = pd.read_excel(filepath)
+    except FileNotFoundError:
+        print(f"Error: File not found — {filepath}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Error: Failed to read Excel file — {e}")
+        sys.exit(1)
+    col_map = detect_excel_columns(df)
 
     cols = []
     for key in ['product', 'price', 'time', 'room', 'type']:
-        if key in col_map:
-            cols.append(df.columns[col_map[key]])
-        else:
-            cols.append(None)
+        cols.append(col_map.get(key))
 
     df = df.iloc[:, :len(df.columns)]  # keep all
     new_names = {}
@@ -150,7 +92,7 @@ def summarize_room(grp):
             products[pname] = {
                 'orders': int(len(pgrp)),
                 'revenue': float(round(pgrp['price'].sum(), 2)),
-                'room_pct': round(len(pgrp) / len(hgrp) * 100, 1)
+                'room_pct': round(len(pgrp) / len(hgrp) * 100, 1) if len(hgrp) > 0 else 0
             }
         hourly_stats[str(hour)] = {
             'orders': int(len(hgrp)),
@@ -216,7 +158,7 @@ def summarize_day(df):
             products[pname] = {
                 'orders': int(len(pgrp)),
                 'revenue': float(round(pgrp['price'].sum(), 2)),
-                'room_pct': round(len(pgrp) / len(grp) * 100, 1)
+                'room_pct': round(len(pgrp) / len(grp) * 100, 1) if len(grp) > 0 else 0
             }
         hourly_stats[str(hour)] = {
             'orders': int(len(grp)),
@@ -264,6 +206,20 @@ def load_history():
 
 
 def save_history(history):
+    os.makedirs(HOURLY_DIR, exist_ok=True)
+    for day in history:
+        date_str = day['date']
+        day_has_hourly = '_hourly_stats' in day and day['_hourly_stats']
+        rooms_have_hourly = any('_hourly_stats' in r and r['_hourly_stats'] for r in day.get('rooms', {}).values())
+        if day_has_hourly or rooms_have_hourly:
+            hourly_data = {'date': date_str, 'rooms': {}, '_hourly_stats': day.pop('_hourly_stats', {})}
+            for rname, rinfo in day.get('rooms', {}).items():
+                room_hourly = rinfo.pop('_hourly_stats', None)
+                if room_hourly:
+                    hourly_data['rooms'][rname] = {'_hourly_stats': room_hourly}
+            hourly_path = os.path.join(HOURLY_DIR, f'{date_str}.json')
+            with open(hourly_path, 'w', encoding='utf-8') as f:
+                json.dump(hourly_data, f, ensure_ascii=False, separators=(',', ':'))
     with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
         json.dump(history, f, ensure_ascii=False, separators=(',', ':'))
 
@@ -420,7 +376,7 @@ def update(filepath, our_filepath=None):
     save_history(history)
     print(f"History updated: {len(history)} days saved to {HISTORY_FILE}")
 
-    # Generate charts
+    # Generate charts (import at function level to avoid circular dependency with build_html)
     from generate_dashboard import generate_dashboard, generate_room_comparison, generate_comparison_report
     dashboard_path = generate_dashboard(df)
     print(f"Overall dashboard: {dashboard_path}")
@@ -435,12 +391,16 @@ def update(filepath, our_filepath=None):
         comparison_path = generate_comparison_report(history)
         print(f"Day-over-day comparison: {comparison_path}")
 
-    # Build HTML
-    from build_html import main as build_html
+    # Build HTML dashboard (sales_analysis/build_html.py)
+    from sales_analysis.build_html import main as build_html
     build_html()
 
     # Generate stats_data.js for root index.html overview
     _write_stats_js(history)
+
+    # Extract and save 10Pro comparison data
+    b10pro_day = _extract_b10pro(df)
+    _save_b10pro_history(b10pro_day)
 
     return today, history
 
@@ -472,6 +432,42 @@ def _write_stats_js(history):
     with open(path, 'w', encoding='utf-8') as f:
         f.write(js)
     print(f"Stats data: {path}")
+
+
+def _extract_b10pro(df):
+    """Extract 10Pro comparison data: 我司 vs 良米, live vs card."""
+    b10p = df[df['product'].str.contains('10Pro|10 Pro', na=False)].copy()
+    b10p['team'] = b10p['room'].apply(lambda x: TEAM_MAP.get(str(x).strip(), '良米'))
+    b10p['is_card'] = b10p['room'].str.contains('商品卡', na=False)
+
+    result = {'date': str(df['date'].iloc[0])}
+    for team, key in [('我司', 'our'), ('良米', 'lm')]:
+        t = b10p[b10p['team'] == team]
+        live = t[~t['is_card']]
+        card = t[t['is_card']]
+        result[key] = {
+            'live_o': int(len(live)), 'live_a': round(float(live['price'].sum()), 2),
+            'card_o': int(len(card)), 'card_a': round(float(card['price'].sum()), 2),
+        }
+    return result
+
+
+def _save_b10pro_history(b10pro_day):
+    """Save/update b10pro_history.json with new day's data."""
+    history = []
+    if os.path.exists(B10PRO_FILE):
+        with open(B10PRO_FILE, 'r', encoding='utf-8') as f:
+            history = json.load(f)
+    # Upsert
+    existing = [i for i, d in enumerate(history) if d['date'] == b10pro_day['date']]
+    if existing:
+        history[existing[0]] = b10pro_day
+    else:
+        history.append(b10pro_day)
+    history.sort(key=lambda x: x['date'])
+    with open(B10PRO_FILE, 'w', encoding='utf-8') as f:
+        json.dump(history, f, ensure_ascii=False, separators=(',', ':'))
+    print(f"10Pro data saved: {B10PRO_FILE} ({len(history)} days)")
 
 
 if __name__ == '__main__':

@@ -43,7 +43,8 @@
           "hasSubMenu": true,
           "subModules": [
             { "id": "event618", "title": "618复盘", "url": "618复盘总结.html" },
-            { "id": "eventApril", "title": "4月复盘", "url": "四月份复盘总结.html" }
+            { "id": "eventApril", "title": "4月复盘", "url": "四月份复盘总结.html" },
+            { "id": "eventJuly10Pro", "title": "7月手环10Pro占比", "url": "7月手环10Pro占比分析.html", "badge": "NEW" }
           ]
         },
         {
@@ -93,11 +94,21 @@
             {
               "id": "videoW4",
               "title": "W4 (6.22-7.1)",
-              "badge": "NEW",
               "subModules": [
                 { "id": "videoW4Core", "title": "核心指标+标题+画面", "url": "核心指标分析/核心指标报告_W4.html" },
                 { "id": "videoW4Comp", "title": "竞对数据+标题+画面", "url": "核心指标分析/竞对数据报告_W4.html" },
                 { "id": "videoW4Cmp", "title": "竞对对比+综合总结", "url": "核心指标分析/竞对对比报告_W4.html" }
+              ]
+            },
+            {
+              "id": "videoW5",
+              "title": "W5 (7.1-7.26)",
+              "badge": "HOT",
+              "subModules": [
+                { "id": "videoW5Hub", "title": "W5 总览", "url": "核心指标分析/千川视频分析_W5.html" },
+                { "id": "videoW5Video", "title": "视频数据分析", "url": "核心指标分析/千川视频分析_W5_视频数据.html" },
+                { "id": "videoW5Title", "title": "标题数据分析", "url": "核心指标分析/千川视频分析_W5_标题数据.html" },
+                { "id": "videoW5Room", "title": "画面数据分析", "url": "核心指标分析/千川视频分析_W5_画面数据.html" }
               ]
             },
             {
@@ -124,12 +135,12 @@
           "tag": "Visual"
         },
         {
-          "id": "baiying",
-          "title": "百应复盘分析",
-          "url": "百应数据分析/index.html",
-          "icon": "📡",
-          "description": "千川直播复盘大屏：停留时长、曝光率、互动率、点击率等核心指标分时追踪与自动诊断",
-          "tag": "Baiying",
+          "id": "performance",
+          "title": "业绩分析",
+          "url": "业绩demo.html",
+          "icon": "💰",
+          "description": "多直播间业绩管理：每日GSV、周环比排名、月度退款核算、主播业绩汇总",
+          "tag": "Performance",
           "badge": "NEW"
         }
       ]
@@ -169,11 +180,21 @@
         },
         {
           "id": "streamer",
-          "title": "主播能力分析",
+          "title": "主播模块",
           "url": "主播分析/index.html",
           "icon": "🎙️",
           "description": "主播能力评估：直播话术、互动、产品、客诉应变、创意、协作、学习复盘多维评分",
           "tag": "Streamer"
+        },
+        {
+          "id": "exam",
+          "title": "考试模块",
+          "url": "https://xiaomi-exam.top",
+          "icon": "📝",
+          "description": "小米主播合规考试系统，在线答题、成绩查询",
+          "tag": "Exam",
+          "external": true,
+          "badge": "NEW"
         }
       ]
     },

@@ -3,30 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>小米手环直播间竞对分析仪表盘</title>
+<title>销售分析 · 小米手环直播间竞对仪表盘</title>
+<meta name="description" content="小米手环直播间每日销量追踪、竞对对比、小时分布分析">
+<link rel="icon" type="image/png" href="../xiaomi-logo.png">
+<link rel="stylesheet" href="../common.css">
 <script src="chart.umd.min.js"></script>
 <style>
   :root {
     --accent: #4ECDC4;
     --accent-gold: #FFD700;
-    --text: #0f172a;
-    --text-secondary: #64748b;
-    --text-muted: #9ca3af;
-    --shadow-sm: 0 1px 3px rgba(0,0,0,.04);
-    --shadow-md: 0 4px 16px rgba(0,0,0,.06);
-    --shadow-lg: 0 8px 30px rgba(0,0,0,.10);
-    --radius: 14px;
-    --radius-sm: 8px;
-    --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    --border-light: #bcc3ce;
   }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
     background: #f0f4f8;
-    color: var(--text);
-    -webkit-font-smoothing: antialiased;
   }
 
   /* ===== TOPBAR ===== */
@@ -165,6 +154,31 @@
     .kpi-row { grid-template-columns: 1fr; }
     .charts-row { grid-template-columns: 1fr; }
   }
+
+  /* ===== 10Pro 对比模块 ===== */
+  .b10pro-section { margin: 20px 0; }
+  .b10pro-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
+  .b10pro-kpi { background: #fff; border-radius: var(--radius); padding: 16px 14px; border: 1px solid #e8ecf1; text-align: center; }
+  .b10pro-kpi .bk-title { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; }
+  .b10pro-kpi .bk-vs { display: flex; justify-content: center; align-items: center; gap: 12px; }
+  .b10pro-kpi .bk-side { text-align: center; }
+  .b10pro-kpi .bk-val { font-size: 1.25rem; font-weight: 700; }
+  .b10pro-kpi .bk-lbl { font-size: 0.68rem; color: var(--text-secondary); }
+  .b10pro-kpi .bk-sub { font-size: 0.62rem; color: #999; }
+  .b10pro-kpi .bk-divider { font-size: 0.8rem; font-weight: 700; color: #ccc; }
+  .b10pro-kpi .bk-bar-wrap { margin-top: 8px; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; display: flex; }
+  .b10pro-kpi .bk-bar-o { height: 100%; background: linear-gradient(90deg, #4f6ef7, #6b8aff); border-radius: 3px; transition: width 0.6s ease; }
+  .b10pro-kpi .bk-bar-l { height: 100%; background: linear-gradient(90deg, #94a3b8, #b0bcc8); border-radius: 3px; transition: width 0.6s ease; }
+  .b10pro-kpi .bk-pct { font-size: 0.65rem; color: var(--text-secondary); margin-top: 4px; }
+  .b10pro-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+  .b10pro-table th, .b10pro-table td { padding: 6px 8px; text-align: center; border-bottom: 1px solid #f0f2f5; white-space: nowrap; }
+  .b10pro-table th { background: #f8f9fc; font-size: 0.68rem; font-weight: 600; color: var(--text-secondary); }
+  .b10pro-table tbody tr:hover { background: #f8fafc; }
+  .b10pro-table .col-our { color: #4f6ef7; font-weight: 600; }
+  .b10pro-table .col-lm { color: #94a3b8; font-weight: 600; }
+  .b10pro-table .col-win { background: #f0f3ff; }
+  .b10pro-table .hl-row { background: #fffdf0; }
+  @media (max-width: 768px) { .b10pro-kpis { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -185,7 +199,9 @@ return;
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
 <!-- ===== TOPBAR ===== -->
 <div class="content-topbar">
+  <a href="../index.html" class="back-home" id="backHome" style="display:none;">← 返回工作台</a>
   <h1>小米手环直播间竞对分析仪表盘</h1>
+  <script>if(window.top===window.self)document.getElementById('backHome').style.display='inline-flex';</script>
   <select id="roomSelector" onchange="switchRoom(this.value)">
     <option value="__all__">全部直播间（汇总）</option>
   </select>
@@ -268,6 +284,32 @@ return;
     <div id="prodRoomPanels"></div>
   </div>
 
+  <!-- ===== 小米手环10Pro 我司 vs 良米 销量对比 ===== -->
+  <div class="chart-card full-width b10pro-section" id="b10proSection" style="display:none;">
+    <h2>⌚ 小米手环10Pro · 我司 vs 良米 销量对比</h2>
+    <div class="b10pro-kpis" id="b10proKpis"></div>
+    <div class="charts-row">
+      <div class="chart-card">
+        <h3>📺 直播端10Pro销量趋势（单量）</h3>
+        <div class="chart-container"><canvas id="chartB10proLive"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>🛒 商品卡端10Pro销量趋势（单量）</h3>
+        <div class="chart-container"><canvas id="chartB10proCard"></canvas></div>
+      </div>
+    </div>
+    <div style="overflow-x:auto;margin-top:8px;">
+      <table class="b10pro-table" id="b10proTable">
+        <thead><tr>
+          <th>日期</th><th>我司<br>直播单量</th><th>良米<br>直播单量</th><th>直播<br>合计</th>
+          <th>我司<br>商品卡</th><th>良米<br>商品卡</th><th>商品卡<br>合计</th>
+          <th>我司<br>总计</th><th>良米<br>总计</th><th>总计</th><th>我司<br>占比</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- ===== 各直播间详细数据 -- 分小时分品类 + 环比 ===== -->
   <div class="chart-card full-width" id="roomDetailSection" style="margin:16px 0;">
     <h2>各直播间详细数据 — 分小时分品类 + 环比</h2>
@@ -312,17 +354,54 @@ let HISTORY = [];
 let currentDate = null;
 let currentRoom = '__all__';
 let dataReady = false;
+const HOURLY_CACHE = {};
+
+// Lazy-load hourly stats for a day and merge into the day object
+async function ensureHourly(day) {
+  if (!day || day._hourly_stats) return;
+  const date = day.date;
+  if (HOURLY_CACHE[date]) {
+    const hdata = HOURLY_CACHE[date];
+    day._hourly_stats = hdata._hourly_stats || {};
+    Object.keys(hdata.rooms || {}).forEach(function(r) {
+      if (day.rooms && day.rooms[r]) day.rooms[r]._hourly_stats = hdata.rooms[r]._hourly_stats || {};
+    });
+    return;
+  }
+  try {
+    var nowH = new Date();
+    var cacheKey = nowH.getFullYear() + ('0' + (nowH.getMonth() + 1)).slice(-2) + ('0' + nowH.getDate()).slice(-2);
+    var resp = await fetch('./hourly/' + date + '.json?_=' + cacheKey);
+    if (!resp.ok) return;
+    var hdata = await resp.json();
+    HOURLY_CACHE[date] = hdata;
+    day._hourly_stats = hdata._hourly_stats || {};
+    Object.keys(hdata.rooms || {}).forEach(function(r) {
+      if (day.rooms && day.rooms[r]) day.rooms[r]._hourly_stats = hdata.rooms[r]._hourly_stats || {};
+    });
+  } catch(e) {
+    console.warn('Hourly data not available for ' + date);
+  }
+}
 
 // Async data loading — fetches history.json for better caching and faster initial render
 (async function loadData() {
   try {
-    // Daily cache-busting: refreshed once per day when data changes
-    const cacheKey = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    // Daily cache-busting: refreshed once per day when data changes (local date, UTC+8 safe)
+    var now = new Date();
+    var cacheKey = now.getFullYear() + ('0' + (now.getMonth() + 1)).slice(-2) + ('0' + now.getDate()).slice(-2);
     const resp = await fetch('./history.json?_=' + cacheKey);
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     HISTORY = await resp.json();
+    if (!HISTORY || !HISTORY.length) {
+      document.getElementById('loadingOverlay').innerHTML =
+        '<div style="color:#e74c3c;font-size:14px;">⚠️ 暂无历史数据，请先导入订单数据</div>';
+      return;
+    }
     DATA = HISTORY[HISTORY.length - 1];
+    await ensureHourly(DATA);
     dataReady = true;
+    B10PRO_PROMISE = loadB10proData();
   } catch(e) {
     // Fallback: try inline placeholders (legacy deployment)
     if (typeof __DATA_PLACEHOLDER__ !== 'undefined' && String(__DATA_PLACEHOLDER__) !== '__DATA_PLACEHOLDER__') {
@@ -371,7 +450,7 @@ function renderRoomSelector(d) {
 function switchRoom(room) {
   currentRoom = room;
   const d = HISTORY.find(h => h.date === currentDate);
-  if (d) renderAll(d);
+  if (d) { renderAll(d); renderDailySummary(); }
 }
 
 function formatCurrency(n) { return '¥' + Number(n).toLocaleString('zh-CN', {minimumFractionDigits: 0, maximumFractionDigits: 0}); }
@@ -390,6 +469,8 @@ function groupProduct(name) {
   var clean = name.replace(/【[^】]*】/g, '').replace(/\s+/g, ' ').trim();
   // 2. 去除末尾的 "-默认-(xxx)" 等后缀
   clean = clean.replace(/-.*$/, '').trim();
+  // 2.5. 去除中文营销前缀（平台活动/自营/直播专享等）
+  clean = clean.replace(/^(平台活动|平台自营|自营活动|直播专享|直播爆款|品牌闪购|品牌新品|品牌套装|限时优惠\d*%?|学生优惠|以旧换新|品牌日)[：:]\s*/i, '').trim();
   // 3. 处理分隔符（/、-等），取第一部分核心品名
   // 4. 统一大小写
   clean = clean.replace(/XIaomI/i, 'Xiaomi').replace(/XIaomi/i, 'Xiaomi');
@@ -445,8 +526,68 @@ function groupProduct(name) {
   if (/Tag|定位|追踪/i.test(clean)) return 'Xiaomi Tag';
   // 水浸
   if (/水浸/i.test(clean)) return '小米水浸卫士';
+  // 体重秤/体脂秤
+  if (/体重秤|体脂秤|电子秤/i.test(clean)) return '体重秤';
+  // 摄像机/监控
+  if (/摄像|监控/i.test(clean)) return '智能摄像机';
+  // 路由器
+  if (/路由/i.test(clean)) return '路由器';
+  // 门铃
+  if (/门铃/i.test(clean)) return '智能门铃';
+  // 平板/键盘
+  if (/Pad|平板/i.test(clean)) return '平板/配件';
+  if (/键盘/i.test(clean)) return '键盘/配件';
+  // 风扇
+  if (/风扇/i.test(clean)) return '手持风扇';
+  // 台灯/灯具
+  if (/台灯|吸顶灯|灯泡/i.test(clean)) return '台灯/灯具';
+  // 鱼缸
+  if (/鱼缸/i.test(clean)) return '鱼缸配件';
+  // 儿童手表/米兔
+  if (/米兔|儿童.*(?:手表|电话)/i.test(clean)) return '儿童手表';
+  // 智能门锁
+  if (/门锁|指纹锁/i.test(clean)) return '智能门锁';
+  // 传感器
+  if (/传感/i.test(clean)) return '传感器';
+  // 螺丝刀/工具
+  if (/螺丝刀|扳手|工具/i.test(clean)) return '工具配件';
+  // 腕带/表带/配件
+  if (/腕带|表带|链/i.test(clean)) return '腕带/表带';
+  // 保护壳/膜
+  if (/壳|膜|保护套/i.test(clean)) return '保护壳/膜';
+  // 箱包/背包
+  if (/背包|双肩|箱包|斜挎/i.test(clean)) return '箱包';
+  // 个人护理（剃须刀/牙刷/吹风机）
+  if (/剃须|牙刷|吹风|洁面|美容/i.test(clean)) return '个人护理';
+  // 空气净化/加湿器
+  if (/净化|加湿|除湿/i.test(clean)) return '环境电器';
+  // 音箱/音响
+  if (/音箱|音响|Sound|Speaker/i.test(clean)) return '音箱';
+  // 手机
+  if (/手机|Phone/i.test(clean) && !/手环|手表/i.test(clean)) return '手机';
+  // 笔记本/电脑
+  if (/笔记本|电脑|Book|Laptop/i.test(clean)) return '笔记本';
+  // 电视
+  if (/电视|TV/i.test(clean)) return '电视';
+  // 滑板车/平衡车
+  if (/滑板|平衡车|电动.*车/i.test(clean)) return '出行工具';
+  // 汽车用品
+  if (/车载|汽车/i.test(clean)) return '汽车用品';
 
-  // 未匹配的保留清理后的名称
+  // 通用缩短: 对于未匹配的长名称，尝试截取品牌+型号部分
+  if (clean.length > 14) {
+    // 尝试匹配型号模式：S200, 4C, 7A, 7X, AX3000T, Pro, 2 等
+    var m = clean.match(/([A-Z]{1,2}\d{2,4}[A-Z]?\d*)/i);
+    if (m && m.index > 1) {
+      var cut = m.index + m[0].length;
+      if (cut > 4 && cut < clean.length) {
+        clean = clean.substring(0, cut);
+      }
+    }
+  }
+  // 仍然太长就截断
+  if (clean.length > 18) clean = clean.substring(0, 18);
+
   return clean || name;
 }
 
@@ -513,6 +654,9 @@ function renderRoomCards(d) {
   cards.innerHTML = sorted.map((r, i) => {
     const pct = (r.orders / totalOrders * 100).toFixed(1);
     const topProd = Object.entries(r.products).sort((a, b) => b[1].orders - a[1].orders)[0];
+    const topProdHtml = topProd
+      ? '<div class="stat-row"><span class="stat-label">销冠产品</span><span class="stat-value">' + topProd[0] + ' (' + topProd[1].orders + '单)</span></div>'
+      : '';
     return `
     <div class="room-card" style="border-left: 4px solid ${['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4'][i % 4]}">
       <div class="room-name">
@@ -523,7 +667,7 @@ function renderRoomCards(d) {
       <div class="stat-row"><span class="stat-label">销售额</span><span class="stat-value">${formatCurrency(r.revenue)}</span></div>
       <div class="stat-row"><span class="stat-label">平均单价</span><span class="stat-value">${formatCurrency(r.avg_price)}</span></div>
       <div class="stat-row"><span class="stat-label">SKU数</span><span class="stat-value">${Object.keys(r.products).length}</span></div>
-      <div class="stat-row"><span class="stat-label">销冠产品</span><span class="stat-value">${topProd[0]} (${topProd[1].orders}单)</span></div>
+      ${topProdHtml}
     </div>`;
   }).join('');
 }
@@ -726,7 +870,6 @@ function renderAll(d, prev) {
   renderHourlyBreakdown(data);
   renderProdRoomHourly(d);
   renderRoomDetailHourly(d);
-  renderDailySummary();
 }
 
 function renderHourlyBreakdown(data) {
@@ -842,16 +985,18 @@ function getMonthHistory() {
 
 function renderSummaryKPIs() {
   var monthHistory = getMonthHistory();
+  if (!monthHistory.length) { document.getElementById('summaryKpiRow').innerHTML = ''; return; }
   var ourOrders = monthHistory.map(function(d) { return getOurCompData(d).ourOrders; });
   var compOrders = monthHistory.map(function(d) { return getOurCompData(d).compOrders; });
   var shares = ourOrders.map(function(o, i) { return o + compOrders[i] > 0 ? (o / (o + compOrders[i]) * 100) : 0; });
 
   var recent7 = ourOrders.slice(-7);
   var prev7 = ourOrders.slice(-14, -7);
-  var avgOur = Math.round(recent7.reduce(function(a, b) { return a + b; }, 0) / recent7.length);
+  var avgOur = recent7.length > 0 ? Math.round(recent7.reduce(function(a, b) { return a + b; }, 0) / recent7.length) : 0;
   var avgPrevOur = prev7.length > 0 ? Math.round(prev7.reduce(function(a, b) { return a + b; }, 0) / prev7.length) : null;
-  var avgShare = shares.slice(-7).reduce(function(a, b) { return a + b; }, 0) / Math.min(7, shares.slice(-7).length);
-  var avgComp = Math.round(compOrders.slice(-7).reduce(function(a, b) { return a + b; }, 0) / Math.min(7, compOrders.slice(-7).length));
+  var avgShare = shares.slice(-7).length > 0 ? (shares.slice(-7).reduce(function(a, b) { return a + b; }, 0) / shares.slice(-7).length) : 0;
+  var compSlice = compOrders.slice(-7);
+  var avgComp = compSlice.length > 0 ? Math.round(compSlice.reduce(function(a, b) { return a + b; }, 0) / compSlice.length) : 0;
 
   var bestIdx = 0, worstIdx = 0;
   ourOrders.forEach(function(o, i) { if (o > ourOrders[bestIdx]) bestIdx = i; if (o < ourOrders[worstIdx]) worstIdx = i; });
@@ -937,20 +1082,29 @@ function renderDailyTable() {
 
   thead.innerHTML = '<tr><th>日期</th><th>总订单</th><th>我方订单</th><th>环比</th><th>竞对订单</th><th>我方份额</th><th>我方销售额</th><th>竞对销售额</th><th>我方直播间</th><th>竞对直播间</th></tr>';
 
-  var ourOrders = HISTORY.map(function(d) { return (d.type_summary && d.type_summary['我方']) ? d.type_summary['我方'].orders : 0; });
+  var ourOrders = HISTORY.map(function(d) { return (d.type_summary && d.type_summary['我司']) ? d.type_summary['我司'].orders : 0; });
 
   var bestOur = Math.max.apply(null, ourOrders);
   var worstOur = Math.min.apply(null, ourOrders);
 
   tbody.innerHTML = HISTORY.map(function(d, i) {
-    var our = (d.type_summary && d.type_summary['我方']) || {orders:0, revenue:0, rooms:0};
-    var comp = (d.type_summary && d.type_summary['竞对']) || {orders:0, revenue:0, rooms:0};
+    var our = (d.type_summary && d.type_summary['我司']) || {orders:0, revenue:0, rooms:0};
+    var comp = {orders:0, revenue:0, rooms:0};
+    if (d.type_summary) {
+      ['机械空间', '纵横', '良米', '凝云'].forEach(function(t) {
+        if (d.type_summary[t]) {
+          comp.orders += d.type_summary[t].orders || 0;
+          comp.revenue += d.type_summary[t].revenue || 0;
+          comp.rooms += d.type_summary[t].rooms || 0;
+        }
+      });
+    }
     var total = our.orders + comp.orders;
     var share = total > 0 ? (our.orders / total * 100).toFixed(1) : '0.0';
 
     var dodHtml = '-';
     if (i > 0) {
-      var prevOur = (HISTORY[i-1].type_summary && HISTORY[i-1].type_summary['我方']) || {orders:0};
+      var prevOur = (HISTORY[i-1].type_summary && HISTORY[i-1].type_summary['我司']) || {orders:0};
       var diff = our.orders - prevOur.orders;
       var pct = prevOur.orders > 0 ? (diff / prevOur.orders * 100) : 0;
       var cls = diff >= 0 ? 'change-up' : 'change-down';
@@ -1285,13 +1439,15 @@ function renderTodayInsights() {
   const container = document.getElementById('todayInsights');
   if (!DATA || HISTORY.length < 1) { container.innerHTML = ''; return; }
 
-  const today = DATA;
-  const prev = HISTORY.length > 1 ? HISTORY[HISTORY.length - 2] : null;
+  // 使用当前选中日期的数据，而非始终取最新一天
+  const today = HISTORY.find(function(h) { return h.date === currentDate; }) || DATA;
+  const todayIdx = HISTORY.findIndex(function(h) { return h.date === today.date; });
+  const prev = todayIdx > 0 ? HISTORY[todayIdx - 1] : null;
   const dateLabel = today.date;
 
   // Team totals
   const typeSummary = today.type_summary || {};
-  const our = typeSummary['我方'] || {orders:0, revenue:0, avg_price:0, rooms:0};
+  const our = typeSummary['我司'] || {orders:0, revenue:0, avg_price:0, rooms:0};
   const jx = typeSummary['机械空间'] || {orders:0, revenue:0, avg_price:0, rooms:0};
   const zh = typeSummary['纵横'] || {orders:0, revenue:0, avg_price:0, rooms:0};
   const lm = typeSummary['良米'] || {orders:0, revenue:0, avg_price:0, rooms:0};
@@ -1420,17 +1576,148 @@ function renderDailySummary() {
   renderDailyInsights();
 }
 
+// ==================== 10Pro 对比模块 ====================
+let B10PRO_DATA = null;
+let B10PRO_PROMISE = null;
+let b10proLiveChart = null;
+let b10proCardChart = null;
+
+async function loadB10proData() {
+  try {
+    var now = new Date();
+    var cacheKey = now.getFullYear() + ('0' + (now.getMonth() + 1)).slice(-2) + ('0' + now.getDate()).slice(-2);
+    var resp = await fetch('./b10pro_history.json?_=' + cacheKey);
+    if (!resp.ok) return;
+    B10PRO_DATA = await resp.json();
+  } catch(e) { B10PRO_DATA = null; }
+}
+
+function renderB10proModule() {
+  var section = document.getElementById('b10proSection');
+  if (!B10PRO_DATA || B10PRO_DATA.length < 1) { section.style.display = 'none'; return; }
+  // Only show when all rooms selected
+  if (currentRoom !== '__all__') { section.style.display = 'none'; return; }
+  section.style.display = '';
+
+  var latest = B10PRO_DATA[B10PRO_DATA.length - 1];
+  var d = latest;
+  var our = d.our, lm = d.lm;
+  var tLive = our.live_o + lm.live_o;
+  var tCard = our.card_o + lm.card_o;
+  var tAll = our.live_o + our.card_o + lm.live_o + lm.card_o;
+  var lpO = tLive > 0 ? (our.live_o / tLive * 100) : 0;
+  var lpL = tLive > 0 ? (lm.live_o / tLive * 100) : 0;
+  var cpO = tCard > 0 ? (our.card_o / tCard * 100) : 0;
+  var cpL = tCard > 0 ? (lm.card_o / tCard * 100) : 0;
+  var apO = tAll > 0 ? ((our.live_o + our.card_o) / tAll * 100) : 0;
+  var apL = tAll > 0 ? ((lm.live_o + lm.card_o) / tAll * 100) : 0;
+
+  function fmt(n) { return n >= 10000 ? '¥' + (n / 10000).toFixed(2) + '万' : '¥' + n.toLocaleString(); }
+
+  document.getElementById('b10proKpis').innerHTML =
+    '<div class="b10pro-kpi">' +
+      '<div class="bk-title">📺 直播端 10Pro 销量对比（' + latest.date + '）</div>' +
+      '<div class="bk-vs">' +
+        '<div class="bk-side"><div class="bk-val" style="color:#4f6ef7;">' + our.live_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">⭐ 我司</div><div class="bk-sub">' + fmt(our.live_a) + '</div></div>' +
+        '<div class="bk-divider">VS</div>' +
+        '<div class="bk-side"><div class="bk-val" style="color:#94a3b8;">' + lm.live_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">良米</div><div class="bk-sub">' + fmt(lm.live_a) + '</div></div>' +
+      '</div>' +
+      '<div class="bk-bar-wrap"><div class="bk-bar-o" style="width:' + lpO + '%;"></div><div class="bk-bar-l" style="width:' + lpL + '%;"></div></div>' +
+      '<div class="bk-pct">我司 ' + lpO.toFixed(1) + '% | 良米 ' + lpL.toFixed(1) + '%</div>' +
+    '</div>' +
+    '<div class="b10pro-kpi">' +
+      '<div class="bk-title">🛒 商品卡 10Pro 销量对比（' + latest.date + '）</div>' +
+      '<div class="bk-vs">' +
+        '<div class="bk-side"><div class="bk-val" style="color:#4f6ef7;">' + our.card_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">⭐ 我司</div><div class="bk-sub">' + fmt(our.card_a) + '</div></div>' +
+        '<div class="bk-divider">VS</div>' +
+        '<div class="bk-side"><div class="bk-val" style="color:#94a3b8;">' + lm.card_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">良米</div><div class="bk-sub">' + fmt(lm.card_a) + '</div></div>' +
+      '</div>' +
+      '<div class="bk-bar-wrap"><div class="bk-bar-o" style="width:' + cpO + '%;"></div><div class="bk-bar-l" style="width:' + cpL + '%;"></div></div>' +
+      '<div class="bk-pct">我司 ' + cpO.toFixed(1) + '% | 良米 ' + cpL.toFixed(1) + '%</div>' +
+    '</div>' +
+    '<div class="b10pro-kpi">' +
+      '<div class="bk-title">📦 10Pro 总销量占比（' + latest.date + '）</div>' +
+      '<div class="bk-vs">' +
+        '<div class="bk-side"><div class="bk-val" style="color:#4f6ef7;">' + (our.live_o + our.card_o) + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">⭐ 我司</div><div class="bk-sub">' + fmt(our.live_a + our.card_a) + '</div></div>' +
+        '<div class="bk-divider">VS</div>' +
+        '<div class="bk-side"><div class="bk-val" style="color:#94a3b8;">' + (lm.live_o + lm.card_o) + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">良米</div><div class="bk-sub">' + fmt(lm.live_a + lm.card_a) + '</div></div>' +
+      '</div>' +
+      '<div class="bk-bar-wrap"><div class="bk-bar-o" style="width:' + apO + '%;"></div><div class="bk-bar-l" style="width:' + apL + '%;"></div></div>' +
+      '<div class="bk-pct">我司 ' + apO.toFixed(1) + '% | 良米 ' + apL.toFixed(1) + '%</div>' +
+    '</div>';
+
+  // Charts
+  var labels = B10PRO_DATA.map(function(x) { return x.date.slice(5); });
+  var ourLive = B10PRO_DATA.map(function(x) { return x.our.live_o || 0; });
+  var lmLive = B10PRO_DATA.map(function(x) { return x.lm.live_o || 0; });
+  var ourCard = B10PRO_DATA.map(function(x) { return x.our.card_o || 0; });
+  var lmCard = B10PRO_DATA.map(function(x) { return x.lm.card_o || 0; });
+
+  function makeBar(canvasId, instVar, ourD, lmD) {
+    var ctx = document.getElementById(canvasId).getContext('2d');
+    if (window[instVar]) window[instVar].destroy();
+    window[instVar] = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: '我司', data: ourD, backgroundColor: '#4f6ef7', borderRadius: 4, barPercentage: 0.6 },
+          { label: '良米', data: lmD, backgroundColor: '#94a3b8', borderRadius: 4, barPercentage: 0.6 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, font: { size: 11 } } } },
+        scales: {
+          y: { beginAtZero: true, ticks: { callback: function(v) { return v + '单'; } }, grid: { color: '#eee' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+  makeBar('chartB10proLive', 'b10proLiveChart', ourLive, lmLive);
+  makeBar('chartB10proCard', 'b10proCardChart', ourCard, lmCard);
+
+  // Table
+  var reversed = B10PRO_DATA.slice().reverse();
+  var tbody = document.querySelector('#b10proTable tbody');
+  tbody.innerHTML = reversed.map(function(r) {
+    var o = r.our, l = r.lm;
+    var tL = o.live_o + l.live_o, tC = o.card_o + l.card_o;
+    var tA = o.live_o + o.card_o + l.live_o + l.card_o;
+    var oPct = tA > 0 ? ((o.live_o + o.card_o) / tA * 100) : 0;
+    var oLiveW = o.live_o > l.live_o, oCardW = o.card_o > l.card_o;
+    var oAllW = (o.live_o + o.card_o) > (l.live_o + l.card_o);
+    return '<tr class="' + (r.date === latest.date ? 'hl-row' : '') + '">' +
+      '<td style="font-weight:600;">' + r.date.slice(5) + '</td>' +
+      '<td class="col-our' + (oLiveW ? ' col-win' : '') + '">' + o.live_o + '<br><span style="font-size:0.6rem;font-weight:400;">' + fmt(o.live_a) + '</span></td>' +
+      '<td>' + l.live_o + '<br><span style="font-size:0.6rem;color:#999;">' + fmt(l.live_a) + '</span></td>' +
+      '<td>' + (tL || '-') + '</td>' +
+      '<td class="col-our' + (oCardW ? ' col-win' : '') + '">' + o.card_o + '<br><span style="font-size:0.6rem;font-weight:400;">' + fmt(o.card_a) + '</span></td>' +
+      '<td>' + l.card_o + '<br><span style="font-size:0.6rem;color:#999;">' + fmt(l.card_a) + '</span></td>' +
+      '<td>' + (tC || '-') + '</td>' +
+      '<td class="col-our' + (oAllW ? ' col-win' : '') + '">' + (o.live_o + o.card_o) + '<br><span style="font-size:0.6rem;font-weight:400;">' + fmt(o.live_a + o.card_a) + '</span></td>' +
+      '<td>' + (l.live_o + l.card_o) + '<br><span style="font-size:0.6rem;color:#999;">' + fmt(l.live_a + l.card_a) + '</span></td>' +
+      '<td>' + tA + '</td>' +
+      '<td class="' + (oAllW ? 'col-our' : 'col-lm') + '" style="font-weight:700;">' + oPct.toFixed(1) + '%</td>' +
+      '</tr>';
+  }).join('');
+}
+
 // Init — read date from URL hash (set by root sidebar) or default to latest
 function initDashboard() {
-  function loadDate(date) {
+  async function loadDate(date) {
     const d = HISTORY.find(h => h.date === date);
     if (!d) return;
+    await ensureHourly(d);
     currentDate = date;
     const idx = HISTORY.findIndex(h => h.date === date);
     const prev = idx > 0 ? HISTORY[idx - 1] : null;
     renderAll(d, prev);
     renderRoomSelector(d);
     renderDailySummary();
+    if (B10PRO_PROMISE) { await B10PRO_PROMISE; }
+    renderB10proModule();
   }
 
   const hashDate = window.location.hash.replace('#', '');

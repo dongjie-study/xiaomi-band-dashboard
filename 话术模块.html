@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>直播间话术模块 · 小米手环直播间</title>
+<link rel="icon" type="image/png" href="xiaomi-logo.png">
+<link rel="stylesheet" href="common.css">
 <style>
 :root {
   --bg: #f0f4f8;
@@ -25,7 +27,6 @@
   --clr-blue: #3b82f6;
   --clr-cyan: #0ea89d;
 }
-* { margin:0; padding:0; box-sizing:border-box; }
 html { scroll-behavior: smooth; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -233,6 +234,10 @@ tr:hover { background: #fafbfc; }
 </div>
 
 <!-- Sticky Nav -->
+<div style="display:flex;align-items:center;gap:8px;padding:6px 16px;">
+  <a href="index.html" class="back-home" id="backHome" style="display:none;">← 返回工作台</a>
+  <script>if(window.top===window.self)document.getElementById('backHome').style.display='inline-flex';</script>
+</div>
 <div class="nav-bar" id="navBar">
   <a href="#sec-10pro" class="nav-btn active">🔴 手环10 Pro</a>
   <a href="#sec-watch6" class="nav-btn">⌚ 红米Watch 6</a>

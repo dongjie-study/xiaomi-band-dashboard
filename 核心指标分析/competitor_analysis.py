@@ -1,14 +1,17 @@
 import pandas as pd
 import numpy as np
 import sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from utils import to_num
+
 sys.stdout.reconfigure(encoding='utf-8')
 
 df = pd.read_excel(r'C:\Users\Administrator\Downloads\良米6.1-6.7千川视频数据.xlsx')
-
-def to_num(s):
-    if isinstance(s, str):
-        return float(s.replace(',', '').replace('%', ''))
-    return float(s) if pd.notna(s) else np.nan
 
 clean = pd.DataFrame()
 clean['name'] = df.iloc[:, 0]
@@ -166,8 +169,8 @@ for prod in ['Xiaomi Band', 'Redmi Watch6', 'Earphones', 'AIGC Collection', 'Oth
 
 print("\n[5] ROI DISTRIBUTION COMPARISON")
 print("-" * 70)
-their_roi_gt1_pct = (has_cost['roi'] > 1).sum() / len(has_cost) * 100
-their_roi_eq0_pct = (has_cost['roi'] == 0).sum() / len(has_cost) * 100
+their_roi_gt1_pct = (has_cost['roi'] > 1).sum() / len(has_cost) * 100 if len(has_cost) > 0 else 0
+their_roi_eq0_pct = (has_cost['roi'] == 0).sum() / len(has_cost) * 100 if len(has_cost) > 0 else 0
 our_roi_gt1_pct = 21.5
 our_median_roi = 0.00
 their_median_roi = has_cost['roi'].median()

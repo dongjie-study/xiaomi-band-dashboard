@@ -94,7 +94,7 @@ month_counter = Counter()
 for v in all_records:
     try:
         m = v['time'][:7]
-    except:
+    except (ValueError, IndexError, TypeError, KeyError):
         m = '未知'
     month_counter[m] += 1
 

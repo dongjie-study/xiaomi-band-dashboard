@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>7.1-7.24 小米手环10Pro 占比分析 · 节点总结</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+:root {
+  --bg: #f0f4f8; --surface: #ffffff; --text: #0f172a; --text-secondary: #64748b; --text-muted: #9ca3af;
+  --border: #e8ecf1; --shadow-sm: 0 1px 3px rgba(0,0,0,.03); --shadow-md: 0 4px 16px rgba(0,0,0,.06);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,.10); --radius: 14px; --radius-sm: 10px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --clr-orange: #ff6900; --clr-green: #1da85c; --clr-blue: #3b82f6; --clr-red: #FF4757;
+  --clr-purple: #7c6ff7; --clr-gold: #c8960c; --clr-cyan: #0ea89d; --clr-pink: #ec4899;
+  --clr-10pro: #ff6900; --clr-10: #3b82f6; --clr-9pro: #8b5cf6; --clr-accessory: #9ca3af; --clr-redmi: #f59e0b;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(circle, rgba(148,163,184,.10) 1px, transparent 1px);
+  background-size: 22px 22px;
+}
+.nav-bar {
+  display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
+  padding: 10px 16px; background: rgba(255,255,255,.9); backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,.03);
+}
+.nav-btn {
+  padding: 7px 18px; border-radius: 20px; border: 1.5px solid #dde1e6; background: #fff;
+  color: #555; font-size: 12.5px; cursor: pointer; text-decoration: none;
+  transition: all var(--transition); font-family: inherit; font-weight: 500;
+}
+.nav-btn:hover { border-color: var(--clr-orange); color: var(--clr-orange); background: #fff7ed; }
+.nav-btn.active { background: linear-gradient(135deg, var(--clr-orange), #ff8c42); color: #fff; border-color: transparent; font-weight: 600; box-shadow: 0 2px 8px rgba(255,105,0,.2); }
+.hero {
+  position: relative; z-index: 1;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+  color: white; padding: 48px 20px 40px; text-align: center; box-shadow: 0 4px 24px rgba(15,52,96,.15);
+}
+.hero h1 { font-size: 38px; font-weight: 800; letter-spacing: -.02em; }
+.hero h1 .mi { color: var(--clr-orange); }
+.hero p { font-size: 15px; opacity: 0.85; margin-top: 8px; max-width: 700px; margin-left: auto; margin-right: auto; }
+.hero .badge-row { margin-top: 16px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.hero .badge { padding: 5px 16px; border-radius: 16px; font-size: 12px; font-weight: 600; letter-spacing: .03em; }
+.badge.green { background: rgba(29,168,92,.18); color: #5ddf8a; }
+.badge.warn { background: rgba(255,105,0,.18); color: #ffa366; }
+.badge.info { background: rgba(59,130,246,.18); color: #80c8ff; }
+.badge.purple { background: rgba(124,111,247,.18); color: #b5a8ff; }
+.badge.card { background: rgba(16,185,129,.18); color: #6ee7b7; }
+
+.kpi-row {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+  max-width: 1500px; margin: -28px auto 0; padding: 0 20px; position: relative; z-index: 10;
+}
+.kpi-card {
+  background: var(--surface); border-radius: var(--radius); padding: 18px 10px; text-align: center;
+  box-shadow: var(--shadow-md); border: 1px solid var(--border);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.kpi-card .kpi-value { font-size: 26px; font-weight: 800; line-height: 1.2; }
+.kpi-card .kpi-label { font-size: 11px; color: var(--text-secondary); margin-top: 6px; font-weight: 500; letter-spacing: .03em; }
+.kpi-card .kpi-sub { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+.kpi-card.highlight { border: 2px solid var(--clr-orange); background: linear-gradient(135deg, #fffdf0 0%, #fff 100%); }
+
+.container { max-width: 1500px; margin: 32px auto; padding: 0 20px; position: relative; z-index: 1; }
+.section {
+  background: var(--surface); border-radius: var(--radius); padding: 28px 32px; margin-bottom: 20px;
+  box-shadow: var(--shadow-sm); border: 1px solid var(--border); scroll-margin-top: 70px;
+}
+.section:hover { box-shadow: var(--shadow-md); }
+.section h2 {
+  font-size: 20px; font-weight: 700; margin-bottom: 20px; padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0; position: relative; display: flex; align-items: center; gap: 10px;
+}
+.section h2::after { content: ''; position: absolute; bottom: -2px; left: 0; width: 48px; height: 3px; background: var(--clr-orange); border-radius: 2px; }
+.section h3 { font-size: 16px; font-weight: 700; margin: 24px 0 12px; color: #333; }
+.section h3:first-of-type { margin-top: 0; }
+
+.chart-box { width: 100%; height: 420px; margin: 16px 0; }
+.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.chart-row .chart-box { height: 400px; }
+.chart-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+.chart-row-3 .chart-box { height: 380px; }
+
+table.data-table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 12px 0; }
+table.data-table thead th {
+  background: #f8fafc; padding: 10px 12px; text-align: center; font-weight: 600;
+  color: #475569; border-bottom: 2px solid #e2e8f0; font-size: 12px; letter-spacing: .03em; white-space: nowrap;
+}
+table.data-table tbody td { padding: 9px 12px; text-align: center; border-bottom: 1px solid #f1f5f9; }
+table.data-table tbody tr:hover { background: #f8fafc; }
+table.data-table .highlight-row { background: #fffdf0; font-weight: 600; }
+table.data-table .text-left { text-align: left; }
+table.data-table .num { font-variant-numeric: tabular-nums; font-family: 'SF Mono', 'JetBrains Mono', 'Consolas', monospace; }
+
+.tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; letter-spacing: .03em; }
+.tag-wosi { background: #eff6ff; color: #2563eb; }
+.tag-liangmi { background: #fffbeb; color: #d97706; }
+.tag-jixie { background: #f5f3ff; color: #7c3aed; }
+.tag-other { background: #f3f4f6; color: #6b7280; }
+.tag-10pro { background: #fff7ed; color: #ea580c; }
+.tag-10 { background: #eff6ff; color: #2563eb; }
+.tag-9pro { background: #f5f3ff; color: #7c3aed; }
+
+.note { background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-sm); padding: 14px 18px; margin: 16px 0; font-size: 13px; color: #92400e; }
+.note strong { color: #d97706; }
+
+.summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
+.summary-item {
+  background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
+  border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 20px; text-align: center;
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.summary-item:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.summary-item .s-val { font-size: 32px; font-weight: 800; line-height: 1.2; }
+.summary-item .s-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
+.summary-item .s-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+.divider { border: none; border-top: 2px dashed #e2e8f0; margin: 8px 0; }
+
+@media (max-width: 1200px) { .chart-row-3 { grid-template-columns: 1fr; } }
+@media (max-width: 1024px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } .chart-row { grid-template-columns: 1fr; } .summary-grid { grid-template-columns: 1fr; } }
+@media (max-width: 640px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } .hero h1 { font-size: 26px; } }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<div class="nav-bar">
+  <a href="#overview" class="nav-btn active">总览</a>
+  <a href="#product-structure" class="nav-btn">产品结构</a>
+  <a href="#live-classify" class="nav-btn">直播间分类</a>
+  <a href="#live-10pro" class="nav-btn">直播间10Pro占比</a>
+  <a href="#card-10pro" class="nav-btn">商品卡10Pro占比</a>
+  <a href="#combined" class="nav-btn">综合占比</a>
+  <a href="#detail" class="nav-btn">明细数据</a>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>7.1-7.24 <span class="mi">小米手环10Pro</span> 占比分析</h1>
+  <p>数据范围：2026年7月1日 - 7月24日（24天）· 全部订单（含已发货+已完成+待发货）· 商品卡 + 直播间</p>
+  <div class="badge-row">
+    <span class="badge green">商品卡 7,068单 ¥242万</span>
+    <span class="badge info">直播间 39,592单 ¥1,369万</span>
+    <span class="badge warn">10Pro ¥880万 / 54.6%</span>
+    <span class="badge purple">综合 46,660单 ¥1,611万</span>
+  </div>
+</div>
+
+<!-- KPI ROW -->
+<div class="kpi-row">
+  <div class="kpi-card highlight">
+    <div class="kpi-value" style="color:var(--clr-orange);">¥1,611万</div>
+    <div class="kpi-label">综合总销售额</div>
+    <div class="kpi-sub">46,660单</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" style="color:var(--clr-10pro);">¥880万</div>
+    <div class="kpi-label">10Pro 总销售额</div>
+    <div class="kpi-sub">22,312单</div>
+  </div>
+  <div class="kpi-card highlight">
+    <div class="kpi-value" style="color:var(--clr-orange);">54.62%</div>
+    <div class="kpi-label">🔥 10Pro 综合金额占比</div>
+    <div class="kpi-sub">订单占比 47.82%</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" style="color:var(--clr-blue);">56.16%</div>
+    <div class="kpi-label">直播间 10Pro 占比</div>
+    <div class="kpi-sub">¥769万 / ¥1,369万</div>
+  </div>
+  <div class="kpi-card">
+    <div class="kpi-value" style="color:var(--clr-green);">45.92%</div>
+    <div class="kpi-label">商品卡 10Pro 占比</div>
+    <div class="kpi-sub">¥111万 / ¥242万</div>
+  </div>
+</div>
+
+<!-- ==================== SECTION 1: OVERVIEW ==================== -->
+<div class="container" id="overview">
+<div class="section">
+  <h2>📊 数据总览</h2>
+  <p style="color:var(--text-secondary); font-size:14px; margin-bottom:12px;">
+    本次分析覆盖 <strong>7月1日-7月24日</strong> 共24天<strong>全部订单</strong>（已发货 + 已完成 + 待发货），含商品卡和直播间两个渠道。
+    产品按选购商品名称自动分类为：小米手环10Pro、小米手环10、小米手环9 Pro、Redmi手环、手环配件。
+  </p>
+
+  <div class="summary-grid">
+    <div class="summary-item">
+      <div class="s-val" style="color:var(--clr-blue);">¥1,611万</div>
+      <div class="s-label">综合总销售额（46,660单）</div>
+      <div class="s-sub">商品卡 ¥242万 + 直播间 ¥1,369万</div>
+    </div>
+    <div class="summary-item" style="border: 2px solid var(--clr-orange); background: linear-gradient(135deg, #fffdf0 0%, #fff 100%);">
+      <div class="s-val" style="color:var(--clr-orange);">¥880万</div>
+      <div class="s-label">10Pro 总销售额（22,312单）</div>
+      <div class="s-sub">商品卡 ¥111万 + 直播间 ¥769万</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-val" style="color:var(--clr-green);">54.62%</div>
+      <div class="s-label">10Pro 综合金额占比</div>
+      <div class="s-sub">订单占比 47.82%（22,312/46,660单）</div>
+    </div>
+  </div>
+
+  <div class="chart-row">
+    <div class="chart-box" id="chart-overview-channel"></div>
+    <div class="chart-box" id="chart-overview-10pro-pie"></div>
+  </div>
+</div>
+</div>
+
+<!-- ==================== SECTION 2: PRODUCT STRUCTURE ==================== -->
+<div class="container" id="product-structure">
+<div class="section">
+  <h2>📦 产品结构分析</h2>
+
+  <h3>商品卡 — 产品分类</h3>
+  <table class="data-table">
+    <thead><tr><th>产品分类</th><th>订单数</th><th>销售额</th><th>金额占比</th><th>订单占比</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag tag-10pro">小米手环10Pro</span></td><td class="num">2,795</td><td class="num">¥1,112,668</td><td><strong>45.92%</strong></td><td>39.55%</td></tr>
+      <tr><td><span class="tag tag-10">小米手环10</span></td><td class="num">3,580</td><td class="num">¥1,180,741</td><td><strong>48.73%</strong></td><td>50.65%</td></tr>
+      <tr><td><span class="tag tag-9pro">小米手环9 Pro</span></td><td class="num">395</td><td class="num">¥116,614</td><td>4.81%</td><td>5.59%</td></tr>
+      <tr><td>手环配件</td><td class="num">285</td><td class="num">¥11,215</td><td>0.46%</td><td>4.03%</td></tr>
+      <tr><td>Redmi手环</td><td class="num">13</td><td class="num">¥1,662</td><td>0.07%</td><td>0.18%</td></tr>
+      <tr class="highlight-row"><td><strong>合计</strong></td><td class="num"><strong>7,068</strong></td><td class="num"><strong>¥2,422,901</strong></td><td><strong>100%</strong></td><td><strong>100%</strong></td></tr>
+    </tbody>
+  </table>
+
+  <h3>直播间 — 产品分类</h3>
+  <table class="data-table">
+    <thead><tr><th>产品分类</th><th>订单数</th><th>销售额</th><th>金额占比</th><th>订单占比</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag tag-10pro">小米手环10Pro</span></td><td class="num">19,517</td><td class="num">¥7,689,031</td><td><strong>56.16%</strong></td><td>49.29%</td></tr>
+      <tr><td><span class="tag tag-10">小米手环10</span></td><td class="num">18,881</td><td class="num">¥5,751,321</td><td><strong>42.01%</strong></td><td>47.69%</td></tr>
+      <tr><td><span class="tag tag-9pro">小米手环9 Pro</span></td><td class="num">764</td><td class="num">¥217,889</td><td>1.59%</td><td>1.93%</td></tr>
+      <tr><td>Redmi手环</td><td class="num">265</td><td class="num">¥24,769</td><td>0.18%</td><td>0.67%</td></tr>
+      <tr><td>手环配件</td><td class="num">165</td><td class="num">¥7,892</td><td>0.06%</td><td>0.42%</td></tr>
+      <tr class="highlight-row"><td><strong>合计</strong></td><td class="num"><strong>39,592</strong></td><td class="num"><strong>¥13,690,902</strong></td><td><strong>100%</strong></td><td><strong>100%</strong></td></tr>
+    </tbody>
+  </table>
+
+  <div class="chart-row">
+    <div class="chart-box" id="chart-card-products"></div>
+    <div class="chart-box" id="chart-live-products"></div>
+  </div>
+</div>
+</div>
+
+<!-- ==================== SECTION 3: LIVE ROOM CLASSIFICATION ==================== -->
+<div class="container" id="live-classify">
+<div class="section">
+  <h2>🏷️ 直播间分类规则与统计</h2>
+
+  <div class="note">
+    <strong>分类说明：</strong>直播间共19个，按规则分为4类。未在名单中的直播间统一归为"其他直播间"。
+  </div>
+
+  <table class="data-table">
+    <thead><tr><th style="width:14%;">分类</th><th style="width:11%;">标签</th><th>包含直播间</th><th style="width:8%;">数量</th><th style="width:13%;">销售额</th><th style="width:10%;">订单数</th><th style="width:10%;">10Pro占比</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>机械空间</strong></td><td><span class="tag tag-jixie">机械空间</span></td>
+        <td class="text-left">小米智能穿戴国补号、小米智能穿戴授权号</td>
+        <td>2个</td><td class="num">¥2,651,878</td><td class="num">7,190</td>
+        <td><strong style="color:var(--clr-purple);">78.1%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>我司</strong></td><td><span class="tag tag-wosi">我司</span></td>
+        <td class="text-left">小米官方手表、小米官方手环直播间、小米数码旗舰店、小米官方耳机直播间、小米官旗手表直播间</td>
+        <td>5个</td><td class="num">¥5,930,683</td><td class="num">17,457</td>
+        <td><strong>46.2%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>良米直播间</strong></td><td><span class="tag tag-liangmi">良米</span></td>
+        <td class="text-left">watch数码手环直播间、watch智能手环直播间、小米手表、小米手表官方直播间、小米手环、小米数码智能旗舰店、小米智能手表旗舰店</td>
+        <td>7个</td><td class="num">¥4,508,971</td><td class="num">12,995</td>
+        <td><strong>58.6%</strong></td>
+      </tr>
+      <tr>
+        <td><strong>其他直播间</strong></td><td><span class="tag tag-other">其他</span></td>
+        <td class="text-left">小米手环官方直播间、小米官方手表直播号、小米手环新品直播间、小米手环直播间、小米手环手表直播间</td>
+        <td>5个</td><td class="num">¥599,369</td><td class="num">1,950</td>
+        <td><strong>38.7%</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="chart-row">
+    <div class="chart-box" id="chart-room-amount"></div>
+    <div class="chart-box" id="chart-room-10pro-pct"></div>
+  </div>
+</div>
+</div>
+
+<!-- ==================== SECTION 4: LIVE 10PRO DETAIL ==================== -->
+<div class="container" id="live-10pro">
+<div class="section">
+  <h2>📺 直播间 — 各分类产品结构 &amp; 10Pro占比</h2>
+
+  <h3>机械空间（2个号 / 7,190单 / ¥265万）</h3>
+  <table class="data-table">
+    <thead><tr><th>产品</th><th>订单数</th><th>销售额</th><th>金额占比</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag tag-10pro">小米手环10Pro</span></td><td class="num">5,245</td><td class="num">¥2,071,062</td><td><strong>78.10%</strong></td></tr>
+      <tr><td><span class="tag tag-10">小米手环10</span></td><td class="num">1,871</td><td class="num">¥571,666</td><td>21.56%</td></tr>
+      <tr><td>小米手环9 Pro</td><td class="num">29</td><td class="num">¥7,685</td><td>0.29%</td></tr>
+      <tr><td>手环配件</td><td class="num">45</td><td class="num">¥1,465</td><td>0.06%</td></tr>
+    </tbody>
+  </table>
+
+  <h3>我司（5个号 / 17,457单 / ¥593万）</h3>
+  <table class="data-table">
+    <thead><tr><th>产品</th><th>订单数</th><th>销售额</th><th>金额占比</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag tag-10">小米手环10</span></td><td class="num">9,664</td><td class="num">¥3,013,621</td><td><strong>50.81%</strong></td></tr>
+      <tr><td><span class="tag tag-10pro">小米手环10Pro</span></td><td class="num">6,921</td><td class="num">¥2,742,296</td><td><strong>46.24%</strong></td></tr>
+      <tr><td>小米手环9 Pro</td><td class="num">503</td><td class="num">¥145,947</td><td>2.46%</td></tr>
+      <tr><td>Redmi手环</td><td class="num">265</td><td class="num">¥24,769</td><td>0.42%</td></tr>
+      <tr><td>手环配件</td><td class="num">104</td><td class="num">¥4,050</td><td>0.07%</td></tr>
+    </tbody>
+  </table>
+
+  <h3>良米直播间（7个号 / 12,995单 / ¥451万）</h3>
+  <table class="data-table">
+    <thead><tr><th>产品</th><th>订单数</th><th>销售额</th><th>金额占比</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag tag-10pro">小米手环10Pro</span></td><td class="num">6,740</td><td class="num">¥2,643,791</td><td><strong>58.63%</strong></td></tr>
+      <tr><td><span class="tag tag-10">小米手环10</span></td><td class="num">6,080</td><td class="num">¥1,818,459</td><td><strong>40.33%</strong></td></tr>
+      <tr><td>小米手环9 Pro</td><td class="num">159</td><td class="num">¥44,344</td><td>0.98%</td></tr>
+      <tr><td>手环配件</td><td class="num">16</td><td class="num">¥2,377</td><td>0.05%</td></tr>
+    </tbody>
+  </table>
+
+  <h3>其他直播间（5个号 / 1,950单 / ¥60万）</h3>
+  <table class="data-table">
+    <thead><tr><th>产品</th><th>订单数</th><th>销售额</th><th>金额占比</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag tag-10">小米手环10</span></td><td class="num">1,266</td><td class="num">¥347,575</td><td><strong>57.99%</strong></td></tr>
+      <tr><td><span class="tag tag-10pro">小米手环10Pro</span></td><td class="num">611</td><td class="num">¥231,882</td><td><strong>38.69%</strong></td></tr>
+      <tr><td>小米手环9 Pro</td><td class="num">73</td><td class="num">¥19,912</td><td>3.32%</td></tr>
+    </tbody>
+  </table>
+
+  <div class="chart-row-3">
+    <div class="chart-box" id="chart-live-jixie"></div>
+    <div class="chart-box" id="chart-live-wosi"></div>
+    <div class="chart-box" id="chart-live-liangmi"></div>
+  </div>
+
+  <div class="note">
+    <strong>🔑 关键发现：</strong><br>
+    ① <strong>机械空间</strong>的10Pro占比最高（78.1%），其中授权号贡献了绝大部分（¥196万，占该分类10Pro的94.8%）。<br>
+    ② <strong>我司</strong>体量最大（¥593万），但10Pro占比最低（46.2%），小米手环10才是主力（50.8%）。<br>
+    ③ <strong>良米直播间</strong>10Pro占比58.6%居中，"小米手环"单号10Pro占比达68.6%。<br>
+    ④ 直播间整体10Pro占比56.16%，超过一半销售额来自10Pro。
+  </div>
+</div>
+</div>
+
+<!-- ==================== SECTION 5: PRODUCT CARD ==================== -->
+<div class="container" id="card-10pro">
+<div class="section">
+  <h2>🃏 商品卡 — 产品结构 &amp; 10Pro占比</h2>
+
+  <div class="summary-grid">
+    <div class="summary-item">
+      <div class="s-val" style="color:var(--clr-blue);">¥242万</div>
+      <div class="s-label">商品卡总销售额（7,068单）</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-val" style="color:var(--clr-10pro);">¥111万</div>
+      <div class="s-label">商品卡10Pro销售额（2,795单）</div>
+    </div>
+    <div class="summary-item" style="border: 2px solid var(--clr-orange); background: linear-gradient(135deg, #fffdf0 0%, #fff 100%);">
+      <div class="s-val" style="color:var(--clr-orange);">45.92%</div>
+      <div class="s-label">商品卡10Pro金额占比</div>
+      <div class="s-sub">订单占比 39.55%</div>
+    </div>
+  </div>
+
+  <h3>按商品卡来源</h3>
+  <table class="data-table">
+    <thead><tr><th>商品卡来源</th><th>总销售额</th><th>总订单</th><th>10Pro销售额</th><th>10Pro订单</th><th>10Pro金额占比</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="tag tag-wosi">我司商品卡</span></td>
+        <td class="num">¥1,474,042</td><td class="num">4,324</td>
+        <td class="num">¥543,752</td><td class="num">1,356</td>
+        <td><strong>36.89%</strong></td>
+      </tr>
+      <tr>
+        <td><span class="tag tag-liangmi">良米商品卡</span></td>
+        <td class="num">¥948,859</td><td class="num">2,744</td>
+        <td class="num">¥568,916</td><td class="num">1,439</td>
+        <td><strong style="color:var(--clr-red);">59.96%</strong></td>
+      </tr>
+      <tr class="highlight-row">
+        <td><strong>合计</strong></td><td class="num"><strong>¥2,422,901</strong></td><td class="num"><strong>7,068</strong></td>
+        <td class="num"><strong>¥1,112,668</strong></td><td class="num"><strong>2,795</strong></td>
+        <td><strong>45.92%</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="chart-row">
+    <div class="chart-box" id="chart-card-source-bar"></div>
+    <div class="chart-box" id="chart-card-source-pie"></div>
+  </div>
+
+  <div class="note">
+    <strong>🔑 关键发现：</strong>良米商品卡的10Pro占比高达60%，远高于我司商品卡（36.9%）。良米商品卡虽然订单量较少（2,744 vs 4,324），但10Pro销售额（¥56.9万）超过我司商品卡（¥54.4万）。
+  </div>
+</div>
+</div>
+
+<!-- ==================== SECTION 6: COMBINED ==================== -->
+<div class="container" id="combined">
+<div class="section">
+  <h2>🔗 商品卡 + 直播间 综合占比</h2>
+
+  <div class="summary-grid">
+    <div class="summary-item">
+      <div class="s-val" style="color:var(--clr-blue);">¥1,611万</div>
+      <div class="s-label">综合总销售额（46,660单）</div>
+    </div>
+    <div class="summary-item">
+      <div class="s-val" style="color:var(--clr-10pro);">¥880万</div>
+      <div class="s-label">10Pro总销售额（22,312单）</div>
+    </div>
+    <div class="summary-item" style="border: 2px solid var(--clr-orange); background: linear-gradient(135deg, #fffdf0 0%, #fff 100%);">
+      <div class="s-val" style="color:var(--clr-orange);">54.62%</div>
+      <div class="s-label">🔥 10Pro 综合金额占比</div>
+      <div class="s-sub">订单占比 47.82%</div>
+    </div>
+  </div>
+
+  <h3>综合分渠道/分类</h3>
+  <table class="data-table">
+    <thead><tr><th>渠道/分类</th><th>总销售额</th><th>10Pro销售额</th><th>10Pro内部占比</th><th>贡献整体10Pro份额</th></tr></thead>
+    <tbody>
+      <tr><td>🃏 商品卡</td><td class="num">¥2,422,901</td><td class="num">¥1,112,668</td><td>45.92%</td><td>12.64%</td></tr>
+      <tr><td>📺 直播间-我司</td><td class="num">¥5,930,683</td><td class="num">¥2,742,296</td><td>46.24%</td><td>31.16%</td></tr>
+      <tr><td>📺 直播间-良米</td><td class="num">¥4,508,971</td><td class="num">¥2,643,791</td><td>58.63%</td><td>30.04%</td></tr>
+      <tr><td>📺 直播间-机械空间</td><td class="num">¥2,651,878</td><td class="num">¥2,071,062</td><td><strong style="color:var(--clr-purple);">78.10%</strong></td><td>23.53%</td></tr>
+      <tr><td>📺 直播间-其他</td><td class="num">¥599,369</td><td class="num">¥231,882</td><td>38.69%</td><td>2.63%</td></tr>
+      <tr class="highlight-row">
+        <td><strong>📊 综合合计</strong></td><td class="num"><strong>¥16,113,803</strong></td><td class="num"><strong>¥8,801,699</strong></td><td><strong>54.62%</strong></td><td><strong>100%</strong></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="chart-row">
+    <div class="chart-box" id="chart-combined-bar"></div>
+    <div class="chart-box" id="chart-combined-treemap"></div>
+  </div>
+
+  <div class="chart-box" id="chart-combined-heatmap" style="height:340px;"></div>
+
+  <div class="note" style="margin-top:16px;">
+    <strong>📋 综合结论：</strong><br>
+    ① 7月1-24日，小米手环10Pro占整体手环销售额的 <strong>54.62%</strong>（过半），是第一大产品线。<br>
+    ② 直播间贡献了10Pro销售额的 <strong>87.36%</strong>（¥769万），是绝对主力渠道；商品卡贡献12.64%（¥111万）。<br>
+    ③ 直播间中，<strong>我司</strong>贡献10Pro最多（¥274万，31.2%），<strong>良米直播间</strong>紧随其后（¥264万，30.0%），<strong>机械空间</strong>第三（¥207万，23.5%）。<br>
+    ④ <strong>机械空间</strong>10Pro内部占比最高（78.1%），几乎只卖10Pro；我司10Pro占比最低（46.2%），小米手环10仍是主力。<br>
+    ⑤ 商品卡渠道中，<strong>良米商品卡</strong>的10Pro占比（60.0%）远超我司商品卡（36.9%）。
+  </div>
+</div>
+</div>
+
+<!-- ==================== SECTION 7: DETAIL ==================== -->
+<div class="container" id="detail">
+<div class="section">
+  <h2>📋 各直播间明细数据（全部订单）</h2>
+  <table class="data-table">
+    <thead><tr><th>分类</th><th>直播间名称</th><th>总销售额</th><th>总订单</th><th>10Pro销售额</th><th>10Pro订单</th><th>10Pro金额占比</th><th>主力产品</th></tr></thead>
+    <tbody>
+      <tr><td><span class="tag tag-wosi">我司</span></td><td class="text-left">小米官方手环直播间</td><td class="num">¥3,147,078</td><td>8,949</td><td class="num">¥1,741,949</td><td>4,377</td><td><strong>55.4%</strong></td><td>10Pro+10</td></tr>
+      <tr><td><span class="tag tag-wosi">我司</span></td><td class="text-left">小米数码旗舰店</td><td class="num">¥2,193,448</td><td>6,462</td><td class="num">¥832,491</td><td>2,100</td><td><strong>38.0%</strong></td><td>10为主</td></tr>
+      <tr><td><span class="tag tag-wosi">我司</span></td><td class="text-left">小米官方手表</td><td class="num">¥410,261</td><td>1,440</td><td class="num">¥130,435</td><td>340</td><td><strong>31.8%</strong></td><td>10为主</td></tr>
+      <tr><td><span class="tag tag-wosi">我司</span></td><td class="text-left">小米官旗手表直播间</td><td class="num">¥179,783</td><td>602</td><td class="num">¥37,421</td><td>104</td><td><strong>20.8%</strong></td><td>10为主</td></tr>
+      <tr><td><span class="tag tag-wosi">我司</span></td><td class="text-left">小米官方耳机直播间</td><td class="num">¥114</td><td>4</td><td class="num">¥0</td><td>0</td><td>0.0%</td><td>配件</td></tr>
+      <tr><td colspan="8"><hr class="divider"></td></tr>
+      <tr><td><span class="tag tag-liangmi">良米</span></td><td class="text-left">小米手环</td><td class="num">¥2,525,096</td><td>7,102</td><td class="num">¥1,732,192</td><td>4,385</td><td><strong>68.6%</strong></td><td>10Pro为主</td></tr>
+      <tr><td><span class="tag tag-liangmi">良米</span></td><td class="text-left">小米数码智能旗舰店</td><td class="num">¥1,095,004</td><td>3,216</td><td class="num">¥603,931</td><td>1,534</td><td><strong>55.2%</strong></td><td>10Pro+10</td></tr>
+      <tr><td><span class="tag tag-liangmi">良米</span></td><td class="text-left">小米手表官方直播间</td><td class="num">¥429,837</td><td>1,358</td><td class="num">¥164,052</td><td>437</td><td><strong>38.2%</strong></td><td>10为主</td></tr>
+      <tr><td><span class="tag tag-liangmi">良米</span></td><td class="text-left">watch智能手环直播间</td><td class="num">¥153,215</td><td>305</td><td class="num">¥43,570</td><td>115</td><td><strong>28.4%</strong></td><td>10为主</td></tr>
+      <tr><td><span class="tag tag-liangmi">良米</span></td><td class="text-left">小米智能手表旗舰店</td><td class="num">¥151,493</td><td>470</td><td class="num">¥57,595</td><td>150</td><td><strong>38.0%</strong></td><td>10为主</td></tr>
+      <tr><td><span class="tag tag-liangmi">良米</span></td><td class="text-left">小米手表</td><td class="num">¥134,534</td><td>475</td><td class="num">¥42,452</td><td>119</td><td><strong>31.6%</strong></td><td>10为主</td></tr>
+      <tr><td><span class="tag tag-liangmi">良米</span></td><td class="text-left">watch数码手环直播间</td><td class="num">¥19,793</td><td>69</td><td class="num">¥0</td><td>0</td><td>0.0%</td><td>10</td></tr>
+      <tr><td colspan="8"><hr class="divider"></td></tr>
+      <tr><td><span class="tag tag-jixie">机械空间</span></td><td class="text-left">小米智能穿戴授权号</td><td class="num">¥2,432,416</td><td>6,480</td><td class="num">¥1,963,265</td><td>4,950</td><td><strong style="color:var(--clr-purple);">80.7%</strong></td><td>10Pro绝对主力</td></tr>
+      <tr><td><span class="tag tag-jixie">机械空间</span></td><td class="text-left">小米智能穿戴国补号</td><td class="num">¥219,462</td><td>710</td><td class="num">¥107,797</td><td>295</td><td><strong>49.1%</strong></td><td>10Pro+10</td></tr>
+      <tr><td colspan="8"><hr class="divider"></td></tr>
+      <tr><td><span class="tag tag-other">其他</span></td><td class="text-left">小米手环官方直播间</td><td class="num">¥373,827</td><td>1,177</td><td class="num">¥193,994</td><td>506</td><td><strong>51.9%</strong></td><td>10Pro+10</td></tr>
+      <tr><td><span class="tag tag-other">其他</span></td><td class="text-left">小米官方手表直播号</td><td class="num">¥107,910</td><td>392</td><td class="num">¥35,499</td><td>99</td><td><strong>32.9%</strong></td><td>10为主</td></tr>
+      <tr><td><span class="tag tag-other">其他</span></td><td class="text-left">小米手环直播间</td><td class="num">¥102,770</td><td>335</td><td class="num">¥2,388</td><td>6</td><td><strong>2.3%</strong></td><td>10</td></tr>
+      <tr><td><span class="tag tag-other">其他</span></td><td class="text-left">小米手环新品直播间</td><td class="num">¥14,321</td><td>44</td><td class="num">¥0</td><td>0</td><td>0.0%</td><td>10</td></tr>
+      <tr><td><span class="tag tag-other">其他</span></td><td class="text-left">小米手环手表直播间</td><td class="num">¥540</td><td>2</td><td class="num">¥0</td><td>0</td><td>0.0%</td><td>10</td></tr>
+    </tbody>
+  </table>
+</div>
+</div>
+
+<!-- ==================== CHARTS JS ==================== -->
+<script>
+var clr10pro = '#ff6900', clr10 = '#3b82f6', clr9pro = '#8b5cf6', clracc = '#9ca3af', clrredmi = '#f59e0b';
+var clrWosi = '#3b82f6', clrLiangmi = '#f59e0b', clrJixie = '#8b5cf6', clrOther = '#9ca3af', clrCard = '#10b981';
+var clrTotal = '#cbd5e1';
+
+function fmtWan(v){ return '¥'+(v/10000).toFixed(1)+'万'; }
+function fmtWan2(v){ return (v/10000).toFixed(1)+'万'; }
+
+// ===== Overview: Channel split =====
+(function(){
+  var c = echarts.init(document.getElementById('chart-overview-channel'));
+  c.setOption({
+    title: { text: '渠道销售额分布', left:'center', top:10, textStyle:{fontSize:14,fontWeight:700} },
+    tooltip: { trigger:'item', formatter:function(p){return p.seriesName+'<br/>'+p.name+': ¥'+p.value.toLocaleString()+'<br/>占比: '+p.percent+'%';} },
+    legend: { bottom:0, textStyle:{fontSize:11} },
+    series: [{
+      name:'渠道', type:'pie', radius:['48%','72%'], center:['50%','48%'], padAngle:2,
+      itemStyle:{borderRadius:8,borderColor:'#fff',borderWidth:2},
+      label:{formatter:'{b}\n{d}%',fontSize:13,fontWeight:600},
+      data:[
+        {value:13690902, name:'直播间', itemStyle:{color:clrWosi}},
+        {value:2422901, name:'商品卡', itemStyle:{color:clrCard}}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){c.resize();});
+})();
+
+// ===== Overview: 10Pro vs others =====
+(function(){
+  var c = echarts.init(document.getElementById('chart-overview-10pro-pie'));
+  c.setOption({
+    title: { text: '综合：10Pro vs 其他产品', left:'center', top:10, textStyle:{fontSize:14,fontWeight:700} },
+    tooltip: { trigger:'item', formatter:function(p){return p.name+': ¥'+p.value.toLocaleString()+'<br/>占比: '+p.percent+'%';} },
+    legend: { bottom:0, textStyle:{fontSize:11} },
+    series: [{
+      type:'pie', radius:['48%','72%'], center:['50%','48%'], padAngle:2,
+      itemStyle:{borderRadius:8,borderColor:'#fff',borderWidth:2},
+      label:{formatter:'{b}\n{d}%',fontSize:13,fontWeight:600},
+      data:[
+        {value:8801699, name:'小米手环10Pro', itemStyle:{color:clr10pro}},
+        {value:6932062, name:'小米手环10', itemStyle:{color:clr10}},
+        {value:334503, name:'小米手环9 Pro', itemStyle:{color:clr9pro}},
+        {value:26431, name:'Redmi手环', itemStyle:{color:clrredmi}},
+        {value:19107, name:'手环配件', itemStyle:{color:clracc}}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){c.resize();});
+})();
+
+// ===== Product structure: Card =====
+(function(){
+  var c = echarts.init(document.getElementById('chart-card-products'));
+  c.setOption({
+    title: { text: '商品卡 — 产品结构', left:'center', top:10, textStyle:{fontSize:14,fontWeight:700} },
+    tooltip: { trigger:'item', formatter:function(p){return p.name+': ¥'+p.value.toLocaleString()+' ('+p.percent+'%)';} },
+    series: [{
+      type:'pie', radius:['45%','72%'], center:['50%','50%'], padAngle:2,
+      itemStyle:{borderRadius:8,borderColor:'#fff',borderWidth:2},
+      label:{formatter:'{b}\n{d}%',fontSize:11},
+      data:[
+        {value:1180741, name:'小米手环10', itemStyle:{color:clr10}},
+        {value:1112668, name:'小米手环10Pro', itemStyle:{color:clr10pro}},
+        {value:116614, name:'小米手环9 Pro', itemStyle:{color:clr9pro}},
+        {value:11215, name:'手环配件', itemStyle:{color:clracc}},
+        {value:1662, name:'Redmi手环', itemStyle:{color:clrredmi}}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){c.resize();});
+})();
+
+// ===== Product structure: Live =====
+(function(){
+  var c = echarts.init(document.getElementById('chart-live-products'));
+  c.setOption({
+    title: { text: '直播间 — 产品结构', left:'center', top:10, textStyle:{fontSize:14,fontWeight:700} },
+    tooltip: { trigger:'item', formatter:function(p){return p.name+': ¥'+p.value.toLocaleString()+' ('+p.percent+'%)';} },
+    series: [{
+      type:'pie', radius:['45%','72%'], center:['50%','50%'], padAngle:2,
+      itemStyle:{borderRadius:8,borderColor:'#fff',borderWidth:2},
+      label:{formatter:'{b}\n{d}%',fontSize:11},
+      data:[
+        {value:7689031, name:'小米手环10Pro', itemStyle:{color:clr10pro}},
+        {value:5751321, name:'小米手环10', itemStyle:{color:clr10}},
+        {value:217889, name:'小米手环9 Pro', itemStyle:{color:clr9pro}},
+        {value:24769, name:'Redmi手环', itemStyle:{color:clrredmi}},
+        {value:7892, name:'手环配件', itemStyle:{color:clracc}}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){c.resize();});
+})();
+
+// ===== Room category amount bar =====
+(function(){
+  var c = echarts.init(document.getElementById('chart-room-amount'));
+  c.setOption({
+    title: { text: '直播间分类 — 销售额 & 10Pro占比', left:'center', top:10, textStyle:{fontSize:14,fontWeight:700} },
+    tooltip: { trigger:'axis' },
+    legend: { bottom:0, textStyle:{fontSize:10} },
+    grid: { left:'8%', right:'5%', top:'18%', bottom:'14%' },
+    xAxis: { type:'category', data:['机械空间','我司','良米直播间','其他直播间'], axisLabel:{fontSize:11} },
+    yAxis: { type:'value', axisLabel:{formatter:function(v){return fmtWan2(v);}} },
+    series: [
+      { name:'总销售额', type:'bar', data:[2651878,5930683,4508971,599369],
+        itemStyle:{color:'#e2e8f0',borderRadius:[6,6,0,0]}, barWidth:'28%', barGap:'20%',
+        label:{show:true,position:'top',fontSize:9,color:'#94a3b8',formatter:function(p){return fmtWan(p.value);}} },
+      { name:'10Pro销售额', type:'bar', data:[2071062,2742296,2643791,231882],
+        itemStyle:{color:function(p){return [clrJixie,clrWosi,clrLiangmi,clrOther][p.dataIndex];},borderRadius:[6,6,0,0]}, barWidth:'28%',
+        label:{show:true,position:'top',fontSize:9,fontWeight:600,formatter:function(p){return fmtWan(p.value);}} }
+    ]
+  });
+  window.addEventListener('resize',function(){c.resize();});
+})();
+
+// ===== Room category 10Pro% =====
+(function(){
+  var c = echarts.init(document.getElementById('chart-room-10pro-pct'));
+  c.setOption({
+    title: { text: '各分类 10Pro金额占比(%)', left:'center', top:10, textStyle:{fontSize:14,fontWeight:700} },
+    tooltip: { trigger:'axis' },
+    grid: { left:'8%', right:'5%', top:'18%', bottom:'14%' },
+    xAxis: { type:'category', data:['机械空间','我司','良米直播间','其他直播间'], axisLabel:{fontSize:11} },
+    yAxis: { type:'value', max:90, axisLabel:{formatter:'{value}%'} },
+    series: [{
+      type:'bar', data:[78.1,46.2,58.6,38.7],
+      itemStyle:{color:function(p){return [clrJixie,clrWosi,clrLiangmi,clrOther][p.dataIndex];},borderRadius:[6,6,0,0]},
+      barWidth:'45%',
+      label:{show:true,position:'top',fontSize:15,fontWeight:700,formatter:'{c}%'},
+      markLine:{data:[{type:'average',name:'均值',label:{formatter:'均值 {c}%'}}],lineStyle:{color:'#ef4444',type:'dashed'}}
+    }]
+  });
+  window.addEventListener('resize',function(){c.resize();});
+})();
+
+// ===== Live category product pies =====
+function makeLivePie(domId, title, data){
+  var c = echarts.init(document.getElementById(domId));
+  c.setOption({
+    title: { text:title, left:'center', top:8, textStyle:{fontSize:13,fontWeight:700} },
+    tooltip: { trigger:'item', formatter:function(p){return p.name+': ¥'+p.value.toLocaleString()+' ('+p.percent+'%)';} },
+    series: [{
+      type:'pie', radius:['42%','68%'], center:['50%','52%'], padAngle:2,
+      itemStyle:{borderRadius:6,borderColor:'#fff',borderWidth:1.5},
+      label:{formatter:'{b}\n{d}%',fontSize:10},
+      data: data
+    }]
+  });
+  window.addEventListener('resize',function(){c.resize();});
+}
+makeLivePie('chart-live-jixie', '机械空间-产品结构', [
+  {value:2071062,name:'10Pro',itemStyle:{color:clr10pro}},
+  {value:571666,name:'10',itemStyle:{color:clr10}},
+  {value:7685,name:'9Pro',itemStyle:{color:clr9pro}},
+  {value:1465,name:'配件',itemStyle:{color:clracc}}
+]);
+makeLivePie('chart-live-wosi', '我司-产品结构', [
+  {value:3013621,name:'10',itemStyle:{color:clr10}},
+  {value:2742296,name:'10Pro',itemStyle:{color:clr10pro}},
+  {value:145947,name:'9Pro',itemStyle:{color:clr9pro}},
+  {value:24769,name:'Redmi',itemStyle:{color:clrredmi}},
+  {value:4050,name:'配件',itemStyle:{color:clracc}}
+]);
+makeLivePie('chart-live-liangmi', '良米直播间-产品结构', [
+  {value:2643791,name:'10Pro',itemStyle:{color:clr10pro}},
+  {value:1818459,name:'10',itemStyle:{color:clr10}},
+  {value:44344,name:'9Pro',itemStyle:{color:clr9pro}},
+  {value:2377,name:'配件',itemStyle:{color:clracc}}
+]);
+
+// ===== Card source bar =====
+(function(){
+  var c = echarts.init(document.getElementById('chart-card-source-bar'));
+  c.setOption({
+    title: { text: '商品卡来源 — 10Pro vs 总额', left:'center', top:10, textStyle:{fontSize:14,fontWeight:700} },
+    tooltip: { trigger:'axis' },
+    legend: { bottom:0, textStyle:{fontSize:10} },
+    grid: { left:'10%', right:'5%', top:'18%', bottom:'14%' },
+    xAxis: { type:'category', data:['我司商品卡','良米商品卡'], axisLabel:{fontSize:12} },
+    yAxis: { type:'value', axisLabel:{formatter:function(v){return fmtWan2(v);}} },
+    series: [
+      { name:'总销售额', type:'bar', data:[1474042,948859], itemStyle:{color:'#e2e8f0',borderRadius:[6,6,0,0]}, barWidth:'28%', barGap:'20%',
+        label:{show:true,position:'top',fontSize:9,color:'#94a3b8',formatter:function(p){return fmtWan(p.value);}} },
+      { name:'10Pro销售额', type:'bar', data:[543752,568916], itemStyle:{color:function(p){return p.dataIndex===0?clrWosi:clrLiangmi;},borderRadius:[6,6,0,0]}, barWidth:'28%',
+        label:{show:true,position:'top',fontSize:9,fontWeight:600,formatter:function(p){return fmtWan(p.value);}} }
+    ]
+  });
+  window.addEventListener('resize',function(){c.resize();});
+})();
+
+// ===== Card source 10Pro% =====
+(function(){
+  var c = echarts.init(document.getElementById('chart-card-source-pie'));
+  c.setOption({
+    title: { text: '商品卡来源 10Pro金额占比(%)', left:'center', top:10, textStyle:{fontSize:14,fontWeight:700} },
+    tooltip: { trigger:'axis' },
+    grid: { left:'10%', right:'5%', top:'18%', bottom:'14%' },
+    xAxis: { type:'category', data:['我司商品卡','良米商品卡'], axisLabel:{fontSize:12} },
+    yAxis: { type:'value', max:75, axisLabel:{formatter:'{value}%'} },
+    series: [{
+      type:'bar', data:[36.9,60.0],
+      itemStyle:{color:function(p){return p.value>50?clrLiangmi:clrWosi;},borderRadius:[6,6,0,0]},
+      barWidth:'45%',
+      label:{show:true,position:'top',fontSize:16,fontWeight:700,formatter:'{c}%'},
+      markLine:{data:[{type:'average',name:'均值',label:{formatter:'均值 {c}%'}}],lineStyle:{color:'#ef4444',type:'dashed'}}
+    }]
+  });
+  window.addEventListener('resize',function(){c.resize();});
+})();
+
+// ===== Combined bar =====
+(function(){
+  var c = echarts.init(document.getElementById('chart-combined-bar'));
+  c.setOption({
+    title: { text: '综合各渠道/分类 — 10Pro占比对比', left:'center', top:10, textStyle:{fontSize:14,fontWeight:700} },
+    tooltip: { trigger:'axis' },
+    legend: { bottom:0, textStyle:{fontSize:10} },
+    grid: { left:'8%', right:'5%', top:'18%', bottom:'14%' },
+    xAxis: { type:'category', data:['商品卡','直播间\n我司','直播间\n良米','直播间\n机械空间','直播间\n其他'], axisLabel:{fontSize:10} },
+    yAxis: { type:'value', axisLabel:{formatter:function(v){return fmtWan2(v);}} },
+    series: [
+      { name:'总销售额', type:'bar', data:[2422901,5930683,4508971,2651878,599369],
+        itemStyle:{color:'#e2e8f0',borderRadius:[6,6,0,0]}, barWidth:'28%', barGap:'20%', label:{show:false} },
+      { name:'10Pro销售额', type:'bar', data:[1112668,2742296,2643791,2071062,231882],
+        itemStyle:{color:function(p){return [clrCard,clrWosi,clrLiangmi,clrJixie,clrOther][p.dataIndex];},borderRadius:[6,6,0,0]}, barWidth:'28%',
+        label:{show:true,position:'top',fontSize:9,fontWeight:600,formatter:function(p){return fmtWan(p.value);}} }
+    ]
+  });
+  window.addEventListener('resize',function(){c.resize();});
+})();
+
+// ===== Combined treemap =====
+(function(){
+  var c = echarts.init(document.getElementById('chart-combined-treemap'));
+  c.setOption({
+    title: { text: '10Pro销售额分布 — 矩形树图', left:'center', top:10, textStyle:{fontSize:14,fontWeight:700} },
+    tooltip: { formatter:function(p){return p.name+'<br/>10Pro: ¥'+p.value.toLocaleString()+'<br/>占全部10Pro: '+(p.value/8801699*100).toFixed(1)+'%';} },
+    series: [{
+      type:'treemap', width:'92%', height:'78%', top:'15%', left:'4%',
+      label:{show:true,formatter:function(p){return p.name+'\n¥'+(p.value/10000).toFixed(1)+'万';},fontSize:11},
+      data:[
+        {name:'直播间-我司',value:2742296,itemStyle:{color:clrWosi}},
+        {name:'直播间-良米',value:2643791,itemStyle:{color:clrLiangmi}},
+        {name:'直播间-机械空间',value:2071062,itemStyle:{color:clrJixie}},
+        {name:'商品卡',value:1112668,itemStyle:{color:clrCard}},
+        {name:'直播间-其他',value:231882,itemStyle:{color:clrOther}}
+      ]
+    }]
+  });
+  window.addEventListener('resize',function(){c.resize();});
+})();
+
+// ===== Heatmap =====
+(function(){
+  var c = echarts.init(document.getElementById('chart-combined-heatmap'));
+  c.setOption({
+    title: { text: '渠道×分类 10Pro销售额矩阵 (万元)', left:'center', top:6, textStyle:{fontSize:14,fontWeight:700} },
+    tooltip: {},
+    grid: { left:'14%', right:'5%', top:'20%', bottom:'6%' },
+    xAxis: { type:'category', data:['总销售额','10Pro销售额','10Pro占比%'], axisLabel:{fontSize:11} },
+    yAxis: { type:'category', data:['其他直播间','机械空间','良米直播间','我司','商品卡'], axisLabel:{fontSize:11,fontWeight:600} },
+    visualMap: { min:0, max:100, calculable:true, orient:'horizontal', left:'center', bottom:-2,
+      inRange:{color:['#f1f5f9','#fef3c7','#ff6900']}, textStyle:{fontSize:9} },
+    series: [{
+      type:'heatmap',
+      data:[
+        [0,4,242.3],[1,4,111.3],[2,4,45.9],
+        [0,3,593.1],[1,3,274.2],[2,3,46.2],
+        [0,2,450.9],[1,2,264.4],[2,2,58.6],
+        [0,1,265.2],[1,1,207.1],[2,1,78.1],
+        [0,0,59.9], [1,0,23.2], [2,0,38.7],
+      ],
+      label:{show:true,fontSize:11,fontWeight:600,formatter:function(p){return p.value.toFixed(1);}},
+      emphasis:{itemStyle:{shadowBlur:10,shadowColor:'rgba(0,0,0,.3)'}}
+    }]
+  });
+  window.addEventListener('resize',function(){c.resize();});
+})();
+
+// Nav highlight
+(function(){
+  var btns = document.querySelectorAll('.nav-btn');
+  window.addEventListener('scroll', function(){
+    var scrollY = window.scrollY;
+    var sections = document.querySelectorAll('.section');
+    var current = '';
+    sections.forEach(function(sec){
+      if (scrollY >= sec.offsetTop - 120) current = sec.id;
+    });
+    btns.forEach(function(btn){
+      btn.classList.remove('active');
+      if (btn.getAttribute('href') === '#' + current) btn.classList.add('active');
+    });
+    if (!current) btns[0].classList.add('active');
+  });
+})();
+</script>
+
+</body>
+</html>

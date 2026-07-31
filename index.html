@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>分析平台</title>
+<title>小米手环直播间 · 竞对分析平台</title>
+<meta name="description" content="小米手环直播间每日销量追踪、竞对对比、视频分析、主播管理一站式数据平台">
+<link rel="icon" type="image/png" href="xiaomi-logo.png">
+<link rel="stylesheet" href="common.css">
 <style>
   :root {
     --sidebar-w: 240px;
@@ -37,6 +40,8 @@
     --clr-monthly:    #1da85c;
     --clr-event:      #f59e0b;
     --clr-baiying:    #6366f1;
+    --clr-exam:       #7c3aed;
+    --clr-performance:   #0d9488;
 
     --clr-sales-bg:      #fff7ed;
     --clr-violations-bg: #fef2f2;
@@ -50,9 +55,9 @@
     --clr-monthly-bg:    #ecfdf5;
     --clr-event-bg:      #fffbeb;
     --clr-baiying-bg:    #eef2ff;
+    --clr-exam-bg:       #f5f3ff;
+    --clr-performance-bg: #f0fdfa;
   }
-
-  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -172,6 +177,8 @@
   .sidebar-nav a.monthlySummary::after { background: var(--clr-monthly); }
   .sidebar-nav a.eventSummary::after   { background: var(--clr-event); }
   .sidebar-nav a.baiying::after       { background: var(--clr-baiying); }
+  .sidebar-nav a.exam::after          { background: var(--clr-exam); }
+  .sidebar-nav a.performance::after   { background: var(--clr-performance); }
 
   .sidebar-nav a:hover {
     background: var(--sidebar-hover);
@@ -223,6 +230,8 @@
   .sidebar-nav a.monthlySummary .nav-dot { background: var(--clr-monthly); }
   .sidebar-nav a.eventSummary .nav-dot   { background: var(--clr-event); }
   .sidebar-nav a.baiying .nav-dot       { background: var(--clr-baiying); }
+  .sidebar-nav a.exam .nav-dot          { background: var(--clr-exam); }
+  .sidebar-nav a.performance .nav-dot   { background: var(--clr-performance); }
 
   .sidebar-nav a .badge-nav {
     font-size: .64em;
@@ -282,6 +291,8 @@
     padding: 5px 14px 5px 58px !important;
     font-size: .74em !important;
   }
+
+  .sidebar-footer {
     padding: 14px 20px;
     border-top: 1px solid var(--border-light);
     font-size: .72em;
@@ -459,6 +470,7 @@
   .module-card.monthlySummary::before { background: linear-gradient(90deg, var(--clr-monthly), #6ee7b7); }
   .module-card.eventSummary::before   { background: linear-gradient(90deg, var(--clr-event), #fcd34d); }
   .module-card.baiying::before       { background: linear-gradient(90deg, var(--clr-baiying), #a5b4fc); }
+  .module-card.performance::before   { background: linear-gradient(90deg, var(--clr-performance), #5eead4); }
 
   .module-card .mod-icon {
     width: 46px; height: 46px;
@@ -488,6 +500,7 @@
   .module-card.monthlySummary .mod-icon { background: var(--clr-monthly-bg); }
   .module-card.eventSummary .mod-icon   { background: var(--clr-event-bg); }
   .module-card.baiying .mod-icon      { background: var(--clr-baiying-bg); }
+  .module-card.performance .mod-icon  { background: var(--clr-performance-bg); }
 
   .module-card h3 {
     font-size: .95em;
@@ -509,6 +522,7 @@
   .module-card.monthlySummary:hover h3 { color: var(--clr-monthly); }
   .module-card.eventSummary:hover h3   { color: var(--clr-event); }
   .module-card.baiying:hover h3      { color: var(--clr-baiying); }
+  .module-card.performance:hover h3  { color: var(--clr-performance); }
 
   .module-card p {
     font-size: .8em;
@@ -541,10 +555,150 @@
 	  .module-card.monthlySummary .mod-tag { background: var(--clr-monthly-bg); color: var(--clr-monthly); }
 	  .module-card.eventSummary .mod-tag   { background: var(--clr-event-bg); color: var(--clr-event); }
   .module-card.baiying .mod-tag       { background: var(--clr-baiying-bg); color: var(--clr-baiying); }
+  .module-card.performance .mod-tag   { background: var(--clr-performance-bg); color: var(--clr-performance); }
 
   .module-card:hover .mod-tag {
     filter: brightness(.97);
     transform: translateY(-1px);
+  }
+
+  /* ===== LEI JUN QUOTE CAROUSEL ===== */
+  .quote-carousel {
+    position: relative;
+    animation: quoteSlideIn .6s ease-out;
+    background: linear-gradient(135deg, #fffbf5 0%, #fff7ed 40%, #fff3e0 100%);
+    border: 1px solid #f0c070;
+    border-left: 4px solid #f97316;
+    border-radius: var(--radius);
+    padding: 24px 32px 18px;
+    margin-bottom: 24px;
+    overflow: hidden;
+    cursor: default;
+    box-shadow: 0 1px 3px rgba(249,115,22,.08);
+    text-align: center;
+    transition: box-shadow var(--transition), border-color var(--transition);
+  }
+  .quote-carousel:hover {
+    box-shadow: var(--shadow-md);
+    border-color: #e07b30;
+    border-left-color: #e06000;
+  }
+
+  /* Ambient glow — top right */
+  .quote-carousel::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(249,115,22,.10) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* Quote icon line — Lei Jun silhouette area */
+  .quote-carousel .quote-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 10px;
+    font-size: .75em;
+    font-weight: 600;
+    color: #b45309;
+    letter-spacing: .04em;
+    user-select: none;
+  }
+  .quote-carousel .quote-avatar .avatar-dot {
+    display: inline-block;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #ff6900, #e05800);
+    box-shadow: 0 1px 6px rgba(249,115,22,.25);
+    vertical-align: middle;
+  }
+
+  .quote-carousel .quote-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .quote-carousel .quote-text {
+    font-size: 1.15em;
+    font-weight: 700;
+    color: #3d2000;
+    line-height: 1.7;
+    letter-spacing: .02em;
+    padding: 0 16px;
+    transition: opacity .4s ease, transform .4s ease;
+  }
+
+  .quote-carousel .quote-text.fade-out {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  .quote-carousel .quote-author {
+    font-size: .78em;
+    color: #b45309;
+    font-weight: 500;
+    margin-top: 6px;
+    letter-spacing: .03em;
+  }
+
+  /* Large decorative quote marks */
+  .quote-carousel .quote-mark {
+    position: absolute;
+    font-size: 5em;
+    color: rgba(249,115,22,.05);
+    font-family: Georgia, 'Times New Roman', serif;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+  }
+  .quote-carousel .quote-mark.open  { top: -6px;  left: 28px; }
+  .quote-carousel .quote-mark.close { bottom: -18px; right: 28px; }
+
+  /* Bottom bar: author + dots */
+  .quote-carousel .quote-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .quote-carousel .quote-dots {
+    display: flex;
+    gap: 5px;
+  }
+  .quote-carousel .quote-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #d4c4a8;
+    cursor: pointer;
+    transition: all .35s ease;
+  }
+  .quote-carousel .quote-dot.active {
+    background: #f97316;
+    width: 18px;
+    border-radius: 10px;
+    box-shadow: 0 0 6px rgba(249,115,22,.3);
+  }
+  .quote-carousel .quote-dot:hover { background: #e07b30; }
+
+  @media (max-width: 700px) {
+    .quote-carousel { padding: 16px 16px 14px; }
+    .quote-carousel .quote-text { font-size: .95em; padding: 0 4px; }
+    .quote-carousel .quote-mark { display: none; }
+    .quote-carousel .quote-footer { flex-direction: column; gap: 6px; }
+  }
+
+  @keyframes quoteSlideIn {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   /* Iframe panel */
@@ -651,7 +805,7 @@
   </nav>
 
   <div class="sidebar-footer">
-    <span class="live-dot"></span> <span>系统运行中</span>
+    <span class="live-dot"></span> <span id="footerUpdate">数据加载中...</span>
   </div>
 </aside>
 
@@ -666,6 +820,20 @@
   <div class="content">
     <!-- Overview panel -->
     <div class="overview" id="overview">
+      <!-- Lei Jun Quote Carousel -->
+      <div class="quote-carousel" id="quoteCarousel">
+        <div class="quote-mark open">"</div>
+        <div class="quote-mark close">"</div>
+        <div class="quote-avatar"><span class="avatar-dot"></span> 雷军名言</div>
+        <div class="quote-content">
+          <div class="quote-text" id="quoteText">站在风口上，猪都能飞起来</div>
+        </div>
+        <div class="quote-footer">
+          <div class="quote-author" id="quoteAuthor">— 雷军</div>
+          <div class="quote-dots" id="quoteDots"></div>
+        </div>
+      </div>
+
       <h1>概览</h1>
 
       <div class="stats-row" id="statsRow">
@@ -694,7 +862,7 @@
 var modules = {};   // 全局模块注册表 { id: {url, title} }
 var __MODULE_CONFIG__ = null;
 
-fetch('modules.json')
+fetch('modules.json?v=20260729')
   .then(function(r) { return r.json(); })
   .then(function(config) {
     __MODULE_CONFIG__ = config;
@@ -763,6 +931,12 @@ function renderSidebar(config) {
         if (mod.badge) html += '<span class="badge-nav">' + mod.badge + '</span>';
         html += '<span class="sub-arrow">&#x25B8;</span></a>';
         html += '<div class="sub-menu" id="salesSubMenu" style="display:none;"></div>';
+      } else if (mod.external) {
+        // External link → open in new tab
+        html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" data-external="true" onclick="openExternalModule(this)" class="' + cls + '" target="_blank">';
+        html += '<span class="nav-dot"></span> ' + mod.title;
+        if (mod.badge) html += '<span class="badge-nav">' + mod.badge + '</span>';
+        html += '</a>';
       } else {
         html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" onclick="openModule(this)" class="' + cls + '">';
         html += '<span class="nav-dot"></span> ' + mod.title + '</a>';
@@ -779,7 +953,8 @@ function renderModuleCards(config) {
   var html = '';
   config.sections.forEach(function(section) {
     section.modules.forEach(function(mod) {
-      html += '<div class="module-card ' + mod.id + '" data-module="' + mod.id + '" onclick="openModule(this)">';
+      var clickHandler = mod.external ? 'openExternalModule(this)' : 'openModule(this)';
+      html += '<div class="module-card ' + mod.id + '" data-module="' + mod.id + '" data-url="' + mod.url + '" onclick="' + clickHandler + '">';
       html += '<div class="mod-icon">' + mod.icon + '</div>';
       html += '<h3>' + mod.title + '</h3>';
       html += '<p>' + mod.description + '</p>';
@@ -819,6 +994,7 @@ function getIframe() {
 
 function killIframe() {
   var iframe = getIframe();
+  if (!iframe) return;
   iframe.classList.remove('show');
   iframe.src = 'about:blank';
 }
@@ -868,6 +1044,12 @@ function promptPassword(moduleId, callback) {
   overlay.querySelector('.pw-cancel').addEventListener('click', function() { overlay.remove(); });
   overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
   input.addEventListener('keydown', function(e) { if (e.key === 'Enter') submit(); });
+}
+
+// ----- 打开外部模块（新标签页） -----
+function openExternalModule(el) {
+  var url = el.dataset.url;
+  if (url) window.open(url, '_blank');
 }
 
 // ----- 打开模块（iframe 加载） -----
@@ -944,8 +1126,8 @@ function toggleMonthDates(el, monthKey, datesId) {
     el.classList.remove('expanded');
     return;
   }
-  // Close other month date lists
-  document.querySelectorAll('.month-dates').forEach(function(m) { m.style.display = 'none'; });
+  // Close other month date lists and nested sub-menus
+  document.querySelectorAll('.nested-dates, .month-dates').forEach(function(m) { m.style.display = 'none'; });
   document.querySelectorAll('.month-item.expanded, .period-item.expanded').forEach(function(a) { a.classList.remove('expanded'); });
   // Populate dates if empty
   if (!datesDiv.children.length) {
@@ -1078,6 +1260,87 @@ function collapseSalesSub() {
   cards[2].querySelector('.stat-sub').textContent = '我方 ' + s.our_rooms + ' 间 · 竞对 ' + s.comp_rooms + ' 间';
   cards[3].querySelector('.stat-value').textContent = s.days + ' 天';
   cards[3].querySelector('.stat-sub').textContent = s.first_date + ' ~ ' + s.date;
+  var fu = document.getElementById('footerUpdate');
+  if (fu) fu.textContent = '数据更新至 ' + s.date;
+})();
+
+// ===== 雷军名言轮播 =====
+(function(){
+  var quotes = [
+    { text: '站在风口上，猪都能飞起来', author: '雷军' },
+    { text: '专注、极致、口碑、快', author: '雷军 · 互联网七字诀' },
+    { text: '永远相信美好的事情即将发生', author: '雷军' },
+    { text: '梦想还是要有的，万一实现了呢', author: '雷军' },
+    { text: '做感动人心、价格厚道的好产品', author: '雷军 · 小米使命' },
+    { text: '创新决定我们能飞多高，品质决定我们能走多远', author: '雷军' },
+    { text: '厚道的人运气不会太差', author: '雷军' },
+    { text: '人生是一场马拉松，不是百米冲刺', author: '雷军' }
+  ];
+
+  var textEl   = document.getElementById('quoteText');
+  var authorEl = document.getElementById('quoteAuthor');
+  var dotsEl   = document.getElementById('quoteDots');
+  var current  = 0;
+  var timer    = null;
+  var interval = 5000; // 5s
+
+  // Build dots
+  quotes.forEach(function(_, i) {
+    var dot = document.createElement('span');
+    dot.className = 'quote-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', function(){ goTo(i); });
+    dotsEl.appendChild(dot);
+  });
+
+  function goTo(i) {
+    if (i === current) return;
+    // Fade out current
+    textEl.classList.add('fade-out');
+    setTimeout(function() {
+      textEl.textContent = quotes[i].text;
+      authorEl.textContent = '— ' + quotes[i].author;
+      textEl.classList.remove('fade-out');
+      // Update dots
+      var dots = dotsEl.querySelectorAll('.quote-dot');
+      dots[current].classList.remove('active');
+      dots[i].classList.add('active');
+      current = i;
+    }, 250);
+    resetTimer();
+  }
+
+  function next() {
+    var n = (current + 1) % quotes.length;
+    // Fade out
+    textEl.classList.add('fade-out');
+    setTimeout(function() {
+      textEl.textContent = quotes[n].text;
+      authorEl.textContent = '— ' + quotes[n].author;
+      textEl.classList.remove('fade-out');
+      var dots = dotsEl.querySelectorAll('.quote-dot');
+      dots[current].classList.remove('active');
+      dots[n].classList.add('active');
+      current = n;
+    }, 250);
+    resetTimer();
+  }
+
+  function resetTimer() {
+    clearInterval(timer);
+    timer = setInterval(next, interval);
+  }
+
+  // Show first quote
+  textEl.textContent = quotes[0].text;
+  authorEl.textContent = '— ' + quotes[0].author;
+
+  // Start auto-rotate
+  timer = setInterval(next, interval);
+
+  // Pause on hover
+  var carousel = document.getElementById('quoteCarousel');
+  carousel.addEventListener('mouseenter', function(){ clearInterval(timer); });
+  carousel.addEventListener('mouseleave', function(){ timer = setInterval(next, interval); });
 })();
 </script>
 </body>

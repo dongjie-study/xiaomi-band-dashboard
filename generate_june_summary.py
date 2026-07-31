@@ -4,23 +4,17 @@ Reads history.json, re-classifies rooms with correct OUR_ROOMS, ranks by revenue
 """
 import json
 import os
+import sys
+from pathlib import Path
+
+# Ensure project root is in Python path for shared module imports
+ROOT = Path(__file__).resolve().parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from team_config import TEAM_MAP, classify_room as get_team, TEAM_ORDER, TEAM_COLORS, TEAM_MARKERS
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
-
-# Team classification (matching daily_update.py)
-TEAM_MAP = {
-    '小米官方手表': '我司', '小米官方手环直播间': '我司', '小米数码旗舰店': '我司',
-    '小米官方耳机直播间': '我司', '小米手环10Pro直播间': '我司', '小米官旗手表直播间': '我司',
-    '小米智能穿戴国补号': '机械空间', '小米智能穿戴授权号': '机械空间',
-    '小米官方手表直播号': '纵横',
-    '小米手环官方直播间': '凝云', '小米手环新品直播间': '凝云', '小米手环直播间': '凝云',
-}
-def get_team(room_name):
-    return TEAM_MAP.get(room_name, '良米')
-
-TEAM_ORDER = ['我司', '机械空间', '纵横', '凝云', '良米']
-TEAM_COLORS = {'我司': '#1E90FF', '机械空间': '#FF6B35', '纵横': '#7c6ff7', '凝云': '#e74c3c', '良米': '#94a3b8'}
-TEAM_MARKERS = {'我司': '★', '机械空间': '◆', '纵横': '▲', '凝云': '●', '良米': '·'}
 
 def load_june_data():
     with open(os.path.join(DATA_DIR, 'sales_analysis', 'history.json'), 'r', encoding='utf-8') as f:

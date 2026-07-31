@@ -2,60 +2,16 @@ import pandas as pd
 import json
 import sys
 import io
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from team_config import TEAM_MAP as TEAM_MAPPING
+from product_classifier import classify_product
+
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-
-# ========== CONFIG ==========
-TEAM_MAPPING = {
-    # 我方直播间
-    '小米数码旗舰店': '我方', '小米官方手表': '我方', '小米官方手环直播间': '我方',
-    '小米官方耳机直播间': '我方', '小米手环10Pro直播间': '我方', '小米官旗手表直播间': '我方',
-    # 良米直播间（其他所有未明确分配的直播间默认归良米）
-    '小米手环': '良米', '小米手表官方直播间': '良米', '小米手表': '良米',
-    '小米耳机官方直播间': '良米', '小米手表官旗直播间': '良米', '小米手表直播间': '良米',
-    '小米数码智能旗舰店': '良米', '小米智能手表旗舰店': '良米',
-    # 机械空间
-    '小米智能穿戴国补号': '机械空间', '小米智能穿戴授权号': '机械空间',
-    # 综训
-    '小米官方手表直播号': '综训',
-    # 商品卡
-    '我司商品卡': '我方', '良米商品卡': '良米',
-}
-
-def classify_product(name):
-    name = str(name)
-    if '10Pro' in name or '10 Pro' in name:
-        return '小米手环10 Pro'
-    if '10 陶瓷' in name or '10陶瓷' in name or '陶瓷白' in name:
-        return '小米手环10'
-    if '10系' in name or '10 标准' in name:
-        return '小米手环10'
-    if '手环10' in name and 'Pro' not in name:
-        return '小米手环10'
-    if '9 Pro' in name:
-        return '小米手环9 Pro'
-    if 'REDMI Watch 6' in name:
-        return 'REDMI Watch 6'
-    if '开放式耳机' in name or '耳夹式耳机' in name:
-        return 'Xiaomi 开放式耳机'
-    if 'Buds 8 Pro' in name:
-        return 'REDMI Buds 8 Pro'
-    if 'Buds 8 青春' in name:
-        return 'REDMI Buds 8 青春版'
-    if 'Buds 8 活力' in name:
-        return 'REDMI Buds 8 活力版'
-    if 'Buds 8' in name:
-        return 'REDMI Buds 8'
-    if '手表 S' in name or 'Watch S' in name:
-        return '小米手表 S系列'
-    if '骨传导' in name:
-        return '小米骨传导耳机'
-    if '耳机' in name or 'Buds' in name:
-        return '其他耳机'
-    if '手环' in name:
-        return '其他手环'
-    if '手表' in name or 'Watch' in name:
-        return '其他手表'
-    return '其他品类'
 
 # Load
 df = pd.read_excel(r'C:\Users\Administrator\Desktop\6.15-6.18日我司跟良米穿戴直播间+商品卡订单..xlsx')

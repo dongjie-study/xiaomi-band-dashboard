@@ -3,11 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>主播能力分析 - 小米穿戴</title>
+    <title>主播模块 · 小米手环直播间</title>
+    <link rel="icon" type="image/png" href="../xiaomi-logo.png">
+    <link rel="stylesheet" href="../common.css">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         [v-cloak] { display: none !important; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Microsoft YaHei', sans-serif; background: #f0f2f5; }
         .main { padding: 20px; }
         
@@ -110,6 +111,8 @@
     </style>
 </head>
 <body>
+    <a href="../index.html" class="back-home" id="backHome" style="display:none;position:fixed;top:12px;left:16px;z-index:999;">← 返回工作台</a>
+    <script>if(window.top===window.self)document.getElementById('backHome').style.display='inline-flex';</script>
     <div id="app" v-cloak>
             <div class="main">
                 <div class="btns" style="margin-bottom:15px;">
