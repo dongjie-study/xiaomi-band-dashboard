@@ -285,6 +285,8 @@ footer {{
   <a href="../index.html" class="nav-btn">首页</a>
   <a href="../sales_analysis/index.html" class="nav-btn">每日看板</a>
   <a href="#" class="nav-btn active">7月销量分析</a>
+  <a href="六月销量分析.html" class="nav-btn">6月销量分析</a>
+  <a href="八月销量分析.html" class="nav-btn">8月销量分析</a>
   <a href="../节点总结/618复盘总结.html" class="nav-btn">618复盘</a>
   <a href="../节点总结/四月份复盘总结.html" class="nav-btn">4月复盘</a>
 </div>

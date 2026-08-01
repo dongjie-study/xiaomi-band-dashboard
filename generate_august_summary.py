@@ -138,7 +138,7 @@ def generate_html(summary, august_data):
     today = date.today().strftime('%Y年%m月%d日')
 
     # Read the July HTML template to reuse the structure
-    july_html_path = os.path.join(DATA_DIR, '七月销量分析.html')
+    july_html_path = os.path.join(DATA_DIR, '月度总结', '七月销量分析.html')
     if os.path.exists(july_html_path):
         with open(july_html_path, 'r', encoding='utf-8') as f:
             july_html = f.read()
