@@ -14,7 +14,8 @@
           "hasSubMenu": true,
           "subModules": [
             { "id": "salesJune", "title": "六月", "monthKey": "2026-06" },
-            { "id": "salesJuly", "title": "七月", "monthKey": "2026-07", "badge": "NEW" }
+            { "id": "salesJuly", "title": "七月", "monthKey": "2026-07", "badge": "NEW" },
+            { "id": "salesAugust", "title": "八月", "monthKey": "2026-08" }
           ]
         },
         {
@@ -26,7 +27,9 @@
           "tag": "Monthly Report",
           "hasSubMenu": true,
           "subModules": [
-            { "id": "summaryJune", "title": "六月", "url": "六月销量分析.html" }
+            { "id": "summaryJune", "title": "六月", "url": "六月销量分析.html" },
+            { "id": "summaryJuly", "title": "七月", "url": "七月销量分析.html", "badge": "NEW" },
+            { "id": "summaryAugust", "title": "八月", "url": "八月销量分析.html" }
           ]
         },
         {
