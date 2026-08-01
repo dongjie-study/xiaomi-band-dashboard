@@ -1349,7 +1349,7 @@ var C = {{ ours: '#1E90FF', comp: '#FF6B35', green: '#1da85c', orange: '#ff6900'
 </html>
 '''
 
-with open('618复盘总结.html', 'w', encoding='utf-8') as f:
+with open('节点总结/618复盘总结.html', 'w', encoding='utf-8') as f:
     f.write(html)
 print(f'HTML generated: {len(html)} bytes')
 print('Done!')

@@ -15,7 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-HTML_FILE = ROOT / '业绩demo.html'
+HTML_FILE = ROOT / '主播业绩' / '业绩demo.html'
 
 SHOP_TO_ROOM = {
     '小米数码旗舰店': 'room_xiaomi_digital',

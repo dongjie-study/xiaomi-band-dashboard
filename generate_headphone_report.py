@@ -342,10 +342,10 @@ footer {{
 <body>
 
 <div class="nav-bar">
-  <a href="index.html" class="nav-btn">首页</a>
-  <a href="sales_analysis/index.html" class="nav-btn">每日看板</a>
-  <a href="六月销量分析.html" class="nav-btn">6月销量</a>
-  <a href="七月销量分析.html" class="nav-btn">7月销量</a>
+  <a href="../index.html" class="nav-btn">首页</a>
+  <a href="../sales_analysis/index.html" class="nav-btn">每日看板</a>
+  <a href="../月度总结/六月销量分析.html" class="nav-btn">6月销量</a>
+  <a href="../月度总结/七月销量分析.html" class="nav-btn">7月销量</a>
   <a href="#" class="nav-btn active">🎧 耳机专报</a>
 </div>
 
@@ -689,7 +689,7 @@ if __name__ == '__main__':
     july_summary = build_headphone_summary(july)
 
     html = generate_html(june_summary, july_summary)
-    out_path = os.path.join(DATA_DIR, '耳机销量分析报告.html')
+    out_path = os.path.join(DATA_DIR, '耳机专报', '耳机销量分析报告.html')
     with open(out_path, 'w', encoding='utf-8') as f:
         f.write(html)
 

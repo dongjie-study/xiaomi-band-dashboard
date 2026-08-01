@@ -286,13 +286,13 @@ footer {{
 <body>
 
 <div class="nav-bar">
-  <a href="index.html" class="nav-btn">首页</a>
-  <a href="sales_analysis/index.html" class="nav-btn">每日看板</a>
+  <a href="../index.html" class="nav-btn">首页</a>
+  <a href="../sales_analysis/index.html" class="nav-btn">每日看板</a>
   <a href="六月销量分析.html" class="nav-btn">6月销量分析</a>
   <a href="七月销量分析.html" class="nav-btn">7月销量分析</a>
   <a href="#" class="nav-btn active">8月销量分析</a>
-  <a href="618复盘总结.html" class="nav-btn">618复盘</a>
-  <a href="四月份复盘总结.html" class="nav-btn">4月复盘</a>
+  <a href="../节点总结/618复盘总结.html" class="nav-btn">618复盘</a>
+  <a href="../节点总结/四月份复盘总结.html" class="nav-btn">4月复盘</a>
 </div>
 
 <div class="hero">
@@ -727,13 +727,13 @@ footer {{
 <body>
 
 <div class="nav-bar">
-  <a href="index.html" class="nav-btn">首页</a>
-  <a href="sales_analysis/index.html" class="nav-btn">每日看板</a>
+  <a href="../index.html" class="nav-btn">首页</a>
+  <a href="../sales_analysis/index.html" class="nav-btn">每日看板</a>
   <a href="六月销量分析.html" class="nav-btn">6月销量分析</a>
   <a href="七月销量分析.html" class="nav-btn">7月销量分析</a>
   <a href="#" class="nav-btn active">8月销量分析</a>
-  <a href="618复盘总结.html" class="nav-btn">618复盘</a>
-  <a href="四月份复盘总结.html" class="nav-btn">4月复盘</a>
+  <a href="../节点总结/618复盘总结.html" class="nav-btn">618复盘</a>
+  <a href="../节点总结/四月份复盘总结.html" class="nav-btn">4月复盘</a>
 </div>
 
 <div class="hero">
@@ -780,7 +780,7 @@ if __name__ == '__main__':
         summary = None
         status = 'no data yet (placeholder)'
 
-    out_path = os.path.join(DATA_DIR, '八月销量分析.html')
+    out_path = os.path.join(DATA_DIR, '月度总结', '八月销量分析.html')
     with open(out_path, 'w', encoding='utf-8') as f:
         f.write(html)
 
