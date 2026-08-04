@@ -1077,6 +1077,10 @@
                         updateMonthlySummary(elements.roomSelect.value);
                     });
                 });
+
+                // 同步汇总面板：月份切换时联动更新下方业绩汇总
+                document.getElementById('summaryMonthSelect').value = selectedMonth;
+                updateMonthlySummary(elements.roomSelect.value);
             }
 
             // 月度主播业绩汇总面板
@@ -1417,7 +1421,12 @@
                     summarySelect.value = months[0];
                 }
                 refundSelect.addEventListener('change', updateRefundMgmtPanel);
-                summarySelect.addEventListener('change', () => updateMonthlySummary(elements.roomSelect.value));
+                summarySelect.addEventListener('change', () => {
+                    // 同步退款比率管理面板的月份选择器
+                    document.getElementById('refundMonthSelect').value = document.getElementById('summaryMonthSelect').value;
+                    updateRefundMgmtPanel();
+                    updateMonthlySummary(elements.roomSelect.value);
+                });
             }
 
             function bindEvents() {
