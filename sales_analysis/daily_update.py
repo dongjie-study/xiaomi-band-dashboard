@@ -74,6 +74,8 @@ def load_and_clean(filepath):
     df['product'] = df['product'].astype(str).str.replace('\t', '', regex=False)
     df['time'] = df['time'].astype(str).str.replace('\t', '', regex=False)
     df['price'] = pd.to_numeric(df['price'], errors='coerce')
+    # Filter out duplicate header rows sometimes embedded in exported Excel data
+    df = df[~df['time'].str.match(r'^[一-鿿]+$')]
     df['time'] = pd.to_datetime(df['time'])
     df['date'] = df['time'].dt.date
     df['hour'] = df['time'].dt.hour
