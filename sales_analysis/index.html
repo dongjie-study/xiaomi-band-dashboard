@@ -1735,6 +1735,12 @@ function renderB10proModule() {
     '</tr>';
 
   // 汇总 KPI 卡片
+  var liveOurPct = tLiveO > 0 ? (agg.our_live_o / tLiveO * 100) : 0;
+  var liveLmPct = tLiveO > 0 ? (agg.lm_live_o / tLiveO * 100) : 0;
+  var cardOurPct = tCardO > 0 ? (agg.our_card_o / tCardO * 100) : 0;
+  var cardLmPct = tCardO > 0 ? (agg.lm_card_o / tCardO * 100) : 0;
+  var allLmPct = tAllO > 0 ? ((agg.lm_live_o + agg.lm_card_o) / tAllO * 100) : 0;
+
   var b10proKpisEl = document.getElementById('b10proKpis');
   b10proKpisEl.innerHTML += '<div style="margin-top:10px;padding-top:10px;border-top:2px dashed #FFD700;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">' +
     '<div class="b10pro-kpi" style="background:linear-gradient(135deg,#fffdf0,#fff8e1);border:1.5px solid #FFD700;">' +
@@ -1744,7 +1750,8 @@ function renderB10proModule() {
         '<div class="bk-divider">VS</div>' +
         '<div class="bk-side"><div class="bk-val" style="color:#94a3b8;">' + agg.lm_live_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">良米</div><div class="bk-sub">' + fmt(agg.lm_live_a) + '</div></div>' +
       '</div>' +
-      '<div class="bk-pct" style="color:#b8860b;">' + aggDays + '天累计 · 我司 ' + (tLiveO > 0 ? (agg.our_live_o / tLiveO * 100).toFixed(1) : '0.0') + '%</div>' +
+      '<div class="bk-bar-wrap"><div class="bk-bar-o" style="width:' + liveOurPct + '%;"></div><div class="bk-bar-l" style="width:' + liveLmPct + '%;"></div></div>' +
+      '<div class="bk-pct">我司 ' + liveOurPct.toFixed(1) + '% | 良米 ' + liveLmPct.toFixed(1) + '%（' + aggDays + '天累计）</div>' +
     '</div>' +
     '<div class="b10pro-kpi" style="background:linear-gradient(135deg,#fffdf0,#fff8e1);border:1.5px solid #FFD700;">' +
       '<div class="bk-title">&#128722; ' + aggStart + '~' + aggEnd + ' 商品卡汇总</div>' +
@@ -1753,7 +1760,8 @@ function renderB10proModule() {
         '<div class="bk-divider">VS</div>' +
         '<div class="bk-side"><div class="bk-val" style="color:#94a3b8;">' + agg.lm_card_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">良米</div><div class="bk-sub">' + fmt(agg.lm_card_a) + '</div></div>' +
       '</div>' +
-      '<div class="bk-pct" style="color:#b8860b;">' + aggDays + '天累计 · 我司 ' + (tCardO > 0 ? (agg.our_card_o / tCardO * 100).toFixed(1) : '0.0') + '%</div>' +
+      '<div class="bk-bar-wrap"><div class="bk-bar-o" style="width:' + cardOurPct + '%;"></div><div class="bk-bar-l" style="width:' + cardLmPct + '%;"></div></div>' +
+      '<div class="bk-pct">我司 ' + cardOurPct.toFixed(1) + '% | 良米 ' + cardLmPct.toFixed(1) + '%（' + aggDays + '天累计）</div>' +
     '</div>' +
     '<div class="b10pro-kpi" style="background:linear-gradient(135deg,#fffdf0,#fff8e1);border:1.5px solid #FFD700;">' +
       '<div class="bk-title">&#128230; ' + aggStart + '~' + aggEnd + ' 总计汇总</div>' +
@@ -1762,7 +1770,8 @@ function renderB10proModule() {
         '<div class="bk-divider">VS</div>' +
         '<div class="bk-side"><div class="bk-val" style="color:#94a3b8;">' + (agg.lm_live_o + agg.lm_card_o) + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">良米</div><div class="bk-sub">' + fmt(agg.lm_live_a + agg.lm_card_a) + '</div></div>' +
       '</div>' +
-      '<div class="bk-pct" style="color:#b8860b;">' + aggDays + '天累计 · 我司 ' + oPctAgg.toFixed(1) + '%</div>' +
+      '<div class="bk-bar-wrap"><div class="bk-bar-o" style="width:' + oPctAgg + '%;"></div><div class="bk-bar-l" style="width:' + allLmPct + '%;"></div></div>' +
+      '<div class="bk-pct">我司 ' + oPctAgg.toFixed(1) + '% | 良米 ' + allLmPct.toFixed(1) + '%（' + aggDays + '天累计）</div>' +
     '</div>' +
   '</div>';
 }
