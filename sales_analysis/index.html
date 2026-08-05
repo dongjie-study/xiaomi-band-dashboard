@@ -1702,6 +1702,69 @@ function renderB10proModule() {
       '<td class="' + (oAllW ? 'col-our' : 'col-lm') + '" style="font-weight:700;">' + oPct.toFixed(1) + '%</td>' +
       '</tr>';
   }).join('');
+
+  // 7.30-至今 汇总行
+  var cutoff = '2026-07-30';
+  var agg = B10PRO_DATA.filter(function(r) { return r.date >= cutoff; }).reduce(function(acc, r) {
+    acc.our_live_o += r.our.live_o; acc.our_live_a += r.our.live_a;
+    acc.our_card_o += r.our.card_o; acc.our_card_a += r.our.card_a;
+    acc.lm_live_o += r.lm.live_o; acc.lm_live_a += r.lm.live_a;
+    acc.lm_card_o += r.lm.card_o; acc.lm_card_a += r.lm.card_a;
+    return acc;
+  }, {our_live_o:0, our_live_a:0, our_card_o:0, our_card_a:0, lm_live_o:0, lm_live_a:0, lm_card_o:0, lm_card_a:0});
+  var tLiveO = agg.our_live_o + agg.lm_live_o, tCardO = agg.our_card_o + agg.lm_card_o;
+  var tAllO = agg.our_live_o + agg.our_card_o + agg.lm_live_o + agg.lm_card_o;
+  var oPctAgg = tAllO > 0 ? ((agg.our_live_o + agg.our_card_o) / tAllO * 100) : 0;
+  var oLiveWA = agg.our_live_o > agg.lm_live_o, oCardWA = agg.our_card_o > agg.lm_card_o;
+  var oAllWA = (agg.our_live_o + agg.our_card_o) > (agg.lm_live_o + agg.lm_card_o);
+  var aggStart = cutoff.slice(5);
+  var aggEnd = latest.date.slice(5);
+  var aggDays = B10PRO_DATA.filter(function(r) { return r.date >= cutoff; }).length;
+  tbody.innerHTML += '<tr class="summary-row" style="border-top:3px solid #FFD700;background:linear-gradient(135deg,#fffdf0 0%,#fff8e1 100%);font-weight:700;">' +
+    '<td style="font-weight:700;color:#b8860b;">&#128202; ' + aggStart + '~' + aggEnd + '汇总</td>' +
+    '<td class="col-our' + (oLiveWA ? ' col-win' : '') + '">' + agg.our_live_o + '<br><span style="font-size:0.6rem;font-weight:400;">' + fmt(agg.our_live_a) + '</span></td>' +
+    '<td>' + agg.lm_live_o + '<br><span style="font-size:0.6rem;color:#666;">' + fmt(agg.lm_live_a) + '</span></td>' +
+    '<td>' + tLiveO + '</td>' +
+    '<td class="col-our' + (oCardWA ? ' col-win' : '') + '">' + agg.our_card_o + '<br><span style="font-size:0.6rem;font-weight:400;">' + fmt(agg.our_card_a) + '</span></td>' +
+    '<td>' + agg.lm_card_o + '<br><span style="font-size:0.6rem;color:#666;">' + fmt(agg.lm_card_a) + '</span></td>' +
+    '<td>' + tCardO + '</td>' +
+    '<td class="col-our' + (oAllWA ? ' col-win' : '') + '">' + (agg.our_live_o + agg.our_card_o) + '<br><span style="font-size:0.6rem;font-weight:400;">' + fmt(agg.our_live_a + agg.our_card_a) + '</span></td>' +
+    '<td>' + (agg.lm_live_o + agg.lm_card_o) + '<br><span style="font-size:0.6rem;color:#666;">' + fmt(agg.lm_live_a + agg.lm_card_a) + '</span></td>' +
+    '<td>' + tAllO + '</td>' +
+    '<td class="' + (oAllWA ? 'col-our' : 'col-lm') + '" style="font-weight:700;">' + oPctAgg.toFixed(1) + '%</td>' +
+    '</tr>';
+
+  // 汇总 KPI 卡片
+  var b10proKpisEl = document.getElementById('b10proKpis');
+  b10proKpisEl.innerHTML += '<div style="margin-top:10px;padding-top:10px;border-top:2px dashed #FFD700;display:flex;gap:10px;flex-wrap:wrap;">' +
+    '<div class="b10pro-kpi" style="background:linear-gradient(135deg,#fffdf0,#fff8e1);border:1.5px solid #FFD700;">' +
+      '<div class="bk-title">&#128202; ' + aggStart + '~' + aggEnd + ' 直播端汇总</div>' +
+      '<div class="bk-vs">' +
+        '<div class="bk-side"><div class="bk-val" style="color:#4f6ef7;">' + agg.our_live_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">&#11088; 我司</div><div class="bk-sub">' + fmt(agg.our_live_a) + '</div></div>' +
+        '<div class="bk-divider">VS</div>' +
+        '<div class="bk-side"><div class="bk-val" style="color:#94a3b8;">' + agg.lm_live_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">良米</div><div class="bk-sub">' + fmt(agg.lm_live_a) + '</div></div>' +
+      '</div>' +
+      '<div class="bk-pct" style="color:#b8860b;">' + aggDays + '天累计 · 我司 ' + (tLiveO > 0 ? (agg.our_live_o / tLiveO * 100).toFixed(1) : '0.0') + '%</div>' +
+    '</div>' +
+    '<div class="b10pro-kpi" style="background:linear-gradient(135deg,#fffdf0,#fff8e1);border:1.5px solid #FFD700;">' +
+      '<div class="bk-title">&#128722; ' + aggStart + '~' + aggEnd + ' 商品卡汇总</div>' +
+      '<div class="bk-vs">' +
+        '<div class="bk-side"><div class="bk-val" style="color:#4f6ef7;">' + agg.our_card_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">&#11088; 我司</div><div class="bk-sub">' + fmt(agg.our_card_a) + '</div></div>' +
+        '<div class="bk-divider">VS</div>' +
+        '<div class="bk-side"><div class="bk-val" style="color:#94a3b8;">' + agg.lm_card_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">良米</div><div class="bk-sub">' + fmt(agg.lm_card_a) + '</div></div>' +
+      '</div>' +
+      '<div class="bk-pct" style="color:#b8860b;">' + aggDays + '天累计 · 我司 ' + (tCardO > 0 ? (agg.our_card_o / tCardO * 100).toFixed(1) : '0.0') + '%</div>' +
+    '</div>' +
+    '<div class="b10pro-kpi" style="background:linear-gradient(135deg,#fffdf0,#fff8e1);border:1.5px solid #FFD700;">' +
+      '<div class="bk-title">&#128230; ' + aggStart + '~' + aggEnd + ' 总计汇总</div>' +
+      '<div class="bk-vs">' +
+        '<div class="bk-side"><div class="bk-val" style="color:#4f6ef7;">' + (agg.our_live_o + agg.our_card_o) + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">&#11088; 我司</div><div class="bk-sub">' + fmt(agg.our_live_a + agg.our_card_a) + '</div></div>' +
+        '<div class="bk-divider">VS</div>' +
+        '<div class="bk-side"><div class="bk-val" style="color:#94a3b8;">' + (agg.lm_live_o + agg.lm_card_o) + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">良米</div><div class="bk-sub">' + fmt(agg.lm_live_a + agg.lm_card_a) + '</div></div>' +
+      '</div>' +
+      '<div class="bk-pct" style="color:#b8860b;">' + aggDays + '天累计 · 我司 ' + oPctAgg.toFixed(1) + '%</div>' +
+    '</div>' +
+  '</div>';
 }
 
 // Init — read date from URL hash (set by root sidebar) or default to latest
