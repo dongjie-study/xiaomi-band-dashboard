@@ -1742,7 +1742,7 @@ function renderB10proModule() {
   var allLmPct = tAllO > 0 ? ((agg.lm_live_o + agg.lm_card_o) / tAllO * 100) : 0;
 
   var b10proKpisEl = document.getElementById('b10proKpis');
-  b10proKpisEl.innerHTML += '<div style="margin-top:10px;padding-top:10px;border-top:2px dashed #FFD700;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">' +
+  b10proKpisEl.innerHTML += '<div style="margin-top:10px;padding-top:10px;border-top:2px dashed #FFD700;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;grid-column:1/-1;">' +
     '<div class="b10pro-kpi" style="background:linear-gradient(135deg,#fffdf0,#fff8e1);border:1.5px solid #FFD700;">' +
       '<div class="bk-title">&#128202; ' + aggStart + '~' + aggEnd + ' 直播端汇总</div>' +
       '<div class="bk-vs">' +
