@@ -23,6 +23,7 @@ SHOP_TO_ROOM = {
     '小米官方手表': 'room_xiaomi_watch',
     '小米官旗手表直播间': 'room_xiaomi_watch_flagship',
     '小米官方耳机直播间': 'room_xiaomi_earphone',
+    '小米手环官旗直播间': 'room_xiaomi_band_flagship',
 }
 
 ANCHOR_MAP = {
@@ -31,6 +32,7 @@ ANCHOR_MAP = {
     'room_xiaomi_watch': {0: '郭孟航', 1: '王嘉琦', 2: '高智敏', 3: '高珊珊', 4: '牛萌萌'},
     'room_xiaomi_watch_flagship': {0: '刘卓凡', 1: '刘垚', 2: '马琪', 3: '李牧遥', 4: '未知'},
     'room_xiaomi_earphone': {0: '范金蝶', 1: '刘子源', 2: '李晓洋', 3: '王瑞', 4: '陈依雨'},
+    'room_xiaomi_band_flagship': {0: '未知', 1: '未知', 2: '未知', 3: '未知', 4: '未知'},
 }
 
 
@@ -57,7 +59,7 @@ def generate_daily_records(paid, date_str):
 
     lines = [f"                '{date_str}': ["]
     for room_id in ['room_xiaomi_digital', 'room_xiaomi_band', 'room_xiaomi_watch',
-                     'room_xiaomi_watch_flagship', 'room_xiaomi_earphone']:
+                     'room_xiaomi_watch_flagship', 'room_xiaomi_earphone', 'room_xiaomi_band_flagship']:
         sub = our[our['roomId'] == room_id]
         anchors = ANCHOR_MAP[room_id]
         for si in sorted(sub['shift_idx'].unique()):
