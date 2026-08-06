@@ -1,62 +1,110 @@
 # 每日数据处理工作流
 
-## 🚨 核心判断：看文件名
-
-| 文件名包含 | 执行动作 | 目标 |
-|-----------|---------|------|
-| **x.xx日订单** | 只更新 sales_analysis | 竞品销量看板 |
-| **x.xx日业绩** | 只更新 业绩demo.html | 主播业绩面板 |
-
-**两个流程互不交叉，不要同时执行。**
+> **最后更新**: 2026-08-07
+> **规则**: 每次执行前先读此文档。有新要求时及时更新此文档。
 
 ---
 
-## 一、收到「x.xx日订单」→ 只更新销量看板
+## 🚨 第一步：判断文件类型（必须执行）
 
-### 确认文件特征
-列：选购商品 / 订单提交时间 / 订单状态 / 订单应付金额 / 直播间名称
+收到任何 Excel 文件后，**先打开查看内容**，根据列名判断类型：
+
+### 订单文件特征
+| 列名 | 说明 |
+|------|------|
+| 选购商品 | 产品名称 |
+| 订单提交时间 | 含 `\t` 前缀，如 `\t2026-08-06 23:59:35` |
+| 订单状态 | 已发货 / 已付款 / 已取消等 |
+| 订单应付金额 | 数字 |
+| 直播间名称 | 如 小米官方手环直播间 |
+
+### 业绩文件特征
+| 列 | 说明 |
+|----|------|
+| A列 | 主播名字 |
+| B列 | 主播名字（与A对应） |
+| C列 | 场次：A1/A2、B1/B2、C1/C2、D1/D2、E |
+| E列 | 每小时数据 |
+| F列 | 该主播今天总业绩 |
+| G列 | 日期 |
+
+直播间纵向堆叠：第1行=小米数码旗舰店，第27行=小米官方手环直播间，依次往下。
+
+---
+
+## 二、订单文件 → 只更新销售分析
+
+```
+判断: 文件名含"订单" 且 列名为 [选购商品, 订单提交时间, 订单状态, 订单应付金额, 直播间名称]
+```
 
 ### 步骤
+
 ```bash
-# 1. 更新 业绩demo.html 的 DAILY_RECORDS（update_daily_html.py 会自动做这一步）
-python update_daily_html.py "C:\Users\Administrator\Desktop\x.xx日订单.xlsx"
+# Step 1: 更新 sales_analysis 销量看板
+python run_all.py sales "<Excel完整路径>"
 
-# 2. 更新 sales_analysis 销量看板
-python run_all.py sales "C:\Users\Administrator\Desktop\x.xx日订单.xlsx"
-
-# 3. 提交并推送
+# Step 2: 提交并推送
 git add -A && git commit -m "feat: x.xx日订单数据更新" && git push
 ```
 
+### ⚠️ 注意事项
+- **不要**运行 `update_daily_html.py`（它会修改业绩demo.html）
+- **不要**修改 `主播业绩/业绩demo.html`
+- 只动 `sales_analysis/` 目录下的文件
+
 ---
 
-## 二、收到「x.xx日业绩」→ 只更新业绩面板
+## 三、业绩文件 → 只更新业绩面板
 
-### 确认文件特征（Excel 格式）
-
-每个直播间纵向堆叠排列：
-
-| 起始行 | 直播间 |
-|--------|--------|
-| 第1行 | 小米数码旗舰店 |
-| 第27行 | 小米官方手环直播间 |
-| ... | 依次往下 |
-
-列映射：
-- **A列**: 主播名字
-- **B列**: 主播名字
-- **C列**: 场次 — A1/A2（上/下半场）、B1/B2、C1/C2、D1/D2、E
-- **E列**: 每小时数据
-- **F列**: 该主播今天该直播间总业绩
-- **G列**: 日期
+```
+判断: 文件名含"业绩" 且 Excel格式为 [A=主播, C=场次, F=总业绩, G=日期]
+```
 
 ### 步骤
-1. 解析 Excel → 提取每行 { roomId, shift, anchor, sales }
-2. 生成 DAILY_RECORDS 条目插入 `主播业绩/业绩demo.html`
-3. 提交并推送
+
+1. 解析 Excel，按直播间逐行提取数据
+2. 将每行转为 `{ roomId, shift, anchor, sales }` 格式
+3. 插入到 `主播业绩/业绩demo.html` 的 `DAILY_RECORDS` 中（按日期排序）
+4. 提交并推送
+
+### 直播间 → roomId 映射
+
+| Excel 直播间名 | roomId |
+|---------------|--------|
+| 小米数码旗舰店 | room_xiaomi_digital |
+| 小米官方手环直播间 | room_xiaomi_band |
+| 小米官方手表 | room_xiaomi_watch |
+| 小米官旗手表直播间 | room_xiaomi_watch_flagship |
+| 小米官方耳机直播间 | room_xiaomi_earphone |
+| 小米AI眼镜直播间 | room_xiaomi_glasses |
+| 小米智能设备旗舰店直播间 | room_xiaomi_smart_device |
+| 小米手环官旗直播间 | room_xiaomi_band_flagship |
+
+### 场次映射
+- A1 → shift: 'A', A2 → shift: 'A'
+- B1 → shift: 'B', B2 → shift: 'B'
+- C1 → shift: 'C', C2 → shift: 'C'
+- D1 → shift: 'D', D2 → shift: 'D'
+- E → shift: 'E'（E不分上下半场）
+
+### ⚠️ 注意事项
+- **不要**运行 `run_all.py sales`（它修改销售分析）
+- **不要**修改 `sales_analysis/` 目录下的文件
+- 如果出现新的直播间名，同步更新上方映射表
 
 ---
 
-## 三、自动提交
+## 四、自动提交规则
 
-数据更新后自动 `git add -A && git commit && git push`，无需确认。
+- 数据更新完成后，**自动** `git add -A && git commit && git push`
+- **不需要**等用户确认
+- commit message 格式：`feat: x.xx日订单数据更新` 或 `feat: x.xx日业绩数据更新`
+
+---
+
+## 五、变更日志
+
+| 日期 | 变更内容 |
+|------|---------|
+| 2026-08-07 | 初始创建。明确订单/业绩两条独立流程，加入"先查看再执行"规则 |
