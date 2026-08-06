@@ -1,1 +1,1781 @@
-window.__STATS__ = {"date": "2026-08-06", "orders": 2131, "revenue": 94.8, "avg_price": 445, "rooms": 19, "our_rooms": 8, "comp_rooms": 11, "team_counts": {"我司": 8, "良米": 8, "纵横": 1, "凝云": 1, "机械空间": 1}, "days": 67, "first_date": "2026-06-01", "dates": ["2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-06", "2026-06-07", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-13", "2026-06-14", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-19", "2026-06-20", "2026-06-21", "2026-06-22", "2026-06-23", "2026-06-24", "2026-06-25", "2026-06-26", "2026-06-27", "2026-06-28", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02", "2026-07-03", "2026-07-04", "2026-07-05", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-11", "2026-07-12", "2026-07-13", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-18", "2026-07-19", "2026-07-20", "2026-07-21", "2026-07-22", "2026-07-23", "2026-07-24", "2026-07-25", "2026-07-26", "2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30", "2026-07-31", "2026-08-01", "2026-08-02", "2026-08-03", "2026-08-04", "2026-08-05", "2026-08-06"]};
+const STATS_DATA = [
+  {
+    "date": "2026-08-01",
+    "total_orders": 2548,
+    "total_revenue": 1022819.44,
+    "avg_price": 401.42,
+    "products": {
+      "REDMI Buds 6 活力版": {
+        "orders": 4,
+        "revenue": 258.1,
+        "avg_price": 64.53
+      },
+      "REDMI Buds 7S": {
+        "orders": 2,
+        "revenue": 358.0,
+        "avg_price": 179.0
+      },
+      "REDMI Buds 8": {
+        "orders": 7,
+        "revenue": 1593.0,
+        "avg_price": 227.57
+      },
+      "REDMI Buds 8 Pro": {
+        "orders": 17,
+        "revenue": 6258.0,
+        "avg_price": 368.12
+      },
+      "REDMI Buds 8 活力版": {
+        "orders": 112,
+        "revenue": 8192.95,
+        "avg_price": 73.15
+      },
+      "REDMI Buds 8 青春版": {
+        "orders": 153,
+        "revenue": 21032.75,
+        "avg_price": 137.47
+      },
+      "REDMI Watch 6": {
+        "orders": 591,
+        "revenue": 311081.67,
+        "avg_price": 526.36
+      },
+      "Xiaomi Buds 5 Pro": {
+        "orders": 4,
+        "revenue": 3546.0,
+        "avg_price": 886.5
+      },
+      "Xiaomi Buds 6": {
+        "orders": 16,
+        "revenue": 9934.0,
+        "avg_price": 620.88
+      },
+      "Xiaomi Watch 5": {
+        "orders": 19,
+        "revenue": 37412.0,
+        "avg_price": 1969.05
+      },
+      "Xiaomi Watch S4": {
+        "orders": 4,
+        "revenue": 3546.0,
+        "avg_price": 886.5
+      },
+      "Xiaomi Watch S5": {
+        "orders": 75,
+        "revenue": 81166.92,
+        "avg_price": 1082.23
+      },
+      "Xiaomi 开放式耳机": {
+        "orders": 10,
+        "revenue": 7870.0,
+        "avg_price": 787.0
+      },
+      "保护壳/膜": {
+        "orders": 1,
+        "revenue": 209.0,
+        "avg_price": 209.0
+      },
+      "儿童手表": {
+        "orders": 9,
+        "revenue": 4588.7,
+        "avg_price": 509.86
+      },
+      "充电配件": {
+        "orders": 19,
+        "revenue": 1360.99,
+        "avg_price": 71.63
+      },
+      "头戴式耳机": {
+        "orders": 1,
+        "revenue": 296.65,
+        "avg_price": 296.65
+      },
+      "小米AI眼镜": {
+        "orders": 3,
+        "revenue": 6547.0,
+        "avg_price": 2182.33
+      },
+      "小米手环10": {
+        "orders": 564,
+        "revenue": 158270.6,
+        "avg_price": 280.62
+      },
+      "小米手环10 Pro": {
+        "orders": 871,
+        "revenue": 344973.45,
+        "avg_price": 396.07
+      },
+      "小米手环9 Pro": {
+        "orders": 28,
+        "revenue": 7991.79,
+        "avg_price": 285.42
+      },
+      "小米骨传导耳机2": {
+        "orders": 2,
+        "revenue": 1198.0,
+        "avg_price": 599.0
+      },
+      "手持风扇": {
+        "orders": 1,
+        "revenue": 172.3,
+        "avg_price": 172.3
+      },
+      "路由器": {
+        "orders": 32,
+        "revenue": 4169.47,
+        "avg_price": 130.3
+      },
+      "音箱": {
+        "orders": 3,
+        "revenue": 792.1,
+        "avg_price": 264.03
+      }
+    },
+    "rooms": {
+      "小米AI眼镜直播间": {
+        "orders": 2,
+        "revenue": 4498.0,
+        "avg_price": 2249.0,
+        "products": {
+          "Xiaomi Watch 5": {
+            "orders": 1,
+            "revenue": 2099.0,
+            "avg_price": 2099.0
+          },
+          "小米AI眼镜": {
+            "orders": 1,
+            "revenue": 2399.0,
+            "avg_price": 2399.0
+          }
+        },
+        "type": "良米"
+      },
+      "小米官方Ai智能眼镜": {
+        "orders": 2,
+        "revenue": 698.0,
+        "avg_price": 349.0,
+        "products": {
+          "REDMI Buds 8 活力版": {
+            "orders": 1,
+            "revenue": 99.0,
+            "avg_price": 99.0
+          },
+          "小米骨传导耳机2": {
+            "orders": 1,
+            "revenue": 599.0,
+            "avg_price": 599.0
+          }
+        },
+        "type": "良米"
+      },
+      "小米官方手环直播间": {
+        "orders": 262,
+        "revenue": 99511.32,
+        "avg_price": 379.81,
+        "products": {
+          "REDMI Buds 8 青春版": {
+            "orders": 2,
+            "revenue": 193.0,
+            "avg_price": 96.5
+          },
+          "REDMI Watch 6": {
+            "orders": 2,
+            "revenue": 1038.0,
+            "avg_price": 519.0
+          },
+          "Xiaomi Watch S5": {
+            "orders": 1,
+            "revenue": 1199.0,
+            "avg_price": 1199.0
+          },
+          "Xiaomi 开放式耳机": {
+            "orders": 1,
+            "revenue": 799.0,
+            "avg_price": 799.0
+          },
+          "充电配件": {
+            "orders": 3,
+            "revenue": 89.7,
+            "avg_price": 29.9
+          },
+          "小米手环10": {
+            "orders": 32,
+            "revenue": 9436.94,
+            "avg_price": 294.9
+          },
+          "小米手环10 Pro": {
+            "orders": 207,
+            "revenue": 82638.53,
+            "avg_price": 399.22
+          },
+          "小米手环9 Pro": {
+            "orders": 14,
+            "revenue": 4117.15,
+            "avg_price": 294.08
+          }
+        },
+        "type": "我司"
+      },
+      "小米官方手表": {
+        "orders": 178,
+        "revenue": 94601.4,
+        "avg_price": 531.47,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 163,
+            "revenue": 85586.4,
+            "avg_price": 525.07
+          },
+          "Xiaomi Watch 5": {
+            "orders": 2,
+            "revenue": 3698.0,
+            "avg_price": 1849.0
+          },
+          "Xiaomi Watch S4": {
+            "orders": 2,
+            "revenue": 1698.0,
+            "avg_price": 849.0
+          },
+          "头戴式耳机": {
+            "orders": 1,
+            "revenue": 296.65,
+            "avg_price": 296.65
+          },
+          "小米手环10": {
+            "orders": 6,
+            "revenue": 1769.35,
+            "avg_price": 294.89
+          },
+          "小米手环10 Pro": {
+            "orders": 4,
+            "revenue": 1553.0,
+            "avg_price": 388.25
+          }
+        },
+        "type": "我司"
+      },
+      "小米官方手表直播号": {
+        "orders": 12,
+        "revenue": 8566.8,
+        "avg_price": 713.9,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 3,
+            "revenue": 1607.0,
+            "avg_price": 535.67
+          },
+          "Xiaomi Watch S5": {
+            "orders": 5,
+            "revenue": 5495.0,
+            "avg_price": 1099.0
+          },
+          "小米手环10 Pro": {
+            "orders": 4,
+            "revenue": 1464.8,
+            "avg_price": 366.2
+          }
+        },
+        "type": "纵横"
+      },
+      "小米官方耳机直播间": {
+        "orders": 17,
+        "revenue": 6257.75,
+        "avg_price": 368.1,
+        "products": {
+          "REDMI Buds 8": {
+            "orders": 1,
+            "revenue": 229.0,
+            "avg_price": 229.0
+          },
+          "REDMI Buds 8 Pro": {
+            "orders": 2,
+            "revenue": 738.0,
+            "avg_price": 369.0
+          },
+          "REDMI Buds 8 活力版": {
+            "orders": 4,
+            "revenue": 286.75,
+            "avg_price": 71.69
+          },
+          "REDMI Buds 8 青春版": {
+            "orders": 3,
+            "revenue": 411.0,
+            "avg_price": 137.0
+          },
+          "Xiaomi Buds 5 Pro": {
+            "orders": 1,
+            "revenue": 899.0,
+            "avg_price": 899.0
+          },
+          "Xiaomi Buds 6": {
+            "orders": 6,
+            "revenue": 3694.0,
+            "avg_price": 615.67
+          }
+        },
+        "type": "我司"
+      },
+      "小米官旗手表直播间": {
+        "orders": 61,
+        "revenue": 55490.37,
+        "avg_price": 909.68,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 12,
+            "revenue": 5989.3,
+            "avg_price": 499.11
+          },
+          "Xiaomi Watch 5": {
+            "orders": 7,
+            "revenue": 13724.0,
+            "avg_price": 1960.57
+          },
+          "Xiaomi Watch S5": {
+            "orders": 29,
+            "revenue": 31429.0,
+            "avg_price": 1083.76
+          },
+          "小米手环10 Pro": {
+            "orders": 11,
+            "revenue": 3924.07,
+            "avg_price": 356.73
+          },
+          "小米手环9 Pro": {
+            "orders": 2,
+            "revenue": 424.0,
+            "avg_price": 212.0
+          }
+        },
+        "type": "我司"
+      },
+      "小米手环": {
+        "orders": 680,
+        "revenue": 220241.15,
+        "avg_price": 323.88,
+        "products": {
+          "REDMI Buds 6 活力版": {
+            "orders": 4,
+            "revenue": 258.1,
+            "avg_price": 64.53
+          },
+          "REDMI Buds 8 活力版": {
+            "orders": 42,
+            "revenue": 2894.8,
+            "avg_price": 68.92
+          },
+          "REDMI Buds 8 青春版": {
+            "orders": 1,
+            "revenue": 139.0,
+            "avg_price": 139.0
+          },
+          "REDMI Watch 6": {
+            "orders": 19,
+            "revenue": 9930.15,
+            "avg_price": 522.64
+          },
+          "Xiaomi 开放式耳机": {
+            "orders": 2,
+            "revenue": 1578.0,
+            "avg_price": 789.0
+          },
+          "小米手环10": {
+            "orders": 317,
+            "revenue": 89649.14,
+            "avg_price": 282.8
+          },
+          "小米手环10 Pro": {
+            "orders": 289,
+            "revenue": 114044.96,
+            "avg_price": 394.62
+          },
+          "小米手环9 Pro": {
+            "orders": 6,
+            "revenue": 1747.0,
+            "avg_price": 291.17
+          }
+        },
+        "type": "良米"
+      },
+      "小米手环官方直播间": {
+        "orders": 8,
+        "revenue": 3286.0,
+        "avg_price": 410.75,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 1,
+            "revenue": 519.0,
+            "avg_price": 519.0
+          },
+          "小米手环10 Pro": {
+            "orders": 7,
+            "revenue": 2767.0,
+            "avg_price": 395.29
+          }
+        },
+        "type": "凝云"
+      },
+      "小米手环直播间": {
+        "orders": 1,
+        "revenue": 289.0,
+        "avg_price": 289.0,
+        "products": {
+          "小米手环10": {
+            "orders": 1,
+            "revenue": 289.0,
+            "avg_price": 289.0
+          }
+        },
+        "type": "凝云"
+      },
+      "小米手表": {
+        "orders": 47,
+        "revenue": 48454.61,
+        "avg_price": 1030.95,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 2,
+            "revenue": 1088.0,
+            "avg_price": 544.0
+          },
+          "Xiaomi Watch 5": {
+            "orders": 4,
+            "revenue": 7796.0,
+            "avg_price": 1949.0
+          },
+          "Xiaomi Watch S4": {
+            "orders": 1,
+            "revenue": 849.0,
+            "avg_price": 849.0
+          },
+          "Xiaomi Watch S5": {
+            "orders": 34,
+            "revenue": 36750.0,
+            "avg_price": 1080.88
+          },
+          "小米手环10 Pro": {
+            "orders": 4,
+            "revenue": 1454.97,
+            "avg_price": 363.74
+          },
+          "小米手环9 Pro": {
+            "orders": 2,
+            "revenue": 516.64,
+            "avg_price": 258.32
+          }
+        },
+        "type": "良米"
+      },
+      "小米手表官方直播间": {
+        "orders": 360,
+        "revenue": 193299.42,
+        "avg_price": 536.94,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 332,
+            "revenue": 175195.94,
+            "avg_price": 527.7
+          },
+          "Xiaomi Watch 5": {
+            "orders": 4,
+            "revenue": 8296.0,
+            "avg_price": 2074.0
+          },
+          "Xiaomi Watch S5": {
+            "orders": 2,
+            "revenue": 1998.0,
+            "avg_price": 999.0
+          },
+          "小米手环10": {
+            "orders": 7,
+            "revenue": 1957.98,
+            "avg_price": 279.71
+          },
+          "小米手环10 Pro": {
+            "orders": 15,
+            "revenue": 5851.5,
+            "avg_price": 390.1
+          }
+        },
+        "type": "良米"
+      },
+      "小米数码旗舰店": {
+        "orders": 142,
+        "revenue": 46558.04,
+        "avg_price": 327.87,
+        "products": {
+          "REDMI Buds 8 Pro": {
+            "orders": 1,
+            "revenue": 369.0,
+            "avg_price": 369.0
+          },
+          "REDMI Buds 8 活力版": {
+            "orders": 25,
+            "revenue": 1651.1,
+            "avg_price": 66.04
+          },
+          "REDMI Watch 6": {
+            "orders": 20,
+            "revenue": 10512.73,
+            "avg_price": 525.64
+          },
+          "充电配件": {
+            "orders": 2,
+            "revenue": 59.8,
+            "avg_price": 29.9
+          },
+          "小米AI眼镜": {
+            "orders": 1,
+            "revenue": 1749.0,
+            "avg_price": 1749.0
+          },
+          "小米手环10": {
+            "orders": 47,
+            "revenue": 13978.18,
+            "avg_price": 297.41
+          },
+          "小米手环10 Pro": {
+            "orders": 43,
+            "revenue": 17350.23,
+            "avg_price": 403.49
+          },
+          "小米手环9 Pro": {
+            "orders": 3,
+            "revenue": 888.0,
+            "avg_price": 296.0
+          }
+        },
+        "type": "我司"
+      },
+      "小米数码智能旗舰店": {
+        "orders": 218,
+        "revenue": 69322.37,
+        "avg_price": 317.99,
+        "products": {
+          "REDMI Buds 8 Pro": {
+            "orders": 1,
+            "revenue": 354.0,
+            "avg_price": 354.0
+          },
+          "REDMI Buds 8 青春版": {
+            "orders": 2,
+            "revenue": 278.0,
+            "avg_price": 139.0
+          },
+          "REDMI Watch 6": {
+            "orders": 12,
+            "revenue": 6468.0,
+            "avg_price": 539.0
+          },
+          "Xiaomi Buds 6": {
+            "orders": 1,
+            "revenue": 599.0,
+            "avg_price": 599.0
+          },
+          "Xiaomi Watch S5": {
+            "orders": 1,
+            "revenue": 1099.0,
+            "avg_price": 1099.0
+          },
+          "小米手环10": {
+            "orders": 143,
+            "revenue": 38067.63,
+            "avg_price": 266.21
+          },
+          "小米手环10 Pro": {
+            "orders": 57,
+            "revenue": 22157.74,
+            "avg_price": 388.73
+          },
+          "小米手环9 Pro": {
+            "orders": 1,
+            "revenue": 299.0,
+            "avg_price": 299.0
+          }
+        },
+        "type": "良米"
+      },
+      "小米智能手表旗舰店": {
+        "orders": 37,
+        "revenue": 22658.98,
+        "avg_price": 612.4,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 16,
+            "revenue": 8326.15,
+            "avg_price": 520.38
+          },
+          "Xiaomi Watch 5": {
+            "orders": 1,
+            "revenue": 1799.0,
+            "avg_price": 1799.0
+          },
+          "Xiaomi Watch S4": {
+            "orders": 1,
+            "revenue": 999.0,
+            "avg_price": 999.0
+          },
+          "Xiaomi Watch S5": {
+            "orders": 3,
+            "revenue": 3196.92,
+            "avg_price": 1065.64
+          },
+          "小米AI眼镜": {
+            "orders": 1,
+            "revenue": 2399.0,
+            "avg_price": 2399.0
+          },
+          "小米手环10": {
+            "orders": 1,
+            "revenue": 352.91,
+            "avg_price": 352.91
+          },
+          "小米手环10 Pro": {
+            "orders": 14,
+            "revenue": 5586.0,
+            "avg_price": 399.0
+          }
+        },
+        "type": "良米"
+      },
+      "小米智能穿戴国补号": {
+        "orders": 2,
+        "revenue": 1038.0,
+        "avg_price": 519.0,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 2,
+            "revenue": 1038.0,
+            "avg_price": 519.0
+          }
+        },
+        "type": "机械空间"
+      },
+      "小米智能穿戴授权号": {
+        "orders": 143,
+        "revenue": 50192.58,
+        "avg_price": 351.0,
+        "products": {
+          "REDMI Buds 8 活力版": {
+            "orders": 19,
+            "revenue": 1196.3,
+            "avg_price": 62.96
+          },
+          "REDMI Watch 6": {
+            "orders": 7,
+            "revenue": 3783.0,
+            "avg_price": 540.43
+          },
+          "充电配件": {
+            "orders": 2,
+            "revenue": 59.8,
+            "avg_price": 29.9
+          },
+          "小米手环10": {
+            "orders": 7,
+            "revenue": 2407.92,
+            "avg_price": 343.99
+          },
+          "小米手环10 Pro": {
+            "orders": 108,
+            "revenue": 42745.56,
+            "avg_price": 395.79
+          }
+        },
+        "type": "机械空间"
+      },
+      "小米智能设备旗舰店直播间": {
+        "orders": 61,
+        "revenue": 11444.81,
+        "avg_price": 187.62,
+        "products": {
+          "保护壳/膜": {
+            "orders": 1,
+            "revenue": 209.0,
+            "avg_price": 209.0
+          },
+          "儿童手表": {
+            "orders": 9,
+            "revenue": 4588.7,
+            "avg_price": 509.86
+          },
+          "充电配件": {
+            "orders": 12,
+            "revenue": 1151.69,
+            "avg_price": 95.97
+          },
+          "小米手环10": {
+            "orders": 3,
+            "revenue": 361.55,
+            "avg_price": 120.52
+          },
+          "手持风扇": {
+            "orders": 1,
+            "revenue": 172.3,
+            "avg_price": 172.3
+          },
+          "路由器": {
+            "orders": 32,
+            "revenue": 4169.47,
+            "avg_price": 130.3
+          },
+          "音箱": {
+            "orders": 3,
+            "revenue": 792.1,
+            "avg_price": 264.03
+          }
+        },
+        "type": "我司"
+      },
+      "小米耳机官方直播间": {
+        "orders": 207,
+        "revenue": 42975.75,
+        "avg_price": 207.61,
+        "products": {
+          "REDMI Buds 7S": {
+            "orders": 2,
+            "revenue": 358.0,
+            "avg_price": 179.0
+          },
+          "REDMI Buds 8": {
+            "orders": 6,
+            "revenue": 1364.0,
+            "avg_price": 227.33
+          },
+          "REDMI Buds 8 Pro": {
+            "orders": 13,
+            "revenue": 4797.0,
+            "avg_price": 369.0
+          },
+          "REDMI Buds 8 活力版": {
+            "orders": 21,
+            "revenue": 2065.0,
+            "avg_price": 98.33
+          },
+          "REDMI Buds 8 青春版": {
+            "orders": 145,
+            "revenue": 20011.75,
+            "avg_price": 138.01
+          },
+          "Xiaomi Buds 5 Pro": {
+            "orders": 3,
+            "revenue": 2647.0,
+            "avg_price": 882.33
+          },
+          "Xiaomi Buds 6": {
+            "orders": 9,
+            "revenue": 5641.0,
+            "avg_price": 626.78
+          },
+          "Xiaomi 开放式耳机": {
+            "orders": 7,
+            "revenue": 5493.0,
+            "avg_price": 784.71
+          },
+          "小米骨传导耳机2": {
+            "orders": 1,
+            "revenue": 599.0,
+            "avg_price": 599.0
+          }
+        },
+        "type": "良米"
+      },
+      "我司商品卡": {
+        "orders": 27,
+        "revenue": 10818.78,
+        "avg_price": 400.7,
+        "products": {
+          "小米手环10 Pro": {
+            "orders": 27,
+            "revenue": 10818.78,
+            "avg_price": 400.7
+          }
+        },
+        "type": "我司"
+      },
+      "良米商品卡": {
+        "orders": 81,
+        "revenue": 32616.31,
+        "avg_price": 402.67,
+        "products": {
+          "小米手环10 Pro": {
+            "orders": 81,
+            "revenue": 32616.31,
+            "avg_price": 402.67
+          }
+        },
+        "type": "良米"
+      }
+    },
+    "our_rooms": [
+      "小米官方手环直播间",
+      "小米官方手表",
+      "小米官方耳机直播间",
+      "小米官旗手表直播间",
+      "小米数码旗舰店",
+      "小米智能设备旗舰店直播间",
+      "我司商品卡"
+    ],
+    "jixie_rooms": [
+      "小米智能穿戴国补号",
+      "小米智能穿戴授权号"
+    ],
+    "zongheng_rooms": [
+      "小米官方手表直播号"
+    ],
+    "liangmi_rooms": [
+      "小米AI眼镜直播间",
+      "小米官方Ai智能眼镜",
+      "小米手环",
+      "小米手表",
+      "小米手表官方直播间",
+      "小米数码智能旗舰店",
+      "小米智能手表旗舰店",
+      "小米耳机官方直播间",
+      "良米商品卡"
+    ],
+    "comp_rooms": [
+      "小米智能穿戴国补号",
+      "小米智能穿戴授权号",
+      "小米官方手表直播号",
+      "小米AI眼镜直播间",
+      "小米官方Ai智能眼镜",
+      "小米手环",
+      "小米手表",
+      "小米手表官方直播间",
+      "小米数码智能旗舰店",
+      "小米智能手表旗舰店",
+      "小米耳机官方直播间",
+      "良米商品卡"
+    ],
+    "type_summary": {
+      "我司": {
+        "orders": 748,
+        "revenue": 324682.47,
+        "avg_price": 434.07,
+        "rooms": 7
+      },
+      "机械空间": {
+        "orders": 145,
+        "revenue": 51230.58,
+        "avg_price": 353.31,
+        "rooms": 2
+      },
+      "纵横": {
+        "orders": 12,
+        "revenue": 8566.8,
+        "avg_price": 713.9,
+        "rooms": 1
+      },
+      "凝云": {
+        "orders": 9,
+        "revenue": 3575.0,
+        "avg_price": 397.22,
+        "rooms": 2
+      },
+      "良米": {
+        "orders": 1634,
+        "revenue": 634764.59,
+        "avg_price": 388.47,
+        "rooms": 9
+      }
+    }
+  },
+  {
+    "date": "2026-08-02",
+    "total_orders": 1951,
+    "total_revenue": 995202.13,
+    "avg_price": 510.1,
+    "products": {
+      "REDMI Buds 6 活力版": {
+        "orders": 2,
+        "revenue": 161.0,
+        "avg_price": 80.5
+      },
+      "REDMI Buds 7S": {
+        "orders": 6,
+        "revenue": 1074.0,
+        "avg_price": 179.0
+      },
+      "REDMI Buds 8": {
+        "orders": 10,
+        "revenue": 2180.93,
+        "avg_price": 218.09
+      },
+      "REDMI Buds 8 Pro": {
+        "orders": 14,
+        "revenue": 5144.0,
+        "avg_price": 367.43
+      },
+      "REDMI Buds 8 活力版": {
+        "orders": 69,
+        "revenue": 5074.53,
+        "avg_price": 73.54
+      },
+      "REDMI Buds 8 青春版": {
+        "orders": 97,
+        "revenue": 13118.2,
+        "avg_price": 135.24
+      },
+      "REDMI Watch 6": {
+        "orders": 484,
+        "revenue": 254592.85,
+        "avg_price": 526.02
+      },
+      "REDMI 手环 3": {
+        "orders": 3,
+        "revenue": 313.0,
+        "avg_price": 104.33
+      },
+      "Xiaomi Buds 5 Pro": {
+        "orders": 2,
+        "revenue": 1848.0,
+        "avg_price": 924.0
+      },
+      "Xiaomi Buds 6": {
+        "orders": 19,
+        "revenue": 11531.0,
+        "avg_price": 606.89
+      },
+      "Xiaomi Watch 5": {
+        "orders": 19,
+        "revenue": 37268.15,
+        "avg_price": 1961.48
+      },
+      "Xiaomi Watch S4": {
+        "orders": 1,
+        "revenue": 849.0,
+        "avg_price": 849.0
+      },
+      "Xiaomi Watch S5": {
+        "orders": 82,
+        "revenue": 90054.0,
+        "avg_price": 1098.22
+      },
+      "Xiaomi 开放式耳机": {
+        "orders": 5,
+        "revenue": 3970.0,
+        "avg_price": 794.0
+      },
+      "儿童手表": {
+        "orders": 4,
+        "revenue": 2127.84,
+        "avg_price": 531.96
+      },
+      "充电配件": {
+        "orders": 12,
+        "revenue": 697.2,
+        "avg_price": 58.1
+      },
+      "头戴式耳机": {
+        "orders": 3,
+        "revenue": 850.95,
+        "avg_price": 283.65
+      },
+      "小米AI眼镜": {
+        "orders": 124,
+        "revenue": 188918.0,
+        "avg_price": 1523.53
+      },
+      "小米手环10": {
+        "orders": 145,
+        "revenue": 44699.87,
+        "avg_price": 308.27
+      },
+      "小米手环10 Pro": {
+        "orders": 805,
+        "revenue": 320485.87,
+        "avg_price": 398.12
+      },
+      "小米手环9 Pro": {
+        "orders": 24,
+        "revenue": 6920.99,
+        "avg_price": 288.37
+      },
+      "手机": {
+        "orders": 1,
+        "revenue": 220.0,
+        "avg_price": 220.0
+      },
+      "路由器": {
+        "orders": 19,
+        "revenue": 2911.75,
+        "avg_price": 153.25
+      },
+      "音箱": {
+        "orders": 1,
+        "revenue": 191.0,
+        "avg_price": 191.0
+      }
+    },
+    "rooms": {
+      "小米AI眼镜直播间": {
+        "orders": 41,
+        "revenue": 61043.0,
+        "avg_price": 1488.85,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 1,
+            "revenue": 519.0,
+            "avg_price": 519.0
+          },
+          "小米AI眼镜": {
+            "orders": 40,
+            "revenue": 60524.0,
+            "avg_price": 1513.1
+          }
+        },
+        "type": "良米"
+      },
+      "小米官方Ai智能眼镜": {
+        "orders": 64,
+        "revenue": 98774.0,
+        "avg_price": 1543.34,
+        "products": {
+          "REDMI Buds 8 活力版": {
+            "orders": 1,
+            "revenue": 99.0,
+            "avg_price": 99.0
+          },
+          "小米AI眼镜": {
+            "orders": 63,
+            "revenue": 98675.0,
+            "avg_price": 1566.27
+          }
+        },
+        "type": "良米"
+      },
+      "小米官方手环直播间": {
+        "orders": 203,
+        "revenue": 79527.91,
+        "avg_price": 391.76,
+        "products": {
+          "REDMI Buds 8 青春版": {
+            "orders": 1,
+            "revenue": 72.62,
+            "avg_price": 72.62
+          },
+          "REDMI Watch 6": {
+            "orders": 8,
+            "revenue": 4302.0,
+            "avg_price": 537.75
+          },
+          "Xiaomi Buds 6": {
+            "orders": 1,
+            "revenue": 599.0,
+            "avg_price": 599.0
+          },
+          "Xiaomi Watch S5": {
+            "orders": 1,
+            "revenue": 1099.0,
+            "avg_price": 1099.0
+          },
+          "充电配件": {
+            "orders": 2,
+            "revenue": 59.8,
+            "avg_price": 29.9
+          },
+          "头戴式耳机": {
+            "orders": 1,
+            "revenue": 257.65,
+            "avg_price": 257.65
+          },
+          "小米手环10": {
+            "orders": 28,
+            "revenue": 9327.9,
+            "avg_price": 333.14
+          },
+          "小米手环10 Pro": {
+            "orders": 155,
+            "revenue": 62100.95,
+            "avg_price": 400.65
+          },
+          "小米手环9 Pro": {
+            "orders": 6,
+            "revenue": 1708.99,
+            "avg_price": 284.83
+          }
+        },
+        "type": "我司"
+      },
+      "小米官方手表": {
+        "orders": 222,
+        "revenue": 112946.29,
+        "avg_price": 508.77,
+        "products": {
+          "REDMI Buds 7S": {
+            "orders": 1,
+            "revenue": 179.0,
+            "avg_price": 179.0
+          },
+          "REDMI Buds 8": {
+            "orders": 1,
+            "revenue": 154.93,
+            "avg_price": 154.93
+          },
+          "REDMI Watch 6": {
+            "orders": 197,
+            "revenue": 103642.17,
+            "avg_price": 526.1
+          },
+          "REDMI 手环 3": {
+            "orders": 3,
+            "revenue": 313.0,
+            "avg_price": 104.33
+          },
+          "Xiaomi Watch 5": {
+            "orders": 1,
+            "revenue": 1899.0,
+            "avg_price": 1899.0
+          },
+          "Xiaomi Watch S5": {
+            "orders": 1,
+            "revenue": 1199.0,
+            "avg_price": 1199.0
+          },
+          "充电配件": {
+            "orders": 2,
+            "revenue": 59.8,
+            "avg_price": 29.9
+          },
+          "小米手环10": {
+            "orders": 9,
+            "revenue": 2963.39,
+            "avg_price": 329.27
+          },
+          "小米手环10 Pro": {
+            "orders": 6,
+            "revenue": 2237.0,
+            "avg_price": 372.83
+          },
+          "小米手环9 Pro": {
+            "orders": 1,
+            "revenue": 299.0,
+            "avg_price": 299.0
+          }
+        },
+        "type": "我司"
+      },
+      "小米官方手表直播号": {
+        "orders": 8,
+        "revenue": 5436.05,
+        "avg_price": 679.51,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 2,
+            "revenue": 966.05,
+            "avg_price": 483.02
+          },
+          "Xiaomi Watch S5": {
+            "orders": 3,
+            "revenue": 3397.0,
+            "avg_price": 1132.33
+          },
+          "小米手环10": {
+            "orders": 1,
+            "revenue": 329.0,
+            "avg_price": 329.0
+          },
+          "小米手环10 Pro": {
+            "orders": 2,
+            "revenue": 744.0,
+            "avg_price": 372.0
+          }
+        },
+        "type": "纵横"
+      },
+      "小米官方耳机直播间": {
+        "orders": 16,
+        "revenue": 5213.26,
+        "avg_price": 325.83,
+        "products": {
+          "REDMI Buds 8": {
+            "orders": 1,
+            "revenue": 194.0,
+            "avg_price": 194.0
+          },
+          "REDMI Buds 8 Pro": {
+            "orders": 2,
+            "revenue": 736.0,
+            "avg_price": 368.0
+          },
+          "REDMI Buds 8 活力版": {
+            "orders": 3,
+            "revenue": 214.51,
+            "avg_price": 71.5
+          },
+          "REDMI Buds 8 青春版": {
+            "orders": 4,
+            "revenue": 474.75,
+            "avg_price": 118.69
+          },
+          "Xiaomi Buds 6": {
+            "orders": 6,
+            "revenue": 3594.0,
+            "avg_price": 599.0
+          }
+        },
+        "type": "我司"
+      },
+      "小米官旗手表直播间": {
+        "orders": 55,
+        "revenue": 54609.58,
+        "avg_price": 992.9,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 3,
+            "revenue": 1657.0,
+            "avg_price": 552.33
+          },
+          "Xiaomi Watch 5": {
+            "orders": 8,
+            "revenue": 15679.15,
+            "avg_price": 1959.89
+          },
+          "Xiaomi Watch S5": {
+            "orders": 30,
+            "revenue": 32608.0,
+            "avg_price": 1086.93
+          },
+          "小米手环10 Pro": {
+            "orders": 11,
+            "revenue": 3873.43,
+            "avg_price": 352.13
+          },
+          "小米手环9 Pro": {
+            "orders": 3,
+            "revenue": 792.0,
+            "avg_price": 264.0
+          }
+        },
+        "type": "我司"
+      },
+      "小米手环": {
+        "orders": 266,
+        "revenue": 94033.84,
+        "avg_price": 353.51,
+        "products": {
+          "REDMI Buds 6 活力版": {
+            "orders": 1,
+            "revenue": 62.0,
+            "avg_price": 62.0
+          },
+          "REDMI Buds 8": {
+            "orders": 1,
+            "revenue": 229.0,
+            "avg_price": 229.0
+          },
+          "REDMI Buds 8 活力版": {
+            "orders": 21,
+            "revenue": 1467.77,
+            "avg_price": 69.89
+          },
+          "REDMI Buds 8 青春版": {
+            "orders": 2,
+            "revenue": 193.17,
+            "avg_price": 96.58
+          },
+          "REDMI Watch 6": {
+            "orders": 6,
+            "revenue": 3231.0,
+            "avg_price": 538.5
+          },
+          "Xiaomi Watch 5": {
+            "orders": 1,
+            "revenue": 1799.0,
+            "avg_price": 1799.0
+          },
+          "小米手环10": {
+            "orders": 50,
+            "revenue": 14591.84,
+            "avg_price": 291.84
+          },
+          "小米手环10 Pro": {
+            "orders": 178,
+            "revenue": 70699.06,
+            "avg_price": 397.19
+          },
+          "小米手环9 Pro": {
+            "orders": 6,
+            "revenue": 1761.0,
+            "avg_price": 293.5
+          }
+        },
+        "type": "良米"
+      },
+      "小米手环官方直播间": {
+        "orders": 19,
+        "revenue": 7840.15,
+        "avg_price": 412.64,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 4,
+            "revenue": 2037.0,
+            "avg_price": 509.25
+          },
+          "小米手环10 Pro": {
+            "orders": 15,
+            "revenue": 5803.15,
+            "avg_price": 386.88
+          }
+        },
+        "type": "凝云"
+      },
+      "小米手环手表直播间": {
+        "orders": 1,
+        "revenue": 519.0,
+        "avg_price": 519.0,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 1,
+            "revenue": 519.0,
+            "avg_price": 519.0
+          }
+        },
+        "type": "良米"
+      },
+      "小米手表": {
+        "orders": 39,
+        "revenue": 44898.0,
+        "avg_price": 1151.23,
+        "products": {
+          "Xiaomi Watch 5": {
+            "orders": 4,
+            "revenue": 7896.0,
+            "avg_price": 1974.0
+          },
+          "Xiaomi Watch S4": {
+            "orders": 1,
+            "revenue": 849.0,
+            "avg_price": 849.0
+          },
+          "Xiaomi Watch S5": {
+            "orders": 33,
+            "revenue": 35765.0,
+            "avg_price": 1083.79
+          },
+          "小米手环10 Pro": {
+            "orders": 1,
+            "revenue": 388.0,
+            "avg_price": 388.0
+          }
+        },
+        "type": "良米"
+      },
+      "小米手表官方直播间": {
+        "orders": 231,
+        "revenue": 125273.16,
+        "avg_price": 542.31,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 217,
+            "revenue": 114235.59,
+            "avg_price": 526.43
+          },
+          "Xiaomi Watch 5": {
+            "orders": 2,
+            "revenue": 4298.0,
+            "avg_price": 2149.0
+          },
+          "Xiaomi Watch S5": {
+            "orders": 3,
+            "revenue": 3197.0,
+            "avg_price": 1065.67
+          },
+          "小米手环10 Pro": {
+            "orders": 9,
+            "revenue": 3542.57,
+            "avg_price": 393.62
+          }
+        },
+        "type": "良米"
+      },
+      "小米数码旗舰店": {
+        "orders": 123,
+        "revenue": 40814.35,
+        "avg_price": 331.82,
+        "products": {
+          "REDMI Buds 8 活力版": {
+            "orders": 27,
+            "revenue": 1821.29,
+            "avg_price": 67.46
+          },
+          "REDMI Buds 8 青春版": {
+            "orders": 1,
+            "revenue": 108.0,
+            "avg_price": 108.0
+          },
+          "REDMI Watch 6": {
+            "orders": 13,
+            "revenue": 6819.15,
+            "avg_price": 524.55
+          },
+          "Xiaomi Buds 6": {
+            "orders": 1,
+            "revenue": 599.0,
+            "avg_price": 599.0
+          },
+          "充电配件": {
+            "orders": 1,
+            "revenue": 29.9,
+            "avg_price": 29.9
+          },
+          "头戴式耳机": {
+            "orders": 1,
+            "revenue": 296.65,
+            "avg_price": 296.65
+          },
+          "小米AI眼镜": {
+            "orders": 1,
+            "revenue": 1749.0,
+            "avg_price": 1749.0
+          },
+          "小米手环10": {
+            "orders": 18,
+            "revenue": 6122.74,
+            "avg_price": 340.15
+          },
+          "小米手环10 Pro": {
+            "orders": 55,
+            "revenue": 21862.62,
+            "avg_price": 397.5
+          },
+          "小米手环9 Pro": {
+            "orders": 4,
+            "revenue": 1186.0,
+            "avg_price": 296.5
+          },
+          "手机": {
+            "orders": 1,
+            "revenue": 220.0,
+            "avg_price": 220.0
+          }
+        },
+        "type": "我司"
+      },
+      "小米数码智能旗舰店": {
+        "orders": 86,
+        "revenue": 33565.18,
+        "avg_price": 390.29,
+        "products": {
+          "REDMI Buds 8 Pro": {
+            "orders": 4,
+            "revenue": 1476.0,
+            "avg_price": 369.0
+          },
+          "REDMI Buds 8 青春版": {
+            "orders": 1,
+            "revenue": 139.0,
+            "avg_price": 139.0
+          },
+          "REDMI Watch 6": {
+            "orders": 9,
+            "revenue": 4723.89,
+            "avg_price": 524.88
+          },
+          "Xiaomi 开放式耳机": {
+            "orders": 2,
+            "revenue": 1573.0,
+            "avg_price": 786.5
+          },
+          "小米手环10": {
+            "orders": 17,
+            "revenue": 4442.3,
+            "avg_price": 261.31
+          },
+          "小米手环10 Pro": {
+            "orders": 53,
+            "revenue": 21210.99,
+            "avg_price": 400.21
+          }
+        },
+        "type": "良米"
+      },
+      "小米智能手表旗舰店": {
+        "orders": 91,
+        "revenue": 71674.18,
+        "avg_price": 787.63,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 18,
+            "revenue": 9392.0,
+            "avg_price": 521.78
+          },
+          "Xiaomi Watch 5": {
+            "orders": 3,
+            "revenue": 5697.0,
+            "avg_price": 1899.0
+          },
+          "Xiaomi Watch S5": {
+            "orders": 11,
+            "revenue": 12789.0,
+            "avg_price": 1162.64
+          },
+          "小米AI眼镜": {
+            "orders": 20,
+            "revenue": 27970.0,
+            "avg_price": 1398.5
+          },
+          "小米手环10 Pro": {
+            "orders": 36,
+            "revenue": 14951.18,
+            "avg_price": 415.31
+          },
+          "小米手环9 Pro": {
+            "orders": 3,
+            "revenue": 875.0,
+            "avg_price": 291.67
+          }
+        },
+        "type": "良米"
+      },
+      "小米智能穿戴国补号": {
+        "orders": 1,
+        "revenue": 519.0,
+        "avg_price": 519.0,
+        "products": {
+          "REDMI Watch 6": {
+            "orders": 1,
+            "revenue": 519.0,
+            "avg_price": 519.0
+          }
+        },
+        "type": "机械空间"
+      },
+      "小米智能穿戴授权号": {
+        "orders": 173,
+        "revenue": 65221.17,
+        "avg_price": 377.0,
+        "products": {
+          "REDMI Buds 8 活力版": {
+            "orders": 7,
+            "revenue": 483.96,
+            "avg_price": 69.14
+          },
+          "REDMI Watch 6": {
+            "orders": 4,
+            "revenue": 2030.0,
+            "avg_price": 507.5
+          },
+          "充电配件": {
+            "orders": 2,
+            "revenue": 59.8,
+            "avg_price": 29.9
+          },
+          "小米手环10": {
+            "orders": 18,
+            "revenue": 6200.7,
+            "avg_price": 344.48
+          },
+          "小米手环10 Pro": {
+            "orders": 141,
+            "revenue": 56147.71,
+            "avg_price": 398.21
+          },
+          "小米手环9 Pro": {
+            "orders": 1,
+            "revenue": 299.0,
+            "avg_price": 299.0
+          }
+        },
+        "type": "机械空间"
+      },
+      "小米智能设备旗舰店直播间": {
+        "orders": 30,
+        "revenue": 5877.49,
+        "avg_price": 195.92,
+        "products": {
+          "儿童手表": {
+            "orders": 4,
+            "revenue": 2127.84,
+            "avg_price": 531.96
+          },
+          "充电配件": {
+            "orders": 5,
+            "revenue": 487.9,
+            "avg_price": 97.58
+          },
+          "小米手环10": {
+            "orders": 1,
+            "revenue": 159.0,
+            "avg_price": 159.0
+          },
+          "路由器": {
+            "orders": 19,
+            "revenue": 2911.75,
+            "avg_price": 153.25
+          },
+          "音箱": {
+            "orders": 1,
+            "revenue": 191.0,
+            "avg_price": 191.0
+          }
+        },
+        "type": "我司"
+      },
+      "小米耳机官方直播间": {
+        "orders": 136,
+        "revenue": 29928.31,
+        "avg_price": 220.06,
+        "products": {
+          "REDMI Buds 6 活力版": {
+            "orders": 1,
+            "revenue": 99.0,
+            "avg_price": 99.0
+          },
+          "REDMI Buds 7S": {
+            "orders": 5,
+            "revenue": 895.0,
+            "avg_price": 179.0
+          },
+          "REDMI Buds 8": {
+            "orders": 7,
+            "revenue": 1603.0,
+            "avg_price": 229.0
+          },
+          "REDMI Buds 8 Pro": {
+            "orders": 8,
+            "revenue": 2932.0,
+            "avg_price": 366.5
+          },
+          "REDMI Buds 8 活力版": {
+            "orders": 10,
+            "revenue": 988.0,
+            "avg_price": 98.8
+          },
+          "REDMI Buds 8 青春版": {
+            "orders": 88,
+            "revenue": 12130.66,
+            "avg_price": 137.85
+          },
+          "Xiaomi Buds 5 Pro": {
+            "orders": 2,
+            "revenue": 1848.0,
+            "avg_price": 924.0
+          },
+          "Xiaomi Buds 6": {
+            "orders": 11,
+            "revenue": 6739.0,
+            "avg_price": 612.64
+          },
+          "Xiaomi 开放式耳机": {
+            "orders": 3,
+            "revenue": 2397.0,
+            "avg_price": 799.0
+          },
+          "头戴式耳机": {
+            "orders": 1,
+            "revenue": 296.65,
+            "avg_price": 296.65
+          }
+        },
+        "type": "良米"
+      },
+      "我司商品卡": {
+        "orders": 34,
+        "revenue": 13175.15,
+        "avg_price": 387.5,
+        "products": {
+          "小米手环10": {
+            "orders": 3,
+            "revenue": 563.0,
+            "avg_price": 187.67
+          },
+          "小米手环10 Pro": {
+            "orders": 31,
+            "revenue": 12612.15,
+            "avg_price": 406.84
+          }
+        },
+        "type": "我司"
+      },
+      "良米商品卡": {
+        "orders": 112,
+        "revenue": 44313.06,
+        "avg_price": 395.65,
+        "products": {
+          "小米手环10 Pro": {
+            "orders": 112,
+            "revenue": 44313.06,
+            "avg_price": 395.65
+          }
+        },
+        "type": "良米"
+      }
+    },
+    "our_rooms": [
+      "小米官方手环直播间",
+      "小米官方手表",
+      "小米官方耳机直播间",
+      "小米官旗手表直播间",
+      "小米数码旗舰店",
+      "小米智能设备旗舰店直播间",
+      "我司商品卡"
+    ],
+    "jixie_rooms": [
+      "小米智能穿戴国补号",
+      "小米智能穿戴授权号"
+    ],
+    "zongheng_rooms": [
+      "小米官方手表直播号"
+    ],
+    "liangmi_rooms": [
+      "小米AI眼镜直播间",
+      "小米官方Ai智能眼镜",
+      "小米手环",
+      "小米手环手表直播间",
+      "小米手表",
+      "小米手表官方直播间",
+      "小米数码智能旗舰店",
+      "小米智能手表旗舰店",
+      "小米耳机官方直播间",
+      "良米商品卡"
+    ],
+    "comp_rooms": [
+      "小米智能穿戴国补号",
+      "小米智能穿戴授权号",
+      "小米官方手表直播号",
+      "小米AI眼镜直播间",
+      "小米官方Ai智能眼镜",
+      "小米手环",
+      "小米手环手表直播间",
+      "小米手表",
+      "小米手表官方直播间",
+      "小米数码智能旗舰店",
+      "小米智能手表旗舰店",
+      "小米耳机官方直播间",
+      "良米商品卡"
+    ],
+    "type_summary": {
+      "我司": {
+        "orders": 683,
+        "revenue": 312164.03,
+        "avg_price": 457.05,
+        "rooms": 7
+      },
+      "机械空间": {
+        "orders": 174,
+        "revenue": 65740.17,
+        "avg_price": 377.82,
+        "rooms": 2
+      },
+      "纵横": {
+        "orders": 8,
+        "revenue": 5436.05,
+        "avg_price": 679.51,
+        "rooms": 1
+      },
+      "凝云": {
+        "orders": 19,
+        "revenue": 7840.15,
+        "avg_price": 412.64,
+        "rooms": 1
+      },
+      "良米": {
+        "orders": 1067,
+        "revenue": 604021.73,
+        "avg_price": 566.09,
+        "rooms": 10
+      }
+    }
+  }
+];
