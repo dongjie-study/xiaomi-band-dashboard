@@ -1010,14 +1010,14 @@
                 }
                 ROOMS.forEach(room => {
                     if (monthlyRefundRates[month][room.id] === undefined) {
-                        monthlyRefundRates[month][room.id] = 5.0;
+                        monthlyRefundRates[month][room.id] = 0.0;
                     }
                 });
             }
 
             function getRefundRate(month, roomId) {
                 ensureRefundRatesForMonth(month);
-                return monthlyRefundRates[month][roomId] || 5.0;
+                return monthlyRefundRates[month][roomId] || 0.0;
             }
 
             function setRefundRate(month, roomId, rate) {
