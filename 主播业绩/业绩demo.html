@@ -6,6 +6,7 @@
     <title>多直播间业绩管理 · 周环比与排名看板</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js">
     </script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
     <style>
         :root {
             --bg: #f5f6fa;
@@ -591,7 +592,8 @@
                 <span class="dot" style="background:#22c55e;"></span>
                 <span>📆 月主播业绩汇总（分直播间，已扣退款）</span>
                 <span class="month-period-badge" id="monthPeriodLabel">本月 2026-07</span>
-                <select class="month-select" id="summaryMonthSelect" style="margin-left:auto;"></select>
+                <select class="month-select" id="summaryMonthSelect"></select>
+                <button class="apply-btn" id="exportMonthlyBtn" style="margin-left:8px;" title="导出当前月份业绩为Excel">📥 导出Excel</button>
             </div>
             <div class="panel-body" style="max-height:400px;">
                 <table>
@@ -1223,9 +1225,11 @@
                 if (rows.length === 0) {
                     tbody.innerHTML =
                         '<tr><td colspan="6" style="text-align:center;padding:24px;color:#999;">该月份暂无数据</td></tr>';
+                    window._monthlyExportData = [];
                     return;
                 }
 
+                window._monthlyExportData = rows;
                 tbody.innerHTML = rows.map(r => `
                     <tr>
                         <td><strong>${r.anchor}</strong></td>
@@ -1236,6 +1240,21 @@
                         <td class="highlight-sales">${formatMoney(r.netSales)}</td>
                     </tr>
                 `).join('');
+            }
+
+            function exportMonthlyToExcel() {
+                var rows = window._monthlyExportData || [];
+                if (!rows.length) { alert('当前月份暂无数据可导出'); return; }
+                var month = document.getElementById('summaryMonthSelect').value || '月份';
+                var data = [['主播', '直播间', '月销售额', '退款比率', '退款金额', '净有效业绩']];
+                rows.forEach(function(r) {
+                    data.push([r.anchor, r.roomName, r.sales, r.refundRatePercent.toFixed(1)+'%', r.refundAmount.toFixed(2), r.netSales.toFixed(2)]);
+                });
+                var ws = XLSX.utils.aoa_to_sheet(data);
+                ws['!cols'] = [{wch:12},{wch:22},{wch:14},{wch:10},{wch:14},{wch:14}];
+                var wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, month);
+                XLSX.writeFile(wb, month + '_主播业绩汇总.xlsx');
             }
 
             // 周环比面板
@@ -1521,6 +1540,7 @@
                     updateRefundMgmtPanel();
                     updateMonthlySummary(elements.roomSelect.value);
                 });
+                document.getElementById('exportMonthlyBtn').addEventListener('click', exportMonthlyToExcel);
             }
 
             function bindEvents() {
