@@ -701,6 +701,76 @@
             </div>
         </div>
 
+        <!-- ==================== 日第一有效阈值管理 ==================== -->
+        <div class="panel" id="championThresholdPanel">
+            <div class="panel-header refund-mgmt-header">
+                <span class="dot" style="background:#f59e0b;"></span>
+                <span>⚙️ 日第一有效阈值管理（按直播间设置最低销售额）</span>
+                <span class="save-hint">💡 低于此阈值的日第一不计入有效排名</span>
+            </div>
+            <div class="panel-body" style="max-height:300px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>直播间</th>
+                            <th>最低销售额 (¥)</th>
+                            <th>说明</th>
+                        </tr>
+                    </thead>
+                    <tbody id="championThresholdBody">
+                        <tr><td colspan="3" style="text-align:center;padding:24px;color:#999;">暂无数据</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ==================== 每日各直播间第一 ==================== -->
+        <div class="content-row">
+            <div class="panel" id="dailyChampionsPanel">
+                <div class="panel-header">
+                    <span class="dot"></span> 📋 每日各直播间第一
+                </div>
+                <div class="panel-body" style="max-height:500px;overflow-y:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>日期</th>
+                                <th>直播间</th>
+                                <th>日冠军</th>
+                                <th>销售额</th>
+                                <th>是否有效</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dailyChampionsBody">
+                            <tr><td colspan="5" style="text-align:center;padding:32px;color:#999;">暂无数据</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ==================== 累计有效日第一排名 ==================== -->
+            <div class="panel" id="championRankingPanel">
+                <div class="panel-header">
+                    <span class="dot" style="background:#f59e0b;"></span> 🏆 累计有效日第一排名
+                </div>
+                <div class="panel-body" style="max-height:500px;overflow-y:auto;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>主播</th>
+                                <th>直播间</th>
+                                <th>有效日第一次数</th>
+                            </tr>
+                        </thead>
+                        <tbody id="championRankingBody">
+                            <tr><td colspan="4" style="text-align:center;padding:32px;color:#999;">暂无数据</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div class="footer-note">
             💡 数据更新：在 <code>DAILY_RECORDS</code> 中按日期添加记录（格式：<code>{ roomId, shift, anchor, sales }</code>）。退款比率在"月度退款比率管理"面板统一设置。
         </div>
@@ -772,6 +842,12 @@
              * 页面上的"月度退款比率管理"面板可实时修改，修改后自动应用
              */
             let monthlyRefundRates = {};
+
+            /**
+             * 日第一有效阈值（按直播间ID -> 最低销售额）
+             * 日冠军销售额低于此阈值不计入有效日第一
+             */
+            let dailyChampionThresholds = {};
 
             /**
              * 每日业绩数据
@@ -1543,6 +1619,144 @@
                 });
             }
 
+            // ==================== 日第一功能 ====================
+
+            function ensureChampionThresholds() {
+                ROOMS.forEach(room => {
+                    if (dailyChampionThresholds[room.id] === undefined) {
+                        dailyChampionThresholds[room.id] = 0;
+                    }
+                });
+            }
+
+            function getDailyChampions(dates, roomId) {
+                const champions = [];
+                dates.forEach(date => {
+                    const dayArr = DAILY_RECORDS[date] || [];
+                    const roomGroups = {};
+                    dayArr.forEach(rec => {
+                        if (roomId && roomId !== 'all' && rec.roomId !== roomId) return;
+                        if (!roomGroups[rec.roomId]) roomGroups[rec.roomId] = [];
+                        roomGroups[rec.roomId].push(rec);
+                    });
+                    Object.entries(roomGroups).forEach(([rid, records]) => {
+                        if (records.length === 0) return;
+                        const max = records.reduce((a, b) => (b.sales || 0) > (a.sales || 0) ? b : a);
+                        const threshold = dailyChampionThresholds[rid] || 0;
+                        champions.push({
+                            date,
+                            roomId: rid,
+                            anchor: max.anchor,
+                            sales: max.sales || 0,
+                            isValid: (max.sales || 0) >= threshold,
+                        });
+                    });
+                });
+                champions.sort((a, b) => b.date.localeCompare(a.date) || a.roomId.localeCompare(b.roomId));
+                return champions;
+            }
+
+            function getCumulativeRanking(champions) {
+                const map = new Map();
+                champions.filter(c => c.isValid).forEach(c => {
+                    const key = c.anchor + '||' + c.roomId;
+                    if (!map.has(key)) map.set(key, { anchor: c.anchor, roomId: c.roomId, count: 0 });
+                    map.get(key).count++;
+                });
+                return Array.from(map.values()).sort((a, b) => b.count - a.count);
+            }
+
+            function updateChampionThresholdPanel() {
+                ensureChampionThresholds();
+                const tbody = document.getElementById('championThresholdBody');
+                tbody.innerHTML = ROOMS.map(room => {
+                    const val = dailyChampionThresholds[room.id] || 0;
+                    return `
+                        <tr>
+                            <td><span class="badge-room" style="background:${room.color};">${room.name}</span></td>
+                            <td>
+                                <input type="number"
+                                       class="refund-rate-input"
+                                       value="${val}"
+                                       step="100"
+                                       min="0"
+                                       data-room="${room.id}"
+                                       title="设置${room.name}有效日第一最低销售额">
+                                <span style="font-size:0.75rem;"> 元</span>
+                            </td>
+                            <td style="font-size:0.75rem;color:var(--text-secondary);">日冠军销售额 ≥ 此值才算有效日第一</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                tbody.querySelectorAll('.refund-rate-input').forEach(input => {
+                    input.addEventListener('input', function() {
+                        const roomId = this.dataset.room;
+                        const newVal = parseFloat(this.value);
+                        if (isNaN(newVal) || newVal < 0) return;
+                        dailyChampionThresholds[roomId] = newVal;
+                        updateDailyChampionsAndRanking();
+                    });
+                });
+            }
+
+            function updateDailyChampionsAndRanking() {
+                const roomId = elements.roomSelect.value;
+                const activeBtn = document.querySelector('#filterPanel .filter-btn.active');
+                let daysBack = activeBtn ? activeBtn.dataset.range : '7';
+                const startDate = document.getElementById('dateStart').value;
+                const endDate = document.getElementById('dateEnd').value;
+                const { dates } = getFilteredRecords(
+                    (startDate || endDate) ? null : daysBack,
+                    startDate || null,
+                    endDate || null,
+                    roomId
+                );
+                const champions = getDailyChampions(dates, roomId);
+                const ranking = getCumulativeRanking(champions);
+
+                // 每日第一明细表
+                const dailyBody = document.getElementById('dailyChampionsBody');
+                if (champions.length === 0) {
+                    dailyBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:#999;">暂无数据</td></tr>';
+                } else {
+                    dailyBody.innerHTML = champions.map(c => {
+                        const room = getRoomById(c.roomId);
+                        const validHtml = c.isValid
+                            ? '<span style="color:#22c55e;font-weight:700;">✓ 有效</span>'
+                            : '<span style="color:#94a3b8;">✗ 未达标</span>';
+                        return `<tr>
+                            <td><strong>${c.date}</strong></td>
+                            <td><span class="badge-room" style="background:${room.color};">${room.name}</span></td>
+                            <td><strong>${c.anchor}</strong></td>
+                            <td class="highlight-sales">${formatMoney(c.sales)}</td>
+                            <td>${validHtml}</td>
+                        </tr>`;
+                    }).join('');
+                }
+
+                // 累计排名表
+                const rankBody = document.getElementById('championRankingBody');
+                if (ranking.length === 0) {
+                    rankBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:#999;">暂无有效日第一</td></tr>';
+                } else {
+                    rankBody.innerHTML = ranking.map((r, idx) => {
+                        const room = getRoomById(r.roomId);
+                        let rankBadge = '';
+                        if (idx === 0) rankBadge = '<span class="rank-cell rank-1">🥇 1</span>';
+                        else if (idx === 1) rankBadge = '<span class="rank-cell rank-2">🥈 2</span>';
+                        else if (idx === 2) rankBadge = '<span class="rank-cell rank-3">🥉 3</span>';
+                        else rankBadge = `<span class="rank-cell">${idx + 1}</span>`;
+                        return `<tr>
+                            <td>${rankBadge}</td>
+                            <td><strong>${r.anchor}</strong></td>
+                            <td><span class="badge-room" style="background:${room.color};">${room.name}</span></td>
+                            <td class="highlight-sales">${r.count} 次</td>
+                        </tr>`;
+                    }).join('');
+                }
+            }
+
             // ==================== 全局刷新 ====================
             function refreshAll() {
                 const activeBtn = document.querySelector('#filterPanel .filter-btn.active');
@@ -1563,6 +1777,8 @@
                 updateWeekCompare(roomId);
                 updateMonthlySummary(roomId);
                 updateRefundMgmtPanel();
+                updateChampionThresholdPanel();
+                updateDailyChampionsAndRanking();
             }
 
             // ==================== 初始化 ====================
