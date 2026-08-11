@@ -735,14 +735,13 @@
                         <thead>
                             <tr>
                                 <th>日期</th>
-                                <th>直播间</th>
                                 <th>日冠军</th>
                                 <th>销售额</th>
                                 <th>是否有效</th>
                             </tr>
                         </thead>
                         <tbody id="dailyChampionsBody">
-                            <tr><td colspan="5" style="text-align:center;padding:32px;color:#999;">暂无数据</td></tr>
+                            <tr><td colspan="4" style="text-align:center;padding:32px;color:#999;">暂无数据</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1727,16 +1726,14 @@
                 // 每日第一明细表
                 const dailyBody = document.getElementById('dailyChampionsBody');
                 if (champions.length === 0) {
-                    dailyBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:32px;color:#999;">暂无数据</td></tr>';
+                    dailyBody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:32px;color:#999;">暂无数据</td></tr>';
                 } else {
                     dailyBody.innerHTML = champions.map(c => {
-                        const room = getRoomById(c.roomId);
                         const validHtml = c.isValid
                             ? '<span style="color:#22c55e;font-weight:700;">✓ 有效</span>'
                             : '<span style="color:#94a3b8;">✗ 未达标</span>';
                         return `<tr>
                             <td><strong>${c.date}</strong></td>
-                            <td><span class="badge-room" style="background:${room.color};">${room.name}</span></td>
                             <td><strong>${c.anchor}</strong></td>
                             <td class="highlight-sales">${formatMoney(c.sales)}</td>
                             <td>${validHtml}</td>
