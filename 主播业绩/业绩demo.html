@@ -1699,7 +1699,7 @@
                 }).join('');
 
                 tbody.querySelectorAll('.refund-rate-input').forEach(input => {
-                    input.addEventListener('input', function() {
+                    input.addEventListener('change', function() {
                         const roomId = this.dataset.room;
                         const newVal = parseFloat(this.value);
                         if (isNaN(newVal) || newVal < 0) return;
