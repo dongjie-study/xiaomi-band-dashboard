@@ -847,7 +847,16 @@
              * 日第一有效阈值（按直播间ID -> 最低销售额）
              * 日冠军销售额低于此阈值不计入有效日第一
              */
-            let dailyChampionThresholds = {};
+            let dailyChampionThresholds = {
+                'room_xiaomi_digital': 30000,
+                'room_xiaomi_band': 30000,
+                'room_xiaomi_watch': 30000,
+                'room_xiaomi_watch_flagship': 10000,
+                'room_xiaomi_earphone': 10000,
+                'room_xiaomi_glasses': 0,
+                'room_xiaomi_smart_device': 0,
+                'room_xiaomi_band_flagship': 0,
+            };
 
             /**
              * 每日业绩数据
