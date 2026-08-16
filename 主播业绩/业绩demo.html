@@ -732,6 +732,7 @@
             <div class="panel" id="dailyChampionsPanel">
                 <div class="panel-header">
                     <span class="dot"></span> 📋 每日各直播间第一
+                    <button class="apply-btn" id="exportDailyChampionsBtn" style="margin-left:8px;" title="导出每日各直播间第一为Excel">📥 导出Excel</button>
                 </div>
                 <div class="panel-body" style="max-height:500px;overflow-y:auto;">
                     <table>
@@ -754,6 +755,7 @@
             <div class="panel" id="championRankingPanel">
                 <div class="panel-header">
                     <span class="dot" style="background:#f59e0b;"></span> 🏆 累计有效日第一排名
+                    <button class="apply-btn" id="exportChampionRankingBtn" style="margin-left:8px;" title="导出累计有效日第一排名为Excel">📥 导出Excel</button>
                 </div>
                 <div class="panel-body" style="max-height:500px;overflow-y:auto;">
                     <table>
@@ -1893,6 +1895,8 @@
                 );
                 const champions = getDailyChampions(dates, roomId);
                 const ranking = getCumulativeRanking(champions);
+                window._dailyChampionsExportData = champions;
+                window._championRankingExportData = ranking;
 
                 // 每日第一明细表
                 const dailyBody = document.getElementById('dailyChampionsBody');
@@ -1932,6 +1936,37 @@
                         </tr>`;
                     }).join('');
                 }
+            }
+
+            // ==================== 日第一导出 ====================
+            function exportDailyChampionsToExcel() {
+                var champions = window._dailyChampionsExportData || [];
+                if (!champions.length) { alert('暂无每日各直播间第一数据可导出'); return; }
+                var data = [['日期', '直播间', '日冠军', '销售额', '是否有效']];
+                champions.forEach(function(c) {
+                    var room = getRoomById(c.roomId);
+                    data.push([c.date, room.name, c.anchor, c.sales, c.isValid ? '有效' : '未达标']);
+                });
+                var ws = XLSX.utils.aoa_to_sheet(data);
+                ws['!cols'] = [{wch:12},{wch:22},{wch:12},{wch:14},{wch:10}];
+                var wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, '每日各直播间第一');
+                XLSX.writeFile(wb, '每日各直播间第一.xlsx');
+            }
+
+            function exportChampionRankingToExcel() {
+                var ranking = window._championRankingExportData || [];
+                if (!ranking.length) { alert('暂无累计有效日第一排名可导出'); return; }
+                var data = [['排名', '主播', '直播间', '有效日第一次数']];
+                ranking.forEach(function(r, idx) {
+                    var room = getRoomById(r.roomId);
+                    data.push([idx + 1, r.anchor, room.name, r.count]);
+                });
+                var ws = XLSX.utils.aoa_to_sheet(data);
+                ws['!cols'] = [{wch:8},{wch:14},{wch:22},{wch:14}];
+                var wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, '累计有效日第一排名');
+                XLSX.writeFile(wb, '累计有效日第一排名.xlsx');
             }
 
             // ==================== 全局刷新 ====================
@@ -2017,6 +2052,9 @@
                         updateWeekCompare(elements.roomSelect.value);
                     });
                 });
+
+                document.getElementById('exportDailyChampionsBtn').addEventListener('click', exportDailyChampionsToExcel);
+                document.getElementById('exportChampionRankingBtn').addEventListener('click', exportChampionRankingToExcel);
 
                 const allDates = getAllDates();
                 if (allDates.length) {
