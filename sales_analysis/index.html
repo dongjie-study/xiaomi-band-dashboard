@@ -298,6 +298,20 @@ return;
         <div class="chart-container"><canvas id="chartB10proCard"></canvas></div>
       </div>
     </div>
+    <div class="charts-row" style="grid-template-columns:repeat(3,1fr);">
+      <div class="chart-card">
+        <h3>📈 直播端销量趋势 · 我司 vs 良米（折线）</h3>
+        <div class="chart-container"><canvas id="chartB10proLiveLine"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>📈 商品卡销量趋势 · 我司 vs 良米（折线）</h3>
+        <div class="chart-container"><canvas id="chartB10proCardLine"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <h3>📈 总销量趋势 · 我司 vs 良米（折线）</h3>
+        <div class="chart-container"><canvas id="chartB10proTotalLine"></canvas></div>
+      </div>
+    </div>
     <div style="overflow-x:auto;margin-top:8px;">
       <table class="b10pro-table" id="b10proTable">
         <thead><tr>
@@ -1581,6 +1595,9 @@ let B10PRO_DATA = null;
 let B10PRO_PROMISE = null;
 let b10proLiveChart = null;
 let b10proCardChart = null;
+let b10proLiveLineChart = null;
+let b10proCardLineChart = null;
+let b10proTotalLineChart = null;
 
 async function loadB10proData() {
   try {
@@ -1655,6 +1672,8 @@ function renderB10proModule() {
   var lmLive = B10PRO_DATA.map(function(x) { return x.lm.live_o || 0; });
   var ourCard = B10PRO_DATA.map(function(x) { return x.our.card_o || 0; });
   var lmCard = B10PRO_DATA.map(function(x) { return x.lm.card_o || 0; });
+  var ourTotal = B10PRO_DATA.map(function(x) { return (x.our.live_o || 0) + (x.our.card_o || 0); });
+  var lmTotal = B10PRO_DATA.map(function(x) { return (x.lm.live_o || 0) + (x.lm.card_o || 0); });
 
   function makeBar(canvasId, instVar, ourD, lmD) {
     var ctx = document.getElementById(canvasId).getContext('2d');
@@ -1680,6 +1699,36 @@ function renderB10proModule() {
   }
   makeBar('chartB10proLive', 'b10proLiveChart', ourLive, lmLive);
   makeBar('chartB10proCard', 'b10proCardChart', ourCard, lmCard);
+
+  function makeLine(canvasId, instVar, ourD, lmD) {
+    var ctx = document.getElementById(canvasId).getContext('2d');
+    if (window[instVar]) window[instVar].destroy();
+    window[instVar] = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [
+          { label: '我司', data: ourD, borderColor: '#4f6ef7', backgroundColor: '#4f6ef7', borderWidth: 2.5, pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: '#4f6ef7', fill: false, tension: 0.35 },
+          { label: '良米', data: lmD, borderColor: '#94a3b8', backgroundColor: '#94a3b8', borderWidth: 2.5, borderDash: [6, 4], pointRadius: 3, pointHoverRadius: 5, pointBackgroundColor: '#94a3b8', fill: false, tension: 0.35 }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'bottom', labels: { usePointStyle: true, padding: 14, font: { size: 11 } } },
+          tooltip: { callbacks: { label: function(c) { return c.dataset.label + ': ' + c.parsed.y + ' 单'; } } }
+        },
+        scales: {
+          y: { beginAtZero: true, ticks: { callback: function(v) { return v + '单'; } }, grid: { color: '#eee' } },
+          x: { grid: { display: false } }
+        }
+      }
+    });
+  }
+  makeLine('chartB10proLiveLine', 'b10proLiveLineChart', ourLive, lmLive);
+  makeLine('chartB10proCardLine', 'b10proCardLineChart', ourCard, lmCard);
+  makeLine('chartB10proTotalLine', 'b10proTotalLineChart', ourTotal, lmTotal);
 
   // Table
   var reversed = B10PRO_DATA.slice().reverse();
