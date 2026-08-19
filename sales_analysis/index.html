@@ -271,11 +271,11 @@ return;
     </div>
   </div>
 
-  <!-- Hourly product breakdown -->
-  <div class="hourly-breakdown">
+  <!-- 逐小时产品粒度分析 已隐藏 -->
+  <!-- <div class="hourly-breakdown">
     <h2>逐小时产品粒度分析</h2>
     <div class="hour-cards" id="hourCards"></div>
-  </div>
+  </div> -->
 
   <!-- ===== 商品品类 × 直播间 分小时出单对比 ===== -->
   <div class="chart-card full-width" id="prodRoomSection" style="margin:16px 0;">
@@ -867,7 +867,7 @@ function renderAll(d, prev) {
   renderProductTable(data);
   renderRoomCards(d);
   renderRoomHourlyOverlay(d);
-  renderHourlyBreakdown(data);
+  // renderHourlyBreakdown(data); // 逐小时产品粒度分析已隐藏
   renderProdRoomHourly(d);
   renderRoomDetailHourly(d);
 }
