@@ -179,6 +179,26 @@
   .b10pro-table .col-win { background: #f0f3ff; }
   .b10pro-table .hl-row { background: #fffdf0; }
   @media (max-width: 768px) { .b10pro-kpis { grid-template-columns: 1fr; } }
+
+  /* ===== 10Pro 占比环比（今日 vs 昨日） ===== */
+  .b10pro-huanbi { margin-top: 16px; }
+  .b10pro-huanbi-title { font-size: 0.85rem; font-weight: 700; color: #1e293b; margin: 0 0 10px; }
+  .b10pro-huanbi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .b10pro-hb-card { background: #fff; border: 1px solid #e8ecf1; border-radius: var(--radius); padding: 14px; }
+  .b10pro-hb-card .hb-title { font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 4px; }
+  .b10pro-hb-row { padding: 8px 0; border-bottom: 1px dashed #eef1f6; }
+  .b10pro-hb-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .b10pro-hb-row .hb-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .b10pro-hb-row .hb-side { font-size: 0.72rem; font-weight: 700; }
+  .b10pro-hb-row .hb-our { color: #4f6ef7; }
+  .b10pro-hb-row .hb-lm { color: #94a3b8; }
+  .b10pro-hb-row .hb-line { font-size: 0.7rem; color: var(--text-secondary); line-height: 1.5; }
+  .b10pro-hb-row .hb-line b { color: var(--text); font-weight: 600; }
+  .hb-diff { font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; white-space: nowrap; }
+  .hb-diff.up { color: #fff; background: var(--clr-green); }
+  .hb-diff.down { color: #fff; background: var(--clr-red); }
+  .hb-diff.flat { color: var(--text-secondary); background: #eef1f6; }
+  @media (max-width: 768px) { .b10pro-huanbi-grid { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body>
@@ -312,6 +332,7 @@ return;
         <div class="chart-container"><canvas id="chartB10proTotalLine"></canvas></div>
       </div>
     </div>
+    <div class="b10pro-huanbi" id="b10proHuanbi"></div>
     <div style="overflow-x:auto;margin-top:8px;">
       <table class="b10pro-table" id="b10proTable">
         <thead><tr>
@@ -1729,6 +1750,56 @@ function renderB10proModule() {
   makeLine('chartB10proLiveLine', 'b10proLiveLineChart', ourLive, lmLive);
   makeLine('chartB10proCardLine', 'b10proCardLineChart', ourCard, lmCard);
   makeLine('chartB10proTotalLine', 'b10proTotalLineChart', ourTotal, lmTotal);
+
+  // ===== 今日 vs 昨日 占比环比 =====
+  var hbEl = document.getElementById('b10proHuanbi');
+  var dIdx = B10PRO_DATA.indexOf(selectedEntry);
+  var prevD = dIdx > 0 ? B10PRO_DATA[dIdx - 1] : null;
+  if (hbEl) {
+    if (prevD) {
+      var channels = [
+        { key: 'live',  icon: '📺', title: '直播间' },
+        { key: 'card',  icon: '🛒', title: '商品卡' },
+        { key: 'total', icon: '📦', title: '直播间+商品卡' }
+      ];
+      function chVals(e, ch) {
+        var o, l;
+        if (ch === 'live') { o = e.our.live_o; l = e.lm.live_o; }
+        else if (ch === 'card') { o = e.our.card_o; l = e.lm.card_o; }
+        else { o = e.our.live_o + e.our.card_o; l = e.lm.live_o + e.lm.card_o; }
+        var t = o + l;
+        return { o: o, l: l, os: t > 0 ? o / t * 100 : 0, ls: t > 0 ? l / t * 100 : 0 };
+      }
+      function sideRow(lbl, cls, tShare, yShare, tO, yO) {
+        var diff = tShare - yShare;
+        var dCls = diff > 0.05 ? 'up' : (diff < -0.05 ? 'down' : 'flat');
+        var dArrow = diff > 0.05 ? '▲' : (diff < -0.05 ? '▼' : '—');
+        var dTxt = (diff > 0 ? '+' : '') + diff.toFixed(1) + 'pp';
+        var oDiff = yO > 0 ? (tO - yO) / yO * 100 : 0;
+        var oArrow = oDiff > 0.05 ? '▲' : (oDiff < -0.05 ? '▼' : '—');
+        var oTxt = (oDiff > 0 ? '+' : '') + oDiff.toFixed(1) + '%';
+        var oClr = oDiff > 0.05 ? 'var(--clr-green)' : (oDiff < -0.05 ? 'var(--clr-red)' : 'var(--text-muted)');
+        var c = cls === 'hb-our' ? '#4f6ef7' : '#94a3b8';
+        return '<div class="hb-row">' +
+          '<div class="hb-top"><span class="hb-side ' + cls + '">' + lbl + '</span><span class="hb-diff ' + dCls + '">' + dArrow + ' ' + dTxt + '</span></div>' +
+          '<div class="hb-line">今日占比 <b style="color:' + c + ';">' + tShare.toFixed(1) + '%</b> · 昨日占比 <b>' + yShare.toFixed(1) + '%</b></div>' +
+          '<div class="hb-line">单量 <b>' + tO + '</b> → <b>' + yO + '</b>（<span style="color:' + oClr + ';font-weight:700;">' + oArrow + oTxt + '</span>）</div>' +
+        '</div>';
+      }
+      var cardsHtml = channels.map(function(ch) {
+        var t = chVals(d, ch.key), y = chVals(prevD, ch.key);
+        return '<div class="b10pro-hb-card">' +
+          '<div class="hb-title">' + ch.icon + ' ' + ch.title + '</div>' +
+          sideRow('⭐ 我司', 'hb-our', t.os, y.os, t.o, y.o) +
+          sideRow('良米', 'hb-lm', t.ls, y.ls, t.l, y.l) +
+        '</div>';
+      }).join('');
+      hbEl.innerHTML = '<h3 class="b10pro-huanbi-title">🔁 占比环比（' + d.date.slice(5) + ' 对比 ' + prevD.date.slice(5) + '）</h3>' +
+        '<div class="b10pro-huanbi-grid">' + cardsHtml + '</div>';
+    } else {
+      hbEl.innerHTML = '';
+    }
+  }
 
   // Table
   var reversed = B10PRO_DATA.slice().reverse();
