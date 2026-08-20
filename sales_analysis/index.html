@@ -199,6 +199,16 @@
   .hb-diff.down { color: #fff; background: var(--clr-red); }
   .hb-diff.flat { color: var(--text-secondary); background: #eef1f6; }
   @media (max-width: 768px) { .b10pro-huanbi-grid { grid-template-columns: 1fr; } }
+
+  /* ===== 折叠/展开 按钮 & 直播间表格 ===== */
+  .toggle-btn { display:inline-block; padding:8px 20px; border:1px solid #dde1e6; background:#fff; border-radius:20px; cursor:pointer; font-size:13px; color:#4ECDC4; font-weight:600; transition:all .2s; }
+  .toggle-btn:hover { background:#4ECDC4; color:#fff; border-color:#4ECDC4; }
+  .room-table { width:100%; border-collapse:collapse; margin-top:10px; }
+  .room-table th, .room-table td { padding:10px 14px; text-align:left; border-bottom:1px solid #f0f2f5; font-size:13px; }
+  .room-table th { color:var(--text-secondary); font-weight:600; font-size:11px; letter-spacing:.03em; text-transform:uppercase; }
+  .room-table tbody tr { transition:background var(--transition); }
+  .room-table tbody tr:hover { background:#f8fafc; }
+  .team-badge { display:inline-block; font-size:11px; padding:2px 9px; border-radius:10px; font-weight:600; color:#fff; }
 </style>
 </head>
 <body>
@@ -288,6 +298,7 @@ return;
         </tr></thead>
         <tbody></tbody>
       </table>
+      <div id="productTableToggle" style="text-align:center;margin-top:12px;"></div>
     </div>
   </div>
 
@@ -357,6 +368,7 @@ return;
         <tbody></tbody>
       </table>
     </div>
+    <div id="b10proTableToggle" style="text-align:center;margin-top:12px;"></div>
   </div>
 
   <!-- ===== 各直播间详细数据 -- 分小时分品类 + 环比 ===== -->
@@ -377,8 +389,12 @@ return;
 
     <div class="charts-row">
       <div class="chart-card full-width">
-        <h3>我方 vs 竞对 每日趋势 & 份额变化</h3>
+        <h3>各团队每日订单趋势</h3>
         <div class="chart-container tall"><canvas id="chartDailyTrend"></canvas></div>
+      </div>
+      <div class="chart-card full-width">
+        <h3>市场份额变化（各团队占比）</h3>
+        <div class="chart-container tall"><canvas id="chartShare"></canvas></div>
       </div>
     </div>
 
@@ -404,6 +420,38 @@ let currentDate = null;
 let currentRoom = '__all__';
 let dataReady = false;
 const HOURLY_CACHE = {};
+
+// 团队颜色与顺序（与 team_config.py TEAM_COLORS/TEAM_ORDER 保持一致）
+const TEAM_COLORS = {
+  '我司': '#1E90FF', '机械空间': '#FF6B35', '纵横': '#7c6ff7',
+  '凝云': '#e74c3c', '逐梦': '#0d9488', '斐纳': '#c026d3', '良米': '#94a3b8'
+};
+const TEAM_ORDER = ['我司', '机械空间', '纵横', '凝云', '逐梦', '斐纳', '良米'];
+const COMP_TEAMS = ['机械空间', '纵横', '凝云', '逐梦', '斐纳', '良米'];
+
+// ===== 折叠/展开 通用逻辑（前 N 条默认展示，其余行带 extra-row 类折叠） =====
+function toggleTableRows(tableId, btnId, total, unit) {
+  var tbody = document.querySelector('#' + tableId + ' tbody');
+  var expanded = tbody.getAttribute('data-expanded') === '1';
+  var next = !expanded;
+  tbody.setAttribute('data-expanded', next ? '1' : '0');
+  tbody.querySelectorAll('tr.extra-row').forEach(function(tr) {
+    tr.style.display = next ? '' : 'none';
+  });
+  var btn = document.getElementById(btnId);
+  btn.innerHTML = next
+    ? '<button class="toggle-btn" onclick="toggleTableRows(\'' + tableId + '\',\'' + btnId + '\',' + total + ',\'' + unit + '\')">收起 ▲</button>'
+    : '<button class="toggle-btn" onclick="toggleTableRows(\'' + tableId + '\',\'' + btnId + '\',' + total + ',\'' + unit + '\')">点击详情（共 ' + total + unit + '）▼</button>';
+}
+
+function renderToggleButton(tableId, btnId, total, threshold, unit) {
+  var btn = document.getElementById(btnId);
+  if (total > threshold) {
+    btn.innerHTML = '<button class="toggle-btn" onclick="toggleTableRows(\'' + tableId + '\',\'' + btnId + '\',' + total + ',\'' + unit + '\')">点击详情（共 ' + total + unit + '）▼</button>';
+  } else {
+    btn.innerHTML = '';
+  }
+}
 
 // Lazy-load hourly stats for a day and merge into the day object
 async function ensureHourly(day) {
@@ -700,25 +748,31 @@ function renderRoomCards(d) {
   const totalOrders = d.total_orders;
   const sorted = rooms.map(r => ({name: r, ...d.rooms[r]})).sort((a, b) => b.orders - a.orders);
 
-  cards.innerHTML = sorted.map((r, i) => {
-    const pct = (r.orders / totalOrders * 100).toFixed(1);
-    const topProd = Object.entries(r.products).sort((a, b) => b[1].orders - a[1].orders)[0];
-    const topProdHtml = topProd
-      ? '<div class="stat-row"><span class="stat-label">销冠产品</span><span class="stat-value">' + topProd[0] + ' (' + topProd[1].orders + '单)</span></div>'
-      : '';
-    return `
-    <div class="room-card" style="border-left: 4px solid ${['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4'][i % 4]}">
-      <div class="room-name">
-        ${i === 0 ? '👑 ' : ''}${r.name}
-        <span class="badge comp">第${i+1}名</span>
-      </div>
-      <div class="stat-row"><span class="stat-label">订单数</span><span class="stat-value">${r.orders} 单 (${pct}%)</span></div>
-      <div class="stat-row"><span class="stat-label">销售额</span><span class="stat-value">${formatCurrency(r.revenue)}</span></div>
-      <div class="stat-row"><span class="stat-label">平均单价</span><span class="stat-value">${formatCurrency(r.avg_price)}</span></div>
-      <div class="stat-row"><span class="stat-label">SKU数</span><span class="stat-value">${Object.keys(r.products).length}</span></div>
-      ${topProdHtml}
-    </div>`;
-  }).join('');
+  cards.innerHTML = '<table class="room-table"><thead><tr>' +
+    '<th>排名</th><th>直播间</th><th>团队</th><th>订单数</th><th>销售额</th><th>均价</th><th>SKU数</th><th>销冠产品</th>' +
+    '</tr></thead><tbody data-expanded="0">' +
+    sorted.map((r, i) => {
+      const pct = (r.orders / totalOrders * 100).toFixed(1);
+      const topProd = Object.entries(r.products).sort((a, b) => b[1].orders - a[1].orders)[0];
+      const topProdTxt = topProd ? topProd[0] + ' (' + topProd[1].orders + '单)' : '-';
+      const t = r.type || '良米';
+      const color = TEAM_COLORS[t] || '#94a3b8';
+      return `
+    <tr class="${i >= 6 ? 'extra-row' : ''}" style="${i >= 6 ? 'display:none' : ''}">
+      <td>${i + 1}</td>
+      <td><strong>${i === 0 ? '👑 ' : ''}${r.name}</strong></td>
+      <td><span class="team-badge" style="background:${color};">${t}</span></td>
+      <td>${r.orders} <span style="color:#64748b;">(${pct}%)</span></td>
+      <td>${formatCurrency(r.revenue)}</td>
+      <td>${formatCurrency(r.avg_price)}</td>
+      <td>${Object.keys(r.products).length}</td>
+      <td style="color:#64748b;">${topProdTxt}</td>
+    </tr>`;
+    }).join('') +
+    '</tbody></table>' +
+    '<div id="roomCardsToggle" style="text-align:center;margin-top:12px;"></div>';
+
+  renderToggleButton('roomCards', 'roomCardsToggle', sorted.length, 6, '个直播间');
 }
 
 function renderProductChart(d) {
@@ -893,8 +947,9 @@ function renderProductTable(d) {
   const sorted = Object.entries(d.products).sort((a, b) => b[1].orders - a[1].orders);
   const maxOrders = sorted[0] ? sorted[0][1].orders : 1;
   const tbody = document.getElementById('productTable').querySelector('tbody');
+  tbody.setAttribute('data-expanded', '0');
   tbody.innerHTML = sorted.map(([name, info], i) => `
-    <tr>
+    <tr class="${i >= 6 ? 'extra-row' : ''}" style="${i >= 6 ? 'display:none' : ''}">
       <td>${i + 1}</td>
       <td><strong>${name}</strong></td>
       <td class="bar-cell"><span class="bar-bg"><span class="bar" style="width:${info.orders/maxOrders*100}%"></span></span></td>
@@ -903,6 +958,7 @@ function renderProductTable(d) {
       <td>¥${Math.round(info.avg_price)}</td>
     </tr>
   `).join('');
+  renderToggleButton('productTable', 'productTableToggle', sorted.length, 6, '个产品');
 }
 
 function renderAll(d, prev) {
@@ -992,6 +1048,13 @@ function renderHourlyBreakdown(data) {
 
 // ===== 每日数据总结分析模块 =====
 let dailyTrendChart = null;
+let shareChart = null;
+
+// 从 type_summary 读取某团队某天的订单数（缺省返回 0）
+function getTeamOrders(entry, team) {
+  if (!entry || !entry.type_summary || !entry.type_summary[team]) return 0;
+  return entry.type_summary[team].orders || 0;
+}
 
 // 从 type_summary 提取我方/竞对数据，兼容新旧格式
 // 旧格式: {'我方': {...}, '竞对': {...}}
@@ -1015,7 +1078,7 @@ function getOurCompData(entry) {
   var ourRevenue = ts['我司'] ? ts['我司'].revenue : 0;
   var ourRooms = ts['我司'] ? ts['我司'].rooms : 0;
   var compOrders = 0, compRevenue = 0, compRooms = 0;
-  var compTeams = ['机械空间', '纵横', '良米', '凝云'];
+  var compTeams = COMP_TEAMS;
   for (var i = 0; i < compTeams.length; i++) {
     if (ts[compTeams[i]]) {
       compOrders += ts[compTeams[i]].orders;
@@ -1062,64 +1125,83 @@ function renderSummaryKPIs() {
 function renderDailyTrendChart() {
   var monthHistory = getMonthHistory();
   var dates = monthHistory.map(function(h) { return h.date; });
-  var ourOrders = monthHistory.map(function(d) { return getOurCompData(d).ourOrders; });
-  var compOrders = monthHistory.map(function(d) { return getOurCompData(d).compOrders; });
-  var shares = ourOrders.map(function(o, i) { return o + compOrders[i] > 0 ? parseFloat((o / (o + compOrders[i]) * 100).toFixed(1)) : 0; });
 
   if (dailyTrendChart) dailyTrendChart.destroy();
 
+  // 只保留当月出现过订单的团队，我司 + 各竞对团队分别一条线
+  var activeTeams = TEAM_ORDER.filter(function(t) {
+    return monthHistory.some(function(h) { return getTeamOrders(h, t) > 0; });
+  });
+  var datasets = activeTeams.map(function(t) {
+    var isOur = t === '我司';
+    return {
+      label: t + '订单',
+      data: monthHistory.map(function(h) { return getTeamOrders(h, t); }),
+      borderColor: TEAM_COLORS[t],
+      backgroundColor: TEAM_COLORS[t],
+      fill: false, tension: 0.3, pointRadius: 3,
+      borderWidth: isOur ? 3 : 2,
+      borderDash: isOur ? [] : [5, 3],
+      yAxisID: 'y'
+    };
+  });
+
   dailyTrendChart = new Chart(document.getElementById('chartDailyTrend'), {
     type: 'line',
-    data: {
-      labels: dates,
-      datasets: [
-        {
-          label: '我方订单', data: ourOrders,
-          borderColor: '#FFD700', backgroundColor: 'rgba(255,215,0,0.15)',
-          fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#FFD700',
-          borderWidth: 2, yAxisID: 'y'
-        },
-        {
-          label: '竞对订单', data: compOrders,
-          borderColor: '#FF6B6B', backgroundColor: 'rgba(255,107,107,0.08)',
-          fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#FF6B6B',
-          borderWidth: 2, yAxisID: 'y'
-        },
-        {
-          label: '我方份额 %', data: shares,
-          type: 'line', borderColor: '#4ECDC4', backgroundColor: 'rgba(78,205,196,0)',
-          borderWidth: 3, tension: 0.4, pointRadius: 5,
-          pointBackgroundColor: '#4ECDC4', pointBorderColor: '#fff', pointBorderWidth: 2,
-          yAxisID: 'y1', fill: false, order: 0
-        }
-      ]
-    },
+    data: { labels: dates, datasets: datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'top', labels: { usePointStyle: true, padding: 20 } },
-        tooltip: {
-          callbacks: {
-            label: function(ctx) {
-              if (ctx.dataset.yAxisID === 'y1') return ' 我方份额: ' + ctx.raw + '%';
-              return ' ' + ctx.dataset.label + ': ' + ctx.raw.toLocaleString() + ' 单';
-            }
-          }
-        }
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 14 } },
+        tooltip: { callbacks: { label: function(ctx) { return ' ' + ctx.dataset.label + ': ' + ctx.raw.toLocaleString() + ' 单'; } } }
       },
       scales: {
-        y: {
-          type: 'linear', position: 'left',
-          title: { display: true, text: '订单数' },
-          beginAtZero: false, grid: { color: '#f0f0f0' }
-        },
-        y1: {
-          type: 'linear', position: 'right',
-          title: { display: true, text: '我方份额 (%)' },
-          min: 0, max: 100, grid: { drawOnChartArea: false },
-          ticks: { callback: function(v) { return v + '%'; } }
-        }
+        y: { type: 'linear', position: 'left', title: { display: true, text: '订单数' }, beginAtZero: true, grid: { color: '#f0f0f0' } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderShareChart() {
+  var monthHistory = getMonthHistory();
+  var dates = monthHistory.map(function(h) { return h.date; });
+
+  if (shareChart) shareChart.destroy();
+
+  var activeTeams = TEAM_ORDER.filter(function(t) {
+    return monthHistory.some(function(h) { return getTeamOrders(h, t) > 0; });
+  });
+  var datasets = activeTeams.map(function(t, idx) {
+    return {
+      label: t,
+      data: monthHistory.map(function(h) {
+        var total = TEAM_ORDER.reduce(function(s, tt) { return s + getTeamOrders(h, tt); }, 0);
+        var o = getTeamOrders(h, t);
+        return total > 0 ? parseFloat((o / total * 100).toFixed(1)) : 0;
+      }),
+      backgroundColor: TEAM_COLORS[t],
+      borderColor: TEAM_COLORS[t],
+      borderWidth: 1,
+      fill: idx === 0 ? 'origin' : '-1',
+      tension: 0.3
+    };
+  });
+
+  shareChart = new Chart(document.getElementById('chartShare'), {
+    type: 'line',
+    data: { labels: dates, datasets: datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 14 } },
+        tooltip: { callbacks: { label: function(ctx) { return ' ' + ctx.dataset.label + ': ' + ctx.raw + '%'; } } }
+      },
+      scales: {
+        y: { stacked: true, min: 0, max: 100, title: { display: true, text: '份额 (%)' }, ticks: { callback: function(v) { return v + '%'; } }, grid: { color: '#f0f0f0' } },
+        x: { grid: { display: false } }
       }
     }
   });
@@ -1621,6 +1703,7 @@ function renderDailySummary() {
   renderTodayInsights();
   renderSummaryKPIs();
   renderDailyTrendChart();
+  renderShareChart();
   // renderDailyTable(); // 每日数据明细已隐藏
   renderDailyInsights();
 }
@@ -1863,14 +1946,17 @@ function renderB10proModule() {
   // Table
   var reversed = B10PRO_DATA.slice().reverse();
   var tbody = document.querySelector('#b10proTable tbody');
-  tbody.innerHTML = reversed.map(function(r) {
+  tbody.setAttribute('data-expanded', '0');
+  tbody.innerHTML = reversed.map(function(r, i) {
     var o = r.our, l = r.lm;
     var tL = o.live_o + l.live_o, tC = o.card_o + l.card_o;
     var tA = o.live_o + o.card_o + l.live_o + l.card_o;
     var oPct = tA > 0 ? ((o.live_o + o.card_o) / tA * 100) : 0;
     var oLiveW = o.live_o > l.live_o, oCardW = o.card_o > l.card_o;
     var oAllW = (o.live_o + o.card_o) > (l.live_o + l.card_o);
-    return '<tr class="' + (r.date === latest.date ? 'hl-row' : '') + '">' +
+    var extraCls = (i >= 3 ? ' extra-row' : '');
+    var extraStyle = (i >= 3 ? ' style="display:none"' : '');
+    return '<tr class="' + (r.date === latest.date ? 'hl-row' : '') + extraCls + '"' + extraStyle + '>' +
       '<td style="font-weight:600;">' + r.date.slice(5) + '</td>' +
       '<td class="col-our' + (oLiveW ? ' col-win' : '') + '">' + o.live_o + '<br><span style="font-size:0.6rem;font-weight:400;">' + fmt(o.live_a) + '</span></td>' +
       '<td>' + l.live_o + '<br><span style="font-size:0.6rem;color:#999;">' + fmt(l.live_a) + '</span></td>' +
@@ -1915,6 +2001,8 @@ function renderB10proModule() {
     '<td>' + tAllO + '</td>' +
     '<td class="' + (oAllWA ? 'col-our' : 'col-lm') + '" style="font-weight:700;">' + oPctAgg.toFixed(1) + '%</td>' +
     '</tr>';
+
+  renderToggleButton('b10proTable', 'b10proTableToggle', reversed.length, 3, '天');
 
   // 汇总 KPI 卡片
   var liveOurPct = tLiveO > 0 ? (agg.our_live_o / tLiveO * 100) : 0;
