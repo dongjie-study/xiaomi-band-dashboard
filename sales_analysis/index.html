@@ -1166,14 +1166,14 @@ function renderDailyTrendChart() {
 
 function renderShareChart() {
   var monthHistory = getMonthHistory();
-  var dates = monthHistory.map(function(h) { return h.date; });
+  var dates = monthHistory.map(function(h) { return h.date.slice(5); });
 
   if (shareChart) shareChart.destroy();
 
   var activeTeams = TEAM_ORDER.filter(function(t) {
     return monthHistory.some(function(h) { return getTeamOrders(h, t) > 0; });
   });
-  var datasets = activeTeams.map(function(t, idx) {
+  var datasets = activeTeams.map(function(t) {
     return {
       label: t,
       data: monthHistory.map(function(h) {
@@ -1182,26 +1182,33 @@ function renderShareChart() {
         return total > 0 ? parseFloat((o / total * 100).toFixed(1)) : 0;
       }),
       backgroundColor: TEAM_COLORS[t],
-      borderColor: TEAM_COLORS[t],
-      borderWidth: 1,
-      fill: idx === 0 ? 'origin' : '-1',
-      tension: 0.3
+      borderColor: '#fff',
+      borderWidth: 1.5,
+      stack: 'share'
     };
   });
 
   shareChart = new Chart(document.getElementById('chartShare'), {
-    type: 'line',
+    type: 'bar',
     data: { labels: dates, datasets: datasets },
     options: {
       responsive: true, maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { position: 'top', labels: { usePointStyle: true, padding: 14 } },
-        tooltip: { callbacks: { label: function(ctx) { return ' ' + ctx.dataset.label + ': ' + ctx.raw + '%'; } } }
+        legend: { position: 'top', labels: { usePointStyle: true, padding: 12, boxWidth: 10, boxHeight: 10, font: { size: 12 } } },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) { return ' ' + ctx.dataset.label + ': ' + ctx.raw + '%'; },
+            footer: function(items) {
+              var total = items.reduce(function(s, it) { return s + (it.raw || 0); }, 0);
+              return '合计：' + total.toFixed(1) + '%';
+            }
+          }
+        }
       },
       scales: {
-        y: { stacked: true, min: 0, max: 100, title: { display: true, text: '份额 (%)' }, ticks: { callback: function(v) { return v + '%'; } }, grid: { color: '#f0f0f0' } },
-        x: { grid: { display: false } }
+        x: { stacked: true, grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } },
+        y: { stacked: true, min: 0, max: 100, title: { display: true, text: '市场份额 (%)' }, ticks: { callback: function(v) { return v + '%'; } }, grid: { color: '#f0f0f0' } }
       }
     }
   });
