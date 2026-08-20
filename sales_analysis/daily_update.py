@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from team_config import TEAM_MAP, classify_room, ALL_TEAMS, OUR_TEAM
+from team_config import TEAM_MAP, classify_room, ALL_TEAMS, OUR_TEAM, OUR_ROOMS, LIANGMI_ROOMS
 from product_classifier import classify_product as shorten_product
 from utils import detect_excel_columns
 
@@ -437,9 +437,12 @@ def _write_stats_js(history):
 
 
 def _extract_b10pro(df):
-    """Extract 10Pro comparison data: 我司 vs 良米, live vs card."""
+    """Extract 10Pro comparison data: 我司 vs 良米, live vs card.
+    Uses explicit OUR_ROOMS / LIANGMI_ROOMS lists — rooms not listed are excluded."""
     b10p = df[df['product'].str.contains('10Pro|10 Pro', na=False)].copy()
-    b10p['team'] = b10p['room'].apply(lambda x: TEAM_MAP.get(str(x).strip(), '良米'))
+    b10p['team'] = b10p['room'].apply(
+        lambda x: '我司' if str(x).strip() in OUR_ROOMS else ('良米' if str(x).strip() in LIANGMI_ROOMS else '其他')
+    )
     b10p['is_card'] = b10p['room'].str.contains('商品卡', na=False)
 
     result = {'date': str(df['date'].iloc[0])}
