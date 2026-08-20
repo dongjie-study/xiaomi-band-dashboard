@@ -129,10 +129,11 @@ def summarize_day(df):
     # Identify rooms by team
     our_rooms = [r for r, info in rooms.items() if info['type'] == '我司']
     jixie_rooms = [r for r, info in rooms.items() if info['type'] == '机械空间']
+    zongheng_rooms = [r for r, info in rooms.items() if info['type'] == '纵横']
     zhumeng_rooms = [r for r, info in rooms.items() if info['type'] == '逐梦']
     feina_rooms = [r for r, info in rooms.items() if info['type'] == '斐纳']
     liangmi_rooms = [r for r, info in rooms.items() if info['type'] == '良米']
-    comp_rooms = jixie_rooms + zhumeng_rooms + feina_rooms + liangmi_rooms
+    comp_rooms = jixie_rooms + zongheng_rooms + zhumeng_rooms + feina_rooms + liangmi_rooms
 
     # Type-level aggregates
     type_summary = {}
@@ -193,6 +194,7 @@ def summarize_day(df):
         'rooms': rooms,
         'our_rooms': our_rooms,
         'jixie_rooms': jixie_rooms,
+        'zongheng_rooms': zongheng_rooms,
         'zhumeng_rooms': zhumeng_rooms,
         'feina_rooms': feina_rooms,
         'liangmi_rooms': liangmi_rooms,
@@ -240,7 +242,7 @@ def print_comparison(today, yesterday=None):
     rooms = today.get('rooms', {})
 
     # ===== 团队总览 =====
-    team_colors = {'我司': '★', '机械空间': '◆', '凝云': '●', '逐梦': '◇', '斐纳': '△', '良米': '·'}
+    team_colors = {'我司': '★', '机械空间': '◆', '纵横': '▲', '凝云': '●', '逐梦': '◇', '斐纳': '△', '良米': '·'}
     print(f"\n  【四队总览】")
     print(f"    {'':<15s} {'订单':>8s} {'占比':>8s} {'销售额':>14s} {'均价':>10s} {'直播间':>8s}")
     print(f"    {'-'*65}")
@@ -319,7 +321,7 @@ def print_comparison(today, yesterday=None):
     # ===== 总结 =====
     if '我司' in type_summary:
         o = type_summary['我司']
-        other_orders = sum(type_summary[t]['orders'] for t in ['机械空间','凝云','逐梦','斐纳','良米'] if t in type_summary)
+        other_orders = sum(type_summary[t]['orders'] for t in ['机械空间','纵横','凝云','逐梦','斐纳','良米'] if t in type_summary)
         print(f"\n  【总结】")
         print(f"    我司 {o['orders']} 单 ({o['orders']/today['total_orders']*100:.1f}%), "
               f"均价 RMB {o['avg_price']:.0f}, 销售额 RMB {o['revenue']:,.0f}")
