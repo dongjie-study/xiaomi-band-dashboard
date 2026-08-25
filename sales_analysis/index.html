@@ -212,26 +212,57 @@
 
   /* ===== 各服务商直播间销量汇总 ===== */
   .provider-section { margin: 16px 0; }
-  .provider-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
-  .provider-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid #e8ecf1; overflow: hidden; }
-  .provider-card.ours { border: 2px solid var(--accent-gold); }
-  .provider-head { padding: 14px 18px; cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-  .provider-head:hover { background: #f8fafc; }
-  .provider-head .ph-name { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
-  .provider-head .ph-name .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-  .provider-head .ph-sub { font-size: 11px; color: var(--text-secondary); font-weight: 400; }
-  .provider-head .ph-total { text-align: right; }
-  .provider-head .ph-total .ph-rev { font-size: 16px; font-weight: 800; line-height: 1.1; }
-  .provider-head .ph-total .ph-orders { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
-  .provider-body { border-top: 1px solid #f0f2f5; }
-  .provider-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-  .provider-table th, .provider-table td { padding: 7px 12px; text-align: left; border-bottom: 1px solid #f5f5f5; }
-  .provider-table th { color: var(--text-secondary); font-weight: 600; font-size: 11px; background: #fafbfc; }
-  .provider-table td.num { text-align: right; }
-  .provider-table tbody tr:last-child td { border-bottom: none; }
-  .provider-table tbody tr:hover td { background: #f8fafc; }
-  .provider-foot { padding: 8px 18px; background: #fafbfc; font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; }
-  .provider-toggle { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--accent); font-weight: 600; cursor: pointer; }
+  .provider-toolbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+  .provider-hint { font-size: 12px; color: var(--text-secondary); }
+  .provider-toggle-all { border: 1px solid #dde1e6; background: #fff; color: #64748b; padding: 5px 14px; border-radius: 16px; font-size: 12px; cursor: pointer; font-weight: 500; transition: all .2s; }
+  .provider-toggle-all:hover { color: var(--accent); border-color: var(--accent); }
+  .provider-wrap { border: 1px solid #e8ecf1; border-radius: var(--radius); overflow: hidden; background: #fff; }
+  .provider-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .provider-table thead th {
+    background: #f8f9fc; color: var(--text-secondary); font-weight: 600; font-size: 11px;
+    letter-spacing: .03em; padding: 10px 14px; text-align: left; border-bottom: 1px solid #eef1f6;
+    position: sticky; top: 0; z-index: 1; white-space: nowrap;
+  }
+  .provider-table .num, .provider-table thead th.num { text-align: right; }
+  .provider-table td { padding: 9px 14px; border-bottom: 1px solid #f5f5f5; }
+  .provider-table tr:last-child td { border-bottom: none; }
+
+  /* 服务商分组行 */
+  .prow td { background: #fbfcfe; }
+  .prow.ours td { background: linear-gradient(90deg, #fffdf0 0%, #fbfcfe 100%); }
+  .prow { cursor: pointer; }
+  .prow:hover td { background: #f3f6fb; }
+  .prow.ours:hover td { background: #fff9e6; }
+  .prow .p-name { display: flex; align-items: center; gap: 9px; }
+  .prow .p-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .prow .p-main { font-weight: 700; font-size: 14px; }
+  .prow .p-tag { display: inline-block; font-size: 10px; font-weight: 600; color: #fff; border-radius: 8px; padding: 1px 7px; vertical-align: 1px; }
+  .prow .p-sub { font-size: 11px; color: var(--text-secondary); font-weight: 400; }
+  .prow .p-chev { display: inline-block; transition: transform .2s; color: #94a3b8; font-size: 11px; margin-right: 2px; }
+  .prow.collapsed .p-chev { transform: rotate(-90deg); }
+  .prow .p-rev { font-weight: 800; }
+  .prow .p-share { position: relative; }
+  .prow .p-share .share-bar { display: inline-block; height: 6px; border-radius: 3px; vertical-align: middle; margin-right: 8px; background: #e8ecf1; overflow: hidden; width: 72px; }
+  .prow .p-share .share-bar i { display: block; height: 100%; border-radius: 3px; }
+
+  /* 房间子行 */
+  .rrow td { padding-top: 6px; padding-bottom: 6px; }
+  .rrow .r-name { padding-left: 30px; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #334155; }
+  .rrow .r-name::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
+  .rrow:hover td { background: #f8fafc; }
+  .rrow .r-orders { color: #475569; }
+  .rrow .r-orders em { color: #94a3b8; font-style: normal; font-size: 11px; }
+  .rrow .r-rev { font-weight: 600; color: #0f172a; }
+  .rrow .r-ap { color: #94a3b8; font-size: 12px; }
+  .rrow.hidden { display: none; }
+
+  /* 合计行 */
+  .pfoot td { background: #fafbfc; font-weight: 700; color: #0f172a; border-top: 1px solid #eef1f6; }
+  .pfoot .pf-label { font-size: 12px; color: var(--text-secondary); font-weight: 600; }
+
+  @media (max-width: 768px) {
+    .provider-table .hide-sm { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -271,11 +302,26 @@ return;
 
   <!-- 各服务商直播间销量汇总（仅"全部直播间"时显示） -->
   <div class="chart-card full-width" id="providerSection" style="display:none;margin:16px 0;">
-    <h2>🏢 各服务商直播间销量汇总</h2>
-    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">
-      按直播间归属的服务商分组，汇总当日各直播间订单与销售额。点击卡片标题可展开/收起明细。
+    <div class="provider-toolbar">
+      <h2 style="margin:0;">🏢 各服务商直播间销量汇总</h2>
+      <button class="provider-toggle-all" id="providerToggleAll" onclick="toggleAllProviders()">全部收起</button>
     </div>
-    <div class="provider-grid" id="providerGrid"></div>
+    <div class="provider-hint" style="margin-bottom:12px;">
+      按直播间归属的服务商分组，汇总当日各直播间订单与销售额。点击服务商行可展开/收起其直播间明细。
+    </div>
+    <div class="provider-wrap" style="overflow-x:auto;">
+      <table class="provider-table" id="providerTable">
+        <thead><tr>
+          <th>服务商 / 直播间</th>
+          <th class="num hide-sm">直播间数</th>
+          <th class="num">订单数</th>
+          <th class="num">销售额</th>
+          <th class="num">占比</th>
+          <th class="num hide-sm">均价</th>
+        </tr></thead>
+        <tbody id="providerTbody"></tbody>
+      </table>
+    </div>
   </div>
 
   <!-- Product + hourly charts -->
@@ -850,61 +896,108 @@ function renderServiceProvider(d) {
   });
 
   const totalOrders = d.total_orders;
-  const totalRevenue = d.total_revenue;
+  const maxRev = teamOrder.length ? Math.max.apply(null, teamOrder.map(function(t) { return groups[t].revenue; })) : 0;
 
   let html = '';
   teamOrder.forEach(function(t, idx) {
     const g = groups[t];
     const color = TEAM_COLORS[t] || '#94a3b8';
     const provider = SERVICE_PROVIDER[t] || t;
-    const share = totalOrders > 0 ? (g.orders / totalOrders * 100).toFixed(1) : '0.0';
-    const cardId = 'prov-' + idx;
+    const share = totalOrders > 0 ? (g.orders / totalOrders * 100) : 0;
+    const ap = g.orders > 0 ? (g.revenue / g.orders) : 0;
+    const barW = maxRev > 0 ? (g.revenue / maxRev * 100) : 0;
+    const pid = 'prov-' + idx;
+    const collapsed = t !== '我司'; // 我司默认展开，其余默认收起
+    const tagStyle = t === '我司'
+      ? 'background:#FFD700;color:#333;'
+      : 'background:' + color + ';';
+
     // 房间按销售额降序
     g.rooms.sort(function(a, b) { return b.revenue - a.revenue; });
-    const maxRev = g.rooms.length ? g.rooms[0].revenue : 0;
 
     const rows = g.rooms.map(function(rm) {
       const rpct = g.orders > 0 ? (rm.orders / g.orders * 100).toFixed(1) : '0.0';
-      const barW = maxRev > 0 ? Math.max(3, (rm.revenue / maxRev * 100).toFixed(1)) : 0;
-      return '<tr>' +
-        '<td><span style="font-weight:600;">' + rm.name + '</span></td>' +
-        '<td class="num">' + rm.orders.toLocaleString() + ' <span style="color:#94a3b8;font-size:11px;">(' + rpct + '%)</span></td>' +
-        '<td class="num" style="font-weight:600;">' + formatCurrency(rm.revenue) + '</td>' +
-        '<td class="num" style="color:#64748b;">' + formatCurrency(rm.avg_price) + '</td>' +
+      return '<tr class="rrow' + (collapsed ? ' hidden' : '') + '">' +
+        '<td><span class="r-name">' + rm.name + '</span></td>' +
+        '<td class="num hide-sm"></td>' +
+        '<td class="num r-orders">' + rm.orders.toLocaleString() + ' <em>(' + rpct + '%)</em></td>' +
+        '<td class="num r-rev">' + formatCurrency(rm.revenue) + '</td>' +
+        '<td class="num"></td>' +
+        '<td class="num r-ap hide-sm">' + formatCurrency(rm.avg_price) + '</td>' +
       '</tr>';
     }).join('');
 
-    html += '<div class="provider-card' + (t === '我司' ? ' ours' : '') + '" id="' + cardId + '">' +
-      '<div class="provider-head" onclick="toggleProvider(\'' + cardId + '\')">' +
-        '<div class="ph-name">' +
-          '<span class="dot" style="background:' + color + '"></span>' +
-          '<span>' + t + '</span>' +
-          '<span class="ph-sub">' + (provider !== t ? '（' + provider + '）' : '') + g.rooms.length + ' 个直播间</span>' +
-        '</div>' +
-        '<div class="ph-total">' +
-          '<div class="ph-rev">' + formatCurrency(g.revenue) + '</div>' +
-          '<div class="ph-orders">' + g.orders.toLocaleString() + ' 单 · 占 ' + share + '%</div>' +
-        '</div>' +
-      '</div>' +
-      '<div class="provider-body" id="' + cardId + '-body" style="display:' + (t === '我司' ? 'block' : 'none') + ';">' +
-        '<table class="provider-table">' +
-          '<thead><tr><th>直播间</th><th class="num">订单数</th><th class="num">销售额</th><th class="num">均价</th></tr></thead>' +
-          '<tbody>' + rows + '</tbody>' +
-        '</table>' +
-      '</div>' +
-      '<div class="provider-foot">' +
-        '<span>合计 ' + g.rooms.length + ' 个直播间</span>' +
-        '<span class="provider-toggle" onclick="toggleProvider(\'' + cardId + '\')">展开/收起 ▾</span>' +
-      '</div>' +
-    '</div>';
+    html += '<tr class="prow' + (t === '我司' ? ' ours' : '') + (collapsed ? ' collapsed' : '') + '" id="' + pid + '" onclick="toggleProvider(\'' + pid + '\')">' +
+      '<td><span class="p-name">' +
+        '<span class="p-chev">▼</span>' +
+        '<span class="p-dot" style="background:' + color + '"></span>' +
+        '<span class="p-main">' + provider + '</span>' +
+        '<span class="p-tag" style="' + tagStyle + '">' + (t === '我司' ? '★ ' : '') + t + '</span>' +
+      '</span></td>' +
+      '<td class="num hide-sm p-sub">' + g.rooms.length + '</td>' +
+      '<td class="num">' + g.orders.toLocaleString() + '</td>' +
+      '<td class="num p-rev">' + formatCurrency(g.revenue) + '</td>' +
+      '<td class="num p-share"><span class="share-bar"><i style="width:' + barW.toFixed(1) + '%;background:' + color + '"></i></span>' + share.toFixed(1) + '%</td>' +
+      '<td class="num p-sub hide-sm">' + formatCurrency(ap) + '</td>' +
+    '</tr>' + rows;
   });
 
-  document.getElementById('providerGrid').innerHTML = html;
+  // 合计行
+  html += '<tr class="pfoot">' +
+    '<td><span class="pf-label">全平台合计</span></td>' +
+    '<td class="num hide-sm">' + roomNames.length + '</td>' +
+    '<td class="num">' + totalOrders.toLocaleString() + '</td>' +
+    '<td class="num">' + formatCurrency(d.total_revenue) + '</td>' +
+    '<td class="num">100%</td>' +
+    '<td class="num hide-sm">' + formatCurrency(d.avg_price) + '</td>' +
+  '</tr>';
+
+  document.getElementById('providerTbody').innerHTML = html;
+  updateToggleAllLabel();
 }
 
-function toggleProvider(cardId) {
-  const body = document.getElementById(cardId + '-body');
-  if (body) body.style.display = body.style.display === 'none' ? 'block' : 'none';
+function toggleProvider(pid) {
+  const row = document.getElementById(pid);
+  if (!row) return;
+  const collapsed = row.classList.contains('collapsed');
+  // 该服务商下的所有房间子行（紧随其后的 .rrow）
+  let next = row;
+  while ((next = next.nextElementSibling) && next.classList.contains('rrow')) {
+    if (collapsed) next.classList.remove('hidden');
+    else next.classList.add('hidden');
+  }
+  row.classList.toggle('collapsed', !collapsed);
+  updateToggleAllLabel();
+}
+
+function toggleAllProviders() {
+  const tbody = document.getElementById('providerTbody');
+  const rows = tbody.querySelectorAll('tr.prow');
+  if (!rows.length) return;
+  const anyCollapsed = Array.prototype.some.call(rows, function(r) { return r.classList.contains('collapsed'); });
+  rows.forEach(function(r) {
+    if (anyCollapsed) r.classList.remove('collapsed');
+    else r.classList.add('collapsed');
+  });
+  // 统一同步所有子行显隐
+  const allRows = tbody.querySelectorAll('tr');
+  let curProw = null, expanded = anyCollapsed;
+  allRows.forEach(function(tr) {
+    if (tr.classList.contains('prow')) { curProw = tr; return; }
+    if (tr.classList.contains('rrow')) {
+      if (expanded) tr.classList.remove('hidden');
+      else tr.classList.add('hidden');
+    }
+  });
+  updateToggleAllLabel();
+}
+
+function updateToggleAllLabel() {
+  const btn = document.getElementById('providerToggleAll');
+  const rows = document.querySelectorAll('#providerTbody tr.prow');
+  if (!btn || !rows.length) return;
+  const anyCollapsed = Array.prototype.some.call(rows, function(r) { return r.classList.contains('collapsed'); });
+  btn.textContent = anyCollapsed ? '全部展开' : '全部收起';
 }
 
 function renderProductChart(d) {
