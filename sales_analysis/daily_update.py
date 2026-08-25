@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from team_config import TEAM_MAP, classify_room, ALL_TEAMS, OUR_TEAM, OUR_ROOMS, LIANGMI_ROOMS
+from team_config import TEAM_MAP, classify_room, ALL_TEAMS, OUR_TEAM, OUR_ROOMS, LIANGMI_ROOMS, TEAM_MARKERS
 from product_classifier import classify_product as shorten_product
 from utils import detect_excel_columns
 
@@ -132,8 +132,12 @@ def summarize_day(df):
     zongheng_rooms = [r for r, info in rooms.items() if info['type'] == '纵横']
     zhumeng_rooms = [r for r, info in rooms.items() if info['type'] == '逐梦']
     feina_rooms = [r for r, info in rooms.items() if info['type'] == '斐纳']
+    ningyun_rooms = [r for r, info in rooms.items() if info['type'] == '凝云']
+    lequn_rooms = [r for r, info in rooms.items() if info['type'] == '乐群']
+    chimu_rooms = [r for r, info in rooms.items() if info['type'] == '炽木电商']
     liangmi_rooms = [r for r, info in rooms.items() if info['type'] == '良米']
-    comp_rooms = jixie_rooms + zongheng_rooms + zhumeng_rooms + feina_rooms + liangmi_rooms
+    # 竞对 = 所有非我司房间（此前漏掉了凝云，新增团队也会自动纳入）
+    comp_rooms = [r for r, info in rooms.items() if info['type'] != '我司']
 
     # Type-level aggregates
     type_summary = {}
@@ -197,6 +201,9 @@ def summarize_day(df):
         'zongheng_rooms': zongheng_rooms,
         'zhumeng_rooms': zhumeng_rooms,
         'feina_rooms': feina_rooms,
+        'ningyun_rooms': ningyun_rooms,
+        'lequn_rooms': lequn_rooms,
+        'chimu_rooms': chimu_rooms,
         'liangmi_rooms': liangmi_rooms,
         'comp_rooms': comp_rooms,
         'type_summary': type_summary,
@@ -242,8 +249,8 @@ def print_comparison(today, yesterday=None):
     rooms = today.get('rooms', {})
 
     # ===== 团队总览 =====
-    team_colors = {'我司': '★', '机械空间': '◆', '纵横': '▲', '凝云': '●', '逐梦': '◇', '斐纳': '△', '良米': '·'}
-    print(f"\n  【四队总览】")
+    team_colors = TEAM_MARKERS
+    print(f"\n  【团队总览】")
     print(f"    {'':<15s} {'订单':>8s} {'占比':>8s} {'销售额':>14s} {'均价':>10s} {'直播间':>8s}")
     print(f"    {'-'*65}")
     total = today['total_orders']
