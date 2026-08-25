@@ -395,58 +395,63 @@ return;
 
   <!-- ===== 小米手环10Pro 我司 vs 良米 销量对比 ===== -->
   <div class="chart-card full-width b10pro-section" id="b10proSection" style="display:none;">
-    <h2>⌚ 小米手环10Pro · 我司 vs 良米 销量对比</h2>
+    <div class="provider-toolbar">
+      <h2 style="margin:0;">⌚ 小米手环10Pro · 我司 vs 良米 销量对比</h2>
+      <button class="provider-toggle-all" id="b10proToggleBtn" onclick="toggleB10proDetail()">查看详情 ▼</button>
+    </div>
     <div class="b10pro-kpis" id="b10proKpis"></div>
-    <div class="charts-row">
-      <div class="chart-card">
-        <h3>📺 直播端10Pro销量趋势（单量）</h3>
-        <div class="chart-container"><canvas id="chartB10proLive"></canvas></div>
+    <div id="b10proDetail" style="display:none;">
+      <div class="charts-row">
+        <div class="chart-card">
+          <h3>📺 直播端10Pro销量趋势（单量）</h3>
+          <div class="chart-container"><canvas id="chartB10proLive"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>🛒 商品卡端10Pro销量趋势（单量）</h3>
+          <div class="chart-container"><canvas id="chartB10proCard"></canvas></div>
+        </div>
       </div>
-      <div class="chart-card">
-        <h3>🛒 商品卡端10Pro销量趋势（单量）</h3>
-        <div class="chart-container"><canvas id="chartB10proCard"></canvas></div>
+      <div class="charts-row" style="grid-template-columns:repeat(3,1fr);">
+        <div class="chart-card">
+          <h3>📈 直播端销量趋势 · 我司 vs 良米（折线）</h3>
+          <div class="chart-container"><canvas id="chartB10proLiveLine"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>📈 商品卡销量趋势 · 我司 vs 良米（折线）</h3>
+          <div class="chart-container"><canvas id="chartB10proCardLine"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>📈 总销量趋势 · 我司 vs 良米（折线）</h3>
+          <div class="chart-container"><canvas id="chartB10proTotalLine"></canvas></div>
+        </div>
       </div>
+      <div class="charts-row" style="grid-template-columns:repeat(3,1fr);">
+        <div class="chart-card">
+          <h3>🔁 直播端 订单环比增长（单量，较前一日）</h3>
+          <div class="chart-container"><canvas id="chartB10proLiveHuanbi"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>🔁 商品卡 订单环比增长（单量，较前一日）</h3>
+          <div class="chart-container"><canvas id="chartB10proCardHuanbi"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <h3>🔁 总计 订单环比增长（单量，较前一日）</h3>
+          <div class="chart-container"><canvas id="chartB10proTotalHuanbi"></canvas></div>
+        </div>
+      </div>
+      <div class="b10pro-huanbi" id="b10proHuanbi"></div>
+      <div style="overflow-x:auto;margin-top:8px;">
+        <table class="b10pro-table" id="b10proTable">
+          <thead><tr>
+            <th>日期</th><th>我司<br>直播单量</th><th>良米<br>直播单量</th><th>直播<br>合计</th>
+            <th>我司<br>商品卡</th><th>良米<br>商品卡</th><th>商品卡<br>合计</th>
+            <th>我司<br>总计</th><th>良米<br>总计</th><th>总计</th><th>我司<br>占比</th>
+          </tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div id="b10proTableToggle" style="text-align:center;margin-top:12px;"></div>
     </div>
-    <div class="charts-row" style="grid-template-columns:repeat(3,1fr);">
-      <div class="chart-card">
-        <h3>📈 直播端销量趋势 · 我司 vs 良米（折线）</h3>
-        <div class="chart-container"><canvas id="chartB10proLiveLine"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>📈 商品卡销量趋势 · 我司 vs 良米（折线）</h3>
-        <div class="chart-container"><canvas id="chartB10proCardLine"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>📈 总销量趋势 · 我司 vs 良米（折线）</h3>
-        <div class="chart-container"><canvas id="chartB10proTotalLine"></canvas></div>
-      </div>
-    </div>
-    <div class="charts-row" style="grid-template-columns:repeat(3,1fr);">
-      <div class="chart-card">
-        <h3>🔁 直播端 订单环比增长（单量，较前一日）</h3>
-        <div class="chart-container"><canvas id="chartB10proLiveHuanbi"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>🔁 商品卡 订单环比增长（单量，较前一日）</h3>
-        <div class="chart-container"><canvas id="chartB10proCardHuanbi"></canvas></div>
-      </div>
-      <div class="chart-card">
-        <h3>🔁 总计 订单环比增长（单量，较前一日）</h3>
-        <div class="chart-container"><canvas id="chartB10proTotalHuanbi"></canvas></div>
-      </div>
-    </div>
-    <div class="b10pro-huanbi" id="b10proHuanbi"></div>
-    <div style="overflow-x:auto;margin-top:8px;">
-      <table class="b10pro-table" id="b10proTable">
-        <thead><tr>
-          <th>日期</th><th>我司<br>直播单量</th><th>良米<br>直播单量</th><th>直播<br>合计</th>
-          <th>我司<br>商品卡</th><th>良米<br>商品卡</th><th>商品卡<br>合计</th>
-          <th>我司<br>总计</th><th>良米<br>总计</th><th>总计</th><th>我司<br>占比</th>
-        </tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-    <div id="b10proTableToggle" style="text-align:center;margin-top:12px;"></div>
   </div>
 
   <!-- ===== 各直播间详细数据 -- 分小时分品类 + 环比 ===== -->
@@ -1969,6 +1974,11 @@ function renderB10proModule() {
   // Only show when all rooms selected
   if (currentRoom !== '__all__') { section.style.display = 'none'; return; }
   section.style.display = '';
+  // 默认收起详情，仅保留顶部 KPI 汇总卡
+  var detail = document.getElementById('b10proDetail');
+  var btn = document.getElementById('b10proToggleBtn');
+  if (detail) detail.style.display = 'none';
+  if (btn) btn.textContent = '查看详情 ▼';
 
   // Use the currently selected date's entry, not always the last day
   var selectedEntry = B10PRO_DATA.find(function(r) { return r.date === currentDate; });
@@ -2277,6 +2287,15 @@ function renderB10proModule() {
       '<div class="bk-pct">我司 ' + oPctAgg.toFixed(1) + '% | 良米 ' + allLmPct.toFixed(1) + '%（' + aggDays + '天累计）</div>' +
     '</div>' +
   '</div>';
+}
+
+function toggleB10proDetail() {
+  var detail = document.getElementById('b10proDetail');
+  var btn = document.getElementById('b10proToggleBtn');
+  if (!detail || !btn) return;
+  var collapsed = detail.style.display === 'none';
+  detail.style.display = collapsed ? 'block' : 'none';
+  btn.textContent = collapsed ? '收起 ▲' : '查看详情 ▼';
 }
 
 // Init — read date from URL hash (set by root sidebar) or default to latest
