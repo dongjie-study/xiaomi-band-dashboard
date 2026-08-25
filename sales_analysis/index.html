@@ -209,6 +209,29 @@
   .room-table tbody tr { transition:background var(--transition); }
   .room-table tbody tr:hover { background:#f8fafc; }
   .team-badge { display:inline-block; font-size:11px; padding:2px 9px; border-radius:10px; font-weight:600; color:#fff; }
+
+  /* ===== 各服务商直播间销量汇总 ===== */
+  .provider-section { margin: 16px 0; }
+  .provider-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 16px; }
+  .provider-card { background: #fff; border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid #e8ecf1; overflow: hidden; }
+  .provider-card.ours { border: 2px solid var(--accent-gold); }
+  .provider-head { padding: 14px 18px; cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .provider-head:hover { background: #f8fafc; }
+  .provider-head .ph-name { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .provider-head .ph-name .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+  .provider-head .ph-sub { font-size: 11px; color: var(--text-secondary); font-weight: 400; }
+  .provider-head .ph-total { text-align: right; }
+  .provider-head .ph-total .ph-rev { font-size: 16px; font-weight: 800; line-height: 1.1; }
+  .provider-head .ph-total .ph-orders { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+  .provider-body { border-top: 1px solid #f0f2f5; }
+  .provider-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  .provider-table th, .provider-table td { padding: 7px 12px; text-align: left; border-bottom: 1px solid #f5f5f5; }
+  .provider-table th { color: var(--text-secondary); font-weight: 600; font-size: 11px; background: #fafbfc; }
+  .provider-table td.num { text-align: right; }
+  .provider-table tbody tr:last-child td { border-bottom: none; }
+  .provider-table tbody tr:hover td { background: #f8fafc; }
+  .provider-foot { padding: 8px 18px; background: #fafbfc; font-size: 12px; color: var(--text-secondary); display: flex; justify-content: space-between; }
+  .provider-toggle { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--accent); font-weight: 600; cursor: pointer; }
 </style>
 </head>
 <body>
@@ -244,6 +267,15 @@ return;
   <div class="chart-card full-width" id="roomCardsSection" style="display:none;margin:16px 0;">
     <h2>各直播间对比</h2>
     <div id="roomCards"></div>
+  </div>
+
+  <!-- 各服务商直播间销量汇总（仅"全部直播间"时显示） -->
+  <div class="chart-card full-width" id="providerSection" style="display:none;margin:16px 0;">
+    <h2>🏢 各服务商直播间销量汇总</h2>
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:12px;">
+      按直播间归属的服务商分组，汇总当日各直播间订单与销售额。点击卡片标题可展开/收起明细。
+    </div>
+    <div class="provider-grid" id="providerGrid"></div>
   </div>
 
   <!-- Product + hourly charts -->
@@ -424,10 +456,24 @@ const HOURLY_CACHE = {};
 // 团队颜色与顺序（与 team_config.py TEAM_COLORS/TEAM_ORDER 保持一致）
 const TEAM_COLORS = {
   '我司': '#1E90FF', '机械空间': '#FF6B35', '纵横': '#7c6ff7',
-  '凝云': '#e74c3c', '逐梦': '#0d9488', '斐纳': '#c026d3', '良米': '#94a3b8'
+  '凝云': '#e74c3c', '逐梦': '#0d9488', '斐纳': '#c026d3',
+  '乐群': '#f59e0b', '炽木电商': '#65a30d', '良米': '#94a3b8'
 };
-const TEAM_ORDER = ['我司', '机械空间', '纵横', '凝云', '逐梦', '斐纳', '良米'];
-const COMP_TEAMS = ['机械空间', '纵横', '凝云', '逐梦', '斐纳', '良米'];
+const TEAM_ORDER = ['我司', '机械空间', '纵横', '凝云', '逐梦', '斐纳', '乐群', '炽木电商', '良米'];
+const COMP_TEAMS = ['机械空间', '纵横', '凝云', '逐梦', '斐纳', '乐群', '炽木电商', '良米'];
+
+// 团队 → 服务商名称（对应《小米店铺与服务商对应表》）
+const SERVICE_PROVIDER = {
+  '我司': '阳光雨厨',
+  '机械空间': '机器空间',
+  '纵横': '纵横 / 综讯',
+  '凝云': '渡云',
+  '逐梦': '逐梦',
+  '斐纳': '斐纳',
+  '乐群': '乐群',
+  '炽木电商': '炽木电商',
+  '良米': '良米'
+};
 
 // ===== 折叠/展开 通用逻辑（前 N 条默认展示，其余行带 extra-row 类折叠） =====
 function toggleTableRows(tableId, btnId, total, unit) {
@@ -775,6 +821,92 @@ function renderRoomCards(d) {
   renderToggleButton('roomCards', 'roomCardsToggle', sorted.length, 6, '个直播间');
 }
 
+function renderServiceProvider(d) {
+  const section = document.getElementById('providerSection');
+  const rooms = d.rooms || {};
+  const roomNames = Object.keys(rooms);
+  if (roomNames.length <= 1 || currentRoom !== '__all__') {
+    section.style.display = 'none';
+    return;
+  }
+  section.style.display = '';
+
+  // 按团队（服务商）分组直播间
+  const groups = {};
+  roomNames.forEach(function(rn) {
+    const r = rooms[rn];
+    const t = r.type || '良米';
+    if (!groups[t]) groups[t] = { rooms: [], orders: 0, revenue: 0 };
+    groups[t].rooms.push({ name: rn, orders: r.orders, revenue: r.revenue, avg_price: r.avg_price });
+    groups[t].orders += r.orders;
+    groups[t].revenue += r.revenue;
+  });
+
+  // 服务商排序：我司第一，其余按销售额降序
+  const teamOrder = Object.keys(groups).sort(function(a, b) {
+    if (a === '我司') return -1;
+    if (b === '我司') return 1;
+    return groups[b].revenue - groups[a].revenue;
+  });
+
+  const totalOrders = d.total_orders;
+  const totalRevenue = d.total_revenue;
+
+  let html = '';
+  teamOrder.forEach(function(t, idx) {
+    const g = groups[t];
+    const color = TEAM_COLORS[t] || '#94a3b8';
+    const provider = SERVICE_PROVIDER[t] || t;
+    const share = totalOrders > 0 ? (g.orders / totalOrders * 100).toFixed(1) : '0.0';
+    const cardId = 'prov-' + idx;
+    // 房间按销售额降序
+    g.rooms.sort(function(a, b) { return b.revenue - a.revenue; });
+    const maxRev = g.rooms.length ? g.rooms[0].revenue : 0;
+
+    const rows = g.rooms.map(function(rm) {
+      const rpct = g.orders > 0 ? (rm.orders / g.orders * 100).toFixed(1) : '0.0';
+      const barW = maxRev > 0 ? Math.max(3, (rm.revenue / maxRev * 100).toFixed(1)) : 0;
+      return '<tr>' +
+        '<td><span style="font-weight:600;">' + rm.name + '</span></td>' +
+        '<td class="num">' + rm.orders.toLocaleString() + ' <span style="color:#94a3b8;font-size:11px;">(' + rpct + '%)</span></td>' +
+        '<td class="num" style="font-weight:600;">' + formatCurrency(rm.revenue) + '</td>' +
+        '<td class="num" style="color:#64748b;">' + formatCurrency(rm.avg_price) + '</td>' +
+      '</tr>';
+    }).join('');
+
+    html += '<div class="provider-card' + (t === '我司' ? ' ours' : '') + '" id="' + cardId + '">' +
+      '<div class="provider-head" onclick="toggleProvider(\'' + cardId + '\')">' +
+        '<div class="ph-name">' +
+          '<span class="dot" style="background:' + color + '"></span>' +
+          '<span>' + t + '</span>' +
+          '<span class="ph-sub">' + (provider !== t ? '（' + provider + '）' : '') + g.rooms.length + ' 个直播间</span>' +
+        '</div>' +
+        '<div class="ph-total">' +
+          '<div class="ph-rev">' + formatCurrency(g.revenue) + '</div>' +
+          '<div class="ph-orders">' + g.orders.toLocaleString() + ' 单 · 占 ' + share + '%</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="provider-body" id="' + cardId + '-body" style="display:' + (t === '我司' ? 'block' : 'none') + ';">' +
+        '<table class="provider-table">' +
+          '<thead><tr><th>直播间</th><th class="num">订单数</th><th class="num">销售额</th><th class="num">均价</th></tr></thead>' +
+          '<tbody>' + rows + '</tbody>' +
+        '</table>' +
+      '</div>' +
+      '<div class="provider-foot">' +
+        '<span>合计 ' + g.rooms.length + ' 个直播间</span>' +
+        '<span class="provider-toggle" onclick="toggleProvider(\'' + cardId + '\')">展开/收起 ▾</span>' +
+      '</div>' +
+    '</div>';
+  });
+
+  document.getElementById('providerGrid').innerHTML = html;
+}
+
+function toggleProvider(cardId) {
+  const body = document.getElementById(cardId + '-body');
+  if (body) body.style.display = body.style.display === 'none' ? 'block' : 'none';
+}
+
 function renderProductChart(d) {
   const sorted = Object.entries(d.products).sort((a, b) => b[1].orders - a[1].orders);
   const labels = sorted.map(([name]) => name);
@@ -971,6 +1103,7 @@ function renderAll(d, prev) {
   renderComparison();
   renderProductTable(data);
   renderRoomCards(d);
+  renderServiceProvider(d);
   renderRoomHourlyOverlay(d);
   // renderHourlyBreakdown(data); // 逐小时产品粒度分析已隐藏
   renderProdRoomHourly(d);
