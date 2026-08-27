@@ -25,7 +25,8 @@ def run_sales(excel_path, our_path=None):
         cmd = [sys.executable, "daily_update.py", excel_path]
         if our_path:
             cmd.append(our_path)
-        subprocess.run(cmd, check=True)
+        env = {**os.environ, "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
+        subprocess.run(cmd, check=True, env=env)
 
         # Copy outputs to shared output
         for f in ["index.html", "dashboard.png", "room_comparison.png", "comparison.png"]:
