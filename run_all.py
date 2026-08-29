@@ -29,11 +29,19 @@ def run_sales(excel_path, our_path=None):
         subprocess.run(cmd, check=True, env=env)
 
         # Copy outputs to shared output
-        for f in ["index.html", "dashboard.png", "room_comparison.png", "comparison.png"]:
+        for f in ["index.html", "dashboard.png", "room_comparison.png", "comparison.png",
+                  "history.json", "b10pro_history.json"]:
             src = SALES_DIR / f
             dst = OUTPUT_DIR / f
             if src.exists():
                 shutil.copy2(src, dst)
+
+        # 同步 hourly 数据目录（index.html 按日期 fetch 使用）
+        hourly_src = SALES_DIR / "hourly"
+        hourly_dst = OUTPUT_DIR / "hourly"
+        if hourly_src.exists():
+            shutil.copytree(hourly_src, hourly_dst, dirs_exist_ok=True)
+
         print(f"\nOutputs copied to: {OUTPUT_DIR}")
     finally:
         os.chdir(ROOT)
