@@ -651,6 +651,7 @@
             <div class="panel">
                 <div class="panel-header">
                     <span class="dot"></span> 📋 <span id="detailTitle">直播间每日业绩明细</span>
+                    <button class="apply-btn" id="exportDetailBtn" style="margin-left:8px;" title="导出当前明细为Excel">📥 导出Excel</button>
                 </div>
                 <div class="panel-body" id="detailTableWrapper">
                     <table>
@@ -2089,6 +2090,7 @@
             function updateDetailTable(records, selectedRoomId) {
                 const tbody = elements.detailTableBody;
                 if (!records.length) {
+                    window._detailExportData = [];
                     tbody.innerHTML =
                         '<tr><td colspan="5" style="text-align:center;padding:32px;color:#999;">暂无匹配数据</td></tr>';
                     return;
@@ -2099,6 +2101,8 @@
                     if (a.roomId !== b.roomId && selectedRoomId === 'all') return a.roomName.localeCompare(b.roomName);
                     return (a.dailyRank || 999) - (b.dailyRank || 999);
                 });
+                window._detailExportData = sorted;
+                window._detailExportRoomId = selectedRoomId;
                 tbody.innerHTML = sorted.map(r => {
                     let rankHtml = '';
                     if (r.dailyRank === 1) rankHtml = '<span class="rank-cell rank-1">🥇1</span>';
@@ -2335,6 +2339,32 @@
                 }
             }
 
+            // ==================== 每日明细导出 ====================
+            function exportDetailToExcel() {
+                var rows = window._detailExportData || [];
+                if (!rows.length) { alert('当前明细暂无数据可导出'); return; }
+                var roomId = window._detailExportRoomId || 'all';
+                var isAll = roomId === 'all';
+                var data = isAll
+                    ? [['日期', '直播间', '主播', '班次', '销售额', '当日排名']]
+                    : [['日期', '主播', '班次', '销售额', '当日排名']];
+                rows.forEach(function(r) {
+                    var rank = (r.dailyRank === undefined || r.dailyRank === '-') ? '' : r.dailyRank;
+                    if (isAll) {
+                        data.push([r.date, r.roomName, r.anchor, r.shift, r.sales, rank]);
+                    } else {
+                        data.push([r.date, r.anchor, r.shift, r.sales, rank]);
+                    }
+                });
+                var ws = XLSX.utils.aoa_to_sheet(data);
+                if (isAll) ws['!cols'] = [{wch:12},{wch:22},{wch:12},{wch:8},{wch:14},{wch:10}];
+                else ws['!cols'] = [{wch:12},{wch:12},{wch:8},{wch:14},{wch:10}];
+                var wb = XLSX.utils.book_new();
+                var roomName = isAll ? '全部直播间' : getRoomById(roomId).name;
+                XLSX.utils.book_append_sheet(wb, ws, roomName + '每日明细');
+                XLSX.writeFile(wb, roomName + '_每日明细.xlsx');
+            }
+
             // ==================== 日第一导出 ====================
             function exportDailyChampionsToExcel() {
                 var champions = window._dailyChampionsExportData || [];
@@ -2452,6 +2482,7 @@
 
                 document.getElementById('exportDailyChampionsBtn').addEventListener('click', exportDailyChampionsToExcel);
                 document.getElementById('exportChampionRankingBtn').addEventListener('click', exportChampionRankingToExcel);
+                document.getElementById('exportDetailBtn').addEventListener('click', exportDetailToExcel);
 
                 const allDates = getAllDates();
                 if (allDates.length) {
