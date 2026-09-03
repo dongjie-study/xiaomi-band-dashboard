@@ -31,6 +31,8 @@ def classify_product(name):
     name = re.sub(r'【[^】]*】', '', name).strip()
     if '10Pro' in name or '10 Pro' in name:
         return '小米手环10 Pro'
+    elif '手环11' in name or '手环 11' in name or 'Band 11' in name or 'Band11' in name:
+        return '小米手环11'
     elif '10' in name and 'Pro' not in name and '9' not in name:
         return '小米手环10'
     elif '9 Pro' in name or '9Pro' in name:

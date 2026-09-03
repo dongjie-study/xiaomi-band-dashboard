@@ -449,16 +449,27 @@ def _write_stats_js(history):
     print(f"Stats data: {path}")
 
 
+# === 主打产品对比配置 ===
+# 9.7 起主推产品从「小米手环10 Pro」切换为「小米手环11」。
+# 只影响 _extract_b10pro 每天挑选商品的正则与展示名；历史已入库数据不动。
+# 拿到真实商品名后，如需精确匹配可在此调整 pattern。
+FOCUS_SWITCH_DATE = '2026-09-07'
+FOCUS_PRODUCT_BEFORE = {'pattern': r'10Pro|10 Pro', 'name': '小米手环10 Pro', 'short': '10Pro'}
+FOCUS_PRODUCT_AFTER = {'pattern': r'(?i)手环\s*11|Band\s*11', 'name': '小米手环11', 'short': '手环11'}
+
+
 def _extract_b10pro(df):
-    """Extract 10Pro comparison data: 我司 vs 良米, live vs card.
+    """Extract 主打产品对比数据 (9.7 前=10Pro，9.7 起=手环11): 我司 vs 良米, live vs card.
     Uses explicit OUR_ROOMS / LIANGMI_ROOMS lists — rooms not listed are excluded."""
-    b10p = df[df['product'].str.contains('10Pro|10 Pro', na=False)].copy()
+    day = str(df['date'].iloc[0])
+    cfg = FOCUS_PRODUCT_AFTER if day >= FOCUS_SWITCH_DATE else FOCUS_PRODUCT_BEFORE
+    b10p = df[df['product'].str.contains(cfg['pattern'], na=False, regex=True)].copy()
     b10p['team'] = b10p['room'].apply(
         lambda x: '我司' if str(x).strip() in OUR_ROOMS else ('良米' if str(x).strip() in LIANGMI_ROOMS else '其他')
     )
     b10p['is_card'] = b10p['room'].str.contains('商品卡', na=False)
 
-    result = {'date': str(df['date'].iloc[0])}
+    result = {'date': day, 'product': cfg['name'], 'product_short': cfg['short']}
     for team, key in [('我司', 'our'), ('良米', 'lm')]:
         t = b10p[b10p['team'] == team]
         live = t[~t['is_card']]

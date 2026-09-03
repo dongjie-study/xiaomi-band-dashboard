@@ -396,18 +396,18 @@ return;
   <!-- ===== 小米手环10Pro 我司 vs 良米 销量对比 ===== -->
   <div class="chart-card full-width b10pro-section" id="b10proSection" style="display:none;">
     <div class="provider-toolbar">
-      <h2 style="margin:0;">⌚ 小米手环10Pro · 我司 vs 良米 销量对比</h2>
+      <h2 style="margin:0;" id="b10proTitle">⌚ 小米手环10 Pro · 我司 vs 良米 销量对比</h2>
       <button class="provider-toggle-all" id="b10proToggleBtn" onclick="toggleB10proDetail()">查看详情 ▼</button>
     </div>
     <div class="b10pro-kpis" id="b10proKpis"></div>
     <div id="b10proDetail" style="display:none;">
       <div class="charts-row">
         <div class="chart-card">
-          <h3>📺 直播端10Pro销量趋势（单量）</h3>
+          <h3 id="b10proLiveChartTitle">📺 直播端10Pro销量趋势（单量）</h3>
           <div class="chart-container"><canvas id="chartB10proLive"></canvas></div>
         </div>
         <div class="chart-card">
-          <h3>🛒 商品卡端10Pro销量趋势（单量）</h3>
+          <h3 id="b10proCardChartTitle">🛒 商品卡端10Pro销量趋势（单量）</h3>
           <div class="chart-container"><canvas id="chartB10proCard"></canvas></div>
         </div>
       </div>
@@ -671,6 +671,8 @@ function groupProduct(name) {
 
   // 小米手环10 Pro（必须在10之前判断）
   if (/手环\s*10\s*Pro|手环10Pro/i.test(clean)) return '小米手环10 Pro';
+  // 小米手环11（必须在10之前判断）
+  if (/手环\s*11|Band\s*11/i.test(clean)) return '小米手环11';
   // 小米手环10 陶瓷版等变体 → 统一为 小米手环10
   if (/手环\s*10/.test(clean)) return '小米手环10';
   // 小米手环9 Pro
@@ -1984,6 +1986,14 @@ function renderB10proModule() {
   var selectedEntry = B10PRO_DATA.find(function(r) { return r.date === currentDate; });
   if (!selectedEntry) { selectedEntry = B10PRO_DATA[B10PRO_DATA.length - 1]; }
   var d = selectedEntry;
+  var productName = d.product || '小米手环10 Pro';
+  var productShort = d.product_short || '10Pro';
+  var _tEl = document.getElementById('b10proTitle');
+  if (_tEl) _tEl.textContent = '⌚ ' + productName + ' · 我司 vs 良米 销量对比';
+  var _ltEl = document.getElementById('b10proLiveChartTitle');
+  if (_ltEl) _ltEl.textContent = '📺 直播端' + productShort + '销量趋势（单量）';
+  var _ctEl = document.getElementById('b10proCardChartTitle');
+  if (_ctEl) _ctEl.textContent = '🛒 商品卡端' + productShort + '销量趋势（单量）';
   var latest = d;  // keep for hl-row highlight in table
   var our = d.our, lm = d.lm;
   var tLive = our.live_o + lm.live_o;
@@ -2000,7 +2010,7 @@ function renderB10proModule() {
 
   document.getElementById('b10proKpis').innerHTML =
     '<div class="b10pro-kpi">' +
-      '<div class="bk-title">📺 直播端 10Pro 销量对比（' + latest.date + '）</div>' +
+      '<div class="bk-title">📺 直播端 ' + productShort + ' 销量对比（' + latest.date + '）</div>' +
       '<div class="bk-vs">' +
         '<div class="bk-side"><div class="bk-val" style="color:#4f6ef7;">' + our.live_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">⭐ 我司</div><div class="bk-sub">' + fmt(our.live_a) + '</div></div>' +
         '<div class="bk-divider">VS</div>' +
@@ -2010,7 +2020,7 @@ function renderB10proModule() {
       '<div class="bk-pct">我司 ' + lpO.toFixed(1) + '% | 良米 ' + lpL.toFixed(1) + '%</div>' +
     '</div>' +
     '<div class="b10pro-kpi">' +
-      '<div class="bk-title">🛒 商品卡 10Pro 销量对比（' + latest.date + '）</div>' +
+      '<div class="bk-title">🛒 商品卡 ' + productShort + ' 销量对比（' + latest.date + '）</div>' +
       '<div class="bk-vs">' +
         '<div class="bk-side"><div class="bk-val" style="color:#4f6ef7;">' + our.card_o + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">⭐ 我司</div><div class="bk-sub">' + fmt(our.card_a) + '</div></div>' +
         '<div class="bk-divider">VS</div>' +
@@ -2020,7 +2030,7 @@ function renderB10proModule() {
       '<div class="bk-pct">我司 ' + cpO.toFixed(1) + '% | 良米 ' + cpL.toFixed(1) + '%</div>' +
     '</div>' +
     '<div class="b10pro-kpi">' +
-      '<div class="bk-title">📦 10Pro 总销量占比（' + latest.date + '）</div>' +
+      '<div class="bk-title">📦 ' + productShort + ' 总销量占比（' + latest.date + '）</div>' +
       '<div class="bk-vs">' +
         '<div class="bk-side"><div class="bk-val" style="color:#4f6ef7;">' + (our.live_o + our.card_o) + '<span style="font-size:0.7rem;font-weight:400;">单</span></div><div class="bk-lbl">⭐ 我司</div><div class="bk-sub">' + fmt(our.live_a + our.card_a) + '</div></div>' +
         '<div class="bk-divider">VS</div>' +
