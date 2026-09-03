@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from team_config import TEAM_MAP, classify_room, ALL_TEAMS, OUR_TEAM, OUR_ROOMS, LIANGMI_ROOMS, TEAM_MARKERS
+from team_config import TEAM_MAP, classify_room, ALL_TEAMS, OUR_TEAM, OUR_ROOMS, LIANGMI_ROOMS, TEAM_MARKERS, IGNORED_ROOMS
 from product_classifier import classify_product as shorten_product
 from utils import detect_excel_columns
 
@@ -81,6 +81,8 @@ def load_and_clean(filepath):
     df['hour'] = df['time'].dt.hour
     df['product_short'] = df['product'].apply(shorten_product)
     df['room'] = df['room'].astype(str).str.strip()
+    # 忽略不入库的直播间（归属未定）
+    df = df[~df['room'].isin(IGNORED_ROOMS)]
     # Classify by room name into teams
     df['type'] = df['room'].apply(classify_room)
     return df
