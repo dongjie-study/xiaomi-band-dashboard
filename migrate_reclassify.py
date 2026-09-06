@@ -29,6 +29,7 @@ BUCKETS = {
     '凝云': 'ningyun_rooms',
     '乐群': 'lequn_rooms',
     '炽木电商': 'chimu_rooms',
+    '米乐': 'mile_rooms',
     '良米': 'liangmi_rooms',
 }
 
