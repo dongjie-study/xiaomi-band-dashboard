@@ -393,21 +393,21 @@ return;
     <div id="prodRoomPanels"></div>
   </div>
 
-  <!-- ===== 小米手环10Pro 我司 vs 良米 销量对比 ===== -->
+  <!-- ===== 小米手环11 我司 vs 良米 销量对比 ===== -->
   <div class="chart-card full-width b10pro-section" id="b10proSection" style="display:none;">
     <div class="provider-toolbar">
-      <h2 style="margin:0;" id="b10proTitle">⌚ 小米手环10 Pro · 我司 vs 良米 销量对比</h2>
+      <h2 style="margin:0;" id="b10proTitle">⌚ 小米手环11 · 我司 vs 良米 销量对比</h2>
       <button class="provider-toggle-all" id="b10proToggleBtn" onclick="toggleB10proDetail()">查看详情 ▼</button>
     </div>
     <div class="b10pro-kpis" id="b10proKpis"></div>
     <div id="b10proDetail" style="display:none;">
       <div class="charts-row">
         <div class="chart-card">
-          <h3 id="b10proLiveChartTitle">📺 直播端10Pro销量趋势（单量）</h3>
+          <h3 id="b10proLiveChartTitle">📺 直播端手环11销量趋势（单量）</h3>
           <div class="chart-container"><canvas id="chartB10proLive"></canvas></div>
         </div>
         <div class="chart-card">
-          <h3 id="b10proCardChartTitle">🛒 商品卡端10Pro销量趋势（单量）</h3>
+          <h3 id="b10proCardChartTitle">🛒 商品卡端手环11销量趋势（单量）</h3>
           <div class="chart-container"><canvas id="chartB10proCard"></canvas></div>
         </div>
       </div>
@@ -1967,7 +1967,8 @@ async function loadB10proData() {
   try {
     var now = new Date();
     var cacheKey = now.getFullYear() + ('0' + (now.getMonth() + 1)).slice(-2) + ('0' + now.getDate()).slice(-2);
-    var resp = await fetch('./b10pro_history.json?_=' + cacheKey);
+    // 手环11 单独累计（9.7 起），不再读取 10Pro 的 b10pro_history.json
+    var resp = await fetch('./band11_history.json?_=' + cacheKey);
     if (!resp.ok) return;
     B10PRO_DATA = await resp.json();
   } catch(e) { B10PRO_DATA = null; }
@@ -1989,7 +1990,7 @@ function renderB10proModule() {
   var selectedEntry = B10PRO_DATA.find(function(r) { return r.date === currentDate; });
   if (!selectedEntry) { selectedEntry = B10PRO_DATA[B10PRO_DATA.length - 1]; }
   var d = selectedEntry;
-  var productName = d.product || '小米手环10 Pro';
+  var productName = d.product || '小米手环11';
   var productShort = d.product_short || '10Pro';
   var _tEl = document.getElementById('b10proTitle');
   if (_tEl) _tEl.textContent = '⌚ ' + productName + ' · 我司 vs 良米 销量对比';
@@ -2227,8 +2228,8 @@ function renderB10proModule() {
       '</tr>';
   }).join('');
 
-  // 7.30 - currentDate 汇总行
-  var cutoff = '2026-07-30';
+  // 手环11 从 9.7 起重新累计，10Pro 历史不计入
+  var cutoff = '2026-09-07';
   var agg = B10PRO_DATA.filter(function(r) { return r.date >= cutoff && r.date <= currentDate; }).reduce(function(acc, r) {
     acc.our_live_o += r.our.live_o; acc.our_live_a += r.our.live_a;
     acc.our_card_o += r.our.card_o; acc.our_card_a += r.our.card_a;

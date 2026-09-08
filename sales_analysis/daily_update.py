@@ -22,7 +22,6 @@ from utils import detect_excel_columns
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(DATA_DIR, 'history.json')
-B10PRO_FILE = os.path.join(DATA_DIR, 'b10pro_history.json')
 HOURLY_DIR = os.path.join(DATA_DIR, 'hourly')
 
 
@@ -415,9 +414,9 @@ def update(filepath, our_filepath=None):
     # Generate stats_data.js for root index.html overview
     _write_stats_js(history)
 
-    # Extract and save 10Pro comparison data
-    b10pro_day = _extract_b10pro(df)
-    _save_b10pro_history(b10pro_day)
+    # Extract and save 主打产品对比数据（10Pro / 手环11 分别入库）
+    focus_day = _extract_focus(df)
+    _save_focus_history(focus_day)
 
     return today, history
 
@@ -453,14 +452,16 @@ def _write_stats_js(history):
 
 # === 主打产品对比配置 ===
 # 9.7 起主推产品从「小米手环10 Pro」切换为「小米手环11」。
-# 只影响 _extract_b10pro 每天挑选商品的正则与展示名；历史已入库数据不动。
+# 10Pro 与 手环11 分别入库到不同文件，互不叠加累计：
+#   - b10pro_history.json  → 小米手环10 Pro（9.7 前，已冻结不再更新）
+#   - band11_history.json  → 小米手环11（9.7 起，单独累计）
 # 拿到真实商品名后，如需精确匹配可在此调整 pattern。
 FOCUS_SWITCH_DATE = '2026-09-07'
-FOCUS_PRODUCT_BEFORE = {'pattern': r'10Pro|10 Pro', 'name': '小米手环10 Pro', 'short': '10Pro'}
-FOCUS_PRODUCT_AFTER = {'pattern': r'(?i)手环\s*11|Band\s*11', 'name': '小米手环11', 'short': '手环11'}
+FOCUS_PRODUCT_BEFORE = {'pattern': r'10Pro|10 Pro', 'name': '小米手环10 Pro', 'short': '10Pro', 'file': 'b10pro_history.json'}
+FOCUS_PRODUCT_AFTER = {'pattern': r'(?i)手环\s*11|Band\s*11', 'name': '小米手环11', 'short': '手环11', 'file': 'band11_history.json'}
 
 
-def _extract_b10pro(df):
+def _extract_focus(df):
     """Extract 主打产品对比数据 (9.7 前=10Pro，9.7 起=手环11): 我司 vs 良米, live vs card.
     Uses explicit OUR_ROOMS / LIANGMI_ROOMS lists — rooms not listed are excluded."""
     day = str(df['date'].iloc[0])
@@ -483,22 +484,24 @@ def _extract_b10pro(df):
     return result
 
 
-def _save_b10pro_history(b10pro_day):
-    """Save/update b10pro_history.json with new day's data."""
+def _save_focus_history(focus_day):
+    """Save/update 主打产品对比 history. 按产品分别写入 b10pro_history.json / band11_history.json。"""
+    cfg = FOCUS_PRODUCT_AFTER if focus_day['date'] >= FOCUS_SWITCH_DATE else FOCUS_PRODUCT_BEFORE
+    path = os.path.join(DATA_DIR, cfg['file'])
     history = []
-    if os.path.exists(B10PRO_FILE):
-        with open(B10PRO_FILE, 'r', encoding='utf-8') as f:
+    if os.path.exists(path):
+        with open(path, 'r', encoding='utf-8') as f:
             history = json.load(f)
     # Upsert
-    existing = [i for i, d in enumerate(history) if d['date'] == b10pro_day['date']]
+    existing = [i for i, d in enumerate(history) if d['date'] == focus_day['date']]
     if existing:
-        history[existing[0]] = b10pro_day
+        history[existing[0]] = focus_day
     else:
-        history.append(b10pro_day)
+        history.append(focus_day)
     history.sort(key=lambda x: x['date'])
-    with open(B10PRO_FILE, 'w', encoding='utf-8') as f:
+    with open(path, 'w', encoding='utf-8') as f:
         json.dump(history, f, ensure_ascii=False, separators=(',', ':'))
-    print(f"10Pro data saved: {B10PRO_FILE} ({len(history)} days)")
+    print(f"{focus_day['product_short']} data saved: {path} ({len(history)} days)")
 
 
 if __name__ == '__main__':
