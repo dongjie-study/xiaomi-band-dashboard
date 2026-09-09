@@ -705,31 +705,6 @@
             </div>
         </div>
 
-        <!-- ==================== 手环预约期业绩 ==================== -->
-        <div class="panel" id="preorderPanel">
-            <div class="panel-header">
-                <span class="dot" style="background:#8b5cf6;"></span>
-                <span>🚀 手环预约期业绩（手环11 预约）</span>
-                <span class="month-period-badge" id="preorderPeriodLabel">9.7</span>
-            </div>
-            <div class="panel-body" style="max-height:500px;overflow-y:auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>排名</th>
-                            <th>主播</th>
-                            <th>时间</th>
-                            <th>穿戴设备GSV</th>
-                            <th>总GSV</th>
-                        </tr>
-                    </thead>
-                    <tbody id="preorderBody">
-                        <tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">暂无数据</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
         <!-- ==================== 日第一有效阈值管理 ==================== -->
         <div class="panel" id="championThresholdPanel">
             <div class="panel-header refund-mgmt-header">
@@ -865,6 +840,7 @@
                 { id: 'room_xiaomi_glasses', name: '小米AI眼镜直播间', color: '#06b6d4' },
                 { id: 'room_xiaomi_smart_device', name: '小米智能设备旗舰店直播间', color: '#ec4899' },
                 { id: 'room_xiaomi_band_flagship', name: '小米手环官旗直播间', color: '#14b8a6' },
+                { id: 'room_xiaomi_band_preorder', name: '手环预约期业绩', color: '#a855f7' },
             ];
 
             /**
@@ -886,6 +862,7 @@
                 'room_xiaomi_glasses': 2000,
                 'room_xiaomi_smart_device': 2000,
                 'room_xiaomi_band_flagship': 2000,
+                'room_xiaomi_band_preorder': 2000,
             };
 
             /**
@@ -1922,42 +1899,32 @@
                     { roomId: 'room_xiaomi_digital', shift: 'C', anchor: '申琰', sales: 92657.148 },
                     { roomId: 'room_xiaomi_digital', shift: 'D', anchor: '高智敏', sales: 51399.28 },
                     { roomId: 'room_xiaomi_digital', shift: 'E', anchor: '徐梦洁', sales: 6540.68 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '张蓬元', sales: 369767.48 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '陈苡妤', sales: 232046.53 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '周亚锦', sales: 234069.79 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '朱泓颖', sales: 209930.25 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '徐梦洁', sales: 207000.02 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '欧阳硕果', sales: 228767.46 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '王晨阳', sales: 172465.13 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '申琰', sales: 170720.95 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '周家会', sales: 143651.18 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '涂新亮', sales: 130744.2 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '宋紫如', sales: 91813.96 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '高珊珊', sales: 74302.33 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '高智敏', sales: 178395.37 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '韩婧晴', sales: 60767.45 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '王嘉琪', sales: 31325.58 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '李晓洋', sales: 43116.28 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '刘垚', sales: 42767.45 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '刘子源', sales: 28953.49 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '王瑞', sales: 28744.19 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '李亚娴', sales: 21767.44 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '王秋鸽', sales: 19465.12 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '李牧遥', sales: 17720.93 },
+                    { roomId: 'room_xiaomi_band_preorder', shift: 'B', anchor: '张艳丽', sales: 14790.7 },
                 ],
 
                 // 按日期添加新数据，格式同上
-            };
-
-            /**
-             * 手环预约期业绩（手环11 预约）
-             * 格式：'YYYY-MM-DD': [ { anchor, time, wearableGSV, totalGSV }, ... ]
-             * 与 DAILY_RECORDS 分开，独立展示
-             */
-            const PREORDER_RECORDS = {
-                '2026-09-07': [
-                    { anchor: '张蓬元', time: '06:00', wearableGSV: 375246.6156996, totalGSV: 369767.47795545 },
-                    { anchor: '陈苡妤', time: '07:00', wearableGSV: 235664.7857952, totalGSV: 232046.534279212 },
-                    { anchor: '周亚锦', time: '08:00', wearableGSV: 237591.9510996, totalGSV: 234069.790290667 },
-                    { anchor: '朱泓颖', time: '12:00', wearableGSV: 213089.4208008, totalGSV: 209930.253050556 },
-                    { anchor: '徐梦洁', time: '13:00', wearableGSV: 210061.0181796, totalGSV: 207000.020206381 },
-                    { anchor: '欧阳硕果', time: '09:00', wearableGSV: 190789.3651356, totalGSV: 228767.464191683 },
-                    { anchor: '王晨阳', time: '10:00', wearableGSV: 175096.7333712, totalGSV: 172465.133114315 },
-                    { anchor: '申琰', time: '11:00', wearableGSV: 173169.5680668, totalGSV: 170720.946897544 },
-                    { anchor: '周家会', time: '14:00', wearableGSV: 145913.944476, totalGSV: 143651.176813259 },
-                    { anchor: '涂新亮', time: '15:00', wearableGSV: 132699.0966744, totalGSV: 130744.198809153 },
-                    { anchor: '宋紫如', time: '16:00', wearableGSV: 93329.8625988, totalGSV: 91813.9624508249 },
-                    { anchor: '高珊珊', time: '17:00', wearableGSV: 75434.7562008, totalGSV: 74302.3328344441 },
-                    { anchor: '高智敏', time: '18:00', wearableGSV: 181153.5386136, totalGSV: 178395.366251337 },
-                    { anchor: '韩婧晴', time: '21:00', wearableGSV: 61669.2897408, totalGSV: 60767.4477923013 },
-                    { anchor: '王嘉琪', time: '22:00', wearableGSV: 55061.86584, totalGSV: 31325.584453207 },
-                    { anchor: '李晓洋', time: '19:00', wearableGSV: 43774.1833428, totalGSV: 43116.2832785788 },
-                    { anchor: '刘垚', time: '20:00', wearableGSV: 43498.8740136, totalGSV: 42767.4460352247 },
-                    { anchor: '刘子源', time: '23:00', wearableGSV: 29458.0982244, totalGSV: 28953.4911983984 },
-                    { anchor: '王瑞', time: '00:00', wearableGSV: 29182.7888952, totalGSV: 28744.1888523859 },
-                    { anchor: '李亚娴', time: '01:00', wearableGSV: 22024.746336, totalGSV: 21767.4439853019 },
-                    { anchor: '王秋鸽', time: '02:00', wearableGSV: 19822.2717024, totalGSV: 19465.1181791642 },
-                    { anchor: '李牧遥', time: '03:00', wearableGSV: 17895.106398, totalGSV: 17720.9319623932 },
-                    { anchor: '张艳丽', time: '04:00', wearableGSV: 15142.013106, totalGSV: 14790.699118218 },
-                ],
             };
 
             // ==================== 辅助函数 ====================
@@ -2431,37 +2398,6 @@
                 });
             }
 
-            // ==================== 手环预约期业绩 ====================
-            function updatePreorderPanel() {
-                const body = document.getElementById('preorderBody');
-                const dates = Object.keys(PREORDER_RECORDS).sort();
-                const latest = dates[dates.length - 1];
-                if (!latest) {
-                    body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">暂无数据</td></tr>';
-                    return;
-                }
-                document.getElementById('preorderPeriodLabel').textContent = latest.slice(5);
-                const records = PREORDER_RECORDS[latest].slice().sort((a, b) => (b.totalGSV || 0) - (a.totalGSV || 0));
-                if (!records.length) {
-                    body.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">暂无数据</td></tr>';
-                    return;
-                }
-                body.innerHTML = records.map((r, idx) => {
-                    let rankBadge = '';
-                    if (idx === 0) rankBadge = '<span class="rank-cell rank-1">🥇 1</span>';
-                    else if (idx === 1) rankBadge = '<span class="rank-cell rank-2">🥈 2</span>';
-                    else if (idx === 2) rankBadge = '<span class="rank-cell rank-3">🥉 3</span>';
-                    else rankBadge = `<span class="rank-cell">${idx + 1}</span>`;
-                    return `<tr>
-                        <td>${rankBadge}</td>
-                        <td><strong>${r.anchor}</strong></td>
-                        <td>${r.time}</td>
-                        <td>${formatMoney(r.wearableGSV)}</td>
-                        <td class="highlight-sales">${formatMoney(r.totalGSV)}</td>
-                    </tr>`;
-                }).join('');
-            }
-
             // ==================== 日第一功能 ====================
 
             function ensureChampionThresholds() {
@@ -2679,7 +2615,6 @@
                 updateRefundMgmtPanel();
                 updateChampionThresholdPanel();
                 updateDailyChampionsAndRanking();
-                updatePreorderPanel();
             }
 
             // ==================== 初始化 ====================
