@@ -146,8 +146,7 @@
             margin-right: 2px;
             white-space: nowrap;
         }
-        .filter-btn,
-        .month-btn {
+        .filter-btn {
             padding: 7px 14px;
             border-radius: 18px;
             border: 1.5px solid var(--border);
@@ -160,14 +159,12 @@
             white-space: nowrap;
             user-select: none;
         }
-        .filter-btn:hover,
-        .month-btn:hover {
+        .filter-btn:hover {
             border-color: var(--primary);
             color: var(--primary);
             background: #f8f9ff;
         }
-        .filter-btn.active,
-        .month-btn.active {
+        .filter-btn.active {
             background: var(--primary);
             color: #fff;
             border-color: var(--primary);
@@ -447,11 +444,6 @@
             color: var(--text-secondary);
             font-size: 0.72rem;
         }
-        .month-btn-group {
-            display: inline-flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
 
         .refund-rate-input {
             width: 70px;
@@ -576,7 +568,7 @@
             <input type="date" id="dateEnd" title="结束日期">
             <button class="apply-btn" id="applyCustomRange">应用</button>
             <span style="margin-left:12px;" class="filter-label">📆 按月</span>
-            <span class="month-btn-group" id="monthFilterButtons"></span>
+            <select class="month-select" id="monthFilterSelect" title="选择月份快速筛选该月数据"></select>
             <span style="margin-left:12px;" class="filter-label">🎙️ 直播间</span>
             <select class="room-select" id="roomSelect">
                 <option value="all">全部直播间</option>
@@ -2836,8 +2828,10 @@
             }
 
             // ==================== 顶部「按月」快捷筛选 ====================
-            function clearMonthFilterActive() {
-                document.querySelectorAll('#monthFilterButtons .month-btn').forEach(b => b.classList.remove('active'));
+            // 回到"不限月份"（点近N天 / 手动改日期时调用）
+            function resetMonthFilterSelect() {
+                const sel = document.getElementById('monthFilterSelect');
+                if (sel) sel.value = '';
             }
 
             // 把时间筛选切到指定自然月（首日 ~ 末日），再全局刷新
@@ -2852,19 +2846,16 @@
                 refreshAll();
             }
 
-            function initMonthFilterButtons() {
-                const wrap = document.getElementById('monthFilterButtons');
+            function initMonthFilterSelect() {
+                const sel = document.getElementById('monthFilterSelect');
                 const months = getAvailableMonths();
-                wrap.innerHTML = months.map(m => {
+                sel.innerHTML = '<option value="">不限月份</option>' + months.map(m => {
                     const y = m.slice(0, 4), mo = parseInt(m.slice(5, 7), 10);
-                    return `<button class="month-btn" data-month="${m}" title="${y}年${mo}月（${m}）">${mo}月</button>`;
+                    return `<option value="${m}">${y}年${mo}月</option>`;
                 }).join('');
-                wrap.querySelectorAll('.month-btn').forEach(btn => {
-                    btn.addEventListener('click', function() {
-                        applyMonthRange(this.dataset.month);
-                        clearMonthFilterActive();
-                        this.classList.add('active');
-                    });
+                sel.addEventListener('change', function() {
+                    if (!this.value) return;
+                    applyMonthRange(this.value);
                 });
             }
 
@@ -2939,18 +2930,18 @@
                         this.classList.add('active');
                         document.getElementById('dateStart').value = '';
                         document.getElementById('dateEnd').value = '';
-                        clearMonthFilterActive();
+                        resetMonthFilterSelect();
                         refreshAll();
                     });
                 });
                 document.getElementById('applyCustomRange').addEventListener('click', () => {
                     filterBtns.forEach(b => b.classList.remove('active'));
-                    clearMonthFilterActive();
+                    resetMonthFilterSelect();
                     refreshAll();
                 });
-                // 手动改日期区间时，取消「按月」按钮的选中态
+                // 手动改日期区间时，把「按月」下拉框复位为"不限月份"
                 ['dateStart', 'dateEnd'].forEach(id => {
-                    document.getElementById(id).addEventListener('change', clearMonthFilterActive);
+                    document.getElementById(id).addEventListener('change', resetMonthFilterSelect);
                 });
                 elements.roomSelect.addEventListener('change', refreshAll);
 
@@ -2979,7 +2970,7 @@
             initRoomSelect();
             initMonthSelects();
             bindEvents();
-            initMonthFilterButtons();
+            initMonthFilterSelect();
             updateAnchorMonthlyStats();
             refreshAll();
         })();
