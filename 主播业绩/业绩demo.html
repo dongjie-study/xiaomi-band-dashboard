@@ -435,20 +435,20 @@
             color: var(--text-secondary);
             margin-left: 2px;
         }
-        /* 固定列宽：左三列按内容收紧，多余空间全部让给最右的「月销售额」列 */
+        /* 列宽按百分比铺满整宽：每列分到一份，避免出现某列超宽、右侧大片留白 */
         #anchorMonthlyStatsPanel table {
             table-layout: fixed;
+            min-width: 1000px;  /* 窄屏时列不被压扁，超出部分横向滚动 */
         }
-        #anchorMonthlyStatsPanel thead th:nth-child(1) { width: 200px; }
-        #anchorMonthlyStatsPanel thead th:nth-child(2) { width: 96px; }
-        #anchorMonthlyStatsPanel thead th:nth-child(3) { width: 96px; }
-        #anchorMonthlyStatsPanel thead th:nth-child(9) { width: auto; }
+        #anchorMonthlyStatsPanel thead th:nth-child(1) { width: 20%; }
+        #anchorMonthlyStatsPanel thead th:nth-child(2) { width: 9%; }
+        #anchorMonthlyStatsPanel thead th:nth-child(3) { width: 9%; }
+        #anchorMonthlyStatsPanel thead th.shift-col { width: 8%; }
+        #anchorMonthlyStatsPanel thead th:nth-child(9) { width: 22%; }
 
-        /* A~E 班次列：窄列居中，数字用等宽对齐 */
+        /* A~E 班次列：居中，数字用等宽对齐 */
         table thead th.shift-col,
         table tbody td.shift-col {
-            width: 48px;
-            min-width: 48px;
             text-align: center;
             padding-left: 4px;
             padding-right: 4px;
@@ -673,6 +673,7 @@
                 <span>🗓️ 主播月度出勤统计（各主播在各直播间的出勤天数 / 班次）</span>
                 <span class="month-period-badge" id="anchorStatsPeriodLabel">本月 -</span>
                 <select class="month-select" id="anchorStatsMonthSelect"></select>
+                <select class="room-select" id="anchorStatsRoomSelect" title="只看某个直播间"></select>
                 <button class="apply-btn" id="exportAnchorStatsBtn" style="margin-left:8px;" title="导出当前月份出勤统计为Excel">📥 导出Excel</button>
             </div>
             <div class="panel-body" style="max-height:500px;">
@@ -2792,8 +2793,14 @@
                 });
             }
 
+            // 只保留某个直播间的行（'all' = 全部）
+            function filterStatsByRoom(rows, roomId) {
+                return (!roomId || roomId === 'all') ? rows : rows.filter(r => r.roomId === roomId);
+            }
+
             function updateAnchorMonthlyStats() {
                 const month = document.getElementById('anchorStatsMonthSelect').value;
+                const roomId = document.getElementById('anchorStatsRoomSelect').value;
                 const label = document.getElementById('anchorStatsPeriodLabel');
                 const tbody = document.getElementById('anchorStatsBody');
                 if (!month) {
@@ -2802,12 +2809,13 @@
                     return;
                 }
 
-                const rows = getAnchorMonthlyStats(month);
+                const rows = filterStatsByRoom(getAnchorMonthlyStats(month), roomId);
                 const dayCount = getAllDates().filter(d => d.slice(0, 7) === month).length;
-                label.textContent = `本月 ${month} · ${dayCount}天 · ${rows.length}条`;
+                const roomLabel = (roomId && roomId !== 'all') ? ` · ${getRoomById(roomId).name}` : '';
+                label.textContent = `本月 ${month}${roomLabel} · ${dayCount}天 · ${rows.length}条`;
 
                 if (rows.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#999;">该月暂无数据</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#999;">该月该直播间暂无数据</td></tr>';
                     return;
                 }
 
@@ -2836,8 +2844,9 @@
 
             function exportAnchorStatsToExcel() {
                 const month = document.getElementById('anchorStatsMonthSelect').value;
-                const rows = month ? getAnchorMonthlyStats(month) : [];
-                if (!rows.length) { alert('当前月份暂无可导出的出勤数据'); return; }
+                const roomId = document.getElementById('anchorStatsRoomSelect').value;
+                const rows = month ? filterStatsByRoom(getAnchorMonthlyStats(month), roomId) : [];
+                if (!rows.length) { alert('当前筛选条件下暂无可导出的出勤数据'); return; }
                 // 与页面表格同口径：A~E 逐列给出该班次的出勤天数，未出勤留空
                 const data = [['月份', '直播间', '主播', '出勤天数', ...SHIFT_ORDER, '月销售额']];
                 rows.forEach(r => {
@@ -2855,9 +2864,10 @@
                 const ws = XLSX.utils.aoa_to_sheet(data);
                 ws['!cols'] = [{wch:10},{wch:22},{wch:12},{wch:10},
                                {wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:14}];
+                const roomTag = (roomId && roomId !== 'all') ? '_' + getRoomById(roomId).name : '';
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, '主播月度出勤统计');
-                XLSX.writeFile(wb, `主播月度出勤统计_${month}.xlsx`);
+                XLSX.writeFile(wb, `主播月度出勤统计_${month}${roomTag}.xlsx`);
             }
 
             // ==================== 顶部「按月」快捷筛选 ====================
@@ -2946,6 +2956,12 @@
                 refundSelect.addEventListener('change', updateRefundMgmtPanel);
                 statsSelect.addEventListener('change', updateAnchorMonthlyStats);
                 document.getElementById('exportAnchorStatsBtn').addEventListener('click', exportAnchorStatsToExcel);
+
+                // 出勤统计面板的「直播间」筛选（独立于顶部筛选栏）
+                const statsRoomSelect = document.getElementById('anchorStatsRoomSelect');
+                statsRoomSelect.innerHTML = '<option value="all">全部直播间</option>' +
+                    ROOMS.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+                statsRoomSelect.addEventListener('change', updateAnchorMonthlyStats);
                 summarySelect.addEventListener('change', () => {
                     // 同步退款比率管理面板的月份选择器
                     document.getElementById('refundMonthSelect').value = document.getElementById('summaryMonthSelect').value;
