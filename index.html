@@ -282,10 +282,10 @@
   }
 
   /* Overview panel */
-  /* 大屏时给两侧留一道窄边，避免内容无限拉宽；窄屏下不生效 */
+  /* 只在超宽屏（>2040px）兜底收一下，常规屏不产生两侧留白 */
   .overview {
     padding: 32px 36px 40px;
-    max-width: 1520px;
+    max-width: 1800px;
     margin: 0 auto;
   }
   .overview.hidden { display: none; }
@@ -626,6 +626,10 @@
   .pw-dialog .pw-error { color: var(--danger); font-size: 12px; margin-bottom: 10px; display: none; }
 
   /* ===== RESPONSIVE ===== */
+  /* 宽屏排 6 列：12 张卡正好 2 行，卡片保持窄，同时两侧不留白 */
+  @media (min-width: 1800px) {
+    .module-grid { grid-template-columns: repeat(6, 1fr); }
+  }
   /* 卡片窄于 250px 就退到 3 列，不然正文会被挤成太多行 */
   @media (max-width: 1360px) {
     .module-grid { grid-template-columns: repeat(3, 1fr); }

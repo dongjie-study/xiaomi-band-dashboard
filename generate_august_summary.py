@@ -194,7 +194,7 @@ body::before {{
 .badge.purple {{ background: rgba(124,111,247,.18); color: #b5a8ff; }}
 .kpi-row {{
   display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;
-  max-width: 1500px; margin: -28px auto 0; padding: 0 20px; position: relative; z-index: 10;
+  max-width: 1920px; margin: -28px auto 0; padding: 0 20px; position: relative; z-index: 10;
 }}
 @media (max-width: 1100px) {{ .kpi-row {{ grid-template-columns: repeat(3, 1fr); }} }}
 @media (max-width: 640px) {{ .kpi-row {{ grid-template-columns: repeat(2, 1fr); }} }}
@@ -211,7 +211,7 @@ body::before {{
 .kpi-card.comp .value {{ color: var(--clr-comp); }}
 .kpi-card.green .value {{ color: var(--clr-green); }}
 .section {{
-  max-width: 1500px; margin: 28px auto; padding: 0 20px; position: relative; z-index: 1;
+  max-width: 1920px; margin: 28px auto; padding: 0 20px; position: relative; z-index: 1;
 }}
 .section-title {{
   font-size: 22px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
