@@ -197,6 +197,36 @@ git add -A && git commit -m "feat: x.xx日订单数据更新" && git push
 
 ---
 
+## 四点五、设计令牌（theme.css）
+
+根目录 `theme.css` 是全站**唯一的视觉令牌来源**：品牌色、中性阶、语义色、圆角 3 档、阴影 3 档、间距阶、模块强调色。
+
+### 规则
+
+- **新页面必须引入**：`<link rel="stylesheet" href="theme.css">`（子目录页面用 `../theme.css`），**放在该页自己 `<style>` 之前**，这样页面内联规则仍可覆盖。页面不要自己再定义一套 `:root`。
+- **`common.css` 不要动**：它还服务 `主播分析/`、`主播管理/`、`竞争方案/`、`运营工具/` 等页面；改它的 `:root` 会波及那些页。
+- **数据语义色不要在 theme.css 里覆盖**：月度总结页的 `--clr-ours`（我方蓝）/`--clr-comp`（竞对橙）、违规报告页的 `--accent`（违规红）、业绩页 `ROOMS` 数组里的直播间色——这些在**编码数据含义**，不是装饰色。
+- **模块强调色**：在 `theme.css` 里按 `.module-card.<模块id>, .sidebar-nav a.<模块id> { --mod: …; --mod-bg: …; }` 加一行。**没加规则的新模块会自动落到默认小米橙，不会再出现「卡片掉色」**（首页历史上 `scripts`/`exam` 漏写就是这个原因）。
+
+### 换月时自动生效
+
+`generate_september_summary.py`（换月模板）已经带上了 theme.css 链接和统一令牌，所以复制出新月份生成器时**无需额外处理**。各月份页面的 `.nav-bar` 仍需按「四、月度切换」加入新月份链接；历史的 `generate_june/july/august_summary.py` 里的导航也要同步补链接，否则重跑会把手工加的链接冲掉。
+
+### 改动视觉时的红线
+
+改样式前先确认没动到 JS 依赖的选择器——详见各页面的硬约束：
+
+| 页面 | 绝对不能改 |
+|------|-----------|
+| `index.html` | `#sidebarNav` 的模块链接必须是它的**直接子元素**（JS 用 `>` 选择器）；`#overview` 内 4 张 `.stat-card` 顺序数量不可变（JS 按 `[0]~[3]` 索引）；全局函数名（内联 `onclick` 引用） |
+| `主播业绩/业绩demo.html` | 44 个 `getElementById` 目标、`.filter-btn.active`、`#anchorMonthlyStatsPanel` 的 9 列表头 + `table-layout:fixed` |
+| `sales_analysis/index.html` | `.prow` `.rrow` `.collapsed` `.hidden` `.extra-row` `.tab-prodroom` `.roomdet-panel` |
+| 月度总结页 | id 由生成器产出，**改样式要改生成器**，只改 HTML 会被下次重跑覆盖 |
+
+> 视觉改完跑一次 `python ui_check.py <标签>` 可自动核对：各页 JS 错误数、JS 引用的选择器是否仍可解析、关键数值是否与基线一致。改之前先跑一次 `python ui_check.py before` 存基线，改完再跑一次对比。
+
+---
+
 ## 五、自动提交规则
 
 - 数据更新完成后，**自动** `git add -A && git commit && git push`
@@ -218,3 +248,4 @@ git add -A && git commit -m "feat: x.xx日订单数据更新" && git push
 | 2026-09-11 | 出勤统计面板新增直播间下拉筛选；列宽改百分比铺满，消除右侧留白 |
 | 2026-09-11 | 从导航移除并删除 4 个停用模块：千川视频分析、小时数据分析、视觉分析、生态链+穿戴（仅改 `modules.json`，导航为动态渲染） |
 | 2026-09-11 | 修 `run_all.py` 漏拷 `stats_data.js`；补八月页面「九月」链接；重新生成九月月度总结页 |
+| 2026-09-11 | 新增 `theme.css` 统一设计令牌（品牌色/中性阶/语义色/圆角/阴影/间距/模块强调色）；8 个页面接入；修复首页话术库·考试模块卡片掉色、边框过深、移动端侧边栏文字溢出 |
