@@ -58,86 +58,6 @@
           "tag": "Violations"
         },
         {
-          "id": "video",
-          "title": "千川视频分析",
-          "url": "核心指标分析/核心指标报告.html",
-          "icon": "🎬",
-          "description": "千川视频素材核心指标：消耗/成交/ROI/CTR，W1-W4四周趋势追踪，新增标题分析+直播间画面分析+综合总结",
-          "tag": "Video Analytics",
-          "hasSubMenu": true,
-          "subModules": [
-            {
-              "id": "videoW1",
-              "title": "W1 (6.1-6.7)",
-              "subModules": [
-                { "id": "videoW1Core", "title": "核心指标", "url": "核心指标分析/核心指标报告.html" },
-                { "id": "videoW1Comp", "title": "竞对数据", "url": "核心指标分析/竞对数据报告.html" },
-                { "id": "videoW1Cmp", "title": "竞对对比", "url": "核心指标分析/竞对对比报告.html" }
-              ]
-            },
-            {
-              "id": "videoW2",
-              "title": "W2 (6.8-6.13)",
-              "subModules": [
-                { "id": "videoW2Core", "title": "核心指标", "url": "核心指标分析/核心指标报告_W2.html" },
-                { "id": "videoW2Comp", "title": "竞对数据", "url": "核心指标分析/竞对数据报告_W2.html" },
-                { "id": "videoW2Cmp", "title": "竞对对比", "url": "核心指标分析/竞对对比报告_W2.html" }
-              ]
-            },
-            {
-              "id": "videoW3",
-              "title": "W3 (6.14-6.21)",
-              "subModules": [
-                { "id": "videoW3Core", "title": "核心指标", "url": "核心指标分析/核心指标报告_W3.html" },
-                { "id": "videoW3Comp", "title": "竞对数据", "url": "核心指标分析/竞对数据报告_W3.html" },
-                { "id": "videoW3Cmp", "title": "竞对对比", "url": "核心指标分析/竞对对比报告_W3.html" }
-              ]
-            },
-            {
-              "id": "videoW4",
-              "title": "W4 (6.22-7.1)",
-              "subModules": [
-                { "id": "videoW4Core", "title": "核心指标+标题+画面", "url": "核心指标分析/核心指标报告_W4.html" },
-                { "id": "videoW4Comp", "title": "竞对数据+标题+画面", "url": "核心指标分析/竞对数据报告_W4.html" },
-                { "id": "videoW4Cmp", "title": "竞对对比+综合总结", "url": "核心指标分析/竞对对比报告_W4.html" }
-              ]
-            },
-            {
-              "id": "videoW5",
-              "title": "W5 (7.1-7.26)",
-              "badge": "HOT",
-              "subModules": [
-                { "id": "videoW5Hub", "title": "W5 总览", "url": "核心指标分析/千川视频分析_W5.html" },
-                { "id": "videoW5Video", "title": "视频数据分析", "url": "核心指标分析/千川视频分析_W5_视频数据.html" },
-                { "id": "videoW5Title", "title": "标题数据分析", "url": "核心指标分析/千川视频分析_W5_标题数据.html" },
-                { "id": "videoW5Room", "title": "画面数据分析", "url": "核心指标分析/千川视频分析_W5_画面数据.html" },
-                { "id": "videoW5Plan", "title": "周期方案", "url": "核心指标分析/千川视频提升方案_W5分析报告.html" }
-              ]
-            },
-            {
-              "id": "videoWeekly",
-              "title": "周度总结对比",
-              "url": "核心指标分析/周度总结对比.html"
-            }
-          ]
-        },
-        {
-          "id": "hourly",
-          "title": "小时数据分析",
-          "url": "小时分析/index.html",
-          "icon": "⏰",
-          "description": "拖入订单Excel，自动识别列名生成小时级报告：分品类热力图、环比趋势",
-          "tag": "Hourly"
-        },
-        {
-          "id": "visual",
-          "title": "视觉分析",
-          "url": "视觉分析/直播间视觉分析.html",
-          "icon": "👁️",
-          "description": "抖音直播间视觉对比：自家vs竞对画面分析、评分对比、改进建议",
-          "tag": "Visual"
-        },
-        {
           "id": "performance",
           "title": "业绩分析",
           "url": "主播业绩/业绩demo.html",
@@ -219,21 +139,6 @@
           "icon": "📊",
           "description": "千川or乘方投放数据分析与优化平台",
           "tag": "Tool",
-          "external": true,
-          "badge": "NEW"
-        }
-      ]
-    },
-    {
-      "name": "生态链+穿戴",
-      "modules": [
-        {
-          "id": "ecosystem",
-          "title": "生态链+穿戴",
-          "url": "https://dongjie-study.github.io/xiaomi-data-dashboard/dashboard.html",
-          "icon": "⌚",
-          "description": "小米生态链穿戴设备数据看板",
-          "tag": "Ecosystem",
           "external": true,
           "badge": "NEW"
         }
