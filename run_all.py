@@ -30,7 +30,7 @@ def run_sales(excel_path, our_path=None):
 
         # Copy outputs to shared output
         for f in ["index.html", "dashboard.png", "room_comparison.png", "comparison.png",
-                  "history.json", "b10pro_history.json", "band11_history.json"]:
+                  "history.json", "b10pro_history.json", "band11_history.json", "stats_data.js"]:
             src = SALES_DIR / f
             dst = OUTPUT_DIR / f
             if src.exists():

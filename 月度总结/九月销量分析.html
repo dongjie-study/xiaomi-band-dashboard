@@ -4,53 +4,135 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>9月销量分析 · 小米手环直播间</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <style>
 :root {
   --bg: #f0f4f8; --surface: #ffffff; --text: #0f172a; --text-secondary: #64748b;
-  --text-muted: #9ca3af; --border: #e8ecf1; --shadow-md: 0 4px 16px rgba(0,0,0,.06);
-  --radius: 14px; --clr-orange: #ff6900; --clr-ours: #1E90FF;
+  --text-muted: #9ca3af; --border: #e8ecf1; --shadow-sm: 0 1px 3px rgba(0,0,0,.03);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.06); --shadow-lg: 0 8px 30px rgba(0,0,0,.10);
+  --radius: 14px; --radius-sm: 10px; --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --clr-ours: #1E90FF; --clr-comp: #FF6B35; --clr-orange: #ff6900;
+  --clr-green: #1da85c; --clr-red: #FF4757; --clr-purple: #7c6ff7;
+  --clr-gold: #c8960c; --clr-cyan: #0ea89d;
 }
 * { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  background: var(--bg); color: var(--text); line-height: 1.6;
+  background: var(--bg); color: var(--text); line-height: 1.6; -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: radial-gradient(circle, rgba(148,163,184,.10) 1px, transparent 1px);
+  background-size: 22px 22px;
 }
 .nav-bar {
   display: flex; justify-content: center; gap: 6px; flex-wrap: wrap;
   padding: 10px 16px; background: rgba(255,255,255,.9);
   backdrop-filter: blur(14px); border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 100;
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,.03);
 }
 .nav-btn {
   padding: 7px 18px; border-radius: 20px; border: 1.5px solid #dde1e6;
   background: #fff; color: #555; font-size: 12.5px; cursor: pointer;
-  text-decoration: none; transition: all 0.25s; font-family: inherit; font-weight: 500;
+  text-decoration: none; transition: all var(--transition); font-family: inherit; font-weight: 500;
 }
 .nav-btn:hover { border-color: var(--clr-orange); color: var(--clr-orange); background: #fff7ed; }
-.nav-btn.active { background: linear-gradient(135deg, var(--clr-orange), #ff8c42); color: #fff; border-color: transparent; font-weight: 600; }
+.nav-btn.active { background: linear-gradient(135deg, var(--clr-orange), #ff8c42); color: #fff; border-color: transparent; font-weight: 600; box-shadow: 0 2px 8px rgba(255,105,0,.2); }
 .hero {
+  position: relative; z-index: 1;
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
   color: white; padding: 48px 20px 40px; text-align: center;
+  box-shadow: 0 4px 24px rgba(15,52,96,.15);
 }
-.hero h1 { font-size: 38px; font-weight: 800; }
+.hero h1 { font-size: 38px; font-weight: 800; letter-spacing: -.02em; }
 .hero h1 .mi { color: var(--clr-orange); }
-.hero p { font-size: 15px; opacity: 0.85; margin-top: 8px; }
+.hero p { font-size: 15px; opacity: 0.85; margin-top: 8px; max-width: 700px; margin-left: auto; margin-right: auto; }
 .hero .badge-row { margin-top: 16px; display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-.hero .badge { padding: 5px 16px; border-radius: 16px; font-size: 12px; font-weight: 600; }
+.hero .badge { padding: 5px 16px; border-radius: 16px; font-size: 12px; font-weight: 600; letter-spacing: .03em; }
 .badge.green { background: rgba(29,168,92,.18); color: #5ddf8a; }
+.badge.warn { background: rgba(255,105,0,.18); color: #ffa366; }
 .badge.info { background: rgba(30,144,255,.18); color: #80c8ff; }
-.container {
-  max-width: 800px; margin: 60px auto; padding: 40px;
-  background: var(--surface); border-radius: var(--radius);
-  box-shadow: var(--shadow-md); text-align: center;
+.badge.purple { background: rgba(124,111,247,.18); color: #b5a8ff; }
+.kpi-row {
+  display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;
+  max-width: 1500px; margin: -28px auto 0; padding: 0 20px; position: relative; z-index: 10;
 }
-.container h2 { font-size: 24px; color: var(--clr-ours); margin-bottom: 16px; }
-.container p { color: var(--text-secondary); font-size: 15px; margin-bottom: 8px; }
-.container .icon { font-size: 64px; margin-bottom: 20px; }
-.container .note { font-size: 13px; color: var(--text-muted); margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); }
+@media (max-width: 1100px) { .kpi-row { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 640px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+.kpi-card {
+  background: var(--surface); border-radius: var(--radius); padding: 18px 10px; text-align: center;
+  box-shadow: var(--shadow-md); border: 1px solid var(--border);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.kpi-card .label { font-size: 12px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
+.kpi-card .value { font-size: 30px; font-weight: 800; letter-spacing: -.02em; }
+.kpi-card .sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.kpi-card.ours .value { color: var(--clr-ours); }
+.kpi-card.comp .value { color: var(--clr-comp); }
+.kpi-card.green .value { color: var(--clr-green); }
+.section {
+  max-width: 1500px; margin: 28px auto; padding: 0 20px; position: relative; z-index: 1;
+}
+.section-title {
+  font-size: 22px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;
+}
+.section-title .icon { font-size: 24px; }
+.table-wrap {
+  background: var(--surface); border-radius: var(--radius); overflow: hidden;
+  box-shadow: var(--shadow-md); border: 1px solid var(--border);
+}
+table {
+  width: 100%; border-collapse: collapse; font-size: 13.5px;
+}
+thead th {
+  background: #f8fafc; padding: 11px 14px; text-align: left; font-weight: 600;
+  color: var(--text-secondary); font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em;
+  border-bottom: 2px solid var(--border); position: sticky; top: 0;
+}
+tbody td {
+  padding: 10px 14px; border-bottom: 1px solid #f1f5f9;
+}
+tbody tr:hover { background: #fafbfd; }
+tbody tr.our { background: #f0f7ff; }
+tbody tr.our:hover { background: #e6f1fc; }
+.rank-num {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%; font-weight: 700; font-size: 12px;
+}
+.rank-1 { background: #FFF1CC; color: #b8860b; }
+.rank-2 { background: #E8E8E8; color: #666; }
+.rank-3 { background: #FFE8D6; color: #c0561e; }
+.rank-other { color: var(--text-muted); }
+.tag-ours { color: var(--clr-ours); font-weight: 600; }
+.tag-comp { color: var(--clr-comp); }
+.amount { font-weight: 600; font-variant-numeric: tabular-nums; }
+.chart-container {
+  background: var(--surface); border-radius: var(--radius);
+  box-shadow: var(--shadow-md); border: 1px solid var(--border);
+  padding: 20px; margin-bottom: 20px;
+}
+.chart-box { width: 100%; height: 420px; }
+.chart-box.tall { height: 500px; }
+.grid-2 {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+}
+@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+.summary-box {
+  background: var(--surface); border-radius: var(--radius); padding: 28px 32px;
+  box-shadow: var(--shadow-md); border: 1px solid var(--border); line-height: 1.9;
+}
+.summary-box h3 { font-size: 17px; margin-bottom: 14px; color: var(--clr-orange); }
+.summary-box ul { padding-left: 20px; }
+.summary-box li { margin-bottom: 6px; font-size: 14px; }
+.summary-box .highlight { background: linear-gradient(180deg, transparent 60%, #fff3cd 60%); padding: 0 3px; }
+.week-table td { text-align: center; }
+.week-table td:first-child { text-align: left; font-weight: 600; }
 footer {
   text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 12px;
 }
+.footnote { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
 </style>
 </head>
 <body>
@@ -68,31 +150,369 @@ footer {
 
 <div class="hero">
   <h1><span class="mi">小米</span>手环直播间 · 9月销量分析</h1>
-  <p>2026年9月全月订单数据汇总 | 排名以<span style="color:#ffa366">销售额</span>为准</p>
+  <p>2026年9月全月订单数据汇总 — 含商品卡全渠道 | 排名以<span style="color:#ffa366">销售额</span>为准</p>
   <div class="badge-row">
-    <span class="badge green">9月1日开始</span>
-    <span class="badge info">等待数据录入</span>
+    <span class="badge green">10天数据（持续更新）</span>
+    <span class="badge info">我司·机械·纵横·良米 四队</span>
+    <span class="badge warn">31个直播间</span>
+    <span class="badge purple">9月数据追踪</span>
   </div>
 </div>
 
-<div class="container">
-  <div class="icon">📅</div>
-  <h2>9月数据尚未开始</h2>
-  <p>9月销量分析页面已就绪，将从<strong>2026年9月1日</strong>开始记录数据。</p>
-  <p>每日订单数据将通过 <code>daily_update.py</code> 自动录入系统。</p>
-  <p style="margin-top:16px">届时本页面将自动展示：</p>
-  <p style="color:var(--text-muted);font-size:13px">
-    ✓ KPI指标卡片 · ✓ 每日订单/销售额趋势图 · ✓ 直播间排名<br>
-    ✓ 产品排名 · ✓ 周度趋势 · ✓ 竞争格局分析 · ✓ 改进建议
-  </p>
-  <div class="note">
-    页面生成于 2026年09月02日 · 返回 <a href="八月销量分析.html" style="color:var(--clr-ours)">8月销量分析</a>
+<div class="kpi-row" id="kpiRow"></div>
+
+<div class="section">
+  <div class="grid-2">
+    <div class="chart-container"><div class="chart-box" id="chartDailyOrders"></div></div>
+    <div class="chart-container"><div class="chart-box" id="chartDailyRevenue"></div></div>
   </div>
+  <div class="chart-container"><div class="chart-box tall" id="chartWeekly"></div></div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="icon">🏪</span> 全渠道直播间排名 · 按销售额</div>
+  <div class="table-wrap"><table><thead><tr>
+    <th>#</th><th>直播间</th><th>团队</th><th>订单数</th><th>销售额</th><th>占比</th><th>均价</th><th>出勤</th>
+  </tr></thead><tbody id="roomTableBody"></tbody></table></div>
+</div>
+
+<div class="section">
+  <div class="grid-2">
+    <div>
+      <div class="section-title"><span class="icon">⭐</span> 我方直播间排名 · 按销售额</div>
+      <div class="table-wrap"><table><thead><tr>
+        <th>#</th><th>直播间</th><th>订单数</th><th>销售额</th><th>占比</th><th>均价</th>
+      </tr></thead><tbody id="ourRoomTable"></tbody></table></div>
+    </div>
+    <div>
+      <div class="section-title"><span class="icon">📦</span> 产品排名 TOP12 · 按销售额</div>
+      <div class="table-wrap"><table><thead><tr>
+        <th>#</th><th>产品</th><th>订单数</th><th>销售额</th><th>占比</th><th>均价</th>
+      </tr></thead><tbody id="prodTable"></tbody></table></div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="icon">📅</span> 周度趋势</div>
+  <div class="table-wrap"><table class="week-table"><thead><tr>
+    <th>周期</th><th>天数</th><th>全渠道订单</th><th>全渠道销售额</th><th>我方订单</th><th>我方份额</th><th>我方销售额</th><th>日均我方订单</th>
+  </tr></thead><tbody id="weekTable"></tbody></table></div>
+  <div class="chart-container" style="margin-top:20px"><div class="chart-box" id="chartWeeklyShare"></div></div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="icon">🔍</span> 竞对直播间 TOP8 · 按销售额</div>
+  <div class="table-wrap"><table><thead><tr>
+    <th>#</th><th>直播间</th><th>团队</th><th>订单数</th><th>销售额</th><th>占比</th><th>均价</th><th>出勤天数</th>
+  </tr></thead><tbody id="compTable"></tbody></table></div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="icon">⚔️</span> 竞争格局深度分析</div>
+  <div class="summary-box" id="competitiveAnalysis"></div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="icon">💡</span> 改进建议</div>
+  <div class="summary-box" id="improvementSuggestions"></div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="icon">🧭</span> 后续方向</div>
+  <div class="summary-box" id="futureDirection"></div>
+</div>
+
+<div class="section">
+  <div class="section-title"><span class="icon">📊</span> 9月总结</div>
+  <div class="summary-box" id="summaryBox"></div>
 </div>
 
 <footer>
-  小米手环直播间 · 9月销量分析 · 数据来源：抖音直播间订单
+  数据来源：抖音直播间订单 · 分析周期：2026-09-01—2026-09-10（10天）· 自动生成于2026年09月11日<br>
+  ★ 我司 = 小米官方手环直播间 / 小米数码旗舰店 / 小米官方手表 / 小米官方耳机直播间 / 小米官旗手表直播间 / 小米智能设备旗舰店直播间 / 小米手环官旗直播间<br>
+  ◆ 机械空间 = 小米智能穿戴国补号 / 小米智能穿戴授权号 &nbsp;|&nbsp; ▲ 纵横 = 小米官方手表直播号 &nbsp;|&nbsp; · 良米 = 其他
 </footer>
+
+<script>
+const DATA = {"all_orders": 109438, "all_rev": 39334967.21, "our_orders": 31263, "our_rev": 11429984.02, "our_share": 28.6, "our_avg_price": 366, "all_avg_price": 359, "team_totals": {"我司": {"orders": 31263, "revenue": 11429984.02, "rooms": 8, "avg_price": 366}, "机械空间": {"orders": 9046, "revenue": 3056125.72, "rooms": 2, "avg_price": 338}, "纵横": {"orders": 56, "revenue": 38784.29, "rooms": 1, "avg_price": 693}, "凝云": {"orders": 1145, "revenue": 397259.65, "rooms": 1, "avg_price": 347}, "逐梦": {"orders": 2841, "revenue": 942836.16, "rooms": 1, "avg_price": 332}, "斐纳": {"orders": 1793, "revenue": 599921.75, "rooms": 2, "avg_price": 335}, "乐群": {"orders": 489, "revenue": 222856.05000000002, "rooms": 1, "avg_price": 456}, "炽木电商": {"orders": 323, "revenue": 104238.26000000001, "rooms": 2, "avg_price": 323}, "米乐": {"orders": 1909, "revenue": 627535.4199999999, "rooms": 1, "avg_price": 329}, "良米": {"orders": 60573, "revenue": 21915425.89, "rooms": 12, "avg_price": 362}}, "team_order": ["我司", "机械空间", "纵横", "凝云", "逐梦", "斐纳", "乐群", "炽木电商", "米乐", "良米"], "rooms_ranked": [["小米手环", {"orders": 23501, "revenue": 7574599.890000001, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 349, "revenue": 128209.62}, "2026-09-02": {"orders": 298, "revenue": 107860.84}, "2026-09-03": {"orders": 339, "revenue": 112887.38}, "2026-09-04": {"orders": 156, "revenue": 47209.6}, "2026-09-05": {"orders": 228, "revenue": 71127.96}, "2026-09-06": {"orders": 181, "revenue": 61327.69}, "2026-09-07": {"orders": 14840, "revenue": 4764619.4}, "2026-09-08": {"orders": 2376, "revenue": 727908.96}, "2026-09-09": {"orders": 2324, "revenue": 793732.5}, "2026-09-10": {"orders": 2410, "revenue": 759715.94}}}], ["小米数码旗舰店", {"orders": 13331, "revenue": 4390480.02, "type": "我司", "days": 10, "daily": {"2026-09-01": {"orders": 149, "revenue": 60583.12}, "2026-09-02": {"orders": 147, "revenue": 59440.23}, "2026-09-03": {"orders": 127, "revenue": 54422.41}, "2026-09-04": {"orders": 91, "revenue": 39268.84}, "2026-09-05": {"orders": 115, "revenue": 47323.6}, "2026-09-06": {"orders": 108, "revenue": 45917.89}, "2026-09-07": {"orders": 10249, "revenue": 3335467.63}, "2026-09-08": {"orders": 817, "revenue": 259258.66}, "2026-09-09": {"orders": 627, "revenue": 196330.39}, "2026-09-10": {"orders": 901, "revenue": 292467.25}}}], ["小米数码智能旗舰店", {"orders": 11788, "revenue": 3808054.2300000004, "type": "良米", "days": 9, "daily": {"2026-09-01": {"orders": 97, "revenue": 35997.31}, "2026-09-03": {"orders": 108, "revenue": 33605.2}, "2026-09-04": {"orders": 102, "revenue": 31264.45}, "2026-09-05": {"orders": 184, "revenue": 58422.89}, "2026-09-06": {"orders": 162, "revenue": 53793.08}, "2026-09-07": {"orders": 9524, "revenue": 3069647.14}, "2026-09-08": {"orders": 440, "revenue": 149500.61}, "2026-09-09": {"orders": 522, "revenue": 165648.7}, "2026-09-10": {"orders": 649, "revenue": 210174.85}}}], ["良米商品卡", {"orders": 10686, "revenue": 3749492.9899999998, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 413, "revenue": 142125.22}, "2026-09-02": {"orders": 359, "revenue": 122146.68}, "2026-09-03": {"orders": 451, "revenue": 161765.85}, "2026-09-04": {"orders": 608, "revenue": 225145.21}, "2026-09-05": {"orders": 888, "revenue": 305171.32}, "2026-09-06": {"orders": 983, "revenue": 320626.65}, "2026-09-07": {"orders": 4191, "revenue": 1579349.15}, "2026-09-08": {"orders": 1061, "revenue": 336519.01}, "2026-09-09": {"orders": 855, "revenue": 275265.81}, "2026-09-10": {"orders": 877, "revenue": 281378.09}}}], ["小米官方手表", {"orders": 4845, "revenue": 2426599.72, "type": "我司", "days": 10, "daily": {"2026-09-01": {"orders": 791, "revenue": 388008.44}, "2026-09-02": {"orders": 857, "revenue": 418393.41}, "2026-09-03": {"orders": 395, "revenue": 206168.0}, "2026-09-04": {"orders": 400, "revenue": 206593.23}, "2026-09-05": {"orders": 427, "revenue": 211234.7}, "2026-09-06": {"orders": 530, "revenue": 271148.93}, "2026-09-07": {"orders": 428, "revenue": 208729.46}, "2026-09-08": {"orders": 331, "revenue": 169797.03}, "2026-09-09": {"orders": 353, "revenue": 176888.19}, "2026-09-10": {"orders": 333, "revenue": 169638.33}}}], ["小米智能穿戴授权号", {"orders": 7433, "revenue": 2387491.93, "type": "机械空间", "days": 10, "daily": {"2026-09-01": {"orders": 116, "revenue": 45952.71}, "2026-09-02": {"orders": 225, "revenue": 89749.8}, "2026-09-03": {"orders": 190, "revenue": 76009.96}, "2026-09-04": {"orders": 38, "revenue": 14794.7}, "2026-09-05": {"orders": 25, "revenue": 9922.3}, "2026-09-06": {"orders": 22, "revenue": 8573.9}, "2026-09-07": {"orders": 4083, "revenue": 1295946.32}, "2026-09-08": {"orders": 742, "revenue": 224142.88}, "2026-09-09": {"orders": 697, "revenue": 207391.47}, "2026-09-10": {"orders": 1295, "revenue": 415007.89}}}], ["小米手表官方直播间", {"orders": 4446, "revenue": 2177099.9000000004, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 317, "revenue": 160053.88}, "2026-09-02": {"orders": 29, "revenue": 14406.8}, "2026-09-03": {"orders": 433, "revenue": 223911.5}, "2026-09-04": {"orders": 394, "revenue": 205890.59}, "2026-09-05": {"orders": 520, "revenue": 261165.6}, "2026-09-06": {"orders": 719, "revenue": 354783.15}, "2026-09-07": {"orders": 846, "revenue": 365939.85}, "2026-09-08": {"orders": 523, "revenue": 256446.55}, "2026-09-09": {"orders": 338, "revenue": 167145.77}, "2026-09-10": {"orders": 327, "revenue": 167356.21}}}], ["小米官方手环直播间", {"orders": 6411, "revenue": 2099324.42, "type": "我司", "days": 10, "daily": {"2026-09-01": {"orders": 200, "revenue": 79543.57}, "2026-09-02": {"orders": 143, "revenue": 58691.77}, "2026-09-03": {"orders": 88, "revenue": 36346.4}, "2026-09-04": {"orders": 67, "revenue": 27425.03}, "2026-09-05": {"orders": 56, "revenue": 22551.55}, "2026-09-06": {"orders": 50, "revenue": 20202.0}, "2026-09-07": {"orders": 3567, "revenue": 1146636.2}, "2026-09-08": {"orders": 721, "revenue": 225594.67}, "2026-09-09": {"orders": 664, "revenue": 206103.22}, "2026-09-10": {"orders": 855, "revenue": 276230.01}}}], ["我司商品卡", {"orders": 5843, "revenue": 2023240.09, "type": "我司", "days": 10, "daily": {"2026-09-01": {"orders": 246, "revenue": 102874.17}, "2026-09-02": {"orders": 236, "revenue": 100188.09}, "2026-09-03": {"orders": 205, "revenue": 83045.1}, "2026-09-04": {"orders": 227, "revenue": 98166.7}, "2026-09-05": {"orders": 204, "revenue": 76216.06}, "2026-09-06": {"orders": 244, "revenue": 101500.16}, "2026-09-07": {"orders": 2500, "revenue": 814057.74}, "2026-09-08": {"orders": 626, "revenue": 208189.06}, "2026-09-09": {"orders": 678, "revenue": 225323.82}, "2026-09-10": {"orders": 677, "revenue": 213679.19}}}], ["小米智能手表旗舰店", {"orders": 5687, "revenue": 1910499.05, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 57, "revenue": 29381.67}, "2026-09-02": {"orders": 69, "revenue": 36530.09}, "2026-09-03": {"orders": 43, "revenue": 22081.75}, "2026-09-04": {"orders": 23, "revenue": 10911.3}, "2026-09-05": {"orders": 39, "revenue": 19648.58}, "2026-09-06": {"orders": 28, "revenue": 14660.0}, "2026-09-07": {"orders": 4277, "revenue": 1388903.13}, "2026-09-08": {"orders": 306, "revenue": 101556.81}, "2026-09-09": {"orders": 479, "revenue": 161871.99}, "2026-09-10": {"orders": 366, "revenue": 124953.73}}}], ["小米官方手表直播", {"orders": 1414, "revenue": 1269545.71, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 141, "revenue": 119449.13}, "2026-09-02": {"orders": 151, "revenue": 131528.84}, "2026-09-03": {"orders": 156, "revenue": 137860.72}, "2026-09-04": {"orders": 139, "revenue": 134980.34}, "2026-09-05": {"orders": 130, "revenue": 122286.84}, "2026-09-06": {"orders": 118, "revenue": 121550.07}, "2026-09-07": {"orders": 182, "revenue": 136287.08}, "2026-09-08": {"orders": 117, "revenue": 110909.12}, "2026-09-09": {"orders": 123, "revenue": 120790.47}, "2026-09-10": {"orders": 157, "revenue": 133903.1}}}], ["小米手环官方账号", {"orders": 2841, "revenue": 942836.16, "type": "逐梦", "days": 10, "daily": {"2026-09-01": {"orders": 93, "revenue": 37241.79}, "2026-09-02": {"orders": 50, "revenue": 20245.19}, "2026-09-03": {"orders": 37, "revenue": 14757.27}, "2026-09-04": {"orders": 12, "revenue": 4748.0}, "2026-09-05": {"orders": 13, "revenue": 4943.1}, "2026-09-06": {"orders": 22, "revenue": 10943.2}, "2026-09-07": {"orders": 2224, "revenue": 723247.04}, "2026-09-08": {"orders": 115, "revenue": 36529.46}, "2026-09-09": {"orders": 157, "revenue": 52025.9}, "2026-09-10": {"orders": 118, "revenue": 38155.21}}}], ["小米智能穿戴国补号", {"orders": 1613, "revenue": 668633.79, "type": "机械空间", "days": 10, "daily": {"2026-09-01": {"orders": 223, "revenue": 100121.4}, "2026-09-02": {"orders": 139, "revenue": 60902.87}, "2026-09-03": {"orders": 48, "revenue": 21815.75}, "2026-09-04": {"orders": 108, "revenue": 55377.8}, "2026-09-05": {"orders": 48, "revenue": 25217.22}, "2026-09-06": {"orders": 39, "revenue": 18730.0}, "2026-09-07": {"orders": 579, "revenue": 190039.01}, "2026-09-08": {"orders": 95, "revenue": 39844.32}, "2026-09-09": {"orders": 159, "revenue": 71594.38}, "2026-09-10": {"orders": 175, "revenue": 84991.04}}}], ["小米官方平板直播间", {"orders": 132, "revenue": 630688.5, "type": "良米", "days": 2, "daily": {"2026-09-01": {"orders": 13, "revenue": 31047.9}, "2026-09-07": {"orders": 119, "revenue": 599640.6}}}], ["小米手环官方", {"orders": 1909, "revenue": 627535.4199999999, "type": "米乐", "days": 6, "daily": {"2026-09-05": {"orders": 10, "revenue": 1496.94}, "2026-09-06": {"orders": 10, "revenue": 2819.1}, "2026-09-07": {"orders": 1640, "revenue": 545003.08}, "2026-09-08": {"orders": 123, "revenue": 37964.45}, "2026-09-09": {"orders": 86, "revenue": 26427.85}, "2026-09-10": {"orders": 40, "revenue": 13824.0}}}], ["小米手环11直播间", {"orders": 1817, "revenue": 563806.82, "type": "良米", "days": 8, "daily": {"2026-09-03": {"orders": 19, "revenue": 4576.88}, "2026-09-04": {"orders": 41, "revenue": 10373.8}, "2026-09-05": {"orders": 38, "revenue": 6422.59}, "2026-09-06": {"orders": 39, "revenue": 7167.57}, "2026-09-07": {"orders": 1584, "revenue": 505757.51}, "2026-09-08": {"orders": 89, "revenue": 27223.27}, "2026-09-09": {"orders": 5, "revenue": 1637.1}, "2026-09-10": {"orders": 2, "revenue": 648.1}}}], ["小米手环直播间", {"orders": 1145, "revenue": 397259.65, "type": "凝云", "days": 6, "daily": {"2026-09-05": {"orders": 63, "revenue": 23587.85}, "2026-09-06": {"orders": 109, "revenue": 40688.67}, "2026-09-07": {"orders": 766, "revenue": 260851.55}, "2026-09-08": {"orders": 71, "revenue": 26036.38}, "2026-09-09": {"orders": 97, "revenue": 33172.2}, "2026-09-10": {"orders": 39, "revenue": 12923.0}}}], ["小米官方手环账号", {"orders": 1018, "revenue": 341953.42, "type": "斐纳", "days": 8, "daily": {"2026-09-03": {"orders": 5, "revenue": 1998.71}, "2026-09-04": {"orders": 46, "revenue": 20082.55}, "2026-09-05": {"orders": 8, "revenue": 3429.2}, "2026-09-06": {"orders": 15, "revenue": 6098.6}, "2026-09-07": {"orders": 747, "revenue": 245124.24}, "2026-09-08": {"orders": 42, "revenue": 13701.0}, "2026-09-09": {"orders": 68, "revenue": 22532.0}, "2026-09-10": {"orders": 87, "revenue": 28987.12}}}], ["小米官旗手表直播间", {"orders": 403, "revenue": 322214.29999999993, "type": "我司", "days": 10, "daily": {"2026-09-01": {"orders": 76, "revenue": 50039.86}, "2026-09-02": {"orders": 64, "revenue": 47671.36}, "2026-09-03": {"orders": 56, "revenue": 41309.93}, "2026-09-04": {"orders": 36, "revenue": 29911.56}, "2026-09-05": {"orders": 26, "revenue": 26668.6}, "2026-09-06": {"orders": 13, "revenue": 14394.5}, "2026-09-07": {"orders": 36, "revenue": 34421.05}, "2026-09-08": {"orders": 33, "revenue": 28137.85}, "2026-09-09": {"orders": 31, "revenue": 25322.18}, "2026-09-10": {"orders": 32, "revenue": 24337.41}}}], ["小米智能穿戴官方直播间", {"orders": 775, "revenue": 257968.33, "type": "斐纳", "days": 10, "daily": {"2026-09-01": {"orders": 7, "revenue": 3043.3}, "2026-09-02": {"orders": 8, "revenue": 3081.15}, "2026-09-03": {"orders": 14, "revenue": 6395.0}, "2026-09-04": {"orders": 12, "revenue": 5103.96}, "2026-09-05": {"orders": 13, "revenue": 5396.1}, "2026-09-06": {"orders": 12, "revenue": 4773.3}, "2026-09-07": {"orders": 627, "revenue": 202460.77}, "2026-09-08": {"orders": 32, "revenue": 9886.1}, "2026-09-09": {"orders": 44, "revenue": 15955.85}, "2026-09-10": {"orders": 6, "revenue": 1872.8}}}], ["小米智能手表官方直播间", {"orders": 489, "revenue": 222856.05000000002, "type": "乐群", "days": 10, "daily": {"2026-09-01": {"orders": 24, "revenue": 11491.8}, "2026-09-02": {"orders": 44, "revenue": 21414.12}, "2026-09-03": {"orders": 28, "revenue": 14953.55}, "2026-09-04": {"orders": 63, "revenue": 32017.0}, "2026-09-05": {"orders": 40, "revenue": 19868.5}, "2026-09-06": {"orders": 15, "revenue": 7492.0}, "2026-09-07": {"orders": 139, "revenue": 49688.88}, "2026-09-08": {"orders": 70, "revenue": 33318.9}, "2026-09-09": {"orders": 33, "revenue": 15548.7}, "2026-09-10": {"orders": 33, "revenue": 17062.6}}}], ["小米耳机官方直播间", {"orders": 966, "revenue": 174697.46, "type": "良米", "days": 9, "daily": {"2026-09-02": {"orders": 72, "revenue": 14045.39}, "2026-09-03": {"orders": 57, "revenue": 9532.59}, "2026-09-04": {"orders": 95, "revenue": 17638.47}, "2026-09-05": {"orders": 153, "revenue": 26906.1}, "2026-09-06": {"orders": 182, "revenue": 31824.8}, "2026-09-07": {"orders": 96, "revenue": 17380.56}, "2026-09-08": {"orders": 132, "revenue": 24744.65}, "2026-09-09": {"orders": 119, "revenue": 22777.8}, "2026-09-10": {"orders": 60, "revenue": 9847.1}}}], ["小米手环官旗直播间", {"orders": 309, "revenue": 104924.19, "type": "我司", "days": 7, "daily": {"2026-09-02": {"orders": 1, "revenue": 399.0}, "2026-09-03": {"orders": 8, "revenue": 3080.44}, "2026-09-04": {"orders": 11, "revenue": 4969.0}, "2026-09-05": {"orders": 13, "revenue": 5097.63}, "2026-09-06": {"orders": 15, "revenue": 5923.8}, "2026-09-07": {"orders": 255, "revenue": 83860.32}, "2026-09-08": {"orders": 6, "revenue": 1594.0}}}], ["小米手环智能穿戴官方直播间", {"orders": 276, "revenue": 97288.26000000001, "type": "炽木电商", "days": 4, "daily": {"2026-09-07": {"orders": 162, "revenue": 61703.13}, "2026-09-08": {"orders": 40, "revenue": 11265.21}, "2026-09-09": {"orders": 17, "revenue": 4749.82}, "2026-09-10": {"orders": 57, "revenue": 19570.1}}}], ["小米手表", {"orders": 124, "revenue": 52825.03999999999, "type": "良米", "days": 4, "daily": {"2026-09-02": {"orders": 50, "revenue": 24888.04}, "2026-09-03": {"orders": 4, "revenue": 2034.1}, "2026-09-04": {"orders": 37, "revenue": 13647.2}, "2026-09-05": {"orders": 33, "revenue": 12255.7}}}], ["小米智能设备旗舰店直播间", {"orders": 61, "revenue": 49707.13, "type": "我司", "days": 6, "daily": {"2026-09-01": {"orders": 19, "revenue": 29255.6}, "2026-09-02": {"orders": 17, "revenue": 3045.05}, "2026-09-03": {"orders": 3, "revenue": 1032.33}, "2026-09-07": {"orders": 4, "revenue": 4142.0}, "2026-09-09": {"orders": 17, "revenue": 6733.15}, "2026-09-10": {"orders": 1, "revenue": 5499.0}}}], ["小米官方手表直播号", {"orders": 56, "revenue": 38784.29, "type": "纵横", "days": 9, "daily": {"2026-09-01": {"orders": 15, "revenue": 8710.7}, "2026-09-02": {"orders": 5, "revenue": 2943.2}, "2026-09-03": {"orders": 3, "revenue": 2677.2}, "2026-09-04": {"orders": 4, "revenue": 4546.0}, "2026-09-05": {"orders": 1, "revenue": 336.6}, "2026-09-06": {"orders": 6, "revenue": 4825.2}, "2026-09-07": {"orders": 2, "revenue": 1410.3}, "2026-09-08": {"orders": 5, "revenue": 4376.2}, "2026-09-10": {"orders": 15, "revenue": 8958.89}}}], ["小米官方耳机直播间", {"orders": 60, "revenue": 13494.15, "type": "我司", "days": 2, "daily": {"2026-09-08": {"orders": 25, "revenue": 6269.0}, "2026-09-10": {"orders": 35, "revenue": 7225.15}}}], ["小米耳机数码官方直播间", {"orders": 47, "revenue": 6950.000000000001, "type": "炽木电商", "days": 8, "daily": {"2026-09-02": {"orders": 13, "revenue": 1728.0}, "2026-09-03": {"orders": 3, "revenue": 377.0}, "2026-09-04": {"orders": 7, "revenue": 1163.0}, "2026-09-06": {"orders": 5, "revenue": 824.3}, "2026-09-07": {"orders": 3, "revenue": 377.0}, "2026-09-08": {"orders": 3, "revenue": 265.5}, "2026-09-09": {"orders": 9, "revenue": 1516.4}, "2026-09-10": {"orders": 4, "revenue": 698.8}}}], ["小米官方手环号", {"orders": 8, "revenue": 3242.0, "type": "良米", "days": 1, "daily": {"2026-09-01": {"orders": 8, "revenue": 3242.0}}}], ["小米耳机", {"orders": 4, "revenue": 874.3, "type": "良米", "days": 1, "daily": {"2026-09-10": {"orders": 4, "revenue": 874.3}}}]], "our_rooms_ranked": [["小米数码旗舰店", {"orders": 13331, "revenue": 4390480.02, "type": "我司", "days": 10, "daily": {"2026-09-01": {"orders": 149, "revenue": 60583.12}, "2026-09-02": {"orders": 147, "revenue": 59440.23}, "2026-09-03": {"orders": 127, "revenue": 54422.41}, "2026-09-04": {"orders": 91, "revenue": 39268.84}, "2026-09-05": {"orders": 115, "revenue": 47323.6}, "2026-09-06": {"orders": 108, "revenue": 45917.89}, "2026-09-07": {"orders": 10249, "revenue": 3335467.63}, "2026-09-08": {"orders": 817, "revenue": 259258.66}, "2026-09-09": {"orders": 627, "revenue": 196330.39}, "2026-09-10": {"orders": 901, "revenue": 292467.25}}}], ["小米官方手表", {"orders": 4845, "revenue": 2426599.72, "type": "我司", "days": 10, "daily": {"2026-09-01": {"orders": 791, "revenue": 388008.44}, "2026-09-02": {"orders": 857, "revenue": 418393.41}, "2026-09-03": {"orders": 395, "revenue": 206168.0}, "2026-09-04": {"orders": 400, "revenue": 206593.23}, "2026-09-05": {"orders": 427, "revenue": 211234.7}, "2026-09-06": {"orders": 530, "revenue": 271148.93}, "2026-09-07": {"orders": 428, "revenue": 208729.46}, "2026-09-08": {"orders": 331, "revenue": 169797.03}, "2026-09-09": {"orders": 353, "revenue": 176888.19}, "2026-09-10": {"orders": 333, "revenue": 169638.33}}}], ["小米官方手环直播间", {"orders": 6411, "revenue": 2099324.42, "type": "我司", "days": 10, "daily": {"2026-09-01": {"orders": 200, "revenue": 79543.57}, "2026-09-02": {"orders": 143, "revenue": 58691.77}, "2026-09-03": {"orders": 88, "revenue": 36346.4}, "2026-09-04": {"orders": 67, "revenue": 27425.03}, "2026-09-05": {"orders": 56, "revenue": 22551.55}, "2026-09-06": {"orders": 50, "revenue": 20202.0}, "2026-09-07": {"orders": 3567, "revenue": 1146636.2}, "2026-09-08": {"orders": 721, "revenue": 225594.67}, "2026-09-09": {"orders": 664, "revenue": 206103.22}, "2026-09-10": {"orders": 855, "revenue": 276230.01}}}], ["我司商品卡", {"orders": 5843, "revenue": 2023240.09, "type": "我司", "days": 10, "daily": {"2026-09-01": {"orders": 246, "revenue": 102874.17}, "2026-09-02": {"orders": 236, "revenue": 100188.09}, "2026-09-03": {"orders": 205, "revenue": 83045.1}, "2026-09-04": {"orders": 227, "revenue": 98166.7}, "2026-09-05": {"orders": 204, "revenue": 76216.06}, "2026-09-06": {"orders": 244, "revenue": 101500.16}, "2026-09-07": {"orders": 2500, "revenue": 814057.74}, "2026-09-08": {"orders": 626, "revenue": 208189.06}, "2026-09-09": {"orders": 678, "revenue": 225323.82}, "2026-09-10": {"orders": 677, "revenue": 213679.19}}}], ["小米官旗手表直播间", {"orders": 403, "revenue": 322214.29999999993, "type": "我司", "days": 10, "daily": {"2026-09-01": {"orders": 76, "revenue": 50039.86}, "2026-09-02": {"orders": 64, "revenue": 47671.36}, "2026-09-03": {"orders": 56, "revenue": 41309.93}, "2026-09-04": {"orders": 36, "revenue": 29911.56}, "2026-09-05": {"orders": 26, "revenue": 26668.6}, "2026-09-06": {"orders": 13, "revenue": 14394.5}, "2026-09-07": {"orders": 36, "revenue": 34421.05}, "2026-09-08": {"orders": 33, "revenue": 28137.85}, "2026-09-09": {"orders": 31, "revenue": 25322.18}, "2026-09-10": {"orders": 32, "revenue": 24337.41}}}], ["小米手环官旗直播间", {"orders": 309, "revenue": 104924.19, "type": "我司", "days": 7, "daily": {"2026-09-02": {"orders": 1, "revenue": 399.0}, "2026-09-03": {"orders": 8, "revenue": 3080.44}, "2026-09-04": {"orders": 11, "revenue": 4969.0}, "2026-09-05": {"orders": 13, "revenue": 5097.63}, "2026-09-06": {"orders": 15, "revenue": 5923.8}, "2026-09-07": {"orders": 255, "revenue": 83860.32}, "2026-09-08": {"orders": 6, "revenue": 1594.0}}}], ["小米智能设备旗舰店直播间", {"orders": 61, "revenue": 49707.13, "type": "我司", "days": 6, "daily": {"2026-09-01": {"orders": 19, "revenue": 29255.6}, "2026-09-02": {"orders": 17, "revenue": 3045.05}, "2026-09-03": {"orders": 3, "revenue": 1032.33}, "2026-09-07": {"orders": 4, "revenue": 4142.0}, "2026-09-09": {"orders": 17, "revenue": 6733.15}, "2026-09-10": {"orders": 1, "revenue": 5499.0}}}], ["小米官方耳机直播间", {"orders": 60, "revenue": 13494.15, "type": "我司", "days": 2, "daily": {"2026-09-08": {"orders": 25, "revenue": 6269.0}, "2026-09-10": {"orders": 35, "revenue": 7225.15}}}]], "comp_rooms_ranked": [["小米手环", {"orders": 23501, "revenue": 7574599.890000001, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 349, "revenue": 128209.62}, "2026-09-02": {"orders": 298, "revenue": 107860.84}, "2026-09-03": {"orders": 339, "revenue": 112887.38}, "2026-09-04": {"orders": 156, "revenue": 47209.6}, "2026-09-05": {"orders": 228, "revenue": 71127.96}, "2026-09-06": {"orders": 181, "revenue": 61327.69}, "2026-09-07": {"orders": 14840, "revenue": 4764619.4}, "2026-09-08": {"orders": 2376, "revenue": 727908.96}, "2026-09-09": {"orders": 2324, "revenue": 793732.5}, "2026-09-10": {"orders": 2410, "revenue": 759715.94}}}], ["小米数码智能旗舰店", {"orders": 11788, "revenue": 3808054.2300000004, "type": "良米", "days": 9, "daily": {"2026-09-01": {"orders": 97, "revenue": 35997.31}, "2026-09-03": {"orders": 108, "revenue": 33605.2}, "2026-09-04": {"orders": 102, "revenue": 31264.45}, "2026-09-05": {"orders": 184, "revenue": 58422.89}, "2026-09-06": {"orders": 162, "revenue": 53793.08}, "2026-09-07": {"orders": 9524, "revenue": 3069647.14}, "2026-09-08": {"orders": 440, "revenue": 149500.61}, "2026-09-09": {"orders": 522, "revenue": 165648.7}, "2026-09-10": {"orders": 649, "revenue": 210174.85}}}], ["良米商品卡", {"orders": 10686, "revenue": 3749492.9899999998, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 413, "revenue": 142125.22}, "2026-09-02": {"orders": 359, "revenue": 122146.68}, "2026-09-03": {"orders": 451, "revenue": 161765.85}, "2026-09-04": {"orders": 608, "revenue": 225145.21}, "2026-09-05": {"orders": 888, "revenue": 305171.32}, "2026-09-06": {"orders": 983, "revenue": 320626.65}, "2026-09-07": {"orders": 4191, "revenue": 1579349.15}, "2026-09-08": {"orders": 1061, "revenue": 336519.01}, "2026-09-09": {"orders": 855, "revenue": 275265.81}, "2026-09-10": {"orders": 877, "revenue": 281378.09}}}], ["小米智能穿戴授权号", {"orders": 7433, "revenue": 2387491.93, "type": "机械空间", "days": 10, "daily": {"2026-09-01": {"orders": 116, "revenue": 45952.71}, "2026-09-02": {"orders": 225, "revenue": 89749.8}, "2026-09-03": {"orders": 190, "revenue": 76009.96}, "2026-09-04": {"orders": 38, "revenue": 14794.7}, "2026-09-05": {"orders": 25, "revenue": 9922.3}, "2026-09-06": {"orders": 22, "revenue": 8573.9}, "2026-09-07": {"orders": 4083, "revenue": 1295946.32}, "2026-09-08": {"orders": 742, "revenue": 224142.88}, "2026-09-09": {"orders": 697, "revenue": 207391.47}, "2026-09-10": {"orders": 1295, "revenue": 415007.89}}}], ["小米手表官方直播间", {"orders": 4446, "revenue": 2177099.9000000004, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 317, "revenue": 160053.88}, "2026-09-02": {"orders": 29, "revenue": 14406.8}, "2026-09-03": {"orders": 433, "revenue": 223911.5}, "2026-09-04": {"orders": 394, "revenue": 205890.59}, "2026-09-05": {"orders": 520, "revenue": 261165.6}, "2026-09-06": {"orders": 719, "revenue": 354783.15}, "2026-09-07": {"orders": 846, "revenue": 365939.85}, "2026-09-08": {"orders": 523, "revenue": 256446.55}, "2026-09-09": {"orders": 338, "revenue": 167145.77}, "2026-09-10": {"orders": 327, "revenue": 167356.21}}}], ["小米智能手表旗舰店", {"orders": 5687, "revenue": 1910499.05, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 57, "revenue": 29381.67}, "2026-09-02": {"orders": 69, "revenue": 36530.09}, "2026-09-03": {"orders": 43, "revenue": 22081.75}, "2026-09-04": {"orders": 23, "revenue": 10911.3}, "2026-09-05": {"orders": 39, "revenue": 19648.58}, "2026-09-06": {"orders": 28, "revenue": 14660.0}, "2026-09-07": {"orders": 4277, "revenue": 1388903.13}, "2026-09-08": {"orders": 306, "revenue": 101556.81}, "2026-09-09": {"orders": 479, "revenue": 161871.99}, "2026-09-10": {"orders": 366, "revenue": 124953.73}}}], ["小米官方手表直播", {"orders": 1414, "revenue": 1269545.71, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 141, "revenue": 119449.13}, "2026-09-02": {"orders": 151, "revenue": 131528.84}, "2026-09-03": {"orders": 156, "revenue": 137860.72}, "2026-09-04": {"orders": 139, "revenue": 134980.34}, "2026-09-05": {"orders": 130, "revenue": 122286.84}, "2026-09-06": {"orders": 118, "revenue": 121550.07}, "2026-09-07": {"orders": 182, "revenue": 136287.08}, "2026-09-08": {"orders": 117, "revenue": 110909.12}, "2026-09-09": {"orders": 123, "revenue": 120790.47}, "2026-09-10": {"orders": 157, "revenue": 133903.1}}}], ["小米手环官方账号", {"orders": 2841, "revenue": 942836.16, "type": "逐梦", "days": 10, "daily": {"2026-09-01": {"orders": 93, "revenue": 37241.79}, "2026-09-02": {"orders": 50, "revenue": 20245.19}, "2026-09-03": {"orders": 37, "revenue": 14757.27}, "2026-09-04": {"orders": 12, "revenue": 4748.0}, "2026-09-05": {"orders": 13, "revenue": 4943.1}, "2026-09-06": {"orders": 22, "revenue": 10943.2}, "2026-09-07": {"orders": 2224, "revenue": 723247.04}, "2026-09-08": {"orders": 115, "revenue": 36529.46}, "2026-09-09": {"orders": 157, "revenue": 52025.9}, "2026-09-10": {"orders": 118, "revenue": 38155.21}}}], ["小米智能穿戴国补号", {"orders": 1613, "revenue": 668633.79, "type": "机械空间", "days": 10, "daily": {"2026-09-01": {"orders": 223, "revenue": 100121.4}, "2026-09-02": {"orders": 139, "revenue": 60902.87}, "2026-09-03": {"orders": 48, "revenue": 21815.75}, "2026-09-04": {"orders": 108, "revenue": 55377.8}, "2026-09-05": {"orders": 48, "revenue": 25217.22}, "2026-09-06": {"orders": 39, "revenue": 18730.0}, "2026-09-07": {"orders": 579, "revenue": 190039.01}, "2026-09-08": {"orders": 95, "revenue": 39844.32}, "2026-09-09": {"orders": 159, "revenue": 71594.38}, "2026-09-10": {"orders": 175, "revenue": 84991.04}}}], ["小米官方平板直播间", {"orders": 132, "revenue": 630688.5, "type": "良米", "days": 2, "daily": {"2026-09-01": {"orders": 13, "revenue": 31047.9}, "2026-09-07": {"orders": 119, "revenue": 599640.6}}}], ["小米手环官方", {"orders": 1909, "revenue": 627535.4199999999, "type": "米乐", "days": 6, "daily": {"2026-09-05": {"orders": 10, "revenue": 1496.94}, "2026-09-06": {"orders": 10, "revenue": 2819.1}, "2026-09-07": {"orders": 1640, "revenue": 545003.08}, "2026-09-08": {"orders": 123, "revenue": 37964.45}, "2026-09-09": {"orders": 86, "revenue": 26427.85}, "2026-09-10": {"orders": 40, "revenue": 13824.0}}}], ["小米手环11直播间", {"orders": 1817, "revenue": 563806.82, "type": "良米", "days": 8, "daily": {"2026-09-03": {"orders": 19, "revenue": 4576.88}, "2026-09-04": {"orders": 41, "revenue": 10373.8}, "2026-09-05": {"orders": 38, "revenue": 6422.59}, "2026-09-06": {"orders": 39, "revenue": 7167.57}, "2026-09-07": {"orders": 1584, "revenue": 505757.51}, "2026-09-08": {"orders": 89, "revenue": 27223.27}, "2026-09-09": {"orders": 5, "revenue": 1637.1}, "2026-09-10": {"orders": 2, "revenue": 648.1}}}], ["小米手环直播间", {"orders": 1145, "revenue": 397259.65, "type": "凝云", "days": 6, "daily": {"2026-09-05": {"orders": 63, "revenue": 23587.85}, "2026-09-06": {"orders": 109, "revenue": 40688.67}, "2026-09-07": {"orders": 766, "revenue": 260851.55}, "2026-09-08": {"orders": 71, "revenue": 26036.38}, "2026-09-09": {"orders": 97, "revenue": 33172.2}, "2026-09-10": {"orders": 39, "revenue": 12923.0}}}], ["小米官方手环账号", {"orders": 1018, "revenue": 341953.42, "type": "斐纳", "days": 8, "daily": {"2026-09-03": {"orders": 5, "revenue": 1998.71}, "2026-09-04": {"orders": 46, "revenue": 20082.55}, "2026-09-05": {"orders": 8, "revenue": 3429.2}, "2026-09-06": {"orders": 15, "revenue": 6098.6}, "2026-09-07": {"orders": 747, "revenue": 245124.24}, "2026-09-08": {"orders": 42, "revenue": 13701.0}, "2026-09-09": {"orders": 68, "revenue": 22532.0}, "2026-09-10": {"orders": 87, "revenue": 28987.12}}}], ["小米智能穿戴官方直播间", {"orders": 775, "revenue": 257968.33, "type": "斐纳", "days": 10, "daily": {"2026-09-01": {"orders": 7, "revenue": 3043.3}, "2026-09-02": {"orders": 8, "revenue": 3081.15}, "2026-09-03": {"orders": 14, "revenue": 6395.0}, "2026-09-04": {"orders": 12, "revenue": 5103.96}, "2026-09-05": {"orders": 13, "revenue": 5396.1}, "2026-09-06": {"orders": 12, "revenue": 4773.3}, "2026-09-07": {"orders": 627, "revenue": 202460.77}, "2026-09-08": {"orders": 32, "revenue": 9886.1}, "2026-09-09": {"orders": 44, "revenue": 15955.85}, "2026-09-10": {"orders": 6, "revenue": 1872.8}}}], ["小米智能手表官方直播间", {"orders": 489, "revenue": 222856.05000000002, "type": "乐群", "days": 10, "daily": {"2026-09-01": {"orders": 24, "revenue": 11491.8}, "2026-09-02": {"orders": 44, "revenue": 21414.12}, "2026-09-03": {"orders": 28, "revenue": 14953.55}, "2026-09-04": {"orders": 63, "revenue": 32017.0}, "2026-09-05": {"orders": 40, "revenue": 19868.5}, "2026-09-06": {"orders": 15, "revenue": 7492.0}, "2026-09-07": {"orders": 139, "revenue": 49688.88}, "2026-09-08": {"orders": 70, "revenue": 33318.9}, "2026-09-09": {"orders": 33, "revenue": 15548.7}, "2026-09-10": {"orders": 33, "revenue": 17062.6}}}], ["小米耳机官方直播间", {"orders": 966, "revenue": 174697.46, "type": "良米", "days": 9, "daily": {"2026-09-02": {"orders": 72, "revenue": 14045.39}, "2026-09-03": {"orders": 57, "revenue": 9532.59}, "2026-09-04": {"orders": 95, "revenue": 17638.47}, "2026-09-05": {"orders": 153, "revenue": 26906.1}, "2026-09-06": {"orders": 182, "revenue": 31824.8}, "2026-09-07": {"orders": 96, "revenue": 17380.56}, "2026-09-08": {"orders": 132, "revenue": 24744.65}, "2026-09-09": {"orders": 119, "revenue": 22777.8}, "2026-09-10": {"orders": 60, "revenue": 9847.1}}}], ["小米手环智能穿戴官方直播间", {"orders": 276, "revenue": 97288.26000000001, "type": "炽木电商", "days": 4, "daily": {"2026-09-07": {"orders": 162, "revenue": 61703.13}, "2026-09-08": {"orders": 40, "revenue": 11265.21}, "2026-09-09": {"orders": 17, "revenue": 4749.82}, "2026-09-10": {"orders": 57, "revenue": 19570.1}}}], ["小米手表", {"orders": 124, "revenue": 52825.03999999999, "type": "良米", "days": 4, "daily": {"2026-09-02": {"orders": 50, "revenue": 24888.04}, "2026-09-03": {"orders": 4, "revenue": 2034.1}, "2026-09-04": {"orders": 37, "revenue": 13647.2}, "2026-09-05": {"orders": 33, "revenue": 12255.7}}}], ["小米官方手表直播号", {"orders": 56, "revenue": 38784.29, "type": "纵横", "days": 9, "daily": {"2026-09-01": {"orders": 15, "revenue": 8710.7}, "2026-09-02": {"orders": 5, "revenue": 2943.2}, "2026-09-03": {"orders": 3, "revenue": 2677.2}, "2026-09-04": {"orders": 4, "revenue": 4546.0}, "2026-09-05": {"orders": 1, "revenue": 336.6}, "2026-09-06": {"orders": 6, "revenue": 4825.2}, "2026-09-07": {"orders": 2, "revenue": 1410.3}, "2026-09-08": {"orders": 5, "revenue": 4376.2}, "2026-09-10": {"orders": 15, "revenue": 8958.89}}}], ["小米耳机数码官方直播间", {"orders": 47, "revenue": 6950.000000000001, "type": "炽木电商", "days": 8, "daily": {"2026-09-02": {"orders": 13, "revenue": 1728.0}, "2026-09-03": {"orders": 3, "revenue": 377.0}, "2026-09-04": {"orders": 7, "revenue": 1163.0}, "2026-09-06": {"orders": 5, "revenue": 824.3}, "2026-09-07": {"orders": 3, "revenue": 377.0}, "2026-09-08": {"orders": 3, "revenue": 265.5}, "2026-09-09": {"orders": 9, "revenue": 1516.4}, "2026-09-10": {"orders": 4, "revenue": 698.8}}}], ["小米官方手环号", {"orders": 8, "revenue": 3242.0, "type": "良米", "days": 1, "daily": {"2026-09-01": {"orders": 8, "revenue": 3242.0}}}], ["小米耳机", {"orders": 4, "revenue": 874.3, "type": "良米", "days": 1, "daily": {"2026-09-10": {"orders": 4, "revenue": 874.3}}}]], "jixie_rooms": [["小米智能穿戴授权号", {"orders": 7433, "revenue": 2387491.93, "type": "机械空间", "days": 10, "daily": {"2026-09-01": {"orders": 116, "revenue": 45952.71}, "2026-09-02": {"orders": 225, "revenue": 89749.8}, "2026-09-03": {"orders": 190, "revenue": 76009.96}, "2026-09-04": {"orders": 38, "revenue": 14794.7}, "2026-09-05": {"orders": 25, "revenue": 9922.3}, "2026-09-06": {"orders": 22, "revenue": 8573.9}, "2026-09-07": {"orders": 4083, "revenue": 1295946.32}, "2026-09-08": {"orders": 742, "revenue": 224142.88}, "2026-09-09": {"orders": 697, "revenue": 207391.47}, "2026-09-10": {"orders": 1295, "revenue": 415007.89}}}], ["小米智能穿戴国补号", {"orders": 1613, "revenue": 668633.79, "type": "机械空间", "days": 10, "daily": {"2026-09-01": {"orders": 223, "revenue": 100121.4}, "2026-09-02": {"orders": 139, "revenue": 60902.87}, "2026-09-03": {"orders": 48, "revenue": 21815.75}, "2026-09-04": {"orders": 108, "revenue": 55377.8}, "2026-09-05": {"orders": 48, "revenue": 25217.22}, "2026-09-06": {"orders": 39, "revenue": 18730.0}, "2026-09-07": {"orders": 579, "revenue": 190039.01}, "2026-09-08": {"orders": 95, "revenue": 39844.32}, "2026-09-09": {"orders": 159, "revenue": 71594.38}, "2026-09-10": {"orders": 175, "revenue": 84991.04}}}]], "zongheng_rooms": [["小米官方手表直播号", {"orders": 56, "revenue": 38784.29, "type": "纵横", "days": 9, "daily": {"2026-09-01": {"orders": 15, "revenue": 8710.7}, "2026-09-02": {"orders": 5, "revenue": 2943.2}, "2026-09-03": {"orders": 3, "revenue": 2677.2}, "2026-09-04": {"orders": 4, "revenue": 4546.0}, "2026-09-05": {"orders": 1, "revenue": 336.6}, "2026-09-06": {"orders": 6, "revenue": 4825.2}, "2026-09-07": {"orders": 2, "revenue": 1410.3}, "2026-09-08": {"orders": 5, "revenue": 4376.2}, "2026-09-10": {"orders": 15, "revenue": 8958.89}}}]], "liangmi_rooms": [["小米手环", {"orders": 23501, "revenue": 7574599.890000001, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 349, "revenue": 128209.62}, "2026-09-02": {"orders": 298, "revenue": 107860.84}, "2026-09-03": {"orders": 339, "revenue": 112887.38}, "2026-09-04": {"orders": 156, "revenue": 47209.6}, "2026-09-05": {"orders": 228, "revenue": 71127.96}, "2026-09-06": {"orders": 181, "revenue": 61327.69}, "2026-09-07": {"orders": 14840, "revenue": 4764619.4}, "2026-09-08": {"orders": 2376, "revenue": 727908.96}, "2026-09-09": {"orders": 2324, "revenue": 793732.5}, "2026-09-10": {"orders": 2410, "revenue": 759715.94}}}], ["小米数码智能旗舰店", {"orders": 11788, "revenue": 3808054.2300000004, "type": "良米", "days": 9, "daily": {"2026-09-01": {"orders": 97, "revenue": 35997.31}, "2026-09-03": {"orders": 108, "revenue": 33605.2}, "2026-09-04": {"orders": 102, "revenue": 31264.45}, "2026-09-05": {"orders": 184, "revenue": 58422.89}, "2026-09-06": {"orders": 162, "revenue": 53793.08}, "2026-09-07": {"orders": 9524, "revenue": 3069647.14}, "2026-09-08": {"orders": 440, "revenue": 149500.61}, "2026-09-09": {"orders": 522, "revenue": 165648.7}, "2026-09-10": {"orders": 649, "revenue": 210174.85}}}], ["良米商品卡", {"orders": 10686, "revenue": 3749492.9899999998, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 413, "revenue": 142125.22}, "2026-09-02": {"orders": 359, "revenue": 122146.68}, "2026-09-03": {"orders": 451, "revenue": 161765.85}, "2026-09-04": {"orders": 608, "revenue": 225145.21}, "2026-09-05": {"orders": 888, "revenue": 305171.32}, "2026-09-06": {"orders": 983, "revenue": 320626.65}, "2026-09-07": {"orders": 4191, "revenue": 1579349.15}, "2026-09-08": {"orders": 1061, "revenue": 336519.01}, "2026-09-09": {"orders": 855, "revenue": 275265.81}, "2026-09-10": {"orders": 877, "revenue": 281378.09}}}], ["小米手表官方直播间", {"orders": 4446, "revenue": 2177099.9000000004, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 317, "revenue": 160053.88}, "2026-09-02": {"orders": 29, "revenue": 14406.8}, "2026-09-03": {"orders": 433, "revenue": 223911.5}, "2026-09-04": {"orders": 394, "revenue": 205890.59}, "2026-09-05": {"orders": 520, "revenue": 261165.6}, "2026-09-06": {"orders": 719, "revenue": 354783.15}, "2026-09-07": {"orders": 846, "revenue": 365939.85}, "2026-09-08": {"orders": 523, "revenue": 256446.55}, "2026-09-09": {"orders": 338, "revenue": 167145.77}, "2026-09-10": {"orders": 327, "revenue": 167356.21}}}], ["小米智能手表旗舰店", {"orders": 5687, "revenue": 1910499.05, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 57, "revenue": 29381.67}, "2026-09-02": {"orders": 69, "revenue": 36530.09}, "2026-09-03": {"orders": 43, "revenue": 22081.75}, "2026-09-04": {"orders": 23, "revenue": 10911.3}, "2026-09-05": {"orders": 39, "revenue": 19648.58}, "2026-09-06": {"orders": 28, "revenue": 14660.0}, "2026-09-07": {"orders": 4277, "revenue": 1388903.13}, "2026-09-08": {"orders": 306, "revenue": 101556.81}, "2026-09-09": {"orders": 479, "revenue": 161871.99}, "2026-09-10": {"orders": 366, "revenue": 124953.73}}}], ["小米官方手表直播", {"orders": 1414, "revenue": 1269545.71, "type": "良米", "days": 10, "daily": {"2026-09-01": {"orders": 141, "revenue": 119449.13}, "2026-09-02": {"orders": 151, "revenue": 131528.84}, "2026-09-03": {"orders": 156, "revenue": 137860.72}, "2026-09-04": {"orders": 139, "revenue": 134980.34}, "2026-09-05": {"orders": 130, "revenue": 122286.84}, "2026-09-06": {"orders": 118, "revenue": 121550.07}, "2026-09-07": {"orders": 182, "revenue": 136287.08}, "2026-09-08": {"orders": 117, "revenue": 110909.12}, "2026-09-09": {"orders": 123, "revenue": 120790.47}, "2026-09-10": {"orders": 157, "revenue": 133903.1}}}], ["小米官方平板直播间", {"orders": 132, "revenue": 630688.5, "type": "良米", "days": 2, "daily": {"2026-09-01": {"orders": 13, "revenue": 31047.9}, "2026-09-07": {"orders": 119, "revenue": 599640.6}}}], ["小米手环11直播间", {"orders": 1817, "revenue": 563806.82, "type": "良米", "days": 8, "daily": {"2026-09-03": {"orders": 19, "revenue": 4576.88}, "2026-09-04": {"orders": 41, "revenue": 10373.8}, "2026-09-05": {"orders": 38, "revenue": 6422.59}, "2026-09-06": {"orders": 39, "revenue": 7167.57}, "2026-09-07": {"orders": 1584, "revenue": 505757.51}, "2026-09-08": {"orders": 89, "revenue": 27223.27}, "2026-09-09": {"orders": 5, "revenue": 1637.1}, "2026-09-10": {"orders": 2, "revenue": 648.1}}}], ["小米耳机官方直播间", {"orders": 966, "revenue": 174697.46, "type": "良米", "days": 9, "daily": {"2026-09-02": {"orders": 72, "revenue": 14045.39}, "2026-09-03": {"orders": 57, "revenue": 9532.59}, "2026-09-04": {"orders": 95, "revenue": 17638.47}, "2026-09-05": {"orders": 153, "revenue": 26906.1}, "2026-09-06": {"orders": 182, "revenue": 31824.8}, "2026-09-07": {"orders": 96, "revenue": 17380.56}, "2026-09-08": {"orders": 132, "revenue": 24744.65}, "2026-09-09": {"orders": 119, "revenue": 22777.8}, "2026-09-10": {"orders": 60, "revenue": 9847.1}}}], ["小米手表", {"orders": 124, "revenue": 52825.03999999999, "type": "良米", "days": 4, "daily": {"2026-09-02": {"orders": 50, "revenue": 24888.04}, "2026-09-03": {"orders": 4, "revenue": 2034.1}, "2026-09-04": {"orders": 37, "revenue": 13647.2}, "2026-09-05": {"orders": 33, "revenue": 12255.7}}}], ["小米官方手环号", {"orders": 8, "revenue": 3242.0, "type": "良米", "days": 1, "daily": {"2026-09-01": {"orders": 8, "revenue": 3242.0}}}], ["小米耳机", {"orders": 4, "revenue": 874.3, "type": "良米", "days": 1, "daily": {"2026-09-10": {"orders": 4, "revenue": 874.3}}}]], "prods_ranked": [["小米手环11", {"orders": 80122, "revenue": 25654533.8}], ["REDMI Watch 6", {"orders": 11353, "revenue": 5884780.649999999}], ["小米手环10 Pro", {"orders": 10813, "revenue": 4093421.4599999995}], ["Xiaomi Watch S5", {"orders": 1281, "revenue": 1318012.05}], ["小米手环9 Pro", {"orders": 131, "revenue": 720384.0}], ["Xiaomi Watch 5", {"orders": 244, "revenue": 456698.61}], ["REDMI Buds 8 Pro", {"orders": 781, "revenue": 251393.05}], ["REDMI Buds 8 青春版", {"orders": 1579, "revenue": 198450.88999999998}], ["平板/配件", {"orders": 47, "revenue": 116104.5}], ["REDMI 手环 3", {"orders": 662, "revenue": 81367.73000000001}], ["REDMI Buds 8 活力版", {"orders": 911, "revenue": 73213.16}], ["笔记本", {"orders": 12, "revenue": 53362.42}], ["Xiaomi Buds 6", {"orders": 87, "revenue": 49090.0}], ["Xiaomi智能存储 小米nas家庭", {"orders": 12, "revenue": 46538.0}], ["REDMI Buds 8", {"orders": 248, "revenue": 41299.119999999995}], ["智能摄像机", {"orders": 168, "revenue": 41097.8}], ["Xiaomi 开放式耳机", {"orders": 52, "revenue": 36665.1}], ["Xiaomi Buds 5 Pro", {"orders": 43, "revenue": 34598.5}], ["Xiaomi Watch S4", {"orders": 14, "revenue": 15356.2}], ["保护壳/膜", {"orders": 47, "revenue": 14428.3}], ["小米骨传导耳机2", {"orders": 26, "revenue": 14143.5}], ["充电配件", {"orders": 271, "revenue": 13684.96}], ["儿童手表", {"orders": 25, "revenue": 13269.990000000002}], ["鱼缸配件", {"orders": 28, "revenue": 12261.0}], ["Xiaomi 智能存储", {"orders": 2, "revenue": 10995.0}], ["体重秤", {"orders": 90, "revenue": 9169.64}], ["REDMI Buds 7S", {"orders": 50, "revenue": 8747.33}], ["小米米家喷墨打印一体机无线打印复印扫", {"orders": 17, "revenue": 8154.99}], ["小米手环10", {"orders": 83, "revenue": 8133.6}], ["REDMI Buds 6", {"orders": 40, "revenue": 7505.98}], ["路由器", {"orders": 38, "revenue": 7078.2300000000005}], ["小米AI眼镜", {"orders": 3, "revenue": 6527.0}], ["头戴式耳机", {"orders": 19, "revenue": 5275.28}], ["小米米家口袋照片打印机Pro蓝牙连接", {"orders": 10, "revenue": 5141.1}], ["音箱", {"orders": 19, "revenue": 3938.12}], ["智能门铃", {"orders": 11, "revenue": 3786.0}], ["台灯/灯具", {"orders": 10, "revenue": 2286.5}], ["小米米家多彩旅行箱简约时尚男女行李箱", {"orders": 8, "revenue": 1966.82}], ["REDMI Buds 6 活力版", {"orders": 22, "revenue": 1613.35}], ["小米米家口袋照片打印机Pro纪念礼盒", {"orders": 2, "revenue": 1384.2}], ["手机", {"orders": 14, "revenue": 915.62}], ["小米手环系列配件", {"orders": 6, "revenue": 872.65}], ["耳机配件", {"orders": 6, "revenue": 834.0}], ["小米米家口袋打印相纸 热升华套装版（", {"orders": 7, "revenue": 788.0}], ["小米米家行李箱旅行箱学生密码箱PC箱", {"orders": 2, "revenue": 788.0}], ["小米米家词典笔 点读笔 翻译笔英语学", {"orders": 1, "revenue": 699.0}], ["Xiaomi 智能家庭屏 8 云台版", {"orders": 1, "revenue": 641.0}], ["米家显示器挂灯2", {"orders": 2, "revenue": 598.0}], ["米家智能宠物喂食器 2 可视版 远程", {"orders": 1, "revenue": 499.0}], ["米家桌面学习灯  家用学生宿舍插电", {"orders": 2, "revenue": 498.1}], ["小米米家扩容旅行箱", {"orders": 1, "revenue": 315.8}], ["小米米家桌面打印相纸6英寸(80张)", {"orders": 2, "revenue": 236.0}], ["小米米家手持折叠挂烫机2 熨烫 小型", {"orders": 2, "revenue": 233.0}], ["米家智能宠物饮水机2 除菌版", {"orders": 1, "revenue": 199.0}], ["腕带/表带", {"orders": 1, "revenue": 197.0}], ["米家桌面照片打印相纸 6英寸 4色专", {"orders": 1, "revenue": 159.0}], ["小米米家口袋打印即贴相纸 热升华套装", {"orders": 1, "revenue": 149.0}], ["小米米家折叠偏光太阳镜套镜户外时尚可", {"orders": 1, "revenue": 149.0}], ["小米米家偏光太阳镜夹片便携高清偏光男", {"orders": 2, "revenue": 139.8}], ["小米米家喷墨打印一体机原装墨盒清晰可", {"orders": 2, "revenue": 119.11}], ["米家桌面打印相纸4英寸 双拼版 (4", {"orders": 1, "revenue": 79.2}]], "weeks": {"W1": {"total_orders": 82440, "total_revenue": 29947522.69, "our_orders": 23500, "our_revenue": 8705366.459999999, "days": 7, "label": "W1 (9/1-9/7)"}, "W2": {"total_orders": 26998, "total_revenue": 9387444.52, "our_orders": 7763, "our_revenue": 2724617.56, "days": 3, "label": "W2 (9/8-9/14)"}}, "daily_data": [{"date": "09-01", "total": 3354, "our_orders": 1481, "comp_orders": 1873, "our_revenue": 710304.76, "comp_revenue": 856068.4299999999, "total_revenue": 1566373.19, "our_share": 44.2}, {"date": "09-02", "total": 2977, "our_orders": 1465, "comp_orders": 1512, "our_revenue": 687828.9099999999, "comp_revenue": 651471.01, "total_revenue": 1339299.92, "our_share": 49.2}, {"date": "09-03", "total": 2820, "our_orders": 882, "comp_orders": 1938, "our_revenue": 425404.61, "comp_revenue": 847240.41, "total_revenue": 1272645.02, "our_share": 31.3}, {"date": "09-04", "total": 2717, "our_orders": 832, "comp_orders": 1885, "our_revenue": 406334.36, "comp_revenue": 834893.9700000001, "total_revenue": 1241228.33, "our_share": 30.6}, {"date": "09-05", "total": 3275, "our_orders": 841, "comp_orders": 2434, "our_revenue": 389092.14, "comp_revenue": 977605.39, "total_revenue": 1366697.53, "our_share": 25.7}, {"date": "09-06", "total": 3627, "our_orders": 960, "comp_orders": 2667, "our_revenue": 459087.27999999997, "comp_revenue": 1071501.28, "total_revenue": 1530588.56, "our_share": 26.5}, {"date": "09-07", "total": 63670, "our_orders": 17039, "comp_orders": 46631, "our_revenue": 5627314.399999999, "comp_revenue": 16003375.740000002, "total_revenue": 21630690.14, "our_share": 26.8}, {"date": "09-08", "total": 8941, "our_orders": 2559, "comp_orders": 6382, "our_revenue": 898840.27, "comp_revenue": 2172139.38, "total_revenue": 3070979.65, "our_share": 28.6}, {"date": "09-09", "total": 8502, "our_orders": 2370, "comp_orders": 6132, "our_revenue": 836700.9500000001, "comp_revenue": 2159784.71, "total_revenue": 2996485.66, "our_share": 27.9}, {"date": "09-10", "total": 9555, "our_orders": 2834, "comp_orders": 6721, "our_revenue": 989076.34, "comp_revenue": 2330902.87, "total_revenue": 3319979.21, "our_share": 29.7}], "days_count": 10};
+const TEAM_COLORS = {'我司':'#1E90FF','机械空间':'#FF6B35','纵横':'#7c6ff7','良米':'#94a3b8'};
+const TEAM_ORDER = ['我司','机械空间','纵横','良米'];
+
+function fmt(n) { return n.toLocaleString('zh-CN'); }
+function fmtRMB(n) { return '¥' + Math.round(n).toLocaleString('zh-CN'); }
+function fmtPct(n) { return n.toFixed(1) + '%'; }
+
+// KPI cards
+(function renderKPIs() {
+  const d = DATA, our = d.team_totals['我司'], jx = d.team_totals['机械空间'], zh = d.team_totals['纵横'], lm = d.team_totals['良米'];
+  const cards = [
+    { label: '9月全渠道订单', value: fmt(d.all_orders), sub: d.days_count + '天累计', cls: '' },
+    { label: '全渠道销售额', value: '¥' + (d.all_rev/10000).toFixed(0) + '万', sub: fmtRMB(d.all_rev), cls: '' },
+    { label: '★ 我司订单', value: fmt(our.orders), sub: '份额 ' + fmtPct(d.our_share), cls: 'ours' },
+    { label: '★ 我司销售额', value: '¥' + (our.revenue/10000).toFixed(0) + '万', sub: fmtRMB(our.revenue), cls: 'ours' },
+    { label: '我司均价', value: '¥' + our.avg_price, sub: '我司 ' + our.rooms + '个直播间', cls: 'green' },
+    { label: '主要竞对', value: jx.rooms + '机械+' + zh.rooms + '纵横+' + lm.rooms + '良米', sub: jx.orders + '/' + zh.orders + '/' + lm.orders + '单', cls: '' },
+  ];
+  document.getElementById('kpiRow').innerHTML = cards.map(c =>
+    `<div class="kpi-card ${c.cls}"><div class="label">${c.label}</div><div class="value">${c.value}</div><div class="sub">${c.sub}</div></div>`
+  ).join('');
+})();
+
+// Room ranking table
+(function renderRoomTable() {
+  const all_rev = DATA.all_rev;
+  const rows = DATA.rooms_ranked.map((r, i) => {
+    const [name, info] = r;
+    const rank = i + 1;
+    const rankCls = rank <= 3 ? 'rank-' + rank : 'rank-other';
+    const team = info.type;
+    const marker = team === '我司' ? '★' : team === '机械空间' ? '◆' : team === '纵横' ? '▲' : '·';
+    const rowCls = team === '我司' ? 'our' : '';
+    const teamColor = TEAM_COLORS[team] || '#64748b';
+    return `<tr class="${rowCls}">
+      <td><span class="rank-num ${rankCls}">${rank}</span></td>
+      <td>${marker} <strong>${name}</strong></td>
+      <td style="color:${teamColor};font-weight:600">${team}</td>
+      <td>${fmt(info.orders)}</td>
+      <td class="amount">${fmtRMB(info.revenue)}</td>
+      <td>${fmtPct(info.revenue/all_rev*100)}</td>
+      <td>¥${Math.round(info.revenue/info.orders)}</td>
+      <td>${info.days}天</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('roomTableBody').innerHTML = rows;
+})();
+
+// 我司 rooms table
+(function renderOurRooms() {
+  const our_rev = DATA.team_totals['我司'].revenue;
+  const rows = DATA.our_rooms_ranked.map((r, i) => {
+    const [name, info] = r;
+    const rank = i + 1;
+    const rankCls = rank <= 3 ? 'rank-' + rank : 'rank-other';
+    return `<tr>
+      <td><span class="rank-num ${rankCls}">${rank}</span></td>
+      <td><strong>${name}</strong></td>
+      <td>${fmt(info.orders)}</td>
+      <td class="amount">${fmtRMB(info.revenue)}</td>
+      <td>${fmtPct(info.revenue/our_rev*100)}</td>
+      <td>¥${Math.round(info.revenue/info.orders)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('ourRoomTable').innerHTML = rows;
+})();
+
+// Product table
+(function renderProds() {
+  const all_rev = DATA.all_rev;
+  const top12 = DATA.prods_ranked.slice(0, 12);
+  const rows = top12.map((r, i) => {
+    const [name, info] = r;
+    const rank = i + 1;
+    const rankCls = rank <= 3 ? 'rank-' + rank : 'rank-other';
+    return `<tr>
+      <td><span class="rank-num ${rankCls}">${rank}</span></td>
+      <td>${name}</td>
+      <td>${fmt(info.orders)}</td>
+      <td class="amount">${fmtRMB(info.revenue)}</td>
+      <td>${fmtPct(info.revenue/all_rev*100)}</td>
+      <td>¥${Math.round(info.revenue/info.orders)}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('prodTable').innerHTML = rows;
+})();
+
+// Competitor room ranking
+(function renderComp() {
+  const all_rev = DATA.all_rev;
+  const all_comp = [...DATA.jixie_rooms, ...DATA.zongheng_rooms, ...DATA.liangmi_rooms].sort((a,b) => b[1].revenue - a[1].revenue);
+  const top8 = all_comp.slice(0, 8);
+  const rows = top8.map((r, i) => {
+    const [name, info] = r;
+    const rank = i + 1;
+    const rankCls = rank <= 3 ? 'rank-' + rank : 'rank-other';
+    const teamColor = TEAM_COLORS[info.type] || '#64748b';
+    return `<tr>
+      <td><span class="rank-num ${rankCls}">${rank}</span></td>
+      <td>${name}</td>
+      <td style="color:${teamColor};font-weight:600">${info.type}</td>
+      <td>${fmt(info.orders)}</td>
+      <td class="amount">${fmtRMB(info.revenue)}</td>
+      <td>${fmtPct(info.revenue/all_rev*100)}</td>
+      <td>¥${Math.round(info.revenue/info.orders)}</td>
+      <td>${info.days}天</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('compTable').innerHTML = rows;
+})();
+
+// Week table
+(function renderWeeks() {
+  const rows = Object.entries(DATA.weeks).map(([wk, w]) => {
+    const share = w.our_orders / w.total_orders * 100;
+    const daily_avg = Math.round(w.our_orders / w.days);
+    return `<tr>
+      <td>${w.label}</td>
+      <td>${w.days}天</td>
+      <td>${fmt(w.total_orders)}</td>
+      <td class="amount">${fmtRMB(w.total_revenue)}</td>
+      <td>${fmt(w.our_orders)}</td>
+      <td>${fmtPct(share)}</td>
+      <td class="amount">${fmtRMB(w.our_revenue)}</td>
+      <td>${daily_avg}单/天</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('weekTable').innerHTML = rows;
+})();
+
+// Summary
+(function renderSummary() {
+  const d = DATA;
+  const our = d.team_totals['我司'], jx = d.team_totals['机械空间'], zh = d.team_totals['纵横'], lm = d.team_totals['良米'];
+  const top_our = d.our_rooms_ranked[0];
+
+  document.getElementById('summaryBox').innerHTML = `
+    <h3>📊 9月核心洞察（持续更新中）</h3>
+    <ul>
+      <li><strong>总量：</strong>9月全渠道累计 <span class="highlight">${fmt(d.all_orders)}单</span>，销售额 <span class="highlight">${fmtRMB(d.all_rev)}（¥${(d.all_rev/10000).toFixed(0)}万）</span>，日均 ${Math.round(d.all_orders/d.days_count)}单。</li>
+      <li><strong>我司表现：</strong>${our.rooms}个直播间合计 <span class="highlight">${fmt(our.orders)}单（份额${fmtPct(d.our_share)}）</span>，销售额 <span class="highlight">${fmtRMB(our.revenue)}（¥${(our.revenue/10000).toFixed(0)}万）</span>，均价¥${our.avg_price}。</li>
+      <li><strong>机械空间：</strong>${jx.rooms}个直播间 ${fmt(jx.orders)}单，${fmtRMB(jx.revenue)}。</li>
+      <li><strong>纵横：</strong>${zh.rooms}个直播间 ${fmt(zh.orders)}单，${fmtRMB(zh.revenue)}。</li>
+      <li><strong>良米：</strong>${lm.rooms}个直播间 ${fmt(lm.orders)}单，${fmtRMB(lm.revenue)}。</li>
+    </ul>
+  `;
+})();
+
+// Competitive analysis
+(function renderCompetitive() {
+  const d = DATA;
+  const our = d.team_totals['我司'], jx = d.team_totals['机械空间'], zh = d.team_totals['纵横'], lm = d.team_totals['良米'];
+
+  document.getElementById('competitiveAnalysis').innerHTML = `
+    <h3>一、四队格局</h3>
+    <p>9月延续<span class="highlight">我司·机械空间·纵横·良米</span>四队竞争格局。数据持续更新中。</p>
+    <h3>二、品类分析</h3>
+    <table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:13px">
+      <tr style="background:#f8fafc"><th style="padding:8px;text-align:left">品类</th><th style="padding:8px">全渠道订单</th><th style="padding:8px">销售额</th><th style="padding:8px">判断</th></tr>
+      ${d.prods_ranked.slice(0, 10).map(([name, info], i) => {
+        const share = (info.revenue / d.all_rev * 100);
+        const icon = i < 3 ? '🟢' : i < 6 ? '🟡' : '🟠';
+        return `<tr><td style="padding:8px">${name}</td><td style="padding:8px;font-weight:600">${fmt(info.orders)}单</td><td style="padding:8px;font-weight:600">${fmtRMB(info.revenue)} (${share.toFixed(1)}%)</td><td style="padding:8px">${icon}</td></tr>`;
+      }).join('')}
+    </table>
+  `;
+})();
+
+// Improvement suggestions
+(function renderImprovements() {
+  document.getElementById('improvementSuggestions').innerHTML = `
+    <h3>🔴 9月重点方向</h3>
+    <ul>
+      <li><strong>持续跟踪每日数据：</strong>9月是新月份，密切关注每日单量变化趋势，与8月同期进行对比。</li>
+      <li><strong>秋季开学季运营：</strong>9月进入秋季开学季，重点推出手环/Watch学生及运动健康场景。</li>
+      <li><strong>竞对动态监控：</strong>密切关注机械空间和良米的直播间变化和促销策略。</li>
+    </ul>
+    <p style="margin-top:12px;color:var(--text-muted);">（更多洞察将在累积足够数据后自动生成）</p>
+  `;
+})();
+
+// Future direction
+(function renderFuture() {
+  document.getElementById('futureDirection').innerHTML = `
+    <h3>9月战略方向</h3>
+    <p>9月目标：延续8月增长势头，重点提升我司份额。数据持续更新中，具体策略将根据实际数据调整。</p>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+      <strong>🎯 9月核心KPI：</strong>
+      我司日均目标 <span class="highlight">待定（根据8月基准设定）</span>
+    </div>
+  `;
+})();
+
+(function renderCharts() {
+  const daily = DATA.daily_data;
+  const dates = daily.map(d => d.date);
+  const weeks = DATA.weeks;
+
+  // Daily orders
+  const chart1 = echarts.init(document.getElementById('chartDailyOrders'));
+  chart1.setOption({
+    title: { text: '每日订单趋势', left: 'center', textStyle: { fontSize: 15, fontWeight: 600 } },
+    tooltip: { trigger: 'axis' },
+    legend: { bottom: 0, data: ['全渠道', '我方', '竞对'] },
+    grid: { left: 50, right: 20, top: 50, bottom: 35 },
+    xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45, fontSize: 10 } },
+    yAxis: { type: 'value', name: '订单数' },
+    series: [
+      { name: '全渠道', type: 'bar', data: daily.map(d => d.total), itemStyle: { color: '#94a3b8' }, barWidth: '60%', z: 1 },
+      { name: '我方', type: 'bar', data: daily.map(d => d.our_orders), itemStyle: { color: '#1E90FF' }, barWidth: '60%', z: 2 },
+      { name: '竞对', type: 'bar', data: daily.map(d => d.comp_orders), itemStyle: { color: '#FF6B35' }, barWidth: '60%', z: 2 },
+    ]
+  });
+
+  // Daily revenue
+  const chart2 = echarts.init(document.getElementById('chartDailyRevenue'));
+  chart2.setOption({
+    title: { text: '每日销售额趋势 (万元)', left: 'center', textStyle: { fontSize: 15, fontWeight: 600 } },
+    tooltip: { trigger: 'axis', valueFormatter: v => '¥' + (v/10000).toFixed(1) + '万' },
+    legend: { bottom: 0, data: ['全渠道', '我方', '竞对'] },
+    grid: { left: 55, right: 20, top: 50, bottom: 35 },
+    xAxis: { type: 'category', data: dates, axisLabel: { rotate: 45, fontSize: 10 } },
+    yAxis: { type: 'value', name: '万元', axisLabel: { formatter: v => (v/10000).toFixed(0) + 'w' } },
+    series: [
+      { name: '全渠道', type: 'line', data: daily.map(d => d.total_revenue), smooth: true, lineStyle: { color: '#94a3b8', width: 2 }, symbol: 'none' },
+      { name: '我方', type: 'line', data: daily.map(d => d.our_revenue), smooth: true, lineStyle: { color: '#1E90FF', width: 2.5 }, symbol: 'circle', symbolSize: 4, areaStyle: { color: 'rgba(30,144,255,0.08)' } },
+      { name: '竞对', type: 'line', data: daily.map(d => d.comp_revenue), smooth: true, lineStyle: { color: '#FF6B35', width: 2 }, symbol: 'circle', symbolSize: 4, areaStyle: { color: 'rgba(255,107,53,0.06)' } },
+    ]
+  });
+
+  // Weekly bar
+  const chart3 = echarts.init(document.getElementById('chartWeekly'));
+  const wkLabels = Object.values(weeks).map(w => w.label);
+  const wkOur = Object.values(weeks).map(w => w.our_orders);
+  const wkComp = Object.values(weeks).map(w => w.total_orders - w.our_orders);
+  const wkOurRev = Object.values(weeks).map(w => w.our_revenue);
+  const wkCompRev = Object.values(weeks).map(w => w.total_revenue - w.our_revenue);
+  chart3.setOption({
+    title: { text: '周度订单与销售额对比', left: 'center', textStyle: { fontSize: 15, fontWeight: 600 } },
+    tooltip: { trigger: 'axis' },
+    legend: { bottom: 0, data: ['我方订单', '竞对订单', '我方销售额', '竞对销售额'] },
+    grid: { left: 70, right: 70, top: 50, bottom: 35 },
+    xAxis: { type: 'category', data: wkLabels },
+    yAxis: [
+      { type: 'value', name: '订单数' },
+      { type: 'value', name: '销售额', axisLabel: { formatter: v => (v/10000).toFixed(0) + 'w' } }
+    ],
+    series: [
+      { name: '我方订单', type: 'bar', data: wkOur, itemStyle: { color: '#1E90FF' }, barGap: '10%' },
+      { name: '竞对订单', type: 'bar', data: wkComp, itemStyle: { color: '#FF6B35' } },
+      { name: '我方销售额', type: 'line', yAxisIndex: 1, data: wkOurRev, lineStyle: { color: '#1da85c', width: 3 }, symbol: 'diamond', symbolSize: 8 },
+      { name: '竞对销售额', type: 'line', yAxisIndex: 1, data: wkCompRev, lineStyle: { color: '#FF4757', width: 2, type: 'dashed' }, symbol: 'diamond', symbolSize: 6 },
+    ]
+  });
+
+  // Weekly share
+  const chart4 = echarts.init(document.getElementById('chartWeeklyShare'));
+  const wkShare = Object.values(weeks).map(w => parseFloat((w.our_orders / w.total_orders * 100).toFixed(1)));
+  chart4.setOption({
+    title: { text: '我方周度份额变化', left: 'center', textStyle: { fontSize: 16, fontWeight: 700 } },
+    tooltip: { trigger: 'axis' },
+    grid: { left: 50, right: 40, top: 55, bottom: 45 },
+    xAxis: { type: 'category', data: wkLabels, axisLabel: { fontSize: 12, fontWeight: 600 } },
+    yAxis: { type: 'value', name: '份额 (%)', axisLabel: { formatter: '{value}%' }, splitLine: { lineStyle: { type: 'dashed', color: '#e8ecf1' } } },
+    series: [
+      {
+        name: '我方份额', type: 'bar', data: wkShare,
+        itemStyle: { color: '#1E90FF', borderRadius: [6,6,0,0] },
+        barWidth: '50%',
+        label: { show: true, position: 'top', fontSize: 16, fontWeight: 700, color: '#0f172a', formatter: '{c}%' },
+      }
+    ]
+  });
+
+  window.addEventListener('resize', () => { chart1.resize(); chart2.resize(); chart3.resize(); chart4.resize(); });
+})();
+</script>
 
 </body>
 </html>
