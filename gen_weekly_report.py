@@ -743,6 +743,124 @@ def sheet_analysis(wb):
     return ws
 
 
+# ==================== Sheet 6 运营共识与人员 ====================
+def sheet_ops(wb):
+    ws = wb.create_sheet('扭亏共识与人员')
+    no_grid(ws)
+    title_block(ws, '直播间扭亏共识 · 人员稳定性', '口径：手环 / 手表 / 耳机直播间　｜　数据周期 9.4-9.10', span=4)
+
+    ws.cell(row=5, column=1, value='一、直播间扭亏共识').font = F_SEC
+    ws.merge_cells(start_row=5, start_column=1, end_row=5, end_column=4)
+    header_row(ws, 6, ['#', '共识 / 议题', '数据依据与动作', '状态'])
+    rows1 = [
+        ('止损优先于提效',
+         '我司直播间本周合计 ¥7,869,313，前 3 大间占 96.0%：'
+         '数码旗舰店 ¥602,291/日（53.6%）、官方手环直播间 ¥274,963/日（24.5%）、'
+         '官方手表 ¥202,004/日（18.0%），其余全部仅 4.0%。\n'
+         '低效待收缩：小米智能设备旗舰店 ¥2,339/日（环比 -93%）、'
+         '官方耳机直播间 ¥1,928/日（仅 2/7 天开播）、手环10Pro 与 AI眼镜 0 数据。\n'
+         '例外：手环官旗直播间日均 ¥14,492 但环比 +829%，处回升通道，保留观察',
+         '待执行'),
+        ('耳机直播间 · 小米耳机定金预售方案',
+         '本周仅 ¥13,494 / 60 单，只有 2/7 天开播；产品结构全是低客单——'
+         'REDMI Buds 8 系列 ¥99-317、Xiaomi Buds 6 ¥540、'
+         '最高的 Xiaomi Buds 5 Pro 也仅 ¥874。\n'
+         '客单低、铺不出量级，自然流量撬不动。'
+         '方案需拉通整个 9 月，便于政策申请与收割节点，形成持续曝光而非零散开播',
+         '方案制定中'),
+        ('高端表直播间 · 节点收割',
+         '小米官旗手表直播间（均价 ¥885，全司最高）：销售额 ¥273,434→¥183,193（-33%）、'
+         '单量 386→207（-46%），但均价 ¥708→¥885（+25%），9/5-9/6 破 ¥1,000。\n'
+         '人少了但质量更高 → 非节点收缩直播时长、压缩人力，节点集中资源收割',
+         '已定策略'),
+    ]
+    rr = 7
+    for k, (a, b, c) in enumerate(rows1):
+        ws.cell(row=rr, column=1, value=k + 1).font = Font(name=FONT, size=10, bold=True, color=BRAND)
+        ws.cell(row=rr, column=1).alignment = Alignment(horizontal='center', vertical='top')
+        ws.cell(row=rr, column=2, value=a).font = F_BOLD
+        ws.cell(row=rr, column=3, value=b).font = F_BODY
+        ws.cell(row=rr, column=4, value=c).font = F_TINY
+        for c_ in range(1, 5):
+            cell = ws.cell(row=rr, column=c_)
+            cell.border = B_ALL
+            if c_ > 1:
+                cell.alignment = TOPWRAP
+            else:
+                cell.alignment = Alignment(horizontal='center', vertical='top')
+        ws.row_dimensions[rr].height = 82
+        rr += 1
+
+    rr += 1
+    ws.cell(row=rr, column=1, value='二、人员稳定性').font = F_SEC
+    ws.merge_cells(start_row=rr, start_column=1, end_row=rr, end_column=4)
+    header_row(ws, rr + 1, ['#', '问题反馈', '解决措施', '状态'])
+    rows2 = [
+        ('排班希望早点发，A 班能早点睡觉', '排班每天下午 5:30 前必须发出', '已定规则'),
+        ('穿戴组主播反映样机拿得有点慢',
+         '后续直播间样机充足，各直播间配一套；由该间对应运营 / 主播组长统一管理', '推进中'),
+        ('登记礼赠电脑不够用，建议增加 1 台',
+         '礼赠 9 月统一切换班牛系统，主播无需手动登记', '9 月落地'),
+        ('排班建议 3 天换一次且不平均', '近期稳定执行中', '执行中'),
+        ('建议每个直播间配一台手机', '见下方配备清单', '部分完成'),
+    ]
+    r2 = rr + 2
+    for k, (a, b, c) in enumerate(rows2):
+        x = r2 + k
+        ws.cell(row=x, column=1, value=k + 1).font = Font(name=FONT, size=10, bold=True, color=BRAND)
+        ws.cell(row=x, column=1).alignment = Alignment(horizontal='center', vertical='center')
+        ws.cell(row=x, column=2, value=a).font = F_BOLD
+        ws.cell(row=x, column=3, value=b).font = F_BODY
+        ws.cell(row=x, column=4, value=c).font = F_TINY
+        for c_ in range(1, 5):
+            cell = ws.cell(row=x, column=c_)
+            cell.border = B_ALL
+            cell.alignment = TOPWRAP if c_ > 1 else Alignment(horizontal='center', vertical='center')
+        ws.row_dimensions[x].height = 32
+
+    r3 = r2 + len(rows2) + 1
+    ws.cell(row=r3, column=1, value='三、手机配备清单（手环 / 手表 / 耳机口径）').font = F_SEC
+    ws.merge_cells(start_row=r3, start_column=1, end_row=r3, end_column=4)
+    header_row(ws, r3 + 1, ['状态', '直播间', '本周日均销售额', '备注'])
+    phones = [
+        ('✅ 已配备', '小米数码旗舰店', 602291, ''),
+        ('✅ 已配备', '小米官方手环直播间', 274963, ''),
+        ('✅ 已配备', '小米官方手表（大号）', 202004, ''),
+        ('✅ 已配备', '小米官旗手表直播间（小号）', 26170, ''),
+        ('❌ 待配备', '小米手环官旗直播间', 14492, '本周环比 +829%，建议优先配备'),
+        ('❌ 待配备', '小米官方耳机直播间', 1928, '结合耳机定金预售方案一并考虑'),
+    ]
+    x = r3 + 2
+    for k, (st, room, avg, note) in enumerate(phones):
+        ws.cell(row=x, column=1, value=st).font = Font(
+            name=FONT, size=10, bold=True, color='1E7A46' if st.startswith('✅') else 'C0392B')
+        ws.cell(row=x, column=1).alignment = Alignment(horizontal='center', vertical='center')
+        ws.cell(row=x, column=2, value=room).font = F_BOLD
+        ws.cell(row=x, column=3, value=avg).font = F_INPUT
+        ws.cell(row=x, column=3).number_format = MONEY
+        ws.cell(row=x, column=3).alignment = RIGHT
+        ws.cell(row=x, column=4, value=note).font = F_TINY
+        for c_ in range(1, 5):
+            cell = ws.cell(row=x, column=c_)
+            cell.border = B_ALL
+            if c_ in (2, 4):
+                cell.alignment = TOPWRAP
+            if not st.startswith('✅'):
+                cell.fill = P_WARN
+        ws.row_dimensions[x].height = 26
+        x += 1
+    ws.cell(row=x, column=1, value='注：小米手环10Pro直播间、小米AI眼镜直播间本周无直播数据，'
+                                   '待确认是否仍在运营，确认后再定是否配备').font = F_TINY
+    ws.merge_cells(start_row=x, start_column=1, end_row=x, end_column=4)
+    ws.row_dimensions[x].height = 20
+
+    ws.column_dimensions['A'].width = 13
+    ws.column_dimensions['B'].width = 26
+    ws.column_dimensions['C'].width = 72
+    ws.column_dimensions['D'].width = 26
+    return ws
+
+
 def main():
     h = load()
     wb = Workbook()
@@ -752,6 +870,7 @@ def main():
     sheet_watch(wb, h)
     sheet_daily(wb, h)
     sheet_analysis(wb)
+    sheet_ops(wb)
     wb.save(OUT)
     print('已生成:', OUT)
 
