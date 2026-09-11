@@ -7,10 +7,11 @@
 <meta name="description" content="小米手环直播间每日销量追踪、竞对对比、小时分布分析">
 <link rel="icon" type="image/png" href="../xiaomi-logo.png">
 <link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="../theme.css">
 <script src="chart.umd.min.js"></script>
 <style>
   :root {
-    --accent: #4ECDC4;
+    --accent: var(--mi-orange);
     --accent-gold: #FFD700;
   }
 
@@ -67,7 +68,7 @@
 
   h2 { color: var(--text); margin: 10px 0; font-size: 20px; font-weight: 700; }
   .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin: 16px 0; }
-  .kpi-card { background: white; border-radius: var(--radius); padding: 22px 20px; box-shadow: var(--shadow-sm); border: 1px solid #e8ecf1; text-align: center; transition: transform var(--transition), box-shadow var(--transition); }
+  .kpi-card { background: white; border-radius: var(--radius); padding: 22px 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); text-align: center; transition: transform var(--transition), box-shadow var(--transition); }
   .kpi-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
   .kpi-card.ours { border: 2px solid var(--accent-gold); background: linear-gradient(135deg, #fffdf0 0%, #fff 100%); }
   .kpi-card .label { font-size: 11px; color: var(--text-secondary); margin-bottom: 6px; letter-spacing: .05em; text-transform: uppercase; font-weight: 600; }
@@ -76,40 +77,40 @@
   .kpi-card .change.up { color: #e74c3c; }
   .kpi-card .change.down { color: #27ae60; }
   .charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
-  .chart-card { background: white; border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); border: 1px solid #e8ecf1; transition: box-shadow var(--transition); }
+  .chart-card { background: white; border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); transition: box-shadow var(--transition); }
   .chart-card:hover { box-shadow: var(--shadow-md); }
   .chart-card h3 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 14px; }
   .chart-container { position: relative; height: 320px; }
   .chart-container.tall { height: 400px; }
   .full-width { grid-column: 1 / -1; }
   .product-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-  .product-table th, .product-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid #f0f2f5; font-size: 13px; }
+  .product-table th, .product-table td { padding: 10px 14px; text-align: left; border-bottom: 1px solid var(--border-light); font-size: 13px; }
   .product-table th { color: var(--text-secondary); font-weight: 600; font-size: 11px; letter-spacing: .03em; text-transform: uppercase; }
   .product-table tbody tr { transition: background var(--transition); }
-  .product-table tbody tr:hover { background: #f8fafc; }
+  .product-table tbody tr:hover { background: var(--surface-2); }
   .product-table .bar-cell { width: 100px; }
   .product-table .bar { height: 8px; background: var(--accent); border-radius: 4px; display: inline-block; vertical-align: middle; }
-  .product-table .bar-bg { width: 100px; height: 8px; background: #f0f2f5; border-radius: 4px; display: inline-block; vertical-align: middle; }
+  .product-table .bar-bg { width: 100px; height: 8px; background: var(--border-light); border-radius: 4px; display: inline-block; vertical-align: middle; }
   .room-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin: 16px 0; }
-  .room-card { background: white; border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); border: 1px solid #e8ecf1; transition: transform var(--transition), box-shadow var(--transition); }
+  .room-card { background: white; border-radius: var(--radius); padding: 22px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); transition: transform var(--transition), box-shadow var(--transition); }
   .room-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
   .room-card.ours { border: 2px solid var(--accent-gold); }
   .room-card .room-name { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--text); }
   .room-card .room-name .badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
   .room-card .room-name .badge.ours { background: #FFD700; color: #333; }
-  .room-card .room-name .badge.comp { background: #e8ecf1; color: #64748b; }
-  .room-card .stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f5f5f5; font-size: 13px; }
+  .room-card .room-name .badge.comp { background: var(--border-light); color: #64748b; }
+  .room-card .stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border-light); font-size: 13px; }
   .room-card .stat-row .stat-label { color: var(--text-secondary); }
   .room-card .stat-row .stat-value { font-weight: 600; color: var(--text); }
-  .summary-box { background: #fff; border-radius: var(--radius); padding: 22px 26px; box-shadow: var(--shadow-sm); border: 1px solid #e8ecf1; line-height: 2; font-size: 14px; }
+  .summary-box { background: #fff; border-radius: var(--radius); padding: 22px 26px; box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); line-height: 2; font-size: 14px; }
   .summary-box h3 { margin-bottom: 8px; font-weight: 700; }
   .note { color: var(--text-secondary); font-size: 12px; text-align: center; margin-top: 8px; }
   .back-link { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border: 1px solid #dde1e6; background: white; border-radius: 8px; cursor: pointer; font-size: 14px; color: var(--text-secondary); text-decoration: none; transition: all var(--transition); }
-  .back-link:hover { color: #ff6900; border-color: #ff6900; background: #fff7ed; }
+  .back-link:hover { color: var(--mi-orange); border-color: var(--mi-orange); background: var(--mi-orange-soft); }
   .hourly-breakdown { margin: 16px 0; }
   .hourly-breakdown h2 { margin-bottom: 16px; }
   .hour-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 12px; }
-  .hour-card { background: white; border-radius: var(--radius); padding: 0; box-shadow: var(--shadow-sm); border: 1px solid #e8ecf1; overflow: hidden; transition: box-shadow var(--transition); }
+  .hour-card { background: white; border-radius: var(--radius); padding: 0; box-shadow: var(--shadow-sm); border: 1px solid var(--border-light); overflow: hidden; transition: box-shadow var(--transition); }
   .hour-card:hover { box-shadow: var(--shadow-md); }
   .hour-card .hour-header { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #FFD700; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; }
   .hour-card .hour-header .hour-label { font-size: 18px; font-weight: 700; }
@@ -117,9 +118,9 @@
   .hour-card .hour-header .hour-summary span { color: #fff; font-weight: 600; }
   .hour-card .hour-body { padding: 8px 0; max-height: 420px; overflow-y: auto; }
   .hour-card .hour-body table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .hour-card .hour-body th { padding: 6px 12px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 11px; border-bottom: 2px solid #f0f2f5; position: sticky; top: 0; background: #fff; }
-  .hour-card .hour-body td { padding: 5px 12px; border-bottom: 1px solid #f5f5f5; }
-  .hour-card .hour-body tr:hover td { background: #f8fafc; }
+  .hour-card .hour-body th { padding: 6px 12px; text-align: left; color: var(--text-secondary); font-weight: 600; font-size: 11px; border-bottom: 2px solid var(--border-light); position: sticky; top: 0; background: #fff; }
+  .hour-card .hour-body td { padding: 5px 12px; border-bottom: 1px solid var(--border-light); }
+  .hour-card .hour-body tr:hover td { background: var(--surface-2); }
   .hour-card .hour-body .pct-bar { display: inline-block; height: 6px; background: var(--accent); border-radius: 3px; vertical-align: middle; margin-right: 6px; }
   .hour-empty { text-align: center; color: #94a3b8; padding: 40px; font-size: 14px; }
   .daily-summary-module { margin: 24px 0; }
@@ -129,10 +130,10 @@
   .insight-line.negative { border-left-color: #e74c3c; }
   .insight-line.neutral { border-left-color: var(--accent); }
   .daily-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .daily-table th, .daily-table td { padding: 6px 10px; text-align: center; border-bottom: 1px solid #f0f2f5; white-space: nowrap; }
-  .daily-table th { background: #f8f9fc; color: var(--text-secondary); font-weight: 600; font-size: 11px; position: sticky; top: 0; z-index: 1; }
+  .daily-table th, .daily-table td { padding: 6px 10px; text-align: center; border-bottom: 1px solid var(--border-light); white-space: nowrap; }
+  .daily-table th { background: var(--surface-2); color: var(--text-secondary); font-weight: 600; font-size: 11px; position: sticky; top: 0; z-index: 1; }
   .daily-table tbody tr { transition: background var(--transition); }
-  .daily-table tbody tr:hover { background: #f8fafc; }
+  .daily-table tbody tr:hover { background: var(--surface-2); }
   .daily-table .change-up { color: #e74c3c; font-weight: 600; }
   .daily-table .change-down { color: #27ae60; font-weight: 600; }
   .daily-table .ours-bg { background: #fffdf0; }
@@ -158,7 +159,7 @@
   /* ===== 10Pro 对比模块 ===== */
   .b10pro-section { margin: 20px 0; }
   .b10pro-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 14px; }
-  .b10pro-kpi { background: #fff; border-radius: var(--radius); padding: 16px 14px; border: 1px solid #e8ecf1; text-align: center; }
+  .b10pro-kpi { background: #fff; border-radius: var(--radius); padding: 16px 14px; border: 1px solid var(--border-light); text-align: center; }
   .b10pro-kpi .bk-title { font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 10px; }
   .b10pro-kpi .bk-vs { display: flex; justify-content: center; align-items: center; gap: 12px; }
   .b10pro-kpi .bk-side { text-align: center; }
@@ -171,9 +172,9 @@
   .b10pro-kpi .bk-bar-l { height: 100%; background: linear-gradient(90deg, #94a3b8, #b0bcc8); border-radius: 3px; transition: width 0.6s ease; }
   .b10pro-kpi .bk-pct { font-size: 0.65rem; color: var(--text-secondary); margin-top: 4px; }
   .b10pro-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
-  .b10pro-table th, .b10pro-table td { padding: 6px 8px; text-align: center; border-bottom: 1px solid #f0f2f5; white-space: nowrap; }
-  .b10pro-table th { background: #f8f9fc; font-size: 0.68rem; font-weight: 600; color: var(--text-secondary); }
-  .b10pro-table tbody tr:hover { background: #f8fafc; }
+  .b10pro-table th, .b10pro-table td { padding: 6px 8px; text-align: center; border-bottom: 1px solid var(--border-light); white-space: nowrap; }
+  .b10pro-table th { background: var(--surface-2); font-size: 0.68rem; font-weight: 600; color: var(--text-secondary); }
+  .b10pro-table tbody tr:hover { background: var(--surface-2); }
   .b10pro-table .col-our { color: #4f6ef7; font-weight: 600; }
   .b10pro-table .col-lm { color: #94a3b8; font-weight: 600; }
   .b10pro-table .col-win { background: #f0f3ff; }
@@ -184,7 +185,7 @@
   .b10pro-huanbi { margin-top: 16px; }
   .b10pro-huanbi-title { font-size: 0.85rem; font-weight: 700; color: #1e293b; margin: 0 0 10px; }
   .b10pro-huanbi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-  .b10pro-hb-card { background: #fff; border: 1px solid #e8ecf1; border-radius: var(--radius); padding: 14px; }
+  .b10pro-hb-card { background: #fff; border: 1px solid var(--border-light); border-radius: var(--radius); padding: 14px; }
   .b10pro-hb-card .hb-title { font-size: 0.8rem; font-weight: 700; color: #334155; margin-bottom: 4px; }
   .b10pro-hb-row { padding: 8px 0; border-bottom: 1px dashed #eef1f6; }
   .b10pro-hb-row:last-child { border-bottom: none; padding-bottom: 0; }
@@ -201,8 +202,8 @@
   @media (max-width: 768px) { .b10pro-huanbi-grid { grid-template-columns: 1fr; } }
 
   /* ===== 折叠/展开 按钮 & 直播间表格 ===== */
-  .toggle-btn { display:inline-block; padding:8px 20px; border:1px solid #dde1e6; background:#fff; border-radius:20px; cursor:pointer; font-size:13px; color:#4ECDC4; font-weight:600; transition:all .2s; }
-  .toggle-btn:hover { background:#4ECDC4; color:#fff; border-color:#4ECDC4; }
+  .toggle-btn { display:inline-block; padding:8px 20px; border:1px solid #dde1e6; background:#fff; border-radius:20px; cursor:pointer; font-size:13px; color:var(--mi-orange); font-weight:600; transition:all .2s; }
+  .toggle-btn:hover { background:var(--mi-orange); color:#fff; border-color:var(--mi-orange); }
   .room-table { width:100%; border-collapse:collapse; margin-top:10px; }
   .room-table th, .room-table td { padding:10px 14px; text-align:left; border-bottom:1px solid #f0f2f5; font-size:13px; }
   .room-table th { color:var(--text-secondary); font-weight:600; font-size:11px; letter-spacing:.03em; text-transform:uppercase; }
@@ -216,15 +217,15 @@
   .provider-hint { font-size: 12px; color: var(--text-secondary); }
   .provider-toggle-all { border: 1px solid #dde1e6; background: #fff; color: #64748b; padding: 5px 14px; border-radius: 16px; font-size: 12px; cursor: pointer; font-weight: 500; transition: all .2s; }
   .provider-toggle-all:hover { color: var(--accent); border-color: var(--accent); }
-  .provider-wrap { border: 1px solid #e8ecf1; border-radius: var(--radius); overflow: hidden; background: #fff; }
+  .provider-wrap { border: 1px solid var(--border-light); border-radius: var(--radius); overflow: hidden; background: #fff; }
   .provider-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .provider-table thead th {
-    background: #f8f9fc; color: var(--text-secondary); font-weight: 600; font-size: 11px;
+    background: var(--surface-2); color: var(--text-secondary); font-weight: 600; font-size: 11px;
     letter-spacing: .03em; padding: 10px 14px; text-align: left; border-bottom: 1px solid #eef1f6;
     position: sticky; top: 0; z-index: 1; white-space: nowrap;
   }
   .provider-table .num, .provider-table thead th.num { text-align: right; }
-  .provider-table td { padding: 9px 14px; border-bottom: 1px solid #f5f5f5; }
+  .provider-table td { padding: 9px 14px; border-bottom: 1px solid var(--border-light); }
   .provider-table tr:last-child td { border-bottom: none; }
 
   /* 服务商分组行 */
@@ -242,14 +243,14 @@
   .prow.collapsed .p-chev { transform: rotate(-90deg); }
   .prow .p-rev { font-weight: 800; }
   .prow .p-share { position: relative; }
-  .prow .p-share .share-bar { display: inline-block; height: 6px; border-radius: 3px; vertical-align: middle; margin-right: 8px; background: #e8ecf1; overflow: hidden; width: 72px; }
+  .prow .p-share .share-bar { display: inline-block; height: 6px; border-radius: 3px; vertical-align: middle; margin-right: 8px; background: var(--border-light); overflow: hidden; width: 72px; }
   .prow .p-share .share-bar i { display: block; height: 100%; border-radius: 3px; }
 
   /* 房间子行 */
   .rrow td { padding-top: 6px; padding-bottom: 6px; }
   .rrow .r-name { padding-left: 30px; display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #334155; }
   .rrow .r-name::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
-  .rrow:hover td { background: #f8fafc; }
+  .rrow:hover td { background: var(--surface-2); }
   .rrow .r-orders { color: #475569; }
   .rrow .r-orders em { color: #94a3b8; font-style: normal; font-size: 11px; }
   .rrow .r-rev { font-weight: 600; color: #0f172a; }
@@ -262,6 +263,27 @@
 
   @media (max-width: 768px) {
     .provider-table .hide-sm { display: none; }
+  }
+  /* ===== 统一规范（接入 theme.css 后补齐） ===== */
+  /* 表头：11 套表格规则里有的用大写有的不用，这里统一 */
+  .provider-table th,
+  .daily-table th,
+  .b10pro-table th,
+  .hour-card .hour-body th {
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    font-weight: 700;
+  }
+  /* 表头下沿统一 1px，不再有 2px 的孤例 */
+  .product-table th, .room-table th,
+  .provider-table th, .daily-table th,
+  .b10pro-table th, .hour-card .hour-body th {
+    border-bottom: 1px solid var(--border);
+  }
+  /* sticky 表头统一层叠顺序，避免被后续 relative 元素盖住 */
+  .product-table th, .room-table th, .provider-table th,
+  .daily-table th, .b10pro-table th, .hour-card .hour-body th {
+    position: sticky; top: 0; z-index: 2;
   }
 </style>
 </head>
@@ -277,7 +299,7 @@ return;
 </script>
 <!-- Loading overlay -->
 <div id="loadingOverlay" style="display:flex;align-items:center;justify-content:center;position:fixed;inset:0;background:#f0f4f8;z-index:9999;flex-direction:column;gap:16px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;">
-  <div style="width:40px;height:40px;border:3px solid #e8ecf1;border-top-color:#4ECDC4;border-radius:50%;animation:spin .8s linear infinite;"></div>
+  <div style="width:40px;height:40px;border:3px solid var(--border-light);border-top-color:var(--mi-orange);border-radius:50%;animation:spin .8s linear infinite;"></div>
   <div style="color:#64748b;font-size:14px;font-weight:500;">正在加载数据...</div>
 </div>
 <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
@@ -1013,7 +1035,7 @@ function renderProductChart(d) {
   const labels = sorted.map(([name]) => name);
   const orders = sorted.map(([, info]) => info.orders);
   const revenues = sorted.map(([, info]) => info.revenue);
-  const colors = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD','#F7DC6F','#BB8FCE','#85C1E9','#98D8C8'];
+  const colors = ['#FF6B6B','#ff6900','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD','#F7DC6F','#BB8FCE','#85C1E9','#98D8C8'];
 
   charts.productOrders = new Chart(document.getElementById('chartProductOrders'), {
     type: 'bar',
@@ -1091,7 +1113,7 @@ function renderHourlyCharts(d) {
       datasets: [{
         label: '销售额（千元）',
         data: revenue,
-        borderColor: '#4ECDC4',
+        borderColor: '#ff6900',
         backgroundColor: 'rgba(78,205,196,0.1)',
         fill: true,
         tension: 0.4,
@@ -1116,7 +1138,7 @@ function renderRoomHourlyOverlay(d) {
   section.style.display = '';
 
   const hours = Array.from({length: 24}, (_, i) => i);
-  const roomColors = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD'];
+  const roomColors = ['#FF6B6B','#ff6900','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD'];
   const datasets = rooms.map((r, i) => {
     const hd = (d.rooms[r]._hourly_stats || {});
     const data = hours.map(h => (hd[h] || {}).orders || 0);
@@ -1159,7 +1181,7 @@ function renderComparison() {
       labels: dates,
       datasets: [
         { label: '订单量', data: orders, backgroundColor: '#FF6B6B', yAxisID: 'y', borderRadius: 6 },
-        { label: '销售额（千元）', data: revenue, backgroundColor: '#4ECDC4', yAxisID: 'y1', borderRadius: 6 }
+        { label: '销售额（千元）', data: revenue, backgroundColor: '#ff6900', yAxisID: 'y1', borderRadius: 6 }
       ]
     },
     options: {
@@ -1619,14 +1641,14 @@ function renderProdRoomHourly(d) {
 
   let tabsHtml = '', panelsHtml = '';
   prodOrder.forEach((prod, i) => {
-    tabsHtml += `<button class="tab-prodroom ${i===0?'active':''}" onclick="switchProdRoomTab(${i})" style="padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;border:1px solid #dde1e6;background:${i===0?'#4ECDC4':'#fff'};color:${i===0?'#fff':'#64748b'};font-weight:500;transition:all .2s">${prod}</button>`;
+    tabsHtml += `<button class="tab-prodroom ${i===0?'active':''}" onclick="switchProdRoomTab(${i})" style="padding:6px 14px;border-radius:20px;cursor:pointer;font-size:12px;border:1px solid #dde1e6;background:${i===0?'#ff6900':'#fff'};color:${i===0?'#fff':'#64748b'};font-weight:500;transition:all .2s">${prod}</button>`;
 
     panelsHtml += `<div class="prodroom-panel" id="prodroom-panel-${i}" style="display:${i===0?'block':'none'}">`;
     panelsHtml += '<div style="overflow-x:auto;max-height:520px;overflow-y:auto;border-radius:8px;border:1px solid #e8ecf1">';
     panelsHtml += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
-    panelsHtml += '<thead><tr style="position:sticky;top:0;z-index:2"><th style="position:sticky;left:0;background:#f8f9fc;z-index:3;text-align:left;padding:8px 12px">小时</th>';
+    panelsHtml += '<thead><tr style="position:sticky;top:0;z-index:2"><th style="position:sticky;left:0;background:var(--surface-2);z-index:3;text-align:left;padding:8px 12px">小时</th>';
     roomNames.forEach(rn => {
-      panelsHtml += `<th style="background:#f8f9fc;padding:6px 10px;text-align:center;font-size:11px">${rn}</th>`;
+      panelsHtml += `<th style="background:var(--surface-2);padding:6px 10px;text-align:center;font-size:11px">${rn}</th>`;
     });
     panelsHtml += '<th style="background:#fffde0;padding:6px 10px;text-align:center">合计</th></tr></thead><tbody>';
 
@@ -1639,7 +1661,7 @@ function renderProdRoomHourly(d) {
         const c = pp.orders || 0;
         rowTotal += c;
         panelsHtml += c > 0
-          ? `<td style="text-align:center;font-weight:700;color:#4ECDC4;padding:5px">${c}</td>`
+          ? `<td style="text-align:center;font-weight:700;color:var(--mi-orange);padding:5px">${c}</td>`
           : '<td style="text-align:center;color:#ddd;padding:5px">-</td>';
       });
       panelsHtml += `<td style="text-align:center;background:#fffde0;font-weight:700">${rowTotal || '-'}</td></tr>`;
@@ -1661,7 +1683,7 @@ function renderProdRoomHourly(d) {
 function switchProdRoomTab(idx) {
   document.querySelectorAll('.tab-prodroom').forEach((t, i) => {
     t.classList.toggle('active', i === idx);
-    t.style.background = i === idx ? '#4ECDC4' : '#fff';
+    t.style.background = i === idx ? '#ff6900' : '#fff';
     t.style.color = i === idx ? '#fff' : '#64748b';
   });
   document.querySelectorAll('.prodroom-panel').forEach((p, i) => {
@@ -1729,9 +1751,9 @@ function renderRoomDetailHourly(d) {
     // Hourly table
     panelsHtml += '<div style="overflow-x:auto;max-height:500px;overflow-y:auto;border-radius:8px;border:1px solid #e8ecf1">';
     panelsHtml += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
-    panelsHtml += '<thead><tr style="position:sticky;top:0;z-index:2"><th style="position:sticky;left:0;background:#f8f9fc;z-index:3;text-align:left;padding:8px 12px">小时</th>';
+    panelsHtml += '<thead><tr style="position:sticky;top:0;z-index:2"><th style="position:sticky;left:0;background:var(--surface-2);z-index:3;text-align:left;padding:8px 12px">小时</th>';
     prodOrder.forEach(p => {
-      panelsHtml += `<th style="background:#f8f9fc;padding:6px 8px;text-align:center;font-size:11px">${p}</th>`;
+      panelsHtml += `<th style="background:var(--surface-2);padding:6px 8px;text-align:center;font-size:11px">${p}</th>`;
     });
     panelsHtml += '<th style="background:#f0f4ff;padding:6px 8px;text-align:center">合计</th><th style="background:#fff8f0;padding:6px 8px;text-align:center">销售额</th><th style="background:#f0fff0;padding:6px 8px;text-align:center">环比</th></tr></thead><tbody>';
 
