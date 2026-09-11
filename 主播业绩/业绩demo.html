@@ -146,7 +146,8 @@
             margin-right: 2px;
             white-space: nowrap;
         }
-        .filter-btn {
+        .filter-btn,
+        .month-btn {
             padding: 7px 14px;
             border-radius: 18px;
             border: 1.5px solid var(--border);
@@ -159,12 +160,14 @@
             white-space: nowrap;
             user-select: none;
         }
-        .filter-btn:hover {
+        .filter-btn:hover,
+        .month-btn:hover {
             border-color: var(--primary);
             color: var(--primary);
             background: #f8f9ff;
         }
-        .filter-btn.active {
+        .filter-btn.active,
+        .month-btn.active {
             background: var(--primary);
             color: #fff;
             border-color: var(--primary);
@@ -423,6 +426,33 @@
             font-weight: 600;
         }
 
+        /* 主播月度出勤统计 */
+        .stats-days {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: var(--primary);
+        }
+        .stats-days-unit {
+            font-size: 0.72rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-left: 2px;
+        }
+        .stats-shift-wrap {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .stats-subtotal {
+            color: var(--text-secondary);
+            font-size: 0.72rem;
+        }
+        .month-btn-group {
+            display: inline-flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
         .refund-rate-input {
             width: 70px;
             padding: 4px 8px;
@@ -545,6 +575,8 @@
             <span class="date-sep">至</span>
             <input type="date" id="dateEnd" title="结束日期">
             <button class="apply-btn" id="applyCustomRange">应用</button>
+            <span style="margin-left:12px;" class="filter-label">📆 按月</span>
+            <span class="month-btn-group" id="monthFilterButtons"></span>
             <span style="margin-left:12px;" class="filter-label">🎙️ 直播间</span>
             <select class="room-select" id="roomSelect">
                 <option value="all">全部直播间</option>
@@ -612,6 +644,33 @@
                     </thead>
                     <tbody id="monthlySummaryBody">
                         <tr><td colspan="6" style="text-align:center;padding:24px;color:#999;">暂无数据</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ==================== 主播月度出勤统计面板 ==================== -->
+        <div class="panel" id="anchorMonthlyStatsPanel">
+            <div class="panel-header month-summary-header">
+                <span class="dot" style="background:#06b6d4;"></span>
+                <span>🗓️ 主播月度出勤统计（各主播在各直播间的出勤天数 / 班次）</span>
+                <span class="month-period-badge" id="anchorStatsPeriodLabel">本月 -</span>
+                <select class="month-select" id="anchorStatsMonthSelect"></select>
+                <button class="apply-btn" id="exportAnchorStatsBtn" style="margin-left:8px;" title="导出当前月份出勤统计为Excel">📥 导出Excel</button>
+            </div>
+            <div class="panel-body" style="max-height:500px;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>直播间</th>
+                            <th>主播</th>
+                            <th>出勤天数</th>
+                            <th>班次分布</th>
+                            <th>月销售额</th>
+                        </tr>
+                    </thead>
+                    <tbody id="anchorStatsBody">
+                        <tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">暂无数据</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -2663,6 +2722,152 @@
                 XLSX.writeFile(wb, '累计有效日第一排名.xlsx');
             }
 
+            // ==================== 主播月度出勤统计 ====================
+            const SHIFT_ORDER = ['A', 'B', 'C', 'D', 'E'];
+
+            /**
+             * 汇总指定月份里 每个主播 在 每个直播间 的出勤情况
+             * - 出勤天数：该月有记录的不同日期数（同一天多场次只算一天）
+             * - 班次分布：A/B/C/D/E（A1、A2 等上下半场合并为 A），值为该班次出勤的天数
+             */
+            function getAnchorMonthlyStats(month) {
+                const map = new Map();
+                getAllDates().filter(d => d.slice(0, 7) === month).forEach(date => {
+                    (DAILY_RECORDS[date] || []).forEach(rec => {
+                        const key = rec.roomId + '||' + rec.anchor;
+                        if (!map.has(key)) {
+                            map.set(key, {
+                                roomId: rec.roomId,
+                                anchor: rec.anchor,
+                                dates: new Set(),
+                                shiftDays: new Map(),
+                                sales: 0
+                            });
+                        }
+                        const entry = map.get(key);
+                        entry.dates.add(date);
+                        if (rec.shift) {
+                            if (!entry.shiftDays.has(rec.shift)) entry.shiftDays.set(rec.shift, new Set());
+                            entry.shiftDays.get(rec.shift).add(date);
+                        }
+                        entry.sales += rec.sales || 0;
+                    });
+                });
+
+                const roomOrder = ROOMS.map(r => r.id);
+                return Array.from(map.values()).map(e => ({
+                    roomId: e.roomId,
+                    anchor: e.anchor,
+                    days: e.dates.size,
+                    shifts: SHIFT_ORDER
+                        .filter(s => e.shiftDays.has(s))
+                        .map(s => ({ shift: s, days: e.shiftDays.get(s).size })),
+                    sales: e.sales
+                })).sort((a, b) => {
+                    const ra = roomOrder.indexOf(a.roomId), rb = roomOrder.indexOf(b.roomId);
+                    if (ra !== rb) return ra - rb;
+                    if (b.days !== a.days) return b.days - a.days;
+                    return b.sales - a.sales;
+                });
+            }
+
+            function updateAnchorMonthlyStats() {
+                const month = document.getElementById('anchorStatsMonthSelect').value;
+                const label = document.getElementById('anchorStatsPeriodLabel');
+                const tbody = document.getElementById('anchorStatsBody');
+                if (!month) {
+                    label.textContent = '本月 -';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">请选择月份</td></tr>';
+                    return;
+                }
+
+                const rows = getAnchorMonthlyStats(month);
+                const dayCount = getAllDates().filter(d => d.slice(0, 7) === month).length;
+                label.textContent = `本月 ${month} · ${dayCount}天 · ${rows.length}条`;
+
+                if (rows.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">该月暂无数据</td></tr>';
+                    return;
+                }
+
+                let prevRoomId = null;
+                tbody.innerHTML = rows.map(r => {
+                    const room = getRoomById(r.roomId);
+                    // 同一直播间的行只在首行显示徽章，便于视觉分组
+                    const roomCell = r.roomId === prevRoomId
+                        ? ''
+                        : `<span class="badge-room" style="background:${room.color};">${room.name}</span>`;
+                    prevRoomId = r.roomId;
+
+                    const shiftHtml = r.shifts.length
+                        ? r.shifts.map(s => `<span class="badge-shift" title="${s.shift}班共出勤${s.days}天">${s.shift} × ${s.days}</span>`).join('')
+                        : '<span class="stats-subtotal">—</span>';
+
+                    return `<tr>
+                        <td>${roomCell}</td>
+                        <td><strong>${r.anchor}</strong></td>
+                        <td><span class="stats-days">${r.days}</span><span class="stats-days-unit">天</span></td>
+                        <td><div class="stats-shift-wrap">${shiftHtml}</div></td>
+                        <td class="highlight-sales">${formatMoney(r.sales)}</td>
+                    </tr>`;
+                }).join('');
+            }
+
+            function exportAnchorStatsToExcel() {
+                const month = document.getElementById('anchorStatsMonthSelect').value;
+                const rows = month ? getAnchorMonthlyStats(month) : [];
+                if (!rows.length) { alert('当前月份暂无可导出的出勤数据'); return; }
+                const data = [['月份', '直播间', '主播', '出勤天数', '班次分布', '月销售额']];
+                rows.forEach(r => {
+                    data.push([
+                        month,
+                        getRoomById(r.roomId).name,
+                        r.anchor,
+                        r.days,
+                        r.shifts.map(s => `${s.shift}班×${s.days}天`).join('、'),
+                        r.sales
+                    ]);
+                });
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                ws['!cols'] = [{wch:10},{wch:22},{wch:12},{wch:10},{wch:30},{wch:14}];
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, '主播月度出勤统计');
+                XLSX.writeFile(wb, `主播月度出勤统计_${month}.xlsx`);
+            }
+
+            // ==================== 顶部「按月」快捷筛选 ====================
+            function clearMonthFilterActive() {
+                document.querySelectorAll('#monthFilterButtons .month-btn').forEach(b => b.classList.remove('active'));
+            }
+
+            // 把时间筛选切到指定自然月（首日 ~ 末日），再全局刷新
+            function applyMonthRange(month) {
+                const y = parseInt(month.slice(0, 4), 10);
+                const mo = parseInt(month.slice(5, 7), 10);
+                const lastDay = new Date(y, mo, 0).getDate();
+                document.getElementById('dateStart').value = `${month}-01`;
+                document.getElementById('dateEnd').value = `${month}-${String(lastDay).padStart(2, '0')}`;
+                // 已进入自定义区间模式，清掉"近N天"按钮的选中态
+                document.querySelectorAll('#filterPanel .filter-btn').forEach(b => b.classList.remove('active'));
+                refreshAll();
+            }
+
+            function initMonthFilterButtons() {
+                const wrap = document.getElementById('monthFilterButtons');
+                const months = getAvailableMonths();
+                wrap.innerHTML = months.map(m => {
+                    const y = m.slice(0, 4), mo = parseInt(m.slice(5, 7), 10);
+                    return `<button class="month-btn" data-month="${m}" title="${y}年${mo}月（${m}）">${mo}月</button>`;
+                }).join('');
+                wrap.querySelectorAll('.month-btn').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        applyMonthRange(this.dataset.month);
+                        clearMonthFilterActive();
+                        this.classList.add('active');
+                    });
+                });
+            }
+
             // ==================== 全局刷新 ====================
             function refreshAll() {
                 const activeBtn = document.querySelector('#filterPanel .filter-btn.active');
@@ -2704,13 +2909,19 @@
                 const months = getAvailableMonths();
                 const refundSelect = document.getElementById('refundMonthSelect');
                 const summarySelect = document.getElementById('summaryMonthSelect');
-                refundSelect.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
-                summarySelect.innerHTML = months.map(m => `<option value="${m}">${m}</option>`).join('');
+                const statsSelect = document.getElementById('anchorStatsMonthSelect');
+                const optsHtml = months.map(m => `<option value="${m}">${m}</option>`).join('');
+                refundSelect.innerHTML = optsHtml;
+                summarySelect.innerHTML = optsHtml;
+                statsSelect.innerHTML = optsHtml;
                 if (months.length > 0) {
                     refundSelect.value = months[0];
                     summarySelect.value = months[0];
+                    statsSelect.value = months[0];
                 }
                 refundSelect.addEventListener('change', updateRefundMgmtPanel);
+                statsSelect.addEventListener('change', updateAnchorMonthlyStats);
+                document.getElementById('exportAnchorStatsBtn').addEventListener('click', exportAnchorStatsToExcel);
                 summarySelect.addEventListener('change', () => {
                     // 同步退款比率管理面板的月份选择器
                     document.getElementById('refundMonthSelect').value = document.getElementById('summaryMonthSelect').value;
@@ -2728,12 +2939,18 @@
                         this.classList.add('active');
                         document.getElementById('dateStart').value = '';
                         document.getElementById('dateEnd').value = '';
+                        clearMonthFilterActive();
                         refreshAll();
                     });
                 });
                 document.getElementById('applyCustomRange').addEventListener('click', () => {
                     filterBtns.forEach(b => b.classList.remove('active'));
+                    clearMonthFilterActive();
                     refreshAll();
+                });
+                // 手动改日期区间时，取消「按月」按钮的选中态
+                ['dateStart', 'dateEnd'].forEach(id => {
+                    document.getElementById(id).addEventListener('change', clearMonthFilterActive);
                 });
                 elements.roomSelect.addEventListener('change', refreshAll);
 
@@ -2762,6 +2979,8 @@
             initRoomSelect();
             initMonthSelects();
             bindEvents();
+            initMonthFilterButtons();
+            updateAnchorMonthlyStats();
             refreshAll();
         })();
     </script>
