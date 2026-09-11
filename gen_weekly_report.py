@@ -84,11 +84,13 @@ def band11(history):
 
 def sheet_target(wb, h):
     """手环11 月净销 6 万台目标进度"""
+    from team_config import TEAM_MAP
     b = band11(h)
     ws = wb.create_sheet('手环11目标进度')
     ws['A1'] = '小米手环11 · 月净销 60,000 台目标进度'
     ws['A1'].font = TITLE_FONT
-    ws['A2'] = '9月累计销量（我司口径）｜ 首发日 9.7 ｜ 数据源：sales_analysis/history.json（订单口径，未扣退款）'
+    ws['A2'] = ('口径：我司全部直播间（含商品卡，不含良米/机械空间等其他团队）'
+                '｜ 数据源：sales_analysis/history.json（订单口径，未扣退款）')
     ws['A2'].font = SUB_FONT
 
     # --- 逐日 ---
@@ -175,6 +177,46 @@ def sheet_target(wb, h):
         if k == 1:
             for c in range(1, 6):
                 ws.cell(row=rr, column=c).fill = PatternFill('solid', start_color='FFF8E7')
+
+    # --- 我司各来源贡献 ---
+    r = sr + len(scen) + 2
+    ws.cell(row=r, column=1, value='四、我司各来源贡献（9.7-9.10）').font = Font(
+        name=FONT, size=11, bold=True, color='B34A00')
+    style_header(ws, r + 1, 3, ['来源', '手环11 台数', '占我司比重'])
+    src = {}
+    for d in h:
+        if not d['date'].startswith('2026-09'):
+            continue
+        for rn, ri in d['rooms'].items():
+            if TEAM_MAP.get(rn) != '我司':
+                continue
+            n = ri.get('products', {}).get('小米手环11', {}).get('orders', 0)
+            if n:
+                src[rn] = src.get(rn, 0) + n
+    rr = r + 2
+    first_src = rr
+    for name, n in sorted(src.items(), key=lambda kv: -kv[1]):
+        ws.cell(row=rr, column=1, value=name).font = BODY_FONT
+        ws.cell(row=rr, column=2, value=n).font = INPUT_FONT
+        ws.cell(row=rr, column=3,
+                value=f'=IFERROR(B{rr}/$B${first_src + len(src)},"-")').font = FORMULA_FONT
+        rr += 1
+    ws.cell(row=rr, column=1, value='我司合计').font = BOLD_FONT
+    ws.cell(row=rr, column=2, value=f'=SUM(B{first_src}:B{rr - 1})').font = BOLD_FONT
+    ws.cell(row=rr, column=3, value=f'=IFERROR(B{rr}/B{rr},"-")').font = BOLD_FONT
+    for x in range(first_src, rr + 1):
+        for c in range(1, 4):
+            cell = ws.cell(row=x, column=c)
+            cell.border = BORDER
+            if c == 2:
+                cell.number_format = INT
+                cell.alignment = Alignment(horizontal='right')
+            if c == 3:
+                cell.number_format = PCT
+                cell.alignment = Alignment(horizontal='right')
+        if x == rr:
+            for c in range(1, 4):
+                ws.cell(row=x, column=c).fill = TOT_FILL
 
     for c, w in enumerate([26, 14, 13, 13, 12], start=1):
         ws.column_dimensions[chr(64 + c)].width = w
@@ -375,6 +417,9 @@ def main():
         ('【结构分化】手环/数码两间被首发强带动，两间手表直播间完全没吃到红利',
          '数码旗舰店日均 44,170→249,352；手环直播间 23,393→235,976；'
          '官旗手表 23,658→25,932（持平）；官方手表 229,659→172,108（继续 -25%）'),
+        ('【渠道结构】我司手环11 的 56.4% 来自小米数码旗舰店，商品卡贡献 16.2%（第三大来源）',
+         '数码 12,164 台 / 手环直播间 5,511 台 / 商品卡 3,506 台；'
+         '商品卡属被动承接，若目标吃紧需评估其可拉动空间'),
         ('【份额】我司手环11 占全站销量 26.9%；四间占全站销售额份额 34.8%→22.0%',
          '首发流量外溢：机械空间、良米等直播间同样在卖手环11，我方没能独占首发红利'),
     ]
