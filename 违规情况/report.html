@@ -5,20 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>小米系直播间违规情况分析报告（6月完整版）</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="../theme.css">
 <style>
 :root {
-  --bg: #f0f4f8;
-  --surface: #ffffff;
-  --text: #0f172a;
-  --text-secondary: #64748b;
+  /* 中性令牌统一在 ../theme.css；这里只保留本页语义色
+     （违规报告主色用红色，因为「违规」本身就是危险语义，不宜改成品牌橙） */
   --accent: #e94560;
   --accent-blue: #3867d6;
   --accent-green: #20bf6b;
-  --shadow-sm: 0 1px 3px rgba(0,0,0,.04);
-  --shadow-md: 0 4px 16px rgba(0,0,0,.06);
-  --shadow-lg: 0 8px 30px rgba(0,0,0,.10);
-  --radius: 14px;
-  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -28,7 +22,7 @@ body::before { content: ''; position: fixed; inset: 0; background-image: radial-
 .header h1 .badge-new { display: inline-block; background: #e94560; color: #fff; font-size: 12px; padding: 3px 10px; border-radius: 10px; vertical-align: middle; margin-left: 8px; }
 .header p { color: var(--text-secondary); font-size: 14px; }
 .stats-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 16px; padding: 24px 40px; max-width: 1500px; margin: 0 auto; position: relative; z-index: 1; }
-.stat-card { background: var(--surface); border-radius: var(--radius); padding: 20px 16px; text-align: center; border: 1px solid #e8ecf1; box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition); }
+.stat-card { background: var(--surface); border-radius: var(--radius); padding: 20px 16px; text-align: center; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); transition: transform var(--transition), box-shadow var(--transition); }
 .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
 .stat-card .num { font-size: 32px; font-weight: 800; line-height: 1.2; }
 .stat-card .label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; font-weight: 500; }
@@ -43,15 +37,15 @@ body::before { content: ''; position: fixed; inset: 0; background-image: radial-
 .row.col2 { grid-template-columns: 1fr 1fr; }
 .row.col3 { grid-template-columns: 1fr 1fr 1fr; }
 .row.col1 { grid-template-columns: 1fr; }
-.card { background: var(--surface); border-radius: var(--radius); padding: 24px; border: 1px solid #e8ecf1; box-shadow: var(--shadow-sm); transition: box-shadow var(--transition); }
+.card { background: var(--surface); border-radius: var(--radius); padding: 24px; border: 1px solid var(--border-light); box-shadow: var(--shadow-sm); transition: box-shadow var(--transition); }
 .card:hover { box-shadow: var(--shadow-md); }
-.card h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid #e8ecf1; position: relative; }
+.card h3 { font-size: 16px; font-weight: 700; color: var(--text); margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--border-light); position: relative; }
 .card h3::after { content: ''; position: absolute; bottom: -1px; left: 0; width: 36px; height: 2px; background: var(--accent); border-radius: 1px; }
 .chart { width: 100%; height: 360px; }
 .chart-lg { width: 100%; height: 440px; }
 table { width: 100%; border-collapse: collapse; font-size: 13px; }
-th { background: #f8f9fc; padding: 10px 14px; text-align: left; font-weight: 600; color: var(--text-secondary); border-radius: 6px 6px 0 0; border-bottom: 2px solid #e8ecf1; font-size: 12px; letter-spacing: .03em; }
-td { padding: 10px 14px; border-bottom: 1px solid #f0f2f5; vertical-align: top; color: var(--text); }
+th { background: #f8f9fc; padding: 10px 14px; text-align: left; font-weight: 600; color: var(--text-secondary); border-radius: 6px 6px 0 0; border-bottom: 2px solid var(--border-light); font-size: 12px; letter-spacing: .03em; }
+td { padding: 10px 14px; border-bottom: 1px solid var(--border-light); vertical-align: top; color: var(--text); }
 tbody tr { transition: background var(--transition); }
 tbody tr:hover td { background: #f8fafc; }
 tbody tr.new-row td { background: #fffdf0; }
@@ -59,7 +53,7 @@ tbody tr.new-row:hover td { background: #fff9db; }
 .tag { display: inline-block; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
 .tag.warn { background: #fff3e0; color: #e17055; border: 1px solid #ffe0b2; }
 .tag.violation { background: #fde8ec; color: #e94560; border: 1px solid #f8c4cf; }
-.tag.revoked { background: #f0f2f5; color: #636e72; border: 1px solid #dde1e6; }
+.tag.revoked { background: var(--border-light); color: #636e72; border: 1px solid #dde1e6; }
 .tag.account { background: #f0e8fd; color: #8854d0; border: 1px solid #dcc8f8; }
 .reason-tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; }
 .reason-gift { background: #e8f0fe; color: #3867d6; }
@@ -71,7 +65,7 @@ tbody tr.new-row:hover td { background: #fff9db; }
 .reason-induce { background: #fce7f3; color: #be185d; }
 .reason-compete { background: #fef2f2; color: #dc2626; }
 .reason-appear { background: #e0e7ff; color: #4338ca; }
-.footer { text-align: center; padding: 20px; color: #94a3b8; font-size: 12px; border-top: 1px solid #e8ecf1; margin-top: 20px; }
+.footer { text-align: center; padding: 20px; color: #94a3b8; font-size: 12px; border-top: 1px solid var(--border-light); margin-top: 20px; }
 .highlight { color: #e94560; font-weight: 700; }
 .new-badge { display: inline-block; background: #e94560; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 4px; vertical-align: middle; }
 .room-section { margin-bottom: 20px; }
@@ -560,7 +554,7 @@ const newCount = allRecords.filter(v=>v.isNew).length;
     legend: { data: ['5月及之前', '6月新增'], textStyle: { color: '#636e72' }, top: 5 },
     grid: { left: 10, right: 40, top: 40, bottom: 70 },
     xAxis: { type: 'category', data: names, axisLabel: { color: '#636e72', rotate: 25, fontSize: 10 }, axisLine: { lineStyle: { color: '#dde1e6' } } },
-    yAxis: { type: 'value', minInterval: 1, axisLabel: { color: '#636e72' }, splitLine: { lineStyle: { color: '#e8ecf1' } } },
+    yAxis: { type: 'value', minInterval: 1, axisLabel: { color: '#636e72' }, splitLine: { lineStyle: { color: 'var(--border-light)' } } },
     series: [
       { name: '5月及之前', type: 'bar', data: totals.map((t,i)=>t-newCounts[i]), itemStyle: { color: params => roomColors[params.dataIndex] }, barWidth: 28, label: { show: true, position: 'top', color: '#999', fontWeight: 'bold' } },
       { name: '6月新增', type: 'bar', data: newCounts, itemStyle: { color: '#e94560' }, barWidth: 18, barGap: '-100%', z: 2, label: { show: true, position: 'top', color: '#e94560', fontWeight: 'bold', fontSize: 12, formatter: p => p.value > 0 ? '+'+p.value : '' } }
@@ -606,7 +600,7 @@ const newCount = allRecords.filter(v=>v.isNew).length;
     tooltip: { trigger: 'axis' },
     grid: { left: 40, right: 20, top: 20, bottom: 30 },
     xAxis: { type: 'category', data: ['5月','6月','7月'], axisLabel: { color: '#636e72', fontSize: 12 }, axisLine: { lineStyle: { color: '#dde1e6' } } },
-    yAxis: { type: 'value', minInterval: 1, axisLabel: { color: '#636e72' }, splitLine: { lineStyle: { color: '#e8ecf1' } } },
+    yAxis: { type: 'value', minInterval: 1, axisLabel: { color: '#636e72' }, splitLine: { lineStyle: { color: 'var(--border-light)' } } },
     series: [{
       name: '总违规', type: 'bar', data: vals, barWidth: 60,
       itemStyle: { color: new echarts.graphic.LinearGradient(0,0,0,1,[
@@ -637,7 +631,7 @@ const newCount = allRecords.filter(v=>v.isNew).length;
     legend: { data: actions, textStyle: { color: '#636e72' }, top: 5 },
     grid: { left: 10, right: 20, top: 40, bottom: 70 },
     xAxis: { type: 'category', data: names, axisLabel: { color: '#636e72', rotate: 25, fontSize: 10 }, axisLine: { lineStyle: { color: '#dde1e6' } } },
-    yAxis: { type: 'value', minInterval: 1, axisLabel: { color: '#636e72' }, splitLine: { lineStyle: { color: '#e8ecf1' } } },
+    yAxis: { type: 'value', minInterval: 1, axisLabel: { color: '#636e72' }, splitLine: { lineStyle: { color: 'var(--border-light)' } } },
     series
   });
 })();

@@ -143,15 +143,14 @@ def generate_html(summary):
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>6月销量分析 · 小米手环直播间</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<link rel="stylesheet" href="../theme.css">
 <style>
 :root {{
-  --bg: #f0f4f8; --surface: #ffffff; --text: #0f172a; --text-secondary: #64748b;
-  --text-muted: #9ca3af; --border: #e8ecf1; --shadow-sm: 0 1px 3px rgba(0,0,0,.03);
-  --shadow-md: 0 4px 16px rgba(0,0,0,.06); --shadow-lg: 0 8px 30px rgba(0,0,0,.10);
-  --radius: 14px; --radius-sm: 10px; --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  --clr-ours: #1E90FF; --clr-comp: #FF6B35; --clr-orange: #ff6900;
-  --clr-green: #1da85c; --clr-red: #FF4757; --clr-purple: #7c6ff7;
-  --clr-gold: #c8960c; --clr-cyan: #0ea89d;
+  /* 设计令牌统一在 ../theme.css；此处只保留报表自身的数据语义色
+     （--clr-ours 我方 / --clr-comp 竞对 是在编码数据含义，不能改成品牌色） */
+  --clr-ours: #1E90FF; --clr-comp: #FF6B35; --clr-orange: var(--mi-orange);
+  --clr-green: var(--success); --clr-red: var(--danger);
+  --clr-purple: #7c6ff7; --clr-gold: #c8960c; --clr-cyan: #0ea89d;
 }}
 * {{ margin:0; padding:0; box-sizing:border-box; }}
 html {{ scroll-behavior: smooth; }}
@@ -171,11 +170,11 @@ body::before {{
   position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 3px rgba(0,0,0,.03);
 }}
 .nav-btn {{
-  padding: 7px 18px; border-radius: 20px; border: 1.5px solid #dde1e6;
+  padding: 7px 18px; border-radius: 20px; border: 1.5px solid var(--border);
   background: #fff; color: #555; font-size: 12.5px; cursor: pointer;
   text-decoration: none; transition: all var(--transition); font-family: inherit; font-weight: 500;
 }}
-.nav-btn:hover {{ border-color: var(--clr-orange); color: var(--clr-orange); background: #fff7ed; }}
+.nav-btn:hover {{ border-color: var(--clr-orange); color: var(--clr-orange); background: var(--mi-orange-soft); }}
 .nav-btn.active {{ background: linear-gradient(135deg, var(--clr-orange), #ff8c42); color: #fff; border-color: transparent; font-weight: 600; box-shadow: 0 2px 8px rgba(255,105,0,.2); }}
 .hero {{
   position: relative; z-index: 1;
@@ -281,6 +280,7 @@ footer {{
   <a href="#" class="nav-btn active">6月销量分析</a>
   <a href="七月销量分析.html" class="nav-btn">7月销量分析</a>
   <a href="八月销量分析.html" class="nav-btn">8月销量分析</a>
+  <a href="九月销量分析.html" class="nav-btn">9月销量分析</a>
   <a href="../节点总结/618复盘总结.html" class="nav-btn">618复盘</a>
   <a href="../节点总结/四月份复盘总结.html" class="nav-btn">4月复盘</a>
 </div>
