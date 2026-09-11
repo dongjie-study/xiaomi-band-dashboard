@@ -100,8 +100,8 @@
         }
 
         .container {
-            /* 数据表格本来就吃宽度，放宽到 1920px，常规屏几乎不留两侧空白 */
-            max-width: 1920px;
+            /* 1560px：再宽表格列就会被拉稀（数字列和文字列之间的空隙肉眼可见） */
+            max-width: 1560px;
             margin: 0 auto;
             padding: 20px 20px 32px;
             display: flex;
@@ -196,7 +196,10 @@
 
         .overview-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            /* 只有 2 张卡时 1fr 会把每张拉到近千像素，内容全缩在左上角。
+               这里给卡片封顶宽度 + 左对齐，保持正常 KPI 卡的观感。 */
+            grid-template-columns: repeat(auto-fit, minmax(180px, 260px));
+            justify-content: start;
             gap: 12px;
         }
         .overview-card {
@@ -435,6 +438,59 @@
         #anchorMonthlyStatsPanel thead th.shift-col { width: 8%; }
         #anchorMonthlyStatsPanel thead th:nth-child(9) { width: 22%; }
 
+        /* ===== 其余表格的列宽比例 =====
+           表格默认按内容自适应：容器一宽，纯数字列就被撑开，行内出现
+           「数字贴左、右边一大片空」的稀疏感。这里按各列的实际信息量分配比例
+           （文本/徽章列吃宽度，数字列收紧），用 th width 提示而不是
+           table-layout:fixed —— 内容超长时仍由浏览器兜底，不会截断徽章和文字。 */
+
+        /* 月度退款比率管理 / 日第一阈值管理：说明列吸收剩余宽度 */
+        #refundMgmtPanel thead th:nth-child(1),
+        #championThresholdPanel thead th:nth-child(1) { width: 30%; }
+        #refundMgmtPanel thead th:nth-child(2),
+        #championThresholdPanel thead th:nth-child(2) { width: 15%; }
+        #refundMgmtPanel thead th:nth-child(3),
+        #championThresholdPanel thead th:nth-child(3) { width: 55%; }
+
+        /* 月主播业绩汇总 */
+        #monthlySummaryPanel thead th:nth-child(1) { width: 14%; }  /* 主播 */
+        #monthlySummaryPanel thead th:nth-child(2) { width: 18%; }  /* 直播间 */
+        #monthlySummaryPanel thead th:nth-child(3) { width: 17%; }  /* 月销售额 */
+        #monthlySummaryPanel thead th:nth-child(4) { width: 15%; }  /* 退款比率 */
+        #monthlySummaryPanel thead th:nth-child(5) { width: 17%; }  /* 退款金额 */
+        #monthlySummaryPanel thead th:nth-child(6) { width: 19%; }  /* 净有效业绩 */
+
+        /* 本周 vs 上周业绩对比 */
+        #weekComparePanel thead th:nth-child(1) { width: 28%; }     /* 主播 / 直播间 */
+        #weekComparePanel thead th:nth-child(2),
+        #weekComparePanel thead th:nth-child(3),
+        #weekComparePanel thead th:nth-child(4) { width: 24%; }
+
+        /* 双列详情 · 左：直播间每日业绩明细 */
+        #detailTableWrapper thead th:nth-child(1) { width: 24%; }   /* 日期 */
+        #detailTableWrapper thead th:nth-child(2) { width: 26%; }   /* 主播 */
+        #detailTableWrapper thead th:nth-child(3) { width: 14%; }   /* 班次 */
+        #detailTableWrapper thead th:nth-child(4) { width: 20%; }   /* 销售额 */
+        #detailTableWrapper thead th:nth-child(5) { width: 16%; }   /* 当日排名 */
+
+        /* 双列详情 · 右：总业绩排名（直播间列给足，避免徽章折行） */
+        #totalRankWrapper thead th:nth-child(1) { width: 12%; }     /* 排名 */
+        #totalRankWrapper thead th:nth-child(2) { width: 36%; }     /* 直播间 */
+        #totalRankWrapper thead th:nth-child(3) { width: 24%; }     /* 主播 */
+        #totalRankWrapper thead th:nth-child(4) { width: 28%; }     /* 累计销售额 */
+
+        /* 每日各直播间第一 */
+        #dailyChampionsPanel thead th:nth-child(1) { width: 26%; }  /* 日期 */
+        #dailyChampionsPanel thead th:nth-child(2) { width: 26%; }  /* 日冠军 */
+        #dailyChampionsPanel thead th:nth-child(3) { width: 26%; }  /* 销售额 */
+        #dailyChampionsPanel thead th:nth-child(4) { width: 22%; }  /* 是否有效 */
+
+        /* 累计有效日第一排名 */
+        #championRankingPanel thead th:nth-child(1) { width: 12%; } /* 排名 */
+        #championRankingPanel thead th:nth-child(2) { width: 24%; } /* 主播 */
+        #championRankingPanel thead th:nth-child(3) { width: 36%; } /* 直播间 */
+        #championRankingPanel thead th:nth-child(4) { width: 28%; } /* 有效日第一次数 */
+
         /* A~E 班次列：居中，数字用等宽对齐 */
         table thead th.shift-col,
         table tbody td.shift-col {
@@ -536,6 +592,10 @@
             .month-select {
                 padding: 6px 24px 6px 10px;
                 font-size: 0.78rem;
+            }
+            /* 窄屏取消卡片封顶，让两张卡平分整宽 */
+            .overview-row {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
             .overview-card {
                 padding: 12px;

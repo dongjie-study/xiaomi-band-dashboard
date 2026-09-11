@@ -30,6 +30,9 @@
   /* ===== SIDEBAR ===== */
   .sidebar {
     width: var(--sidebar-w);
+    /* 侧边栏内部全部用 em：在这里定一个基准字号，品牌/分组/菜单/页脚会等比放大，
+       不用逐个改。px 的间距和圆点保持不变，所以不会显得松垮。 */
+    font-size: 17.5px;
     background: var(--sidebar-bg);
     display: flex;
     flex-direction: column;
@@ -56,7 +59,7 @@
   }
 
   .sidebar-brand .logo-icon {
-    width: 38px; height: 38px;
+    width: 40px; height: 40px;
     border-radius: 10px;
     object-fit: contain;
     flex-shrink: 0;
@@ -94,7 +97,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 9px 14px;
+    padding: 10px 14px;
     margin: 1px 10px;
     border-radius: 8px;
     text-decoration: none;
