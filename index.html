@@ -282,7 +282,12 @@
   }
 
   /* Overview panel */
-  .overview { padding: 32px 36px 40px; }
+  /* 收窄并居中，让概览区两侧留白，卡片不再贴边铺满 */
+  .overview {
+    padding: 32px 36px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
   .overview.hidden { display: none; }
 
   .overview h1 {
@@ -347,9 +352,10 @@
     margin-top: 5px;
   }
 
+  /* 4 列：卡片窄一些，正文刚好铺满，避免右侧一大片空档 */
   .module-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: 16px;
   }
 
@@ -620,6 +626,10 @@
   .pw-dialog .pw-error { color: var(--danger); font-size: 12px; margin-bottom: 10px; display: none; }
 
   /* ===== RESPONSIVE ===== */
+  /* 卡片窄于 250px 就退到 3 列，不然正文会被挤成太多行 */
+  @media (max-width: 1360px) {
+    .module-grid { grid-template-columns: repeat(3, 1fr); }
+  }
   @media (max-width: 900px) {
     .module-grid { grid-template-columns: repeat(2, 1fr); }
     .stats-row { grid-template-columns: repeat(2, 1fr); }
