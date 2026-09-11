@@ -7,61 +7,9 @@
 <meta name="description" content="小米手环直播间每日销量追踪、竞对对比、视频分析、主播管理一站式数据平台">
 <link rel="icon" type="image/png" href="xiaomi-logo.png">
 <link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="theme.css">
 <style>
-  :root {
-    --sidebar-w: 240px;
-    --bg:           #f6f7f9;
-    --sidebar-bg:   #bcc3ce;
-    --sidebar-text: #23272d;
-    --sidebar-active:#03050a;
-    --sidebar-hover:#afb7c3;
-    --surface:      #ffffff;
-    --text:         #111827;
-    --text-secondary:#6b7280;
-    --text-muted:   #9ca3af;
-    --border:       #afb7c3;
-    --border-light: #bcc3ce;
-    --radius:       12px;
-    --radius-sm:    8px;
-    --transition:   .25s cubic-bezier(0.4, 0, 0.2, 1);
-    --shadow-sm:    0 1px 2px rgba(0,0,0,.03);
-    --shadow-md:    0 4px 12px rgba(0,0,0,.05), 0 1px 3px rgba(0,0,0,.04);
-    --shadow-lg:    0 12px 28px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04);
-
-    --clr-sales:      #f97316;
-    --clr-violations: #ef4444;
-    --clr-strategy:   #f59e0b;
-    --clr-video:      #3b82f6;
-    --clr-hourly:     #8b5cf6;
-    --clr-gsv:        #0891b2;
-    --clr-upgrade:    #ec4899;
-    --clr-visual:     #10b981;
-    --clr-streamer:   #ec4899;
-    --clr-monthly:    #1da85c;
-    --clr-event:      #f59e0b;
-    --clr-baiying:    #6366f1;
-    --clr-exam:       #7c3aed;
-    --clr-performance:   #0d9488;
-    --clr-qianchuan:    #06b6d4;
-    --clr-ecosystem:    #14b8a6;
-
-    --clr-sales-bg:      #fff7ed;
-    --clr-violations-bg: #fef2f2;
-    --clr-strategy-bg:   #fffbeb;
-    --clr-video-bg:      #eff6ff;
-    --clr-hourly-bg:     #f5f3ff;
-    --clr-gsv-bg:        #ecfeff;
-    --clr-upgrade-bg:    #fdf2f8;
-    --clr-visual-bg:     #ecfdf5;
-    --clr-streamer-bg:   #fdf2f8;
-    --clr-monthly-bg:    #ecfdf5;
-    --clr-event-bg:      #fffbeb;
-    --clr-baiying-bg:    #eef2ff;
-    --clr-exam-bg:       #f5f3ff;
-    --clr-performance-bg: #f0fdfa;
-    --clr-qianchuan-bg:    #ecfeff;
-    --clr-ecosystem-bg:    #f0fdfa;
-  }
+  /* 设计令牌统一在 theme.css，本页不再自定义 :root */
 
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
@@ -99,7 +47,7 @@
     transition: background var(--transition);
     border-bottom: 1px solid var(--border-light);
   }
-  .sidebar-brand:hover { background: #afb7c3; }
+  .sidebar-brand:hover { background: var(--sidebar-hover); }
 
   .sidebar-brand .logo {
     display: flex;
@@ -165,26 +113,10 @@
     left: 0; top: 50%; transform: translateY(-50%);
     width: 3px; height: 0;
     border-radius: 0 3px 3px 0;
-    background: var(--clr-sales);
+    background: var(--mod);
     transition: height .25s ease;
   }
 
-  .sidebar-nav a.sales::after      { background: var(--clr-sales); }
-  .sidebar-nav a.violations::after { background: var(--clr-violations); }
-  .sidebar-nav a.strategy::after   { background: var(--clr-strategy); }
-  .sidebar-nav a.video::after      { background: var(--clr-video); }
-  .sidebar-nav a.hourly::after     { background: var(--clr-hourly); }
-  .sidebar-nav a.gsv::after        { background: var(--clr-gsv); }
-  .sidebar-nav a.upgrade::after    { background: var(--clr-upgrade); }
-  .sidebar-nav a.visual::after     { background: var(--clr-visual); }
-  .sidebar-nav a.streamer::after   { background: var(--clr-streamer); }
-  .sidebar-nav a.monthlySummary::after { background: var(--clr-monthly); }
-  .sidebar-nav a.eventSummary::after   { background: var(--clr-event); }
-  .sidebar-nav a.baiying::after       { background: var(--clr-baiying); }
-  .sidebar-nav a.exam::after          { background: var(--clr-exam); }
-  .sidebar-nav a.performance::after   { background: var(--clr-performance); }
-  .sidebar-nav a.qianchuan::after     { background: var(--clr-qianchuan); }
-  .sidebar-nav a.ecosystem::after     { background: var(--clr-ecosystem); }
 
   .sidebar-nav a:hover {
     background: var(--sidebar-hover);
@@ -196,8 +128,8 @@
   }
 
   .sidebar-nav a.active {
-    background: #f0f4ff;
-    color: #1e40af;
+    background: var(--mi-orange-soft);
+    color: var(--mi-orange-dark);
     font-weight: 600;
   }
 
@@ -224,22 +156,6 @@
     transform: scale(1.2);
   }
 
-  .sidebar-nav a.sales .nav-dot      { background: var(--clr-sales); }
-  .sidebar-nav a.violations .nav-dot { background: var(--clr-violations); }
-  .sidebar-nav a.strategy .nav-dot   { background: var(--clr-strategy); }
-  .sidebar-nav a.video .nav-dot      { background: var(--clr-video); }
-  .sidebar-nav a.hourly .nav-dot     { background: var(--clr-hourly); }
-  .sidebar-nav a.gsv .nav-dot        { background: var(--clr-gsv); }
-  .sidebar-nav a.upgrade .nav-dot    { background: var(--clr-upgrade); }
-  .sidebar-nav a.visual .nav-dot     { background: var(--clr-visual); }
-  .sidebar-nav a.streamer .nav-dot   { background: var(--clr-streamer); }
-  .sidebar-nav a.monthlySummary .nav-dot { background: var(--clr-monthly); }
-  .sidebar-nav a.eventSummary .nav-dot   { background: var(--clr-event); }
-  .sidebar-nav a.baiying .nav-dot       { background: var(--clr-baiying); }
-  .sidebar-nav a.exam .nav-dot          { background: var(--clr-exam); }
-  .sidebar-nav a.performance .nav-dot   { background: var(--clr-performance); }
-  .sidebar-nav a.qianchuan .nav-dot     { background: var(--clr-qianchuan); }
-  .sidebar-nav a.ecosystem .nav-dot     { background: var(--clr-ecosystem); }
 
   .sidebar-nav a .badge-nav {
     font-size: .64em;
@@ -247,8 +163,8 @@
     border-radius: 10px;
     font-weight: 600;
     letter-spacing: .03em;
-    background: #fff7ed;
-    color: var(--clr-sales);
+    background: var(--mod-bg);
+    color: var(--mod);
   }
 
   .sidebar-nav a .sub-arrow {
@@ -272,7 +188,7 @@
     transition: all var(--transition);
   }
   .sub-menu a:hover { color: var(--text); background: var(--sidebar-hover); }
-  .sub-menu a.active { color: #1e40af; background: #f0f4ff; font-weight: 600; }
+  .sub-menu a.active { color: var(--mi-orange-dark); background: var(--mi-orange-soft); font-weight: 600; }
 
   /* 月份项（二级） */
   .month-item {
@@ -289,7 +205,7 @@
     position: relative;
   }
   .month-item:hover, .period-item:hover { color: var(--text); background: var(--sidebar-hover); }
-  .month-item.active, .period-item.active { color: #1e40af; background: #f0f4ff; font-weight: 600; }
+  .month-item.active, .period-item.active { color: var(--mi-orange-dark); background: var(--mi-orange-soft); font-weight: 600; }
   .month-item.expanded, .period-item.expanded { color: var(--text); font-weight: 600; }
   .month-item .sub-arrow, .period-item .sub-arrow { transition: transform .25s ease; }
   .month-item.expanded .sub-arrow, .period-item.expanded .sub-arrow { transform: rotate(90deg); opacity: 1; }
@@ -313,7 +229,7 @@
   .sidebar-footer .live-dot {
     width: 6px; height: 6px;
     border-radius: 50%;
-    background: #22c55e;
+    background: var(--success);
     box-shadow: 0 0 0 0 rgba(34,197,94,.4);
     animation: pulse-ring 2s ease-in-out infinite;
   }
@@ -354,7 +270,7 @@
   }
 
   .topbar .breadcrumb span {
-    color: #ff6900;
+    color: var(--mi-orange);
     font-weight: 600;
   }
 
@@ -404,7 +320,7 @@
 
   .stat-card:hover {
     box-shadow: var(--shadow-md);
-    border-color: #c8d6e5;
+    border-color: var(--border);
   }
   .stat-card:hover::after { opacity: 1; }
 
@@ -451,7 +367,7 @@
   }
 
   .module-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
     border-color: transparent;
   }
@@ -467,20 +383,6 @@
 
   .module-card:hover::before { height: 3px; }
 
-  .module-card.sales::before      { background: linear-gradient(90deg, var(--clr-sales), #fdba74); }
-  .module-card.violations::before { background: linear-gradient(90deg, var(--clr-violations), #fca5a5); }
-  .module-card.strategy::before   { background: linear-gradient(90deg, var(--clr-strategy), #fcd34d); }
-  .module-card.video::before      { background: linear-gradient(90deg, var(--clr-video), #93c5fd); }
-  .module-card.hourly::before     { background: linear-gradient(90deg, var(--clr-hourly), #c4b5fd); }
-  .module-card.gsv::before        { background: linear-gradient(90deg, var(--clr-gsv), #67e8f9); }
-  .module-card.upgrade::before    { background: linear-gradient(90deg, var(--clr-upgrade), #f9a8d4); }
-  .module-card.streamer::before   { background: linear-gradient(90deg, var(--clr-streamer), #f9a8d4); }
-  .module-card.monthlySummary::before { background: linear-gradient(90deg, var(--clr-monthly), #6ee7b7); }
-  .module-card.eventSummary::before   { background: linear-gradient(90deg, var(--clr-event), #fcd34d); }
-  .module-card.baiying::before       { background: linear-gradient(90deg, var(--clr-baiying), #a5b4fc); }
-  .module-card.performance::before   { background: linear-gradient(90deg, var(--clr-performance), #5eead4); }
-  .module-card.qianchuan::before     { background: linear-gradient(90deg, var(--clr-qianchuan), #67e8f9); }
-  .module-card.ecosystem::before     { background: linear-gradient(90deg, var(--clr-ecosystem), #5eead4); }
 
   .module-card .mod-icon {
     width: 46px; height: 46px;
@@ -498,21 +400,6 @@
     box-shadow: 0 4px 12px rgba(0,0,0,.08);
   }
 
-  .module-card.sales .mod-icon      { background: var(--clr-sales-bg); }
-  .module-card.violations .mod-icon { background: var(--clr-violations-bg); }
-  .module-card.strategy .mod-icon   { background: var(--clr-strategy-bg); }
-  .module-card.video .mod-icon      { background: var(--clr-video-bg); }
-  .module-card.hourly .mod-icon     { background: var(--clr-hourly-bg); }
-  .module-card.gsv .mod-icon        { background: var(--clr-gsv-bg); }
-  .module-card.upgrade .mod-icon    { background: var(--clr-upgrade-bg); }
-  .module-card.visual .mod-icon     { background: var(--clr-visual-bg); }
-  .module-card.streamer .mod-icon   { background: var(--clr-streamer-bg); }
-  .module-card.monthlySummary .mod-icon { background: var(--clr-monthly-bg); }
-  .module-card.eventSummary .mod-icon   { background: var(--clr-event-bg); }
-  .module-card.baiying .mod-icon      { background: var(--clr-baiying-bg); }
-  .module-card.performance .mod-icon  { background: var(--clr-performance-bg); }
-  .module-card.qianchuan .mod-icon    { background: var(--clr-qianchuan-bg); }
-  .module-card.ecosystem .mod-icon    { background: var(--clr-ecosystem-bg); }
 
   .module-card h3 {
     font-size: .95em;
@@ -523,20 +410,6 @@
     transition: color var(--transition);
   }
 
-  .module-card.sales:hover h3      { color: var(--clr-sales); }
-  .module-card.violations:hover h3 { color: var(--clr-violations); }
-  .module-card.strategy:hover h3   { color: var(--clr-strategy); }
-  .module-card.video:hover h3      { color: var(--clr-video); }
-  .module-card.hourly:hover h3     { color: var(--clr-hourly); }
-  .module-card.gsv:hover h3        { color: var(--clr-gsv); }
-  .module-card.upgrade:hover h3    { color: var(--clr-upgrade); }
-  .module-card.streamer:hover h3   { color: var(--clr-streamer); }
-  .module-card.monthlySummary:hover h3 { color: var(--clr-monthly); }
-  .module-card.eventSummary:hover h3   { color: var(--clr-event); }
-  .module-card.baiying:hover h3      { color: var(--clr-baiying); }
-  .module-card.performance:hover h3  { color: var(--clr-performance); }
-  .module-card.qianchuan:hover h3    { color: var(--clr-qianchuan); }
-  .module-card.ecosystem:hover h3    { color: var(--clr-ecosystem); }
 
   .module-card p {
     font-size: .8em;
@@ -557,21 +430,6 @@
     transition: all var(--transition);
   }
 
-  .module-card.sales .mod-tag      { background: var(--clr-sales-bg); color: var(--clr-sales); }
-  .module-card.violations .mod-tag { background: var(--clr-violations-bg); color: var(--clr-violations); }
-  .module-card.strategy .mod-tag   { background: var(--clr-strategy-bg); color: var(--clr-strategy); }
-  .module-card.video .mod-tag      { background: var(--clr-video-bg); color: var(--clr-video); }
-  .module-card.hourly .mod-tag     { background: var(--clr-hourly-bg); color: var(--clr-hourly); }
-  .module-card.gsv .mod-tag        { background: var(--clr-gsv-bg); color: var(--clr-gsv); }
-  .module-card.upgrade .mod-tag    { background: var(--clr-upgrade-bg); color: var(--clr-upgrade); }
-  .module-card.visual .mod-tag     { background: var(--clr-visual-bg); color: var(--clr-visual); }
-  .module-card.streamer .mod-tag   { background: var(--clr-streamer-bg); color: var(--clr-streamer); }
-	  .module-card.monthlySummary .mod-tag { background: var(--clr-monthly-bg); color: var(--clr-monthly); }
-	  .module-card.eventSummary .mod-tag   { background: var(--clr-event-bg); color: var(--clr-event); }
-  .module-card.baiying .mod-tag       { background: var(--clr-baiying-bg); color: var(--clr-baiying); }
-  .module-card.performance .mod-tag   { background: var(--clr-performance-bg); color: var(--clr-performance); }
-  .module-card.qianchuan .mod-tag     { background: var(--clr-qianchuan-bg); color: var(--clr-qianchuan); }
-  .module-card.ecosystem .mod-tag     { background: var(--clr-ecosystem-bg); color: var(--clr-ecosystem); }
 
   .module-card:hover .mod-tag {
     filter: brightness(.97);
@@ -582,22 +440,22 @@
   .quote-carousel {
     position: relative;
     animation: quoteSlideIn .6s ease-out;
-    background: linear-gradient(135deg, #fffbf5 0%, #fff7ed 40%, #fff3e0 100%);
-    border: 1px solid #f0c070;
-    border-left: 4px solid #f97316;
+    background: linear-gradient(135deg, #fffaf4 0%, var(--mi-orange-soft) 45%, #fff1e2 100%);
+    border: 1px solid #f6dcc0;
+    border-left: 4px solid var(--mi-orange);
     border-radius: var(--radius);
-    padding: 24px 32px 18px;
-    margin-bottom: 24px;
+    padding: 22px 32px 16px;
+    margin-bottom: 22px;
     overflow: hidden;
     cursor: default;
-    box-shadow: 0 1px 3px rgba(249,115,22,.08);
+    box-shadow: 0 1px 3px rgba(255, 105, 0, .06);
     text-align: center;
     transition: box-shadow var(--transition), border-color var(--transition);
   }
   .quote-carousel:hover {
     box-shadow: var(--shadow-md);
-    border-color: #e07b30;
-    border-left-color: #e06000;
+    border-color: #ecc79c;
+    border-left-color: var(--mi-orange-dark);
   }
 
   /* Ambient glow — top right */
@@ -628,8 +486,8 @@
     display: inline-block;
     width: 20px; height: 20px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #ff6900, #e05800);
-    box-shadow: 0 1px 6px rgba(249,115,22,.25);
+    background: linear-gradient(135deg, var(--mi-orange), var(--mi-orange-dark));
+    box-shadow: 0 1px 6px rgba(255,105,0,.25);
     vertical-align: middle;
   }
 
@@ -698,12 +556,12 @@
     transition: all .35s ease;
   }
   .quote-carousel .quote-dot.active {
-    background: #f97316;
+    background: var(--mi-orange);
     width: 18px;
     border-radius: 10px;
-    box-shadow: 0 0 6px rgba(249,115,22,.3);
+    box-shadow: 0 0 6px rgba(255,105,0,.3);
   }
-  .quote-carousel .quote-dot:hover { background: #e07b30; }
+  .quote-carousel .quote-dot:hover { background: var(--mi-orange-dark); }
 
   @media (max-width: 700px) {
     .quote-carousel { padding: 16px 16px 14px; }
@@ -749,17 +607,17 @@
     border: 1px solid #d1d5db; font-size: 15px; text-align: center;
     margin-bottom: 16px; outline: none; letter-spacing: 2px;
   }
-  .pw-dialog input:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.12); }
+  .pw-dialog input:focus { border-color: var(--mi-orange); box-shadow: 0 0 0 3px rgba(255,105,0,.12); }
   .pw-dialog .pw-btns { display: flex; gap: 10px; }
   .pw-dialog button {
     flex: 1; padding: 10px; border-radius: 10px; border: none;
     font-size: 14px; font-weight: 600; cursor: pointer;
   }
-  .pw-dialog .pw-submit { background: #6366f1; color: #fff; }
-  .pw-dialog .pw-submit:hover { background: #4f46e5; }
+  .pw-dialog .pw-submit { background: var(--mi-orange); color: #fff; }
+  .pw-dialog .pw-submit:hover { background: var(--mi-orange-dark); }
   .pw-dialog .pw-cancel { background: #f3f4f6; color: #374151; }
   .pw-dialog .pw-cancel:hover { background: #e5e7eb; }
-  .pw-dialog .pw-error { color: #ef4444; font-size: 12px; margin-bottom: 10px; display: none; }
+  .pw-dialog .pw-error { color: var(--danger); font-size: 12px; margin-bottom: 10px; display: none; }
 
   /* ===== RESPONSIVE ===== */
   @media (max-width: 900px) {
@@ -774,7 +632,7 @@
     .sidebar-nav a span:not(.nav-dot),
     .sidebar-nav a .badge-nav,
     .sidebar-nav a .sub-arrow,
-    .sidebar-footer span,
+    .sidebar-footer span:not(.live-dot),
     .sub-menu { display: none !important; }
     .sidebar-nav a { justify-content: center; padding: 12px; margin: 1px 8px; }
     .sidebar-nav a .nav-dot { width: 10px; height: 10px; }
@@ -903,7 +761,7 @@ function renderSidebar(config) {
         // Parent with month sub-modules → each month expands to dates
         var subMenuId = 'subMenu_' + mod.id;
         html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" onclick="toggleSubMenu(this, \'' + subMenuId + '\')" class="' + cls + '">';
-        html += '<span class="nav-dot"></span> ' + mod.title;
+        html += '<span class="nav-dot"></span> <span class="nav-label">' + mod.title + '</span>';
         if (mod.badge) html += '<span class="badge-nav">' + mod.badge + '</span>';
         html += '<span class="sub-arrow">&#x25B8;</span></a>';
         html += '<div class="sub-menu" id="' + subMenuId + '" style="display:none;">';
@@ -943,19 +801,19 @@ function renderSidebar(config) {
       } else if (mod.hasSubMenu) {
         // Legacy: dynamic date list without month grouping
         html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" onclick="toggleSalesSub(this)" class="' + cls + '">';
-        html += '<span class="nav-dot"></span> ' + mod.title;
+        html += '<span class="nav-dot"></span> <span class="nav-label">' + mod.title + '</span>';
         if (mod.badge) html += '<span class="badge-nav">' + mod.badge + '</span>';
         html += '<span class="sub-arrow">&#x25B8;</span></a>';
         html += '<div class="sub-menu" id="salesSubMenu" style="display:none;"></div>';
       } else if (mod.external) {
         // External link → open in new tab
         html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" data-external="true" onclick="openExternalModule(this)" class="' + cls + '" target="_blank">';
-        html += '<span class="nav-dot"></span> ' + mod.title;
+        html += '<span class="nav-dot"></span> <span class="nav-label">' + mod.title + '</span>';
         if (mod.badge) html += '<span class="badge-nav">' + mod.badge + '</span>';
         html += '</a>';
       } else {
         html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" onclick="openModule(this)" class="' + cls + '">';
-        html += '<span class="nav-dot"></span> ' + mod.title + '</a>';
+        html += '<span class="nav-dot"></span> <span class="nav-label">' + mod.title + '</span></a>';
       }
     });
   });

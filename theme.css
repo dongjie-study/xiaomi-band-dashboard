@@ -1,0 +1,171 @@
+/**
+ * theme.css —— 全站统一设计令牌层
+ *
+ * 背景：平台各页面的样式是不同时期各写各的内联 <style>，导致 5 套主色、7 套表格规则、
+ * 4 档圆角、3 套阴影令牌。本文件提供唯一的一套令牌，各页面 link 它之后，
+ * 页面内联规则里的 var(--x) 就会解析到这里。
+ *
+ * 接入方式：
+ *   - index.html / 主播业绩/业绩demo.html  → 引入本文件，并删掉自己那份 :root
+ *   - sales_analysis/index.html           → 放在 common.css 之后（它自身只定义 --accent）
+ *
+ * ⚠️ 本文件包含同一概念的多个别名（--primary / --card-bg / --shadow / --clr-green …），
+ *    因为不同页面用了不同的名字。删别名会让某个页面掉色。
+ *
+ * 命名约定：令牌名用 --kebab-case；模块强调色通过 --mod / --mod-bg 注入。
+ */
+
+:root {
+  /* ===== 品牌 ===== */
+  --mi-orange:        #ff6900;
+  --mi-orange-dark:   #e05800;
+  --mi-orange-soft:   #fff4ec;
+
+  /* ===== 中性阶 ===== */
+  --bg:            #f5f6f8;
+  --surface:       #ffffff;
+  --surface-2:     #fafbfc;
+  --text:          #16181d;
+  --text-secondary:#5c6470;
+  --text-muted:    #98a1ad;
+  --border:        #e5e7eb;
+  --border-light:  #eef0f3;
+
+  /* ===== 语义色 ===== */
+  --success: #16a34a;
+  --warning: #d97706;
+  --danger:  #dc2626;
+  --info:    #2563eb;
+
+  /* ===== 圆角（3 档）===== */
+  --radius-sm: 8px;
+  --radius:    12px;
+  --radius-lg: 16px;
+
+  /* ===== 阴影（3 档）===== */
+  --shadow-sm: 0 1px 2px rgba(16, 24, 40, .04);
+  --shadow-md: 0 1px 3px rgba(16, 24, 40, .06), 0 1px 2px rgba(16, 24, 40, .04);
+  --shadow-lg: 0 12px 24px -6px rgba(16, 24, 40, .10), 0 4px 8px -4px rgba(16, 24, 40, .06);
+
+  /* ===== 间距阶 ===== */
+  --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px;
+
+  /* ===== 动效 ===== */
+  --ease: cubic-bezier(.4, 0, .2, 1);
+  --dur:  .18s;
+  --transition: var(--dur) var(--ease);   /* 兼容旧名 */
+
+  /* ===== 版式 ===== */
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei',
+               'Helvetica Neue', sans-serif;
+
+  /* ===== 侧边栏 ===== */
+  --sidebar-w:      240px;
+  --sidebar-bg:     #ffffff;
+  --sidebar-text:   #3f454e;
+  --sidebar-active: #e05800;
+  --sidebar-hover:  #f4f5f7;
+
+  /* ---------- 别名：其他页面对同一概念用了别的名字，同值打通 ---------- */
+  --primary:      var(--mi-orange);        /* 业绩demo 的主色 */
+  --primary-dark: var(--mi-orange-dark);
+  --card-bg:      var(--surface);          /* 业绩demo 叫 card-bg */
+  --shadow:       var(--shadow-md);        /* 业绩demo 只认 --shadow */
+  --clr-green:    var(--success);          /* common.css 的语义名 */
+  --clr-red:      var(--danger);
+  --clr-blue:     var(--info);
+  --clr-gold:     #ca8a04;
+  --up-color:     var(--success);          /* 业绩demo 涨跌色 */
+  --down-color:   var(--danger);
+  --rank-gold:    #d97706;
+  --rank-silver:  #94a3b8;
+  --rank-bronze:  #b45309;
+}
+
+/* ============================================================
+   模块强调色
+   ------------------------------------------------------------
+   之前每个模块要写 4 组规则（顶部色条 / 图标底色 / hover 标题 / 标签配色），
+   一共 16 个模块平铺 → 漏写就会「掉色」（话术库、考试模块就是这个 bug）。
+   现在统一成 --mod / --mod-bg 两个变量，任何模块只需一行。
+   没有匹配到规则的模块会落到下面的默认小米橙，永远不会掉色。
+   ============================================================ */
+
+.module-card,
+.sidebar-nav a {
+  --mod:    var(--mi-orange);
+  --mod-bg: var(--mi-orange-soft);
+}
+
+/* 数据看板 */
+.module-card.sales,               .sidebar-nav a.sales               { --mod: #f97316; --mod-bg: #fff5ed; }
+.module-card.monthlySummary,      .sidebar-nav a.monthlySummary      { --mod: #16a34a; --mod-bg: #eefaf1; }
+.module-card.eventSummary,        .sidebar-nav a.eventSummary        { --mod: #ca8a04; --mod-bg: #fdf8e7; }
+.module-card.violations,          .sidebar-nav a.violations          { --mod: #dc2626; --mod-bg: #fdf0f0; }
+.module-card.performance,         .sidebar-nav a.performance         { --mod: #0d9488; --mod-bg: #eafaf7; }
+
+/* 竞争方案 */
+.module-card.strategy,            .sidebar-nav a.strategy            { --mod: #f59e0b; --mod-bg: #fff8eb; }
+.module-card.upgrade,             .sidebar-nav a.upgrade             { --mod: #ec4899; --mod-bg: #fdf1f7; }
+
+/* 主播管理 */
+.module-card.scripts,             .sidebar-nav a.scripts             { --mod: #8b5cf6; --mod-bg: #f5f2fe; }
+.module-card.streamer,            .sidebar-nav a.streamer            { --mod: #d946ef; --mod-bg: #fdf1fc; }
+.module-card.exam,                .sidebar-nav a.exam                { --mod: #6366f1; --mod-bg: #f1f2fe; }
+
+/* 运营工具 */
+.module-card.gsv,                 .sidebar-nav a.gsv                 { --mod: #0891b2; --mod-bg: #eaf7fa; }
+.module-card.qianchuan,           .sidebar-nav a.qianchuan           { --mod: #0ea5e9; --mod-bg: #eef7fe; }
+
+/* ---------- 由 --mod 派生的表现层 ---------- */
+
+/* 侧边栏：导航点 + hover/选中时左侧色条 */
+.sidebar-nav a .nav-dot { background: var(--mod); }
+.sidebar-nav a::after   { background: var(--mod); }
+
+/* 侧边栏徽章（HOT / NEW）跟着模块色走，不再一律橙色 */
+.sidebar-nav a .badge-nav {
+  background: var(--mod-bg);
+  color: var(--mod);
+}
+
+/* 模块卡片：顶部色条 / 图标底色 / hover 标题 / 标签 */
+.module-card::before            { background: var(--mod); }
+.module-card .mod-icon          { background: var(--mod-bg); }
+.module-card:hover h3           { color: var(--mod); }
+.module-card .mod-tag           { background: var(--mod-bg); color: var(--mod); }
+
+/* ============================================================
+   全局细节
+   ============================================================ */
+
+/* 数据控制台：数字一律等宽对齐，扫读时列不会跳 */
+table th,
+table td,
+.num,
+.stat-value,
+.kpi-value,
+.kpi-number,
+.metric-value {
+  font-variant-numeric: tabular-nums;
+}
+
+/* 键盘可达性：给所有可聚焦元素一个统一的焦点环 */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--mi-orange);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* 尊重系统的「减少动态效果」设置 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
