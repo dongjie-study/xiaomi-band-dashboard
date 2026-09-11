@@ -435,14 +435,39 @@
             color: var(--text-secondary);
             margin-left: 2px;
         }
-        .stats-shift-wrap {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
+        /* 固定列宽：左三列按内容收紧，多余空间全部让给最右的「月销售额」列 */
+        #anchorMonthlyStatsPanel table {
+            table-layout: fixed;
         }
-        .stats-subtotal {
-            color: var(--text-secondary);
-            font-size: 0.72rem;
+        #anchorMonthlyStatsPanel thead th:nth-child(1) { width: 200px; }
+        #anchorMonthlyStatsPanel thead th:nth-child(2) { width: 96px; }
+        #anchorMonthlyStatsPanel thead th:nth-child(3) { width: 96px; }
+        #anchorMonthlyStatsPanel thead th:nth-child(9) { width: auto; }
+
+        /* A~E 班次列：窄列居中，数字用等宽对齐 */
+        table thead th.shift-col,
+        table tbody td.shift-col {
+            width: 48px;
+            min-width: 48px;
+            text-align: center;
+            padding-left: 4px;
+            padding-right: 4px;
+            font-variant-numeric: tabular-nums;
+        }
+        table thead th.shift-col {
+            background: #f2f5ff;
+            color: var(--primary);
+        }
+        table tbody td.shift-col {
+            background: #fbfcff;
+            font-weight: 600;
+        }
+        table tbody tr:hover td.shift-col {
+            background: #f2f5ff;
+        }
+        .stats-shift-zero {
+            color: #cbd5e1;
+            font-weight: 500;
         }
 
         .refund-rate-input {
@@ -656,13 +681,17 @@
                         <tr>
                             <th>直播间</th>
                             <th>主播</th>
-                            <th>出勤天数</th>
-                            <th>班次分布</th>
-                            <th>月销售额</th>
+                            <th style="text-align:center;">出勤天数</th>
+                            <th class="shift-col" title="A班出勤天数">A</th>
+                            <th class="shift-col" title="B班出勤天数">B</th>
+                            <th class="shift-col" title="C班出勤天数">C</th>
+                            <th class="shift-col" title="D班出勤天数">D</th>
+                            <th class="shift-col" title="E班出勤天数">E</th>
+                            <th style="text-align:right;">月销售额</th>
                         </tr>
                     </thead>
                     <tbody id="anchorStatsBody">
-                        <tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">暂无数据</td></tr>
+                        <tr><td colspan="9" style="text-align:center;padding:24px;color:#999;">暂无数据</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -2769,7 +2798,7 @@
                 const tbody = document.getElementById('anchorStatsBody');
                 if (!month) {
                     label.textContent = '本月 -';
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">请选择月份</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#999;">请选择月份</td></tr>';
                     return;
                 }
 
@@ -2778,29 +2807,29 @@
                 label.textContent = `本月 ${month} · ${dayCount}天 · ${rows.length}条`;
 
                 if (rows.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">该月暂无数据</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#999;">该月暂无数据</td></tr>';
                     return;
                 }
 
-                let prevRoomId = null;
                 tbody.innerHTML = rows.map(r => {
                     const room = getRoomById(r.roomId);
-                    // 同一直播间的行只在首行显示徽章，便于视觉分组
-                    const roomCell = r.roomId === prevRoomId
-                        ? ''
-                        : `<span class="badge-room" style="background:${room.color};">${room.name}</span>`;
-                    prevRoomId = r.roomId;
+                    const daysByShift = {};
+                    r.shifts.forEach(s => { daysByShift[s.shift] = s.days; });
 
-                    const shiftHtml = r.shifts.length
-                        ? r.shifts.map(s => `<span class="badge-shift" title="${s.shift}班共出勤${s.days}天">${s.shift} × ${s.days}</span>`).join('')
-                        : '<span class="stats-subtotal">—</span>';
+                    // A~E 逐列计数，未上过的班次显示占位符
+                    const shiftCells = SHIFT_ORDER.map(s => {
+                        const d = daysByShift[s] || 0;
+                        return d > 0
+                            ? `<td class="shift-col" title="${s}班出勤${d}天">${d}</td>`
+                            : '<td class="shift-col"><span class="stats-shift-zero">–</span></td>';
+                    }).join('');
 
                     return `<tr>
-                        <td>${roomCell}</td>
+                        <td><span class="badge-room" style="background:${room.color};">${room.name}</span></td>
                         <td><strong>${r.anchor}</strong></td>
-                        <td><span class="stats-days">${r.days}</span><span class="stats-days-unit">天</span></td>
-                        <td><div class="stats-shift-wrap">${shiftHtml}</div></td>
-                        <td class="highlight-sales">${formatMoney(r.sales)}</td>
+                        <td style="text-align:center;"><span class="stats-days">${r.days}</span><span class="stats-days-unit">天</span></td>
+                        ${shiftCells}
+                        <td class="highlight-sales" style="text-align:right;">${formatMoney(r.sales)}</td>
                     </tr>`;
                 }).join('');
             }
@@ -2809,19 +2838,23 @@
                 const month = document.getElementById('anchorStatsMonthSelect').value;
                 const rows = month ? getAnchorMonthlyStats(month) : [];
                 if (!rows.length) { alert('当前月份暂无可导出的出勤数据'); return; }
-                const data = [['月份', '直播间', '主播', '出勤天数', '班次分布', '月销售额']];
+                // 与页面表格同口径：A~E 逐列给出该班次的出勤天数，未出勤留空
+                const data = [['月份', '直播间', '主播', '出勤天数', ...SHIFT_ORDER, '月销售额']];
                 rows.forEach(r => {
+                    const daysByShift = {};
+                    r.shifts.forEach(s => { daysByShift[s.shift] = s.days; });
                     data.push([
                         month,
                         getRoomById(r.roomId).name,
                         r.anchor,
                         r.days,
-                        r.shifts.map(s => `${s.shift}班×${s.days}天`).join('、'),
+                        ...SHIFT_ORDER.map(s => daysByShift[s] || ''),
                         r.sales
                     ]);
                 });
                 const ws = XLSX.utils.aoa_to_sheet(data);
-                ws['!cols'] = [{wch:10},{wch:22},{wch:12},{wch:10},{wch:30},{wch:14}];
+                ws['!cols'] = [{wch:10},{wch:22},{wch:12},{wch:10},
+                               {wch:6},{wch:6},{wch:6},{wch:6},{wch:6},{wch:14}];
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, '主播月度出勤统计');
                 XLSX.writeFile(wb, `主播月度出勤统计_${month}.xlsx`);
