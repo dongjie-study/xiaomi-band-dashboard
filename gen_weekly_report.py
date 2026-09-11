@@ -475,6 +475,162 @@ def sheet_daily(wb, h):
     return ws
 
 
+# ==================== Sheet 4.5 手表间诊断 ====================
+def sheet_watch(wb, h):
+    from team_config import TEAM_MAP
+    ws = wb.create_sheet('手表间诊断')
+    no_grid(ws)
+    title_block(
+        ws, '两个手表直播间 · 问题诊断',
+        '手表直播间的核心指标是「手表转化」；手环11 是拉流量工具，不用它衡量手表间表现', span=7)
+
+    # --- 品类大盘 ---
+    def prod_stat(a, b, key, team=None):
+        ds = [d for d in h if a <= d['date'] <= b]
+        o = v = 0
+        for d in ds:
+            for rn, ri in d['rooms'].items():
+                if team and TEAM_MAP.get(rn) != team:
+                    continue
+                p = ri.get('products', {}).get(key, {})
+                o += p.get('orders', 0)
+                v += p.get('revenue', 0)
+        return o, v
+
+    section(ws, 5, '一、手表品类：大盘 / 我司 / 良米（台数）', span=7)
+    header_row(ws, 6, ['产品', '全站 上周', '全站 本周', '全站变化',
+                       '我司 上周', '我司 本周', '我司份额变化'])
+    r0 = 7
+    cats = ['REDMI Watch 6', 'Xiaomi Watch S5', '小米手环10 Pro']
+    for k, key in enumerate(cats):
+        r = r0 + k
+        al, _ = prod_stat('2026-08-29', '2026-09-03', key)
+        at, _ = prod_stat('2026-09-04', '2026-09-10', key)
+        ol, _ = prod_stat('2026-08-29', '2026-09-03', key, '我司')
+        ot, _ = prod_stat('2026-09-04', '2026-09-10', key, '我司')
+        ws.cell(row=r, column=1, value=key).font = F_BOLD
+        ws.cell(row=r, column=2, value=al).font = F_INPUT
+        ws.cell(row=r, column=3, value=at).font = F_INPUT
+        ws.cell(row=r, column=4, value=f'=IFERROR(C{r}/B{r}-1,"-")').font = F_FORM
+        ws.cell(row=r, column=5, value=ol).font = F_INPUT
+        ws.cell(row=r, column=6, value=ot).font = F_INPUT
+        ws.cell(row=r, column=7,
+                value=f'=IFERROR(F{r}/C{r}-E{r}/B{r},"-")').font = F_FORM
+        if k % 2:
+            for c in range(1, 8):
+                ws.cell(row=r, column=c).fill = P_ZEBRA
+    rt = r0 + len(cats)
+    for r in range(r0, rt):
+        for c in range(1, 8):
+            cell = ws.cell(row=r, column=c)
+            cell.border = B_ALL
+            if c == 1:
+                cell.alignment = LEFT
+            else:
+                cell.alignment = RIGHT
+                cell.number_format = PCT if c in (4, 7) else INT
+        ws.row_dimensions[r].height = 21
+    ws.cell(row=rt, column=1, value='→ 全站基本持平甚至上涨，我司大跌、良米大涨：问题不在品，在我司丢份额').font = F_NOTE
+    ws.merge_cells(start_row=rt, start_column=1, end_row=rt, end_column=7)
+    ws.row_dimensions[rt].height = 20
+
+    # --- 分间分产品 ---
+    def room_products(a, b, room):
+        ds = [d for d in h if a <= d['date'] <= b]
+        out = {}
+        for d in ds:
+            for p, i in d['rooms'].get(room, {}).get('products', {}).items():
+                e = out.setdefault(p, {'orders': 0, 'revenue': 0})
+                e['orders'] += i['orders']
+                e['revenue'] += i['revenue']
+        return out
+
+    r = rt + 2
+    for room in ['小米官方手表', '小米官旗手表直播间']:
+        section(ws, r, f'二、{room} · 分产品拆解' if room == '小米官方手表'
+                else f'三、{room} · 分产品拆解', span=7)
+        header_row(ws, r + 1, ['产品', '上周销售额', '本周销售额', '销售额变化',
+                               '上周单量', '本周单量', '单量变化'])
+        lw = room_products('2026-08-29', '2026-09-03', room)
+        tw = room_products('2026-09-04', '2026-09-10', room)
+        keys = sorted(set(lw) | set(tw), key=lambda k: -tw.get(k, {}).get('revenue', 0))
+        keys = [k for k in keys if (lw.get(k, {}).get('revenue', 0) +
+                                    tw.get(k, {}).get('revenue', 0)) > 500][:6]
+        rr = r + 2
+        for k, key in enumerate(keys):
+            a_ = lw.get(key, {})
+            b_ = tw.get(key, {})
+            ws.cell(row=rr, column=1, value=key).font = F_BOLD
+            ws.cell(row=rr, column=2, value=round(a_.get('revenue', 0))).font = F_INPUT
+            ws.cell(row=rr, column=3, value=round(b_.get('revenue', 0))).font = F_INPUT
+            ws.cell(row=rr, column=4,
+                    value=f'=IFERROR(C{rr}/B{rr}-1,"新增")').font = F_FORM
+            ws.cell(row=rr, column=5, value=a_.get('orders', 0)).font = F_INPUT
+            ws.cell(row=rr, column=6, value=b_.get('orders', 0)).font = F_INPUT
+            ws.cell(row=rr, column=7,
+                    value=f'=IFERROR(F{rr}/E{rr}-1,"新增")').font = F_FORM
+            if key == 'REDMI Watch 6' and room == '小米官方手表':
+                for c in range(1, 8):
+                    ws.cell(row=rr, column=c).fill = P_WARN
+            if key == '小米手环10 Pro' and room == '小米官旗手表直播间':
+                for c in range(1, 8):
+                    ws.cell(row=rr, column=c).fill = P_WARN
+            for c in range(1, 8):
+                cell = ws.cell(row=rr, column=c)
+                cell.border = B_ALL
+                if c == 1:
+                    cell.alignment = LEFT
+                else:
+                    cell.alignment = RIGHT
+                    if c in (2, 3):
+                        cell.number_format = MONEY
+                    elif c in (4, 7):
+                        cell.number_format = PCT
+                    else:
+                        cell.number_format = INT
+            ws.row_dimensions[rr].height = 21
+            rr += 1
+        r = rr + 1
+
+    # --- 诊断结论 ---
+    section(ws, r, '四、诊断结论', span=7)
+    header_row(ws, r + 1, ['#', '诊断', '数据依据', '', '', '', ''])
+    diag = [
+        ('小米官方手表：手环11 的流量进来了，但没转化成手表销量',
+         '该间手环类全线上涨（手环10Pro +57%、手环11 新增 121 台），'
+         '但核心品 REDMI Watch 6 单量 3,436→2,344 台（-32%），而它占该间 88% 营收', P_WARN),
+        ('小米官旗手表直播间：全品类同步下滑，无一是幸免',
+         'Watch S5 -23%、Watch 5 -16%、REDMI Watch 6 -23%；'
+         '小米手环10 Pro 更是从 158 单崩到 14 单（-91%），需单独排查是否为断货/替换', P_WARN),
+        ('两个间的共同根因：我司在手表品类上系统性丢份额给良米',
+         'REDMI Watch 6 我司份额 59.0%→41.6%（-17.4pp），我司 -1,506 台而良米 +1,207 台；'
+         'Watch S5 我司 26.8%→18.1%（-8.7pp）', None),
+        ('优先级：官方手表的量级是官旗手表的 6 倍，应先救它',
+         '上周日均 官方手表 ¥301,912 vs 官旗手表 ¥45,572', None),
+    ]
+    rr = r + 2
+    for k, (a, b, fill) in enumerate(diag):
+        ws.cell(row=rr, column=1, value=k + 1).font = Font(name=FONT, size=10, bold=True, color=BRAND)
+        ws.cell(row=rr, column=1).alignment = Alignment(horizontal='center', vertical='top')
+        ws.cell(row=rr, column=2, value=a).font = F_BOLD
+        ws.cell(row=rr, column=3, value=b).font = F_TINY
+        ws.merge_cells(start_row=rr, start_column=3, end_row=rr, end_column=7)
+        for c in range(1, 8):
+            cell = ws.cell(row=rr, column=c)
+            cell.border = B_ALL
+            if c > 1:
+                cell.alignment = TOPWRAP
+            if fill:
+                cell.fill = fill
+        ws.row_dimensions[rr].height = 40
+        rr += 1
+
+    for c, w in enumerate([24, 13, 13, 11, 11, 11, 12], start=1):
+        ws.column_dimensions[chr(64 + c)].width = w
+    ws.column_dimensions['A'].width = 26
+    return ws
+
+
 # ==================== Sheet 5 ====================
 def sheet_analysis(wb):
     ws = wb.create_sheet('分析与规划')
@@ -485,26 +641,38 @@ def sheet_analysis(wb):
     ws.merge_cells(start_row=5, start_column=1, end_row=5, end_column=4)
     header_row(ws, 6, ['#', '结论', '数据依据', ''])
     concl = [
-        ('【目标进度】手环11 月净销 60,000 台，已达成 21,583 台（36.0%）',
-         '9.7-9.10 累计；剩余 20 天（9.11-9.30）需日均 1,921 台', P_HL),
-        ('【关键风险】首发后稳态日均只有 1,905 台，低于所需的 1,921 台',
+        ('【定位纠偏】手表直播间的核心指标是「手表转化」；手环11 是拉流量的工具，'
+         '不能用手环11 销量去衡量手表间的表现',
+         '两个手表间的手环11 销量本就有限（官方手表 121 台、官旗手表 19 台）；'
+         '真正要看的是它们把手表卖得怎么样', P_HL),
+        ('【问题性质】不是品不行，是我司在手表品类上系统性丢份额给良米',
+         'REDMI Watch 6 全站仅 -5%，我司 -33%，良米 +53%；'
+         'Xiaomi Watch S5 全站 +22%，我司 -18%，良米 +35%', P_WARN),
+        ('【份额】我司 REDMI Watch 6 份额 59.0%→41.6%（-17.4pp）；Watch S5 26.8%→18.1%（-8.7pp）',
+         'Watch 6 我司 -1,506 台、良米 +1,207 台 —— 丢掉的份额几乎被良米全额接收', P_WARN),
+        ('【官方手表诊断】手环11 的流量进来了，但没转化成手表销量',
+         '该间手环类全线上涨（手环10Pro +57%、手环11 新增 121 台），'
+         '但核心品 REDMI Watch 6 单量 3,436→2,344 台（-32%），而它占该间 88% 营收', P_WARN),
+        ('【官旗手表诊断】全品类同步下滑，无一是幸免',
+         'Watch S5 -23%、Watch 5 -16%、REDMI Watch 6 -23%；'
+         '小米手环10 Pro 从 158 单崩到 14 单（-91%），需单独排查断货/替换', P_WARN),
+        ('【优先级】官方手表的量级是官旗手表的 6 倍，应先救它',
+         '上周日均 官方手表 ¥301,912 vs 官旗手表 ¥45,572', None),
+        ('【手环11 进度】月净销 60,000 台，已达成 21,583 台（36.0%），剩余 20 天需日均 1,921 台',
+         '9.7-9.10 累计；这是全公司级目标，含商品卡，不含其他团队直播间', P_HL),
+        ('【手环11 风险】首发后稳态日均只有 1,905 台，低于所需的 1,921 台',
          '按现状走，月末约 59,683 台，差 317 台不达标 —— 目标卡在临界点上', P_WARN),
-        ('【可达性】只需在稳态基础上提升 5%（日均 2,000 台）即可稳过 6 万线',
-         '6 万并非激进目标，但没有任何冗余空间，必须主动加动作而不是「顺其自然」', None),
-        ('【口径提醒】history.json 记录的是订单口径，若「净销」需扣退款，实际需更高出货量',
+        ('【手环11 可达性】只需在稳态基础上提升 5%（日均 2,000 台）即可稳过 6 万线',
+         '并非激进目标，但没有任何冗余空间，必须主动加动作而不是「顺其自然」', None),
+        ('【口径提醒】history.json 是订单口径，若「净销」需扣退款，实际需更高出货量',
          '如退款率 10%，则需出货 66,667 台，日均要求从 1,921 提到 2,254 台', P_WARN),
         ('【本周大盘】四间合计 21,897 单 / ¥7,738,000，环比订单 +257.6%、金额 +164.6%',
          '但增量 61% 来自 9/7 首发日（当天 ¥4,725,254），是事件驱动而非自然增长', None),
         ('【剔除首发日】本周日均 ¥502,124 vs 上周 ¥487,328，仅 +3.0%',
          '自然增长基本停滞；首发前 9.4-9.6 日均甚至只有 ¥320,880，比上周 -34%', None),
-        ('【结构分化】手环/数码两间被首发强带动，两间手表直播间完全没吃到红利',
-         '数码旗舰店日均 44,170→249,352；手环直播间 23,393→235,976；'
-         '官旗手表 23,658→25,932（持平）；官方手表 229,659→172,108（继续 -25%）', None),
         ('【渠道结构】我司手环11 的 56.4% 来自小米数码旗舰店，商品卡贡献 16.2%（第三大来源）',
          '数码 12,164 台 / 手环直播间 5,511 台 / 商品卡 3,506 台；'
          '商品卡属被动承接，若目标吃紧需评估其可拉动空间', None),
-        ('【份额】我司手环11 占全站销量 26.9%；四间占全站销售额份额 34.8%→22.0%',
-         '首发流量外溢：机械空间、良米等直播间同样在卖手环11，我方没能独占首发红利', None),
     ]
     for k, (a, b, fill) in enumerate(concl):
         r = 7 + k
@@ -532,19 +700,23 @@ def sheet_analysis(wb):
          '④ 用首发期积累的人群包做二次触达与复购；'
          '⑤ 每日盯 4 主要间的分小时销量，哪间掉队当天就补',
          '日均 ≥2,000 台\n月末累计 ≥60,000 台', P_WARN),
-        ('P0', '小米官方手表',
-         '连续两个阶段下滑（301,912 → 229,659 → 172,108），且 9.7 首发日也没被带动'
-         '（当天仅 ¥208,729），说明不是大盘问题而是这间自身出了问题。'
-         '必须单独复盘：拉分小时数据定位掉在哪个班次，排查货盘、话术、投放',
-         '日均回到 ¥200,000\n止住连续跌势', None),
-        ('P1', '小米官旗手表直播间',
-         '连续低位（约 ¥2.5万/日，本周环比 -33%），首发完全没带动。'
-         '评估该间与官方手表的定位是否重叠，考虑差异化选品或调整投放策略',
+        ('P0', '小米官方手表\n（回归手表）',
+         '这间是最大的手表间（日均 ¥30万），核心品 REDMI Watch 6 占其 88% 营收，本周掉了 32%。'
+         '手环11 的流量确实进来了（手环类全线上涨），但没转化成手表销量 —— '
+         '直播间在卖便宜的手环，手表没承接住。动作：'
+         '① 设手表专属讲解时段，手环11 讲完必须带出手表对比与关联；'
+         '② 排查 Watch 6 掉量根因（货盘 / 价格 / 话术 / 排班），拉分小时数据定位掉在哪个班次；'
+         '③ 对齐良米打法 —— 同期良米 Watch 6 +53%，我们没有理由做不到',
+         'REDMI Watch 6\n单量回到 3,000 台/周\n我司份额重回 50%+', P_WARN),
+        ('P1', '小米官旗手表直播间\n（回归手表）',
+         '全品类同步下滑，其中小米手环10 Pro 从 158 单崩到 14 单（-91%），'
+         '需先确认是否断货或被手环11 替换。核心品 Xiaomi Watch S5 掉 24%。'
+         '这间量级较小（日均 ¥4.5万），先查清 10Pro 崩盘原因，再谈手表动销',
          '日均 ≥¥35,000\n环比转正', None),
         ('P1', '四主要间（复盘）',
-         '四间份额从 34.8% 掉到 22.0%，首发红利被分散到机械空间 / 良米等间。'
-         '复盘首发的流量承接链路（选品-短视频-直播承接-转化），沉淀 SOP 供双11 复用',
-         '下一节点份额 ≥30%', None),
+         '手环类靠首发拉动了流量，但手表品类没接住，份额被良米拿走。'
+         '复盘「手环11 引流 → 手表转化」的承接链路，沉淀 SOP 供双11 复用',
+         '手表品类份额 ≥50%', None),
     ]
     for k, (p, room, act, goal, fill) in enumerate(plan):
         rr = r + 2 + k
@@ -577,6 +749,7 @@ def main():
     sheet_compare(wb, h)
     sheet_target(wb, h)
     sheet_segment(wb, h)
+    sheet_watch(wb, h)
     sheet_daily(wb, h)
     sheet_analysis(wb)
     wb.save(OUT)
