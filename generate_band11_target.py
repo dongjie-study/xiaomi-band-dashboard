@@ -36,10 +36,19 @@ ROOM_TARGETS = [
     ('小米官方手表',         700),
 ]
 
-# 未纳入 60000 目标的其他我司直播间（只走量极少，仅作提示，不计入进度）
-OTHER_OUR_ROOMS = ['小米官旗手表直播间', '小米官方耳机直播间']
+# 我司「其他直播间」：计入 60000 台总量、直接冲减剩余，但不单独设目标、不做主要分析。
+# 由 team_config.OUR_ROOMS 减去上面四个渠道自动推导，避免以后新增直播间漏掉。
+OTHER_LABEL = '我司其他直播间'
 
-HISTORY_FILE = os.path.join('sales_analysis', 'history.json')
+ROOT = os.path.dirname(os.path.abspath(__file__))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
+from team_config import OUR_ROOMS  # noqa: E402
+
+MAIN_ROOMS = {r for r, _ in ROOM_TARGETS}
+OTHER_OUR_ROOMS = sorted(OUR_ROOMS - MAIN_ROOMS)
+
+HISTORY_FILE = os.path.join(ROOT, 'sales_analysis', 'history.json')
 OUT_FILE = os.path.join(os.path.expanduser('~'), 'Desktop', '小米手环11首销月目标进度表.xlsx')
 
 # ============ 样式 ============
@@ -118,11 +127,10 @@ def load_daily():
         row = {}
         for room_name in [r for r, _ in ROOM_TARGETS] + OTHER_OUR_ROOMS:
             info = rec.get('rooms', {}).get(room_name)
-            if not info:
-                row[room_name] = 0
-                continue
-            prod = info.get('products', {}).get(PRODUCT)
+            prod = (info or {}).get('products', {}).get(PRODUCT)
             row[room_name] = int(prod.get('orders', 0)) if prod else 0
+        # 我司其他直播间合并成一行
+        row[OTHER_LABEL] = sum(row[r] for r in OTHER_OUR_ROOMS)
         daily[d] = row
     return daily
 
@@ -144,7 +152,8 @@ def sheet_overview(wb, dates, daily):
     title_row(ws, f'{PRODUCT} 首销月目标进度总览', ncols,
               f'统计区间 {START:%Y-%m-%d} ~ {END:%Y-%m-%d}（{len(dates)}天）  |  口径：我司四渠道下单台数（不扣退款）')
 
-    main_rooms = [r for r, _ in ROOM_TARGETS]
+    # 总量口径 = 四渠道 + 我司其他直播间（其他直播间直接冲减剩余，不单独设目标）
+    main_rooms = [r for r, _ in ROOM_TARGETS] + [OTHER_LABEL]
 
     # 已过天数 = 有数据的天数
     data_days = [d for d in dates if d in daily]
@@ -152,6 +161,7 @@ def sheet_overview(wb, dates, daily):
     last_date = data_days[-1] if data_days else None
 
     done_total = sum(daily[d].get(r, 0) for d in data_days for r in main_rooms)
+    done_other = sum(daily[d].get(OTHER_LABEL, 0) for d in data_days)
     total_days = len(dates)
 
     # --- 顶部 KPI ---
@@ -207,13 +217,20 @@ def sheet_overview(wb, dates, daily):
     c.alignment = Alignment(horizontal='left', vertical='center')
     ws.row_dimensions[r].height = 24
 
-    body_cell(ws, 11, 1, '数据截至', bold=True, fill=C_HEAD)
-    body_cell(ws, 11, 2, f'{last_date:%Y-%m-%d}' if last_date else '—',
+    body_cell(ws, 12, 1, '数据截至', bold=True, fill=C_HEAD)
+    body_cell(ws, 12, 2, f'{last_date:%Y-%m-%d}' if last_date else '—', align='left')
+    body_cell(ws, 12, 3, '数据源', bold=True, fill=C_HEAD)
+    ws.merge_cells(start_row=12, start_column=4, end_row=12, end_column=6)
+    body_cell(ws, 12, 4, 'sales_analysis/history.json（每日跑 run_all.py sales 后重跑本脚本刷新）',
               align='left')
-    body_cell(ws, 11, 3, '数据源', bold=True, fill=C_HEAD)
-    ws.merge_cells(start_row=11, start_column=4, end_row=11, end_column=6)
-    body_cell(ws, 11, 4, 'sales_analysis/history.json（每日跑 run_all.py sales 后重跑本脚本刷新）',
-              align='left')
+
+    # 我司其他直播间的贡献单列一行，说明它只冲减、不设目标
+    body_cell(ws, 11, 1, OTHER_LABEL, bold=True, fill=C_HEAD)
+    body_cell(ws, 11, 2, done_other, fmt='#,##0')
+    ws.merge_cells(start_row=11, start_column=3, end_row=11, end_column=6)
+    body_cell(ws, 11, 3,
+              f'已计入上方总量、直接冲减剩余（{"、".join(OTHER_OUR_ROOMS)}）。'
+              f'不单独设目标，主要分析仍以四渠道为准。', align='left')
     for col, w in zip(range(1, ncols + 1), [16, 16, 16, 18, 18, 16]):
         ws.column_dimensions[get_column_letter(col)].width = w
     return ws
@@ -269,6 +286,22 @@ def sheet_by_room(wb, dates, daily):
         c = body_cell(ws, r, 10, status, bold=True, fill=fill)
         r += 1
 
+    # 我司其他直播间：不设目标，只把已成交量冲减剩余（剩余列显示为负数 = 净冲减）
+    oth_done = sum(daily[d].get(OTHER_LABEL, 0) for d in data_days)
+    oth_rec = (sum(daily[d].get(OTHER_LABEL, 0) for d in recent) / len(recent)) if recent else 0
+    body_cell(ws, r, 1, OTHER_LABEL, align='left', bold=True)
+    body_cell(ws, r, 2, 0, fmt='#,##0;-#,##0;"—"')
+    body_cell(ws, r, 3, oth_done, fmt='#,##0')
+    body_cell(ws, r, 4, '—')
+    body_cell(ws, r, 5, '—')
+    body_cell(ws, r, 6, f'=B{r}-C{r}', fmt='#,##0;-#,##0;"—"')
+    body_cell(ws, r, 7, '—')
+    body_cell(ws, r, 8, round(oth_rec), fmt='#,##0')
+    body_cell(ws, r, 9, '—')
+    body_cell(ws, r, 10, '冲减', bold=True, fill=C_BLANK)
+    ws.row_dimensions[r].height = 18
+    r += 1
+
     body_cell(ws, r, 1, '合计', bold=True, fill=C_TOTAL, align='left')
     body_cell(ws, r, 2, f'=SUM(B5:B{r-1})', fmt='#,##0', bold=True, fill=C_TOTAL)
     body_cell(ws, r, 3, f'=SUM(C5:C{r-1})', fmt='#,##0', bold=True, fill=C_TOTAL)
@@ -284,19 +317,19 @@ def sheet_by_room(wb, dates, daily):
     r += 2
     note = (f'说明：①「已达成」为首销月累计下单台数，取自 history.json，不扣退款；'
             f'②「进度差」= 达成率 − 时间进度（当前 {elapsed}/{total_days}）；'
-            f'③「缺口/富余」= 近4天日均 − 剩余日均需求，正数为富余。')
+            f'③「缺口/富余」= 近4天日均 − 剩余日均需求，正数为富余；'
+            f'④ 我司其他直播间不设目标，其成交量直接冲减总剩余（该行「剩余台数」显示为负数）。')
     ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=ncols)
     c = ws.cell(row=r, column=1, value=note)
     c.font = Font(name=FONT, size=9, color='666666')
     c.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
-    ws.row_dimensions[r].height = 30
+    ws.row_dimensions[r].height = 34
 
     r += 2
-    other = [f'{x}' for x in OTHER_OUR_ROOMS]
-    oth_done = sum(daily[d].get(x, 0) for d in data_days for x in OTHER_OUR_ROOMS)
-    body_cell(ws, r, 1, '未计入目标的直播间', bold=True, fill=C_HEAD, align='left')
+    body_cell(ws, r, 1, f'{OTHER_LABEL}包含', bold=True, fill=C_HEAD, align='left')
     ws.merge_cells(start_row=r, start_column=2, end_row=r, end_column=ncols)
-    body_cell(ws, r, 2, f'{"、".join(other)}（累计 {oth_done:,} 台，走量极少，按约定不计入 60000 台）',
+    body_cell(ws, r, 2, f'{"、".join(OTHER_OUR_ROOMS)}。'
+                        f'（由 team_config.OUR_ROOMS 自动推导，新增我司直播间会自动纳入）',
               align='left')
 
     widths = [22, 12, 11, 10, 10, 11, 13, 11, 12, 9]
@@ -309,18 +342,26 @@ def sheet_by_room(wb, dates, daily):
 
 def sheet_daily(wb, dates, daily):
     ws = wb.create_sheet('每日明细')
-    ncols = 12
+    chan_cols = [r for r, _ in ROOM_TARGETS] + [OTHER_LABEL]
+    ncols = 3 + len(chan_cols) + 6
     title_row(ws, '每日台数明细（9.7 - 10.7）· 历史数据全部保留，逐日追加', ncols,
               '每天新数据只往下追加，已入库日期不会被覆盖；灰底行 = 尚未到来的日期')
 
-    heads = ['日期', '星期'] + [r for r, _ in ROOM_TARGETS] + \
+    heads = ['日期', '星期'] + chan_cols + \
             ['当日合计', '累计合计', '累计达成率', '时间进度', '累计目标(线性)', '进度差']
     for i, h in enumerate(heads, start=1):
-        hdr_cell(ws, 4, i, h)
+        if h == OTHER_LABEL:
+            c = ws.cell(row=4, column=i, value=h)
+            c.font = Font(name=FONT, size=9, bold=True, color='FFFFFF')
+            c.fill = PatternFill('solid', fgColor='B0BEC5')
+            c.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+            c.border = BORDER
+        else:
+            hdr_cell(ws, 4, i, h)
     ws.row_dimensions[4].height = 32
 
     N = len(dates)
-    last_room_col = 2 + len(ROOM_TARGETS)          # = 6
+    last_room_col = 2 + len(chan_cols)             # = 7
     sum_col = last_room_col + 1                    # G 当日合计
     cum_col = sum_col + 1                          # H 累计合计
     rate_col = cum_col + 1                         # I 累计达成率
@@ -336,7 +377,7 @@ def sheet_daily(wb, dates, daily):
         fill = None if has else C_BLANK
         body_cell(ws, r, 1, d.strftime('%m-%d'), fill=fill, bold=not has)
         body_cell(ws, r, 2, WEEKDAYS[d.weekday()], fill=fill)
-        for j, (room, _) in enumerate(ROOM_TARGETS):
+        for j, room in enumerate(chan_cols):
             v = daily[d].get(room, 0) if has else None
             body_cell(ws, r, 3 + j, v, fmt='#,##0', fill=fill)
         # 已入库行写公式（可手改明细自动重算）；未到日期留空，避免把"还没到"误读成"没达成"
@@ -364,7 +405,7 @@ def sheet_daily(wb, dates, daily):
     last_row = r - 1
     body_cell(ws, r, 1, '合计', bold=True, fill=C_TOTAL)
     body_cell(ws, r, 2, '', fill=C_TOTAL)
-    for j in range(len(ROOM_TARGETS)):
+    for j in range(len(chan_cols)):
         col = get_column_letter(3 + j)
         body_cell(ws, r, 3 + j, f'=SUM({col}{first_data_row}:{col}{last_row})',
                   fmt='#,##0', bold=True, fill=C_TOTAL)
@@ -379,7 +420,7 @@ def sheet_daily(wb, dates, daily):
     body_cell(ws, r, diff_col, f'={get_column_letter(cum_col)}{r}-{TOTAL_TARGET}',
               fmt='+#,##0;-#,##0', bold=True, fill=C_TOTAL)
 
-    widths = [9, 6] + [15] * len(ROOM_TARGETS) + [11, 11, 12, 10, 14, 12]
+    widths = [9, 6] + [15] * len(ROOM_TARGETS) + [11] + [11, 11, 12, 10, 14, 12]
     for col, w in enumerate(widths, start=1):
         ws.column_dimensions[get_column_letter(col)].width = w
     ws.freeze_panes = 'C5'
@@ -443,10 +484,13 @@ def sheet_notes(wb, dates, daily):
         ('二、拆分口径', f'按 9.8-9.11 四天稳态占比拆分。不采用 9.7 开售日数据，'
                          f'因为开售日单日 {sum(daily[START].get(x, 0) for x, _ in ROOM_TARGETS):,} 台、'
                          f'占首销前5天的 65%，是瞬时峰值，不代表后续 26 天的真实承接能力。'),
-        ('三、剔除项', '小米官旗手表直播间、小米官方耳机直播间也有零星手环11 成交，'
-                       '按约定不计入本 60000 台目标，仅在「分渠道目标」页底部列示。'),
+        ('三、我司其他直播间', f'{"、".join(OTHER_OUR_ROOMS)} 的手环11 成交也计入 60000 台总量，'
+                               f'合并为「{OTHER_LABEL}」一行，直接冲减总剩余；'
+                               f'但不单独设目标，主要分析仍以上面四个渠道为准。'
+                               f'（该行由 team_config.OUR_ROOMS 自动推导，新增我司直播间会自动纳入）'),
         ('四、口径', '① 下单台数 = 订单条数，不扣退款；② 数据源 sales_analysis/history.json，'
-                     '与销售分析看板同口径；③ 后续每日订单入库后重跑本脚本刷新。'),
+                     '与销售分析看板同口径；③ 总达成 = 四渠道 + 我司其他直播间；'
+                     '④ 后续每日订单入库后重跑本脚本刷新。'),
         ('五、有效期', f'本表仅适用于 10.7 首销月结束前。{END:%Y-%m-%d} 之后不再需要更新。'),
     ]
     for label, text in lines:
@@ -505,9 +549,12 @@ def main():
     print(f'[OK] 进度表已生成：{OUT_FILE}')
 
     data_days = [d for d in dates if d in daily]
-    done = sum(daily[d].get(r, 0) for d in data_days for r, _ in ROOM_TARGETS)
+    main = sum(daily[d].get(r, 0) for d in data_days for r, _ in ROOM_TARGETS)
+    other = sum(daily[d].get(OTHER_LABEL, 0) for d in data_days)
+    done = main + other
     print(f'   数据截至 {data_days[-1]:%Y-%m-%d}，已入库 {len(data_days)} 天，'
-          f'累计 {done:,} / {TOTAL_TARGET:,} 台（{done / TOTAL_TARGET:.1%}）')
+          f'累计 {done:,} / {TOTAL_TARGET:,} 台（{done / TOTAL_TARGET:.1%}）'
+          f' = 四渠道 {main:,} + 我司其他直播间 {other:,}')
 
 
 if __name__ == '__main__':
