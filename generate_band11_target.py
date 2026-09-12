@@ -390,10 +390,10 @@ def sheet_daily(wb, dates, daily):
                       f'{get_column_letter(sum_col)}{r})', fmt='#,##0', bold=True)
             body_cell(ws, r, rate_col, f'={get_column_letter(cum_col)}{r}/{TOTAL_TARGET}',
                       fmt='0.0%')
-            c = body_cell(ws, r, diff_col,
-                          f'={get_column_letter(cum_col)}{r}-{get_column_letter(pace_col)}{r}',
-                          fmt='+#,##0;-#,##0;[Red]-#,##0')
-            c.font = Font(name=FONT, size=10, color='2E7D32')
+            # 领先绿、落后红交给数字格式，避免负数也显示成绿色
+            body_cell(ws, r, diff_col,
+                      f'={get_column_letter(cum_col)}{r}-{get_column_letter(pace_col)}{r}',
+                      fmt='[Color2E7D32]+#,##0;[Red]-#,##0')
         else:
             for col in (sum_col, cum_col, rate_col, diff_col):
                 body_cell(ws, r, col, None, fill=fill)
