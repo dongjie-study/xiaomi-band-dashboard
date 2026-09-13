@@ -4,13 +4,16 @@
 
 职责：**算事实 + 存总结**。不碰 xlsx —— xlsx 由 generate_band11_target.py 渲染。
 
+**只看当天整体销售（订单口径）**，不含主播业绩 / 班次维度。
+每天两块文字：销售总结（整体好坏，2-3 句）+ 交接要点（交给接班同事，1-2 句）。
+
 为什么总结必须存独立 JSON：
     generate_band11_target.py 的 main() 每次都 `Workbook()` 从零重建整个工作簿，
     任何只写在 xlsx 里的内容第二次跑就永久消失。所以这里存，那边渲染。
 
 用法：
-    python band11_review.py status              # 三个数据源最新日期对照
-    python band11_review.py context [日期]      # 打印写作素材（默认=订单最新日）
+    python band11_review.py status              # 最新日期对照
+    python band11_review.py context [日期]      # 打印写作素材（默认=最新已入库日）
     python band11_review.py auto <日期>         # 用数据生成兜底稿并落库
     python band11_review.py add <日期> [--replace]   # 读输入稿落库
     python band11_review.py validate            # 校验 store 完整性
@@ -27,23 +30,16 @@ if ROOT not in sys.path:
 from generate_band11_target import (  # noqa: E402
     END, PRODUCT, ROOM_TARGETS, START, TOTAL_TARGET, OTHER_LABEL, load_daily,
 )
-import perf_records as PR  # noqa: E402
 
 STORE_FILE = os.path.join(ROOT, 'sales_analysis', 'daily_summary.json')
 INPUT_DIR = os.path.join(ROOT, 'sales_analysis', 'daily_review_input')
 HISTORY_FILE = os.path.join(ROOT, 'sales_analysis', 'history.json')
 
 DAILY_QUOTA = TOTAL_TARGET / 31          # ≈ 1935 台/天的首销月日均需求
-RATINGS = ('S', 'A', 'B', 'C')
+RATINGS = ('好', '一般', '差')
 
-# 节奏比 = 当日手环11台数 ÷ 日均需求；环比 = vs 前一入库日。自上而下第一条命中即用。
-# 首销日无环比基准，特判 S（见 grade）。
-RATING_RULES = [
-    (1.50, 0.00, 'S'),
-    (1.00, -0.10, 'A'),
-    (0.80, -0.30, 'B'),
-    (0.00, -99.0, 'C'),
-]
+MAIN_ROOMS = [r for r, _ in ROOM_TARGETS]
+B11_COLS = MAIN_ROOMS + [OTHER_LABEL]    # 手环11 口径的列
 
 
 # ============ 数据读取 ============
@@ -66,10 +62,6 @@ def data_days(daily):
     return sorted(d for d in daily if START <= d <= END)
 
 
-MAIN_ROOMS = [r for r, _ in ROOM_TARGETS]
-B11_COLS = MAIN_ROOMS + [OTHER_LABEL]   # 手环11 口径的列
-
-
 def b11_of(row):
     """当日手环11 台数。
 
@@ -82,8 +74,8 @@ def b11_of(row):
 
 # ============ 事实汇总 ============
 
-def day_metrics(d, daily, hist, perf):
-    """某天的全部事实数字（块头 + 交接要点都用它）。"""
+def day_metrics(d, daily, hist):
+    """某天的全部事实数字（块头 + 兜底文案都用它）。"""
     ds = d.isoformat()
     rec = hist.get(ds, {})
     days = data_days(daily)
@@ -103,18 +95,21 @@ def day_metrics(d, daily, hist, perf):
 
     upto = [x for x in days if x <= d]
     cum = sum(b11_of(daily[x]) for x in upto)
-    time_rate = len(upto) / 31
 
-    # 手环11 台数最高的渠道（四渠道 + 「我司其他直播间」聚合行）
+    # 分渠道环比，用来写「哪儿涨哪儿跌」
+    moves = []
+    if prev:
+        prev_b11 = daily.get(prev, {})
+        for r in B11_COLS:
+            cur_n, prev_n = b11.get(r, 0), prev_b11.get(r, 0)
+            if cur_n or prev_n:
+                moves.append({'room': r, 'now': cur_n, 'prev': prev_n,
+                              'delta': cur_n - prev_n,
+                              'pct': _dod(cur_n, prev_n)})
+        moves.sort(key=lambda m: m['delta'])
+
     top_room, top_n = max(((r, b11.get(r, 0)) for r in B11_COLS),
                           key=lambda kv: kv[1], default=('—', 0))
-
-    # 全场最高单班（跨所有我司直播间的 GSV 最高一班）
-    best = None
-    for rid, blk in PR.daily_room_shift(perf, ds).items():
-        for s in blk['shifts']:
-            if best is None or s['sales'] > best['sales']:
-                best = dict(s, room=PR.load_rooms()[rid]['name'])
 
     return {
         'date': ds,
@@ -129,11 +124,10 @@ def day_metrics(d, daily, hist, perf):
         'b11_share_of_our': b11_total / our_orders if our_orders else 0.0,
         'cum': cum,
         'cum_rate': cum / TOTAL_TARGET,
-        'time_rate': time_rate,
-        'pace_diff': cum / TOTAL_TARGET - time_rate,
+        'time_rate': len(upto) / 31,
+        'pace_diff': cum / TOTAL_TARGET - len(upto) / 31,
         'top_room': top_room, 'top_n': top_n,
-        'best_shift': best,
-        'perf_ready': bool(PR.daily_room_shift(perf, ds)),
+        'moves': moves,
     }
 
 
@@ -143,138 +137,61 @@ def _dod(cur, prev):
 
 
 def grade(m):
-    """按 RATING_RULES 评级。
+    """好 / 一般 / 差。
 
-    两个特判：
-    - 首销日无环比基准 → S。
+    主判据是节奏比（当日台数 ÷ 日均需求），环比做辅助。两个特判：
+    - 首销日无环比基准 → 好。
     - **开售次日**：9.7 单日 15,869 台是全月峰值，拿它当环比基准会把正常的
       回落日（9.8，-88%）打成「差」。开售日的长尾不该由次日承担，故跳过环比判据。
     """
-    if m['b11_dod'] is None:
-        return 'S'
     ratio = m['b11_vs_quota']
-    dod = 99.0 if m['prev_date'] == START.isoformat() else m['b11_dod']
-    for min_ratio, min_dod, rating in RATING_RULES:
-        if ratio >= min_ratio and dod >= min_dod:
-            return rating
-    return 'C'
-
-
-def rating_reason(m):
-    parts = [f"手环11 {m['b11_total']:,} 台",
-             f"达日均需求 {m['b11_vs_quota']:.2f} 倍"]
     if m['b11_dod'] is None:
-        parts.append('首销日，无环比基准')
-    else:
-        parts.append(f"环比 {m['b11_dod']:+.1%}（vs {m['prev_date']}）")
-    return '，'.join(parts)
-
-
-def handover_rooms(d, perf):
-    """交接要点的结构化数据：一个我司直播间一条，按当日 GSV 降序。
-
-    三层降级，保证永不空：
-      ① 有班次数据 → 各班次 GSV + 主播名
-      ② 是我司但业绩里没有（如「我司商品卡」）→ 标注只有订单口径
-      ③ 当天确实没开播 → 明确写「无业绩记录」，与②区分开
-    """
-    ds = d.isoformat()
-    cur = PR.daily_room_shift(perf, ds)
-    # 整天的业绩都没到（订单先到、业绩后到是常态）：必须与「当天确实没开播」区分开，
-    # 否则表里会出现一排「未开播」，让人以为所有直播间都停了。
-    perf_missing = ds not in perf
-    prev_ds = None
-    days = [x for x in data_days(load_daily()) if x < d]
-    if days:
-        prev_ds = days[-1].isoformat()
-    prv = PR.daily_room_shift(perf, prev_ds) if prev_ds else {}
-
-    out = []
-    for rid, name in PR.our_room_ids().items():
-        blk = cur.get(rid)
-        shifts = blk['shifts'] if blk else []
-        gsv = blk['total'] if blk else None
-        p_gsv = (prv.get(rid) or {}).get('total')
-        top = max(shifts, key=lambda s: s['sales']) if shifts else None
-        out.append({
-            'room': name,
-            'gsv': gsv,
-            'gsv_dod': _dod(gsv, p_gsv) if (gsv is not None and p_gsv) else None,
-            'prev_date': prev_ds,
-            'shifts': sorted(shifts, key=lambda s: -s['sales']),
-            'top_shift': top,
-            'perf_missing': perf_missing,
-            'note': '',
-        })
-    # 我司身份但业绩里没有班次维度的（商品卡）：用订单口径补一条
-    rec = load_history_index().get(ds, {})
-    for name in rec.get('our_rooms', []):
-        if name in {o['room'] for o in out}:
-            continue
-        prod = (rec.get('rooms', {}).get(name) or {}).get('products', {})
-        out.append({
-            'room': name, 'gsv': None, 'gsv_dod': None, 'prev_date': prev_ds,
-            'shifts': [], 'top_shift': None, 'note': '',
-            'b11_orders': int((prod.get(PRODUCT) or {}).get('orders', 0)),
-            'orders': (rec.get('rooms', {}).get(name) or {}).get('orders', 0),
-            'no_shift': True,
-        })
-    out.sort(key=lambda o: (o['gsv'] is None, -(o['gsv'] or 0)))
-    return out
-
-
-def handover_line(room):
-    """把一间直播间的班次数据拼成一行文字。两种「空」要区分开，别让读者误以为停播。"""
-    if not room['shifts']:
-        if room.get('perf_missing'):
-            return f"⚠ 业绩数据未到齐（业绩最新 {PR.latest_perf_date()}），当天班次/主播数据暂缺"
-        if room.get('no_shift'):
-            # 该渠道本来就没有班次/主播维度（如我司商品卡），不是停播
-            b11 = room.get('b11_orders')
-            tail = f"，手环11 {b11:,} 台" if b11 else ''
-            orders = room.get('orders')
-            head = f"订单 {orders:,} 单" if orders else '当日无订单'
-            return f"仅订单口径（该渠道无班次/主播数据）：{head}{tail}"
-        return '当日无业绩记录（未开播）'
-    top = room['top_shift']
-    segs = []
-    for s in room['shifts']:
-        mark = '（本间最高）' if top and s is top and s['sales'] > 0 else ''
-        segs.append(f"{s['shift']}班 {s['anchor']} ¥{s['sales']:,.0f}{mark}")
-    return '｜'.join(segs)
+        return '好'
+    dod = 99.0 if m['prev_date'] == START.isoformat() else m['b11_dod']
+    if ratio >= 1.00 and dod >= -0.05:
+        return '好'
+    if ratio >= 0.75 and dod >= -0.30:
+        return '一般'
+    return '差'
 
 
 def auto_summary(m):
-    """没人工写时的兜底文案。只陈述数字，不编造原因。"""
+    """没人工写时的兜底：整体好坏，最多 3 句。只陈述数字，不编造原因。"""
     lines = []
-    if m['our_orders']:
-        dod = f"，环比 {m['our_dod']:+.1%}" if m['our_dod'] is not None else ''
-        lines.append(f"我司全店当日 {m['our_orders']:,} 单 / ¥{m['our_revenue']:,.0f}{dod}，"
-                     f"占全店订单 {m['our_share']:.1%}。")
-    dod = f"（环比 {m['b11_dod']:+.1%}）" if m['b11_dod'] is not None else ''
-    lines.append(f"{PRODUCT} 四渠道 + 我司其他直播间合计 {m['b11_total']:,} 台{dod}，"
-                 f"占我司全店 {m['b11_share_of_our']:.1%}；"
-                 f"{m['top_room']} {m['top_n']:,} 台居首。")
-    if m['best_shift']:
-        b = m['best_shift']
-        lines.append(f"全场最高单班：{b['room']} {b['shift']}班 {b['anchor']} ¥{b['sales']:,.0f}。")
-    lines.append(f"累计达成 {m['cum']:,} / {TOTAL_TARGET:,} = {m['cum_rate']:.1%}，"
-                 f"时间进度 {m['time_rate']:.1%}，进度差 {m['pace_diff']:+.1%}。")
+    if m['b11_dod'] is None:
+        lines.append(f'首销日 {m["b11_total"]:,} 台，单日完成全月目标的 '
+                     f'{m["b11_total"] / TOTAL_TARGET:.1%}。')
+    else:
+        trend = '涨' if m['b11_dod'] >= 0 else '跌'
+        lines.append(
+            f'{PRODUCT} {m["b11_total"]:,} 台，环比{trend} {abs(m["b11_dod"]):.1%}，'
+            f'达日均需求 {m["b11_vs_quota"]:.2f} 倍。')
+    lines.append(f'我司全店 {m["our_orders"]:,} 单 / ¥{m["our_revenue"]:,.0f}，'
+                 f'占全店 {m["our_share"]:.1%}。')
+    lines.append(f'累计 {m["cum"]:,} / {TOTAL_TARGET:,} = {m["cum_rate"]:.1%}，'
+                 f'进度差 {m["pace_diff"]:+.1%}。（⚪ 脚本兜底，待人工补充判断）')
     return '\n'.join(lines)
 
 
-def make_record(d, daily, hist, perf, written_by='auto'):
-    m = day_metrics(d, daily, hist, perf)
+def auto_handover(m):
+    """没人工写时的兜底交接：点出跌得最多和涨得最多的渠道。"""
+    moves = [x for x in m['moves'] if x['pct'] is not None]
+    if not moves:
+        return '（⚪ 脚本兜底）接班后按既定节奏继续，留意当日同时段单量变化。'
+    low, high = moves[0], moves[-1]
+    return (f'（⚪ 脚本兜底）重点盯 {low["room"]}（{low["prev"]}→{low["now"]} 台，'
+            f'{low["pct"]:+.1%}）；{high["room"]} {high["pct"]:+.1%} 势头可延续。')
+
+
+def make_record(d, daily, hist, written_by='auto'):
+    m = day_metrics(d, daily, hist)
     return {
         'date': m['date'],
         'rating': grade(m),
-        'rating_reason': rating_reason(m),
         'written_by': written_by,
         'written_at': datetime.now().strftime('%Y-%m-%d %H:%M'),
         'summary': auto_summary(m),
-        'handover': '',
-        'room_notes': {},
-        'auto': m,
+        'handover': auto_handover(m),
     }
 
 
@@ -316,10 +233,6 @@ def save_review(d, record, replace=False):
     return True, f'{ds} 已落库（共 {len(store["reviews"])} 天）'
 
 
-def get_review(ds, store=None):
-    return (store if store is not None else load_store())['reviews'].get(ds)
-
-
 # ============ CLI ============
 
 def _fmt_pct(v):
@@ -329,25 +242,20 @@ def _fmt_pct(v):
 def cmd_status():
     hist = load_history_index()
     hist_latest = max(hist) if hist else None
-    perf_latest = PR.latest_perf_date()
     store = load_store()
     sum_latest = max(store['reviews']) if store['reviews'] else None
     print(f'history 最新 : {hist_latest}')
-    print(f'业绩最新     : {perf_latest}')
     print(f'总结最新     : {sum_latest}')
-    daily = load_daily()
-    days = data_days(daily)
-    missing = [d.isoformat() for d in days if d.isoformat() not in store['reviews']]
+    days = [d.isoformat() for d in data_days(load_daily())]
+    missing = [d for d in days if d not in store['reviews']]
     print(f'待补总结     : {"、".join(missing) if missing else "无 ✔"}')
-    unk = PR.unknown_room_ids()
-    if unk:
-        print(f'⚠ 未知 roomId: {unk}')
+    if days and hist_latest and days[-1] != hist_latest:
+        print(f'⚠ history 末条 {hist_latest} 不在 9.7~10.7 区间内，可能是脏记录')
 
 
 def cmd_context(date_str=None):
     daily = load_daily()
     hist = load_history_index()
-    perf = PR.load_daily_records()
     days = data_days(daily)
     if date_str:
         d = datetime.strptime(date_str, '%Y-%m-%d').date()
@@ -359,24 +267,28 @@ def cmd_context(date_str=None):
     if d not in daily:
         print(f'⚠ {d} 在 history.json 里没有数据（9.7~10.7 区间内已入库：{days[0]} ~ {days[-1]}）')
         return
-    m = day_metrics(d, daily, hist, perf)
+    m = day_metrics(d, daily, hist)
     rec = hist.get(d.isoformat(), {})
 
     print(f'══ {m["date"]}（周{m["weekday"]}）  脚本评级：{grade(m)}')
-    print(f'   {rating_reason(m)}')
+    print(f'   手环11 {m["b11_total"]:,} 台，环比 {_fmt_pct(m["b11_dod"])}，'
+          f'达日均需求 {m["b11_vs_quota"]:.2f} 倍')
     print(f'   我司全店 {m["our_orders"]:,} 单 / ¥{m["our_revenue"]:,.0f} '
           f'（环比 {_fmt_pct(m["our_dod"])} vs {m["prev_date"]}），占全店 {m["our_share"]:.1%}')
-    print(f'   手环11 {m["b11_total"]:,} 台（环比 {_fmt_pct(m["b11_dod"])}），'
-          f'占我司 {m["b11_share_of_our"]:.1%}，达日均需求 {m["b11_vs_quota"]:.2f} 倍')
+    print(f'   手环11 占我司 {m["b11_share_of_our"]:.1%}')
     print(f'   累计 {m["cum"]:,}/{TOTAL_TARGET:,} = {m["cum_rate"]:.1%}，'
           f'时间进度 {m["time_rate"]:.1%}，进度差 {m["pace_diff"]:+.1%}')
+
     b11 = daily.get(d, {})
-    print('\n── 手环11 分渠道台数 ' + '─' * 30)
+    print('\n── 手环11 分渠道台数（对比前一入库日）' + '─' * 12)
     for room in B11_COLS:
         n = b11.get(room, 0)
-        if n:
-            print(f'   {room:<24} {n:>6,}')
-    print(f'   {"合计":<24} {b11_of(b11):>6,}')
+        mv = next((x for x in m['moves'] if x['room'] == room), None)
+        pct = f'{mv["pct"]:+.1%}' if (mv and mv['pct'] is not None) else '—'
+        dlt = f'{mv["delta"]:+}' if mv else ''
+        if n or (mv and mv['prev']):
+            print(f'   {room:<24} {n:>6,}   {dlt:>7}  {pct:>8}')
+    print(f'   {"合计":<24} {m["b11_total"]:>6,}')
 
     print('\n── 各间订单口径 ' + '─' * 32)
     for name in rec.get('our_rooms', []):
@@ -385,18 +297,10 @@ def cmd_context(date_str=None):
         print(f'   {name:<24} {info.get("orders", 0):>6,} 单  '
               f'¥{info.get("revenue", 0):>12,.0f}  手环11 {int(prod.get("orders", 0)):>5,} 台')
 
-    print('\n── 各班次 GSV（我司直播间，按当日 GSV 降序）' + '─' * 10)
-    if not m['perf_ready']:
-        print(f'   ⚠ 业绩数据未到齐（业绩最新 {PR.latest_perf_date()}），交接要点只能给订单口径')
-    for r in handover_rooms(d, perf):
-        dod = f' 环比 {_fmt_pct(r["gsv_dod"])}' if r['gsv_dod'] is not None else ''
-        gsv = f'¥{r["gsv"]:,.0f}' if r['gsv'] is not None else '—'
-        print(f'   {r["room"]:<24} {gsv:>12}{dod}')
-        for s in r['shifts']:
-            print(f'        {s["shift"]}班 {s["anchor"]:<8} ¥{s["sales"]:>10,.0f}')
-
     print('\n── 兜底稿（人工判断请覆盖它）' + '─' * 20)
     print(auto_summary(m))
+    print()
+    print(auto_handover(m))
 
 
 def cmd_auto(date_str, force=False):
@@ -405,7 +309,7 @@ def cmd_auto(date_str, force=False):
     _check_range(d)
     if d not in daily:
         sys.exit(f'{date_str} 在 history.json 里没有数据，不能生成（先入库订单）')
-    rec = make_record(d, daily, load_history_index(), PR.load_daily_records())
+    rec = make_record(d, daily, load_history_index())
     ok, msg = save_review(d, rec, replace=force)
     print(('[OK] ' if ok else '[X] ') + msg)
 
@@ -427,30 +331,25 @@ def cmd_add(date_str, replace=False):
     errs = []
     if not str(draft.get('summary', '')).strip():
         errs.append('summary 不能为空')
+    if not str(draft.get('handover', '')).strip():
+        errs.append('handover 不能为空')
     if draft.get('rating') and draft['rating'] not in RATINGS:
         errs.append(f'rating 必须是 {RATINGS} 之一，收到 {draft["rating"]!r}')
-    # 允许的间 = 主播业绩里的我司直播间 ∪ 当天订单口径的我司直播间
-    # （后者含「我司商品卡」等没有班次/主播维度的渠道）
-    known = set(PR.our_room_ids().values()) | set(
-        load_history_index().get(date_str, {}).get('our_rooms', []))
-    bad = set(draft.get('room_notes', {})) - known
-    if bad:
-        errs.append(f'room_notes 里有不认识的我司直播间：{sorted(bad)}')
+    n = len([s for s in str(draft.get('summary', '')).split('\n') if s.strip()])
+    if n > 4:
+        errs.append(f'summary 有 {n} 段，要求 2-3 句（最多 4 段），请精简')
     if errs:
         sys.exit('[X] 校验不过，未写入：\n  - ' + '\n  - '.join(errs))
 
-    daily = load_daily()
-    perf = PR.load_daily_records()
-    rec = make_record(d, daily, load_history_index(), perf)
-    rec.update({k: v for k, v in draft.items()
-                if k in ('rating', 'summary', 'handover', 'room_notes', 'rating_reason')})
+    rec = make_record(d, daily=load_daily(), hist=load_history_index())
+    rec.update({k: v for k, v in draft.items() if k in ('rating', 'summary', 'handover')})
     rec['written_by'] = 'claude'
     if rec.get('rating') not in RATINGS:
-        rec['rating'] = grade(rec['auto'])
+        rec['rating'] = grade(day_metrics(d, load_daily(), load_history_index()))
     ok, msg = save_review(d, rec, replace=replace)
     print(('[OK] ' if ok else '[X] ') + msg)
     if ok:
-        print(f'     评级 {rec["rating"]}，总结 {len(rec["summary"].splitlines())} 段')
+        print(f'     评级 {rec["rating"]}，总结 {n} 段')
 
 
 def cmd_validate():
@@ -460,17 +359,17 @@ def cmd_validate():
     for ds in sorted(revs):
         r = revs[ds]
         if ds not in days:
-            print(f'[!] {ds} 不在已入库日期里'); ok = False
+            print(f'[!] {ds} 不在已入库日期里')
+            ok = False
         if r.get('rating') not in RATINGS:
-            print(f'[!] {ds} 评级非法：{r.get("rating")!r}'); ok = False
+            print(f'[!] {ds} 评级非法：{r.get("rating")!r}')
+            ok = False
         if not str(r.get('summary', '')).strip():
-            print(f'[!] {ds} 总结为空'); ok = False
+            print(f'[!] {ds} 总结为空')
+            ok = False
     missing = [d for d in days if d not in revs]
     if missing:
         print(f'[i] 待补总结：{"、".join(missing)}（会在表里显示为自动兜底，不算错误）')
-    unk = PR.unknown_room_ids()
-    if unk:
-        print(f'[!] 业绩里出现未知 roomId：{unk}'); ok = False
     print(f'共 {len(revs)} 天总结，校验{"通过 ✔" if ok else "有问题 ✗"}')
 
 

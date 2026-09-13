@@ -536,10 +536,9 @@ def sheet_notes(wb, dates, daily):
 
 # ============ Sheet：每日销售总结 ============
 
-RATING_FILL = {'S': C_OK, 'A': C_WARN, 'B': C_HEAD, 'C': C_BAD}
-RATING_LABEL = {'S': '好', 'A': '偏好', 'B': '一般', 'C': '差'}
+RATING_FILL = {'好': C_OK, '一般': C_WARN, '差': C_BAD}
 
-SUM_WIDTHS = [30, 30, 16, 16, 16, 16]      # 6 列列宽（半角字符数）
+SUM_WIDTHS = [16, 30, 20, 20, 20, 20]      # 6 列列宽（半角字符数）；A 放标签，B:F 是文字区
 
 
 def est_height(text, width, base=15, min_h=20, pad=6):
@@ -578,99 +577,75 @@ def _pct(v):
 
 
 def sheet_daily_summary(wb, daily):
-    """每天一块：块头放当天数字 + 评级，下面「销售总结」「交接要点」各占整行。
+    """每天一块，只 4 行：头行（日期 + 评级）、数据行、销售总结、交接要点。
 
+    只看当天整体销售好坏，不含主播业绩 / 班次维度。
     文字存在 sales_analysis/daily_summary.json（本函数只读），因为 main() 每次都
     从零重建工作簿 —— 写进 xlsx 的内容第二次跑就没了。
     没写过的日期用脚本兜底，不留空块。
     """
     import band11_review as BR          # 懒加载：BR 在模块级 import 了本文件，避免循环
-    import perf_records as PR
 
     ws = wb.create_sheet('每日总结')
     ncols = len(SUM_WIDTHS)
     text_w = sum(SUM_WIDTHS[1:])
 
-    title_row(ws, f'{PRODUCT} 首销月 · 每日销售总结与班次交接', ncols,
+    title_row(ws, f'{PRODUCT} 首销月 · 每日销售总结与交接', ncols,
               '最新日期在最上方 · 历史全部保留  |  数字由脚本算，'
-              '总结与交接要点由人工撰写（⚪ 标记的为脚本兜底）  |  '
-              '金额两个口径：我司全店取订单实付，各班次取主播 GSV（未扣退款），勿相减')
+              '总结与交接由人工撰写（⚪ 标记的为脚本兜底）  |  '
+              '金额口径：订单实付（只讲当天整体销售，不含主播业绩）')
     for i, w in enumerate(SUM_WIDTHS, start=1):
         ws.column_dimensions[get_column_letter(i)].width = w
 
     hist = BR.load_history_index()
-    perf = PR.load_daily_records()
     store = BR.load_store()
     days = BR.data_days(daily)
 
     r = 3
     for d in reversed(days):                      # 最新在最上
         ds = d.isoformat()
-        m = BR.day_metrics(d, daily, hist, perf)
+        m = BR.day_metrics(d, daily, hist)
         rec = store['reviews'].get(ds)
         manual = bool(rec and str(rec.get('summary', '')).strip())
-        rating = (rec or {}).get('rating') or BR.grade(m)
+        rating = (rec or {}).get('rating')
         if rating not in RATING_FILL:
             rating = BR.grade(m)
-        reason = ((rec or {}).get('rating_reason') or '').strip() or BR.rating_reason(m)
 
-        tag = '' if manual else '  ⚪ 自动生成，待人工补充'
-        _merge(ws, r, 1, ncols,
-               f'{ds}（周{m["weekday"]}）  评级：{rating}（{RATING_LABEL[rating]}）'
-               f' · {reason}{tag}',
-               fill=RATING_FILL[rating], bold=True, height=26)
+        tag = '' if manual else '   ⚪ 自动生成，待人工补充'
+        _merge(ws, r, 1, ncols, f'{ds}（周{m["weekday"]}）   评级：{rating}{tag}',
+               fill=RATING_FILL[rating], bold=True, height=24)
         r += 1
         _merge(ws, r, 1, ncols,
                f'我司全店 {m["our_orders"]:,} 单 / ¥{m["our_revenue"]:,.0f}'
                f'（环比 {_pct(m["our_dod"])}）｜'
-               f' {PRODUCT} {m["b11_total"]:,} 台，占我司 {m["b11_share_of_our"]:.1%}'
-               f'（环比 {_pct(m["b11_dod"])}）｜'
+               f' {PRODUCT} {m["b11_total"]:,} 台（环比 {_pct(m["b11_dod"])}，'
+               f'占我司 {m["b11_share_of_our"]:.1%}）｜'
                f' 累计 {m["cum"]:,} / {TOTAL_TARGET:,} = {m["cum_rate"]:.1%}'
                f'（时间进度 {m["time_rate"]:.1%}，进度差 {m["pace_diff"]:+.1%}）',
                fill=C_HEAD, size=9, height=22)
         r += 1
 
-        # 销售总结
         body_cell(ws, r, 1, '销售总结', bold=True, fill=C_HEAD, align='left')
         summary = (rec or {}).get('summary') or BR.auto_summary(m)
         _merge(ws, r, 2, ncols, summary, size=10,
                height=est_height(summary, text_w))
         r += 1
 
-        # 交接要点（整体一句）
         body_cell(ws, r, 1, '交接要点', bold=True, fill=C_HEAD, align='left')
-        handover = ((rec or {}).get('handover') or '').strip() \
-            or '按直播间分组，见下方各行（给接下来班次的小伙伴）'
-        _merge(ws, r, 2, ncols, handover, size=9,
-               height=est_height(handover, text_w, base=14, min_h=18))
+        handover = ((rec or {}).get('handover') or '').strip() or BR.auto_handover(m)
+        _merge(ws, r, 2, ncols, handover, size=10,
+               height=est_height(handover, text_w))
         r += 1
-
-        # 各直播间一行
-        notes = (rec or {}).get('room_notes') or {}
-        for room in BR.handover_rooms(d, perf):
-            body_cell(ws, r, 1, room['room'], bold=True, align='left')
-            txt = BR.handover_line(room)
-            if room['gsv_dod'] is not None:
-                txt = f"环比 {room['gsv_dod']:+.1%}（vs {room['prev_date']}）｜ " + txt
-            if notes.get(room['room']):
-                txt += f"\n→ {notes[room['room']]}"
-            _merge(ws, r, 2, ncols - 1, txt, size=9,
-                   height=est_height(txt, sum(SUM_WIDTHS[1:-1]), base=14, min_h=18))
-            body_cell(ws, r, ncols, room['gsv'], fmt='¥#,##0', bold=True)
-            r += 1
 
         ws.row_dimensions[r].height = 8       # 块间空行
         r += 1
 
-    # 表尾说明
-    _merge(ws, r, 1, ncols,
-           '评级规则：节奏比 = 当日手环11 台数 ÷ 首销月日均需求(60000/31≈1,935 台)；'
-           'S = 节奏比≥1.5 且环比≥0；A = ≥1.0 且环比>-10%；B = ≥0.8 且环比>-30%；其余 C。'
-           '首销日无环比基准，特判 S。阈值见 band11_review.RATING_RULES。',
-           fill=C_HEAD, size=9, align='left', height=est_height(
-               '评级规则：节奏比 = 当日手环11 台数 ÷ 首销月日均需求(60000/31≈1,935 台)；'
-               'S = 节奏比≥1.5 且环比≥0；A = ≥1.0 且环比>-10%；B = ≥0.8 且环比>-30%；其余 C。'
-               '首销日无环比基准，特判 S。阈值见 band11_review.RATING_RULES。', text_w))
+    note = ('评级规则：节奏比 = 当日手环11 台数 ÷ 首销月日均需求(60000/31≈1,935 台)。'
+            '好 = 节奏比≥1.3 且环比≥-10%；一般 = 节奏比≥0.8 且环比≥-30%；其余为差。'
+            '首销日无环比基准记「好」；开售次日跳过环比判据（9.7 的峰值不该由 9.8 承担）。'
+            '阈值见 band11_review.grade()。')
+    _merge(ws, r, 1, ncols, note, fill=C_HEAD, size=9, align='left',
+           height=est_height(note, text_w))
     ws.freeze_panes = 'A3'
     return ws
 
