@@ -180,6 +180,9 @@ def handover_rooms(d, perf):
     """
     ds = d.isoformat()
     cur = PR.daily_room_shift(perf, ds)
+    # 整天的业绩都没到（订单先到、业绩后到是常态）：必须与「当天确实没开播」区分开，
+    # 否则表里会出现一排「未开播」，让人以为所有直播间都停了。
+    perf_missing = ds not in perf
     prev_ds = None
     days = [x for x in data_days(load_daily()) if x < d]
     if days:
@@ -200,6 +203,7 @@ def handover_rooms(d, perf):
             'prev_date': prev_ds,
             'shifts': sorted(shifts, key=lambda s: -s['sales']),
             'top_shift': top,
+            'perf_missing': perf_missing,
             'note': '',
         })
     # 我司身份但业绩里没有班次维度的（商品卡）：用订单口径补一条
@@ -222,6 +226,8 @@ def handover_rooms(d, perf):
 def handover_line(room):
     """把一间直播间的班次数据拼成一行文字。两种「空」要区分开，别让读者误以为停播。"""
     if not room['shifts']:
+        if room.get('perf_missing'):
+            return f"⚠ 业绩数据未到齐（业绩最新 {PR.latest_perf_date()}），当天班次/主播数据暂缺"
         if room.get('no_shift'):
             # 该渠道本来就没有班次/主播维度（如我司商品卡），不是停播
             b11 = room.get('b11_orders')
