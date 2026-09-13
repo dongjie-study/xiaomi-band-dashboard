@@ -641,9 +641,9 @@ def sheet_daily_summary(wb, daily):
         r += 1
 
     note = ('评级规则：节奏比 = 当日手环11 台数 ÷ 首销月日均需求(60000/31≈1,935 台)。'
-            '好 = 节奏比≥1.3 且环比≥-10%；一般 = 节奏比≥0.8 且环比≥-30%；其余为差。'
+            '好 = 节奏比≥1.00 且环比≥-5%；一般 = 节奏比≥0.75 且环比≥-30%；其余为差。'
             '首销日无环比基准记「好」；开售次日跳过环比判据（9.7 的峰值不该由 9.8 承担）。'
-            '阈值见 band11_review.grade()。')
+            '阈值见 band11_review.grade()。真实评级以块头显示为准，人工写的可覆盖脚本判定。')
     _merge(ws, r, 1, ncols, note, fill=C_HEAD, size=9, align='left',
            height=est_height(note, text_w))
     ws.freeze_panes = 'A3'
