@@ -606,7 +606,8 @@ def sheet_daily_summary(wb, daily):
         ds = d.isoformat()
         m = BR.day_metrics(d, daily, hist)
         rec = store['reviews'].get(ds)
-        manual = bool(rec and str(rec.get('summary', '')).strip())
+        manual = bool(rec and str(rec.get('good', '')).strip()
+                      and str(rec.get('bad', '')).strip())
         rating = (rec or {}).get('rating')
         if rating not in RATING_FILL:
             rating = BR.grade(m)
@@ -625,14 +626,18 @@ def sheet_daily_summary(wb, daily):
                fill=C_HEAD, size=9, height=22)
         r += 1
 
+        # 销售总结：固定三小段，每段一句话 —— ✅ 好在哪 / ⚠️ 差在哪 / 🎯 盯什么
         body_cell(ws, r, 1, '销售总结', bold=True, fill=C_HEAD, align='left')
-        summary = (rec or {}).get('summary') or BR.auto_summary(m)
+        good = (rec or {}).get('good') or BR.auto_good(m)
+        bad = (rec or {}).get('bad') or BR.auto_bad(m)
+        summary = f'✅ 好：{good}\n⚠️ 差：{bad}'
         _merge(ws, r, 2, ncols, summary, size=10,
                height=est_height(summary, text_w))
         r += 1
 
         body_cell(ws, r, 1, '交接要点', bold=True, fill=C_HEAD, align='left')
-        handover = ((rec or {}).get('handover') or '').strip() or BR.auto_handover(m)
+        watch = (rec or {}).get('watch') or BR.auto_watch(m)
+        handover = f'🎯 {watch}'
         _merge(ws, r, 2, ncols, handover, size=10,
                height=est_height(handover, text_w))
         r += 1

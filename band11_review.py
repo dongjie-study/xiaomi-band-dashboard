@@ -4,8 +4,11 @@
 
 职责：**算事实 + 存总结**。不碰 xlsx —— xlsx 由 generate_band11_target.py 渲染。
 
-**只看当天整体销售（订单口径）**，不含主播业绩 / 班次维度。
-每天两块文字：销售总结（整体好坏，2-3 句）+ 交接要点（交给接班同事，1-2 句）。
+**只看当天整体销售（订单口径）**，不含主播业绩 / 班次维度。每天固定三小段、**每段一句话**：
+
+    好  good    → 好在哪（要具体到渠道和数字，不要中性描述）
+    差  bad     → 差在哪（同上）
+    盯  watch   → 接下来盯什么 + 大概多久见分晓
 
 为什么总结必须存独立 JSON：
     generate_band11_target.py 的 main() 每次都 `Workbook()` 从零重建整个工作簿，
@@ -37,6 +40,7 @@ HISTORY_FILE = os.path.join(ROOT, 'sales_analysis', 'history.json')
 
 DAILY_QUOTA = TOTAL_TARGET / 31          # ≈ 1935 台/天的首销月日均需求
 RATINGS = ('好', '一般', '差')
+MAX_FIELD = 90                            # 单块文字长度上限（字），防止又写长
 
 MAIN_ROOMS = [r for r, _ in ROOM_TARGETS]
 B11_COLS = MAIN_ROOMS + [OTHER_LABEL]    # 手环11 口径的列
@@ -155,32 +159,39 @@ def grade(m):
     return '差'
 
 
-def auto_summary(m):
-    """没人工写时的兜底：整体好坏，最多 3 句。只陈述数字，不编造原因。"""
-    lines = []
+def auto_good(m):
+    """兜底「好在哪」：先找当天涨得最多的渠道，全跌时退回到最大盘那个。"""
+    up = [x for x in m['moves'] if x['pct'] is not None and x['delta'] > 0]
+    if up:
+        b = max(up, key=lambda x: x['delta'])
+        return f'{b["room"]} {b["now"]:,} 台（{b["pct"]:+.1%}），是当天唯一/最大增量'
     if m['b11_dod'] is None:
-        lines.append(f'首销日 {m["b11_total"]:,} 台，单日完成全月目标的 '
-                     f'{m["b11_total"] / TOTAL_TARGET:.1%}。')
-    else:
-        trend = '涨' if m['b11_dod'] >= 0 else '跌'
-        lines.append(
-            f'{PRODUCT} {m["b11_total"]:,} 台，环比{trend} {abs(m["b11_dod"]):.1%}，'
-            f'达日均需求 {m["b11_vs_quota"]:.2f} 倍。')
-    lines.append(f'我司全店 {m["our_orders"]:,} 单 / ¥{m["our_revenue"]:,.0f}，'
-                 f'占全店 {m["our_share"]:.1%}。')
-    lines.append(f'累计 {m["cum"]:,} / {TOTAL_TARGET:,} = {m["cum_rate"]:.1%}，'
-                 f'进度差 {m["pace_diff"]:+.1%}。（⚪ 脚本兜底，待人工补充判断）')
-    return '\n'.join(lines)
+        return f'首销日 {m["b11_total"]:,} 台，单日完成全月目标的 {m["b11_total"] / TOTAL_TARGET:.1%}'
+    return (f'{m["top_room"]} {m["top_n"]:,} 台仍是最大盘，'
+            f'占手环11 当天的 {m["top_n"] / m["b11_total"]:.0%}')
 
 
-def auto_handover(m):
-    """没人工写时的兜底交接：点出跌得最多和涨得最多的渠道。"""
-    moves = [x for x in m['moves'] if x['pct'] is not None]
-    if not moves:
-        return '（⚪ 脚本兜底）接班后按既定节奏继续，留意当日同时段单量变化。'
-    low, high = moves[0], moves[-1]
-    return (f'（⚪ 脚本兜底）重点盯 {low["room"]}（{low["prev"]}→{low["now"]} 台，'
-            f'{low["pct"]:+.1%}）；{high["room"]} {high["pct"]:+.1%} 势头可延续。')
+def auto_bad(m):
+    """兜底「差在哪」：跌幅最大的渠道，全涨时退回到垫底那个。"""
+    down = [x for x in m['moves'] if x['delta'] < 0]
+    if down:
+        w = min(down, key=lambda x: x['delta'])
+        share = f'，占全天降幅的 {abs(w["delta"]) / abs(sum(x["delta"] for x in down)):.0%}'
+        return f'环比 {m["b11_dod"]:+.1%}，{w["room"]} 少 {abs(w["delta"]):,} 台{share}'
+    alive = [x for x in m['moves'] if x['now'] or x['prev']]
+    if alive:
+        w = min(alive, key=lambda x: x['now'])
+        return f'{w["room"]} 仅 {w["now"]:,} 台，是四渠道垫底'
+    return '当日无分渠道数据'
+
+
+def auto_watch(m):
+    """兜底「接下来盯什么 + 大概多久」。"""
+    down = [x for x in m['moves'] if x['delta'] < 0]
+    if down:
+        w = min(down, key=lambda x: x['delta'])
+        return f'{w["room"]}能否回到 {w["prev"]:,} 台以上，预计 2-3 天见分晓'
+    return '当前各渠道走势一致，盯住日环比是否继续为正，预计 1-2 天可确认'
 
 
 def make_record(d, daily, hist, written_by='auto'):
@@ -190,8 +201,9 @@ def make_record(d, daily, hist, written_by='auto'):
         'rating': grade(m),
         'written_by': written_by,
         'written_at': datetime.now().strftime('%Y-%m-%d %H:%M'),
-        'summary': auto_summary(m),
-        'handover': auto_handover(m),
+        'good': auto_good(m),
+        'bad': auto_bad(m),
+        'watch': auto_watch(m),
     }
 
 
@@ -298,9 +310,9 @@ def cmd_context(date_str=None):
               f'¥{info.get("revenue", 0):>12,.0f}  手环11 {int(prod.get("orders", 0)):>5,} 台')
 
     print('\n── 兜底稿（人工判断请覆盖它）' + '─' * 20)
-    print(auto_summary(m))
-    print()
-    print(auto_handover(m))
+    print(f'  ✅ 好：{auto_good(m)}')
+    print(f'  ⚠️ 差：{auto_bad(m)}')
+    print(f'  🎯 盯：{auto_watch(m)}')
 
 
 def cmd_auto(date_str, force=False):
@@ -329,27 +341,28 @@ def cmd_add(date_str, replace=False):
         draft = json.load(f)
 
     errs = []
-    if not str(draft.get('summary', '')).strip():
-        errs.append('summary 不能为空')
-    if not str(draft.get('handover', '')).strip():
-        errs.append('handover 不能为空')
+    FIELDS = (('good', '好在哪'), ('bad', '差在哪'), ('watch', '盯什么+多久'))
+    for key, label in FIELDS:
+        v = str(draft.get(key, '')).strip()
+        if not v:
+            errs.append(f'{key}（{label}）不能为空')
+        elif len(v) > MAX_FIELD:
+            errs.append(f'{key} 有 {len(v)} 字，超过 {MAX_FIELD} 字上限，请精简')
     if draft.get('rating') and draft['rating'] not in RATINGS:
         errs.append(f'rating 必须是 {RATINGS} 之一，收到 {draft["rating"]!r}')
-    n = len([s for s in str(draft.get('summary', '')).split('\n') if s.strip()])
-    if n > 4:
-        errs.append(f'summary 有 {n} 段，要求 2-3 句（最多 4 段），请精简')
     if errs:
         sys.exit('[X] 校验不过，未写入：\n  - ' + '\n  - '.join(errs))
 
     rec = make_record(d, daily=load_daily(), hist=load_history_index())
-    rec.update({k: v for k, v in draft.items() if k in ('rating', 'summary', 'handover')})
+    rec.update({k: v for k, v in draft.items() if k in ('rating', 'good', 'bad', 'watch')})
     rec['written_by'] = 'claude'
     if rec.get('rating') not in RATINGS:
         rec['rating'] = grade(day_metrics(d, load_daily(), load_history_index()))
     ok, msg = save_review(d, rec, replace=replace)
     print(('[OK] ' if ok else '[X] ') + msg)
     if ok:
-        print(f'     评级 {rec["rating"]}，总结 {n} 段')
+        print(f'     评级 {rec["rating"]}｜好 {len(rec["good"])} 字｜'
+              f'差 {len(rec["bad"])} 字｜盯 {len(rec["watch"])} 字')
 
 
 def cmd_validate():
@@ -364,9 +377,14 @@ def cmd_validate():
         if r.get('rating') not in RATINGS:
             print(f'[!] {ds} 评级非法：{r.get("rating")!r}')
             ok = False
-        if not str(r.get('summary', '')).strip():
-            print(f'[!] {ds} 总结为空')
-            ok = False
+        for key in ('good', 'bad', 'watch'):
+            v = str(r.get(key, '')).strip()
+            if not v:
+                print(f'[!] {ds} {key} 为空')
+                ok = False
+            elif len(v) > MAX_FIELD:
+                print(f'[!] {ds} {key} 有 {len(v)} 字，超过 {MAX_FIELD} 上限')
+                ok = False
     missing = [d for d in days if d not in revs]
     if missing:
         print(f'[i] 待补总结：{"、".join(missing)}（会在表里显示为自动兜底，不算错误）')
