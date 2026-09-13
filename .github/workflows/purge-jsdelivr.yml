@@ -1,0 +1,12 @@
+name: purge-jsdelivr-cache
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+jobs:
+  purge:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Purge jsDelivr CDN cache
+        run: |
+          curl -fsSL --retry 3 "https://purge.jsdelivr.net/gh/${GITHUB_REPOSITORY}@main/%E4%B8%BB%E6%92%AD%E4%B8%9A%E7%BB%A9/%E4%B8%9A%E7%BB%A9demo.html" || true
