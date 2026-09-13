@@ -534,6 +534,147 @@ def sheet_notes(wb, dates, daily):
     return ws
 
 
+# ============ Sheet：每日销售总结 ============
+
+RATING_FILL = {'S': C_OK, 'A': C_WARN, 'B': C_HEAD, 'C': C_BAD}
+RATING_LABEL = {'S': '好', 'A': '偏好', 'B': '一般', 'C': '差'}
+
+SUM_WIDTHS = [30, 30, 16, 16, 16, 16]      # 6 列列宽（半角字符数）
+
+
+def est_height(text, width, base=15, min_h=20, pad=6):
+    """按列宽估算合并单元格的行高。
+
+    openpyxl 对「合并 + wrap_text」的单元格**不会自动撑高** ——
+    不手算的话多行文字会被截成一行显示，而且 Excel 打开时不会有任何报错。
+    中文按 2 个半角宽度计。
+    """
+    total = max(width - 2, 8)
+    lines = 0
+    for seg in str(text).split('\n'):
+        units = sum(2 if ord(c) > 127 else 1 for c in seg)
+        lines += max(1, -(-units // int(total)))
+    return max(min_h, lines * base + pad)
+
+
+def _merge(ws, row, c1, c2, value, fill=None, bold=False, align='left',
+           size=10, height=None):
+    """合并单元格并写入。合并区只有左上角那格带边框，观感上够用。"""
+    if c2 > c1:
+        ws.merge_cells(start_row=row, start_column=c1, end_row=row, end_column=c2)
+    c = ws.cell(row=row, column=c1, value=value)
+    c.font = Font(name=FONT, size=size, bold=bold)
+    c.alignment = Alignment(horizontal=align, vertical='center', wrap_text=True)
+    if fill:
+        c.fill = PatternFill('solid', fgColor=fill)
+    c.border = BORDER
+    if height:
+        ws.row_dimensions[row].height = height
+    return c
+
+
+def _pct(v):
+    return '—' if v is None else f'{v:+.1%}'
+
+
+def sheet_daily_summary(wb, daily):
+    """每天一块：块头放当天数字 + 评级，下面「销售总结」「交接要点」各占整行。
+
+    文字存在 sales_analysis/daily_summary.json（本函数只读），因为 main() 每次都
+    从零重建工作簿 —— 写进 xlsx 的内容第二次跑就没了。
+    没写过的日期用脚本兜底，不留空块。
+    """
+    import band11_review as BR          # 懒加载：BR 在模块级 import 了本文件，避免循环
+    import perf_records as PR
+
+    ws = wb.create_sheet('每日总结')
+    ncols = len(SUM_WIDTHS)
+    text_w = sum(SUM_WIDTHS[1:])
+
+    title_row(ws, f'{PRODUCT} 首销月 · 每日销售总结与班次交接', ncols,
+              '最新日期在最上方 · 历史全部保留  |  数字由脚本算，'
+              '总结与交接要点由人工撰写（⚪ 标记的为脚本兜底）  |  '
+              '金额两个口径：我司全店取订单实付，各班次取主播 GSV（未扣退款），勿相减')
+    for i, w in enumerate(SUM_WIDTHS, start=1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+
+    hist = BR.load_history_index()
+    perf = PR.load_daily_records()
+    store = BR.load_store()
+    days = BR.data_days(daily)
+
+    r = 3
+    for d in reversed(days):                      # 最新在最上
+        ds = d.isoformat()
+        m = BR.day_metrics(d, daily, hist, perf)
+        rec = store['reviews'].get(ds)
+        manual = bool(rec and str(rec.get('summary', '')).strip())
+        rating = (rec or {}).get('rating') or BR.grade(m)
+        if rating not in RATING_FILL:
+            rating = BR.grade(m)
+        reason = ((rec or {}).get('rating_reason') or '').strip() or BR.rating_reason(m)
+
+        tag = '' if manual else '  ⚪ 自动生成，待人工补充'
+        _merge(ws, r, 1, ncols,
+               f'{ds}（周{m["weekday"]}）  评级：{rating}（{RATING_LABEL[rating]}）'
+               f' · {reason}{tag}',
+               fill=RATING_FILL[rating], bold=True, height=26)
+        r += 1
+        _merge(ws, r, 1, ncols,
+               f'我司全店 {m["our_orders"]:,} 单 / ¥{m["our_revenue"]:,.0f}'
+               f'（环比 {_pct(m["our_dod"])}）｜'
+               f' {PRODUCT} {m["b11_total"]:,} 台，占我司 {m["b11_share_of_our"]:.1%}'
+               f'（环比 {_pct(m["b11_dod"])}）｜'
+               f' 累计 {m["cum"]:,} / {TOTAL_TARGET:,} = {m["cum_rate"]:.1%}'
+               f'（时间进度 {m["time_rate"]:.1%}，进度差 {m["pace_diff"]:+.1%}）',
+               fill=C_HEAD, size=9, height=22)
+        r += 1
+
+        # 销售总结
+        body_cell(ws, r, 1, '销售总结', bold=True, fill=C_HEAD, align='left')
+        summary = (rec or {}).get('summary') or BR.auto_summary(m)
+        _merge(ws, r, 2, ncols, summary, size=10,
+               height=est_height(summary, text_w))
+        r += 1
+
+        # 交接要点（整体一句）
+        body_cell(ws, r, 1, '交接要点', bold=True, fill=C_HEAD, align='left')
+        handover = ((rec or {}).get('handover') or '').strip() \
+            or '按直播间分组，见下方各行（给接下来班次的小伙伴）'
+        _merge(ws, r, 2, ncols, handover, size=9,
+               height=est_height(handover, text_w, base=14, min_h=18))
+        r += 1
+
+        # 各直播间一行
+        notes = (rec or {}).get('room_notes') or {}
+        for room in BR.handover_rooms(d, perf):
+            body_cell(ws, r, 1, room['room'], bold=True, align='left')
+            txt = BR.handover_line(room)
+            if room['gsv_dod'] is not None:
+                txt = f"环比 {room['gsv_dod']:+.1%}（vs {room['prev_date']}）｜ " + txt
+            if notes.get(room['room']):
+                txt += f"\n→ {notes[room['room']]}"
+            _merge(ws, r, 2, ncols - 1, txt, size=9,
+                   height=est_height(txt, sum(SUM_WIDTHS[1:-1]), base=14, min_h=18))
+            body_cell(ws, r, ncols, room['gsv'], fmt='¥#,##0', bold=True)
+            r += 1
+
+        ws.row_dimensions[r].height = 8       # 块间空行
+        r += 1
+
+    # 表尾说明
+    _merge(ws, r, 1, ncols,
+           '评级规则：节奏比 = 当日手环11 台数 ÷ 首销月日均需求(60000/31≈1,935 台)；'
+           'S = 节奏比≥1.5 且环比≥0；A = ≥1.0 且环比>-10%；B = ≥0.8 且环比>-30%；其余 C。'
+           '首销日无环比基准，特判 S。阈值见 band11_review.RATING_RULES。',
+           fill=C_HEAD, size=9, align='left', height=est_height(
+               '评级规则：节奏比 = 当日手环11 台数 ÷ 首销月日均需求(60000/31≈1,935 台)；'
+               'S = 节奏比≥1.5 且环比≥0；A = ≥1.0 且环比>-10%；B = ≥0.8 且环比>-30%；其余 C。'
+               '首销日无环比基准，特判 S。阈值见 band11_review.RATING_RULES。', text_w))
+    ws.freeze_panes = 'A3'
+    return ws
+
+
 def main():
     daily = load_daily()
     dates = build_dates()
@@ -541,12 +682,17 @@ def main():
     wb.remove(wb.active)
 
     sheet_overview(wb, dates, daily)
+    sheet_daily_summary(wb, daily)
     sheet_by_room(wb, dates, daily)
     sheet_daily(wb, dates, daily)
     sheet_notes(wb, dates, daily)
 
     os.makedirs(os.path.dirname(OUT_FILE), exist_ok=True)
-    wb.save(OUT_FILE)
+    try:
+        wb.save(OUT_FILE)
+    except PermissionError:
+        sys.exit(f'[X] 保存失败：{OUT_FILE} 正被 Excel 打开。\n'
+                 f'    请先关闭这个文件再重跑本脚本。')
     print(f'[OK] 进度表已生成：{OUT_FILE}')
 
     data_days = [d for d in dates if d in daily]
