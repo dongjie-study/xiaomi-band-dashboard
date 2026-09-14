@@ -17,14 +17,14 @@ python daily_update.py "$ARGUMENTS"
 - 如果是新月份第一天，可能需要更新 TEAM_MAP 中新增的直播间
 
 ### 2. 重新生成当月汇总页面
-根据当前月份选择对应脚本：
-- 7月: `python generate_july_summary.py`
-- 6月: `python generate_june_summary.py`
-- 其他月份: 查找 `generate_<月份>_summary.py`
+根据当前月份选择对应脚本（**注意：月报生成器已移入 `tools/`**）：
+- 7月: `python tools/generate_july_summary.py`
+- 6月: `python tools/generate_june_summary.py`
+- 其他月份: 查找 `tools/generate_<月份>_summary.py`
 
 ```bash
 cd "C:\Users\Administrator\Desktop\小米手环直播间销量分析"
-python generate_july_summary.py
+python tools/generate_july_summary.py
 ```
 
 ### 3. 检查变更并推送

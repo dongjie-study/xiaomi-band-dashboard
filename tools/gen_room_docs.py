@@ -335,7 +335,7 @@ def render_docs03():
         lines.append(f"| {r} | 归属未定，整间剔除 |")
 
     lines += ["", "## 五、待确认归属", "",
-              "**暂按现归属执行**。确认后改 `team_config.py` 并重跑 `migrate_reclassify.py`。", "",
+              "**暂按现归属执行**。确认后改 `team_config.py` 并重跑 `tools/migrate_reclassify.py`。", "",
               "| 直播间 | 现归属 | 疑点 | 影响 |", "|--------|--------|------|------|"]
     for r, cur, doubt, impact in PENDING:
         lines.append(f"| {r} | {cur} | {doubt} | {impact} |")
@@ -358,7 +358,7 @@ def render_docs03():
         "新直播间名不会报错，只会悄悄算进良米。",
         "- 因此 `WORKFLOW.md` 有一条硬规则：**遇到从未见过的新直播间名，先找用户确认归属，不要静默兜底**。",
         "- 新增直播间后必须做的事：改 `team_config.py` → 跑 `python tools/gen_room_docs.py`（本文件与两份 md 一起更新）"
-        "→ 若涉及历史数据重划分，再跑 `migrate_reclassify.py`。",
+        "→ 若涉及历史数据重划分，再跑 `python tools/migrate_reclassify.py`。",
         "",
         "---",
         "",

@@ -11,7 +11,7 @@ import re
 from collections import Counter
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent  # 本脚本在 archive/ 下，项目根是上一级
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 

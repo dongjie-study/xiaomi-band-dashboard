@@ -77,4 +77,4 @@ Key categories: 小米手环10, 小米手环10 Pro, 小米手环9 Pro, REDMI Wat
 | `daily_update.py` | Excel (.xlsx) | `history.json` |
 | `generate_dashboard.py` | history.json | dashboard.png, comparison.png |
 | `build_html.py` (root) | 618_analysis_data.json | 618复盘总结.html |
-| `generate_june_summary.py` | history.json | 六月销量分析.html |
+| `tools/generate_june_summary.py` | history.json | 六月销量分析.html |

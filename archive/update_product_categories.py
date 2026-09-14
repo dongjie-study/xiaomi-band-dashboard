@@ -8,7 +8,7 @@ Only keep 3 Xiaomi Band categories:
 import json
 import os
 
-DATA_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # archive/ 的上一级 = 项目根
 HISTORY_FILE = os.path.join(DATA_DIR, 'sales_analysis', 'history.json')
 
 def reclassify_product(name):

@@ -7,13 +7,14 @@ import os
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+# 本脚本位于 tools/ 下：项目根是上一级，共享模块（team_config）在根目录
+ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from team_config import TEAM_MAP, classify_room as get_team, TEAM_ORDER, TEAM_COLORS
 
-DATA_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 HEADPHONE_KEYWORDS = ['Buds', 'buds', '耳机', '耳', '开放式', '头戴式', '骨传导', 'ear', 'head']
 
 def is_headphone(name):

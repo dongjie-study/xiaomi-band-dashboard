@@ -12,7 +12,7 @@ import sys
 import os
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+ROOT = Path(__file__).resolve().parent.parent  # 本脚本在 archive/ 下，项目根是上一级
 sys.path.insert(0, str(ROOT))
 
 HTML_FILE = ROOT / '主播业绩' / '业绩demo.html'

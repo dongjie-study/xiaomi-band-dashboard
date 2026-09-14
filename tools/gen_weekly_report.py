@@ -6,12 +6,16 @@
 """
 import json
 import os
+import sys
 
 from openpyxl import Workbook
 from openpyxl.formatting.rule import DataBarRule
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
-ROOT = os.path.dirname(os.path.abspath(__file__))
+# 本脚本位于 tools/ 下：项目根是上一级，共享模块（team_config）在根目录
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if ROOT not in sys.path:
+    sys.path.insert(0, ROOT)
 OUT = r"C:\Users\Administrator\Desktop\9.4-9.10周报_主要直播间对比分析.xlsx"
 
 ROOMS = ['小米数码旗舰店', '小米官方手环直播间', '小米官旗手表直播间', '小米官方手表']

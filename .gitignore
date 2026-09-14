@@ -24,7 +24,8 @@ output/
 Thumbs.db
 Desktop.ini
 
-# UI 一致性校验产物（ui_check.py 生成）
+# UI 一致性校验产物（ui_check.py 生成，落在 _artifacts/）
+# 无前导斜杠 = 任意深度都匹配，所以移动 _artifacts/ 后规则依然生效
 _ui_*.json
 _ui_*.png
 

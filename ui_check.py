@@ -6,11 +6,16 @@
       _ui_<标签>_<页名>.png (桌面截图)
       _ui_<标签>_<页名>_mobile.png (移动端截图)
 """
-import asyncio, json, subprocess, sys, time
+import asyncio, json, os, subprocess, sys, time
 from playwright.async_api import async_playwright
 
 ROOT = r"C:\Users\Administrator\Desktop\小米手环直播间销量分析"
 PORT = 8793
+
+# 校验产物（截图 + 数值快照）统一落到 _artifacts/，不要散在项目根目录。
+# .gitignore 的 `_ui_*.png` / `_ui_*.json` 无前导斜杠，跨目录依然忽略。
+OUT_DIR = os.path.join(ROOT, "_artifacts")
+os.makedirs(OUT_DIR, exist_ok=True)
 
 PAGES = [
     ("index",    "index.html",                          True),
@@ -131,11 +136,11 @@ async def main():
                     pg, __import__("os").path.join(ROOT, rel))
                 entry["errors"] = errs
                 result[name] = entry
-                await pg.screenshot(path=f"_ui_{tag}_{name}.png")
+                await pg.screenshot(path=os.path.join(OUT_DIR, f"_ui_{tag}_{name}.png"))
                 # 移动端
                 await pg.set_viewport_size({"width": 700, "height": 1000})
                 await pg.wait_for_timeout(900)
-                await pg.screenshot(path=f"_ui_{tag}_{name}_mobile.png")
+                await pg.screenshot(path=os.path.join(OUT_DIR, f"_ui_{tag}_{name}_mobile.png"))
                 # 移动端侧边栏是否溢出（对比侧边栏宽度与内容宽度）
                 if name == "index":
                     entry["mobileSidebar"] = await pg.evaluate("""()=>{
@@ -149,7 +154,7 @@ async def main():
             await b.close()
     finally:
         srv.terminate()
-    json.dump(result, open(f"_ui_{tag}.json", "w", encoding="utf-8"),
+    json.dump(result, open(os.path.join(OUT_DIR, f"_ui_{tag}.json"), "w", encoding="utf-8"),
               ensure_ascii=False, indent=1)
     # 简报
     for name, e in result.items():

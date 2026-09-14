@@ -30,6 +30,16 @@
 1. **两条流程不许互相污染**：订单流程只碰 `sales_analysis/`；业绩流程只碰 `主播业绩/业绩demo.html`。
 2. **禁止 `git add -A`**：工作区常年躺着别人的半成品（`直播间销量汇总工具.html`、`_vw.py`、`gen_watch_compare.py`）。
    一律 `git add <本次真正改动的文件>`。
+
+## 📁 目录约定
+
+| 位置 | 放什么 |
+|------|--------|
+| 根目录 | 日常入口（`run_all.py` / `band11_review.py` / `generate_band11_target.py`）+ 共享库 + 页面资源 |
+| `tools/` | 活跃但非日常：月报生成器、周报、`migrate_reclassify.py`、`gen_room_docs.py` |
+| `archive/` | 已结项，**别跑**（见 `archive/README.md`） |
+| `_artifacts/` | 可再生产物（`ui_check.py` 截图、历史 xlsx）。可随时删 |
+| 页面目录 / `sales_analysis/` | ⚠️ **不能移动、不能改名**（公开 URL + 硬编码相对路径） |
 3. **脚本生成的文件，改 HTML 无效**：改生成器 `.py`，否则重跑覆盖（清单见 `docs/04`）。
 
 ## ⚙️ 改过 `team_config.py` 就要重跑生成器

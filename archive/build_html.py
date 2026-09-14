@@ -2,13 +2,14 @@ import json
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+HERE = Path(__file__).resolve().parent   # archive/：本脚本的数据 618_analysis_data.json 在这
+ROOT = HERE.parent                        # 项目根：共享模块与输出目录在这
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from formatters import fmt, fmt_wan, fmt_yuan, fmt_gsv, diff_str, diff_class
 
-with open('618_analysis_data.json', 'r', encoding='utf-8') as f:
+with open(HERE / '618_analysis_data.json', 'r', encoding='utf-8') as f:
     D = json.load(f)
 
 teams = D['teams']
@@ -1349,7 +1350,7 @@ var C = {{ ours: '#1E90FF', comp: '#FF6B35', green: '#1da85c', orange: '#ff6900'
 </html>
 '''
 
-with open('节点总结/618复盘总结.html', 'w', encoding='utf-8') as f:
+with open(ROOT / '节点总结' / '618复盘总结.html', 'w', encoding='utf-8') as f:
     f.write(html)
 print(f'HTML generated: {len(html)} bytes')
 print('Done!')

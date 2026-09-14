@@ -14,10 +14,11 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent))
+# 本脚本位于 tools/ 下：项目根是上一级，共享模块（team_config）在根目录
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT))
 from team_config import classify_room, ALL_TEAMS
 
-ROOT = Path(__file__).resolve().parent
 HISTORY = ROOT / "sales_analysis" / "history.json"
 
 BUCKETS = {

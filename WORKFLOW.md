@@ -104,6 +104,9 @@ git log --oneline -1                     # 确认落地
 
 - ⚠️ **不要用 `git add -A`**：工作区常年躺着别人的半成品（如 `直播间销量汇总工具.html`、`_vw.py`、`gen_watch_compare.py`），
   一律**只 add 本次真正改动的文件**，并在回报里说明还有哪些没提交。
+- 目录约定：**日常入口脚本在根目录**（`run_all.py` / `band11_review.py` / `generate_band11_target.py`），
+  **活跃但非日常的在 `tools/`**，**已结项的在 `archive/`**，**可再生的截图产物在 `_artifacts/`**。
+  详见 `docs/05-脚本清单.md`。
 - 进度表 xlsx 在桌面、且被 `.gitignore` 排除，**不进 git**，不用管。
 - commit message 固定格式：`feat: x.xx日订单数据更新` / `feat: x.xx日业绩数据更新`。
 
@@ -196,7 +199,7 @@ git log --oneline -1                     # 确认落地
 本节只补充订单流程特有的注意事项。
 
 ### ⚠️ 注意事项
-- **不要**运行 `update_daily_html.py`（它会修改业绩demo.html）
+- **不要**运行 `archive/update_daily_html.py`（它会整块改写 `业绩demo.html` 的 `DAILY_RECORDS`）
 - **不要**修改 `主播业绩/业绩demo.html`
 - 只动 `sales_analysis/` 目录下的文件
 - **次日凌晨尾单不去重**：文件在次日凌晨导出，会混入少量次日 00:00~01:00 的订单（实测每天 2~6 笔），下一天的文件里还会有，因此**确实跨天重复计算**。量小，**维持全量入库、不做过滤**（用户 2026-09-14 决定）。不要为此改 `daily_update.py`。
@@ -455,8 +458,8 @@ git pull --rebase && git push
 ### 步骤
 
 1. **生成新月份总结页脚本 + 占位页**
-   - 模板：`generate_september_summary.py`（内含占位页逻辑，无数据时生成占位页）。
-   - 复制为 `generate_<下月英文>_summary.py`（10月 → `generate_october_summary.py`），做全局替换：
+   - 模板：`tools/generate_september_summary.py`（内含占位页逻辑，无数据时生成占位页）。
+   - 复制为 `tools/generate_<下月英文>_summary.py`（10月 → `tools/generate_october_summary.py`），做全局替换：
 
    | 模板（9月） | 换成（10月 为例） |
    |---|---|
@@ -468,7 +471,7 @@ git pull --rebase && git push
    | 占位页「返回」链接 | 指向上一个月（如 `八月销量分析.html`） |
    | `.nav-bar` 导航 | 插入上一个月链接（非 active）+ 当前月 active |
 
-   - 运行 `python generate_<下月>_summary.py` → 生成 `月度总结/<X>月销量分析.html`。
+   - 运行 `python tools/generate_<下月>_summary.py` → 生成 `月度总结/<X>月销量分析.html`。
 
 2. **更新 `modules.json`**
    - `sales.subModules` 追加：`{ "id": "sales<Month>", "title": "<X月>", "monthKey": "2026-0X", "badge": "NEW" }`，并移除上月的 `badge`。
@@ -501,7 +504,12 @@ git pull --rebase && git push
 
 ### 换月时自动生效
 
-`generate_september_summary.py`（换月模板）已经带上了 theme.css 链接和统一令牌，所以复制出新月份生成器时**无需额外处理**。各月份页面的 `.nav-bar` 仍需按「四、月度切换」加入新月份链接；历史的 `generate_june/july/august_summary.py` 里的导航也要同步补链接，否则重跑会把手工加的链接冲掉。
+`tools/generate_september_summary.py`（换月模板）已经带上了 theme.css 链接和统一令牌，所以复制出新月份生成器时**无需额外处理**。各月份页面的 `.nav-bar` 仍需按「四、月度切换」加入新月份链接；历史的 `tools/generate_june/july/august_summary.py` 里的导航也要同步补链接，否则重跑会把手工加的链接冲掉。
+
+> ⚠️ **复制新月份脚本时，顶部那段路径逻辑要原样保留**：
+> `ROOT = Path(__file__).resolve().parent.parent` + `sys.path.insert(0, str(ROOT))`。
+> 生成器住在 `tools/` 下，项目根是**上一级**；少写一层 `parent`、或漏掉 `sys.path.insert`，
+> 脚本会直接死在 `import team_config`，而它自己算的路径看起来又是对的——报错会误导排查方向。
 
 ### 改动视觉时的红线
 
@@ -619,3 +627,4 @@ git pull --rebase && git push
 | 2026-09-14 | **新增知识库 `docs/` + 根目录 `CLAUDE.md`**：把散落的字段定义/页面结构/脚本清单/历史坑收成 7 篇文档。直播间归属改为**单向生成**——`team_config.py` → `tools/gen_room_docs.py` → `docs/03` + `直播间分类.md` + `直播间服务商汇总.md`，消灭「两边同步」漂移（该漂移已实际发生过：`直播间服务商汇总.md` 曾漏了「小米耳机」）。新增 `.github/workflows/docs-check.yml` 自动拦截。 |
 | 2026-09-14 | 顺带订正两处过期事实：业绩页 `getElementById` 实为 **35 个唯一 id / 58 处调用**（原写 44）；直播间→roomId 映射表补 `room_xiaomi_band_preorder`（手环预约期业绩）。 |
 | 2026-09-14 | 修复 `band11_history.json` 里 9/13 事故遗漏的 1 条 `date:"NaT"` 垃圾记录。「修坏数据的标准动作」第 3 步补充**兄弟文件排查**（该漏清会让主打手环模块在日期查不到时显示错数据）。 |
+| 2026-09-14 | **根目录整理**：27 个 .py → 11 个、55 个 PNG → 1 个。非日常脚本进 `tools/`（月报生成器 ×4、周报、`migrate_reclassify`、`generate_headphone_report`），已结项脚本进 `archive/`，截图产物进 `_artifacts/`。**页面目录、`sales_analysis/`、日常命令一律未动**。「四、月度切换」与「📦 提交清单」的路径已同步；`tools/` 三个脚本补上了缺失的 `sys.path.insert`。 |

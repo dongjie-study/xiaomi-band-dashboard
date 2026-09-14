@@ -1,34 +1,42 @@
 """
-Generate August 2026 monthly sales summary HTML page.
-Reads history.json, filters for August data.
-If no August data exists yet, creates a placeholder page.
+Generate September 2026 monthly sales summary HTML page.
+Reads history.json, filters for September data.
+If no September data exists yet, creates a placeholder page.
 """
 import json
 import os
+import sys
 from datetime import date
+from pathlib import Path
+
+# 本脚本位于 tools/ 下：项目根是上一级，共享模块（team_config）在根目录
+# ⚠️ 本文件同时是「换月模板」——复制出新月份生成器时，这段路径逻辑要原样保留
+ROOT = Path(__file__).resolve().parent.parent
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 from team_config import TEAM_MAP, TEAM_ORDER, TEAM_COLORS
 
-DATA_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def get_team(room_name):
     return TEAM_MAP.get(room_name, '良米')
 
-def load_august_data():
+def load_september_data():
     history_path = os.path.join(DATA_DIR, 'sales_analysis', 'history.json')
     if not os.path.exists(history_path):
         return []
     with open(history_path, 'r', encoding='utf-8') as f:
         history = json.load(f)
-    return [d for d in history if d['date'].startswith('2026-08')]
+    return [d for d in history if d['date'].startswith('2026-09')]
 
-def build_summary(august):
-    if not august:
+def build_summary(september):
+    if not september:
         return None
 
     room_total = {}
-    for d in august:
+    for d in september:
         for rname, rinfo in d.get('rooms', {}).items():
             if rname not in room_total:
                 room_total[rname] = {'orders': 0, 'revenue': 0, 'type': get_team(rname), 'days': 0, 'daily': {}}
@@ -38,7 +46,7 @@ def build_summary(august):
             room_total[rname]['daily'][d['date']] = {'orders': rinfo['orders'], 'revenue': rinfo['revenue']}
 
     prod_total = {}
-    for d in august:
+    for d in september:
         for pname, pinfo in d.get('products', {}).items():
             if pname not in prod_total:
                 prod_total[pname] = {'orders': 0, 'revenue': 0}
@@ -63,7 +71,7 @@ def build_summary(august):
 
     from datetime import datetime
     weeks = {}
-    for d in august:
+    for d in september:
         dt = datetime.strptime(d['date'], '%Y-%m-%d')
         if dt.day <= 7: w = 'W1'
         elif dt.day <= 14: w = 'W2'
@@ -81,14 +89,14 @@ def build_summary(august):
         weeks[w]['days'] += 1
 
     week_labels = {
-        'W1': 'W1 (8/1-8/7)', 'W2': 'W2 (8/8-8/14)',
-        'W3': 'W3 (8/15-8/21)', 'W4': 'W4 (8/22-8/28)', 'W5': 'W5 (8/29-8/31)'
+        'W1': 'W1 (9/1-9/7)', 'W2': 'W2 (9/8-9/14)',
+        'W3': 'W3 (9/15-9/21)', 'W4': 'W4 (9/22-9/28)', 'W5': 'W5 (9/29-9/30)'
     }
     for wk, wdata in weeks.items():
         wdata['label'] = week_labels.get(wk, wk)
 
     daily_data = []
-    for d in august:
+    for d in september:
         our_ord = sum(rinfo['orders'] for rname, rinfo in d.get('rooms', {}).items() if get_team(rname) == '我司')
         our_rev_d = sum(rinfo['revenue'] for rname, rinfo in d.get('rooms', {}).items() if get_team(rname) == '我司')
         comp_ord = d['total_orders'] - our_ord
@@ -117,19 +125,19 @@ def build_summary(august):
         'liangmi_rooms': [(n, r) for n, r in rooms_ranked if r['type'] == '良米'],
         'prods_ranked': prods_ranked,
         'weeks': weeks, 'daily_data': daily_data,
-        'days_count': len(august),
+        'days_count': len(september),
     }
 
-def generate_html(summary, august_data):
+def generate_html(summary, september_data):
     data_json = json.dumps(summary, ensure_ascii=False)
-    days = len(august_data)
+    days = len(september_data)
     room_count = len(summary['rooms_ranked'])
-    first_date = august_data[0]['date'] if august_data else '2026-08-01'
-    last_date = august_data[-1]['date'] if august_data else '2026-08-31'
+    first_date = september_data[0]['date'] if september_data else '2026-09-01'
+    last_date = september_data[-1]['date'] if september_data else '2026-09-30'
     today = date.today().strftime('%Y年%m月%d日')
 
     # Read the July HTML template to reuse the structure
-    july_html_path = os.path.join(DATA_DIR, '月度总结', '七月销量分析.html')
+    july_html_path = os.path.join(DATA_DIR, '月度总结', '八月销量分析.html')
     if os.path.exists(july_html_path):
         with open(july_html_path, 'r', encoding='utf-8') as f:
             july_html = f.read()
@@ -142,7 +150,7 @@ def generate_html(summary, august_data):
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>8月销量分析 · 小米手环直播间</title>
+<title>9月销量分析 · 小米手环直播间</title>
 <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
 <link rel="stylesheet" href="../theme.css">
 <style>
@@ -280,20 +288,20 @@ footer {{
   <a href="../sales_analysis/index.html" class="nav-btn">每日看板</a>
   <a href="六月销量分析.html" class="nav-btn">6月销量分析</a>
   <a href="七月销量分析.html" class="nav-btn">7月销量分析</a>
-  <a href="#" class="nav-btn active">8月销量分析</a>
-  <a href="九月销量分析.html" class="nav-btn">9月销量分析</a>
+  <a href="八月销量分析.html" class="nav-btn">8月销量分析</a>
+  <a href="#" class="nav-btn active">9月销量分析</a>
   <a href="../节点总结/618复盘总结.html" class="nav-btn">618复盘</a>
   <a href="../节点总结/四月份复盘总结.html" class="nav-btn">4月复盘</a>
 </div>
 
 <div class="hero">
-  <h1><span class="mi">小米</span>手环直播间 · 8月销量分析</h1>
-  <p>2026年8月全月订单数据汇总 — 含商品卡全渠道 | 排名以<span style="color:#ffa366">销售额</span>为准</p>
+  <h1><span class="mi">小米</span>手环直播间 · 9月销量分析</h1>
+  <p>2026年9月全月订单数据汇总 — 含商品卡全渠道 | 排名以<span style="color:#ffa366">销售额</span>为准</p>
   <div class="badge-row">
     <span class="badge green">{days}天数据（持续更新）</span>
     <span class="badge info">我司·机械·纵横·良米 四队</span>
     <span class="badge warn">{room_count}个直播间</span>
-    <span class="badge purple">8月数据追踪</span>
+    <span class="badge purple">9月数据追踪</span>
   </div>
 </div>
 
@@ -362,7 +370,7 @@ footer {{
 </div>
 
 <div class="section">
-  <div class="section-title"><span class="icon">📊</span> 8月总结</div>
+  <div class="section-title"><span class="icon">📊</span> 9月总结</div>
   <div class="summary-box" id="summaryBox"></div>
 </div>
 
@@ -385,7 +393,7 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
 (function renderKPIs() {{
   const d = DATA, our = d.team_totals['我司'], jx = d.team_totals['机械空间'], zh = d.team_totals['纵横'], lm = d.team_totals['良米'];
   const cards = [
-    {{ label: '8月全渠道订单', value: fmt(d.all_orders), sub: d.days_count + '天累计', cls: '' }},
+    {{ label: '9月全渠道订单', value: fmt(d.all_orders), sub: d.days_count + '天累计', cls: '' }},
     {{ label: '全渠道销售额', value: '¥' + (d.all_rev/10000).toFixed(0) + '万', sub: fmtRMB(d.all_rev), cls: '' }},
     {{ label: '★ 我司订单', value: fmt(our.orders), sub: '份额 ' + fmtPct(d.our_share), cls: 'ours' }},
     {{ label: '★ 我司销售额', value: '¥' + (our.revenue/10000).toFixed(0) + '万', sub: fmtRMB(our.revenue), cls: 'ours' }},
@@ -511,9 +519,9 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
   const top_our = d.our_rooms_ranked[0];
 
   document.getElementById('summaryBox').innerHTML = `
-    <h3>📊 8月核心洞察（持续更新中）</h3>
+    <h3>📊 9月核心洞察（持续更新中）</h3>
     <ul>
-      <li><strong>总量：</strong>8月全渠道累计 <span class="highlight">${{fmt(d.all_orders)}}单</span>，销售额 <span class="highlight">${{fmtRMB(d.all_rev)}}（¥${{(d.all_rev/10000).toFixed(0)}}万）</span>，日均 ${{Math.round(d.all_orders/d.days_count)}}单。</li>
+      <li><strong>总量：</strong>9月全渠道累计 <span class="highlight">${{fmt(d.all_orders)}}单</span>，销售额 <span class="highlight">${{fmtRMB(d.all_rev)}}（¥${{(d.all_rev/10000).toFixed(0)}}万）</span>，日均 ${{Math.round(d.all_orders/d.days_count)}}单。</li>
       <li><strong>我司表现：</strong>${{our.rooms}}个直播间合计 <span class="highlight">${{fmt(our.orders)}}单（份额${{fmtPct(d.our_share)}}）</span>，销售额 <span class="highlight">${{fmtRMB(our.revenue)}}（¥${{(our.revenue/10000).toFixed(0)}}万）</span>，均价¥${{our.avg_price}}。</li>
       <li><strong>机械空间：</strong>${{jx.rooms}}个直播间 ${{fmt(jx.orders)}}单，${{fmtRMB(jx.revenue)}}。</li>
       <li><strong>纵横：</strong>${{zh.rooms}}个直播间 ${{fmt(zh.orders)}}单，${{fmtRMB(zh.revenue)}}。</li>
@@ -529,7 +537,7 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
 
   document.getElementById('competitiveAnalysis').innerHTML = `
     <h3>一、四队格局</h3>
-    <p>8月延续<span class="highlight">我司·机械空间·纵横·良米</span>四队竞争格局。数据持续更新中。</p>
+    <p>9月延续<span class="highlight">我司·机械空间·纵横·良米</span>四队竞争格局。数据持续更新中。</p>
     <h3>二、品类分析</h3>
     <table style="width:100%;border-collapse:collapse;margin:10px 0;font-size:13px">
       <tr style="background:#f8fafc"><th style="padding:8px;text-align:left">品类</th><th style="padding:8px">全渠道订单</th><th style="padding:8px">销售额</th><th style="padding:8px">判断</th></tr>
@@ -545,10 +553,10 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
 // Improvement suggestions
 (function renderImprovements() {{
   document.getElementById('improvementSuggestions').innerHTML = `
-    <h3>🔴 8月重点方向</h3>
+    <h3>🔴 9月重点方向</h3>
     <ul>
-      <li><strong>持续跟踪每日数据：</strong>8月是新月份，密切关注每日单量变化趋势，与7月同期进行对比。</li>
-      <li><strong>暑期旺季运营：</strong>8月仍处于暑期，重点推出手环/Watch运动健康场景。</li>
+      <li><strong>持续跟踪每日数据：</strong>9月是新月份，密切关注每日单量变化趋势，与8月同期进行对比。</li>
+      <li><strong>秋季开学季运营：</strong>9月进入秋季开学季，重点推出手环/Watch学生及运动健康场景。</li>
       <li><strong>竞对动态监控：</strong>密切关注机械空间和良米的直播间变化和促销策略。</li>
     </ul>
     <p style="margin-top:12px;color:var(--text-muted);">（更多洞察将在累积足够数据后自动生成）</p>
@@ -558,11 +566,11 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
 // Future direction
 (function renderFuture() {{
   document.getElementById('futureDirection').innerHTML = `
-    <h3>8月战略方向</h3>
-    <p>8月目标：延续7月增长势头，重点提升我司份额。数据持续更新中，具体策略将根据实际数据调整。</p>
+    <h3>9月战略方向</h3>
+    <p>9月目标：延续8月增长势头，重点提升我司份额。数据持续更新中，具体策略将根据实际数据调整。</p>
     <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-      <strong>🎯 8月核心KPI：</strong>
-      我司日均目标 <span class="highlight">待定（根据7月基准设定）</span>
+      <strong>🎯 9月核心KPI：</strong>
+      我司日均目标 <span class="highlight">待定（根据8月基准设定）</span>
     </div>
   `;
 }})();
@@ -658,14 +666,14 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
 
 
 def generate_placeholder():
-    """Generate a placeholder page when no August data exists yet."""
+    """Generate a placeholder page when no September data exists yet."""
     today = date.today().strftime('%Y年%m月%d日')
     return f'''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>8月销量分析 · 小米手环直播间</title>
+<title>9月销量分析 · 小米手环直播间</title>
 <style>
 :root {{
   --bg: #f0f4f8; --surface: #ffffff; --text: #0f172a; --text-secondary: #64748b;
@@ -722,25 +730,25 @@ footer {{
   <a href="../sales_analysis/index.html" class="nav-btn">每日看板</a>
   <a href="六月销量分析.html" class="nav-btn">6月销量分析</a>
   <a href="七月销量分析.html" class="nav-btn">7月销量分析</a>
-  <a href="#" class="nav-btn active">8月销量分析</a>
-  <a href="九月销量分析.html" class="nav-btn">9月销量分析</a>
+  <a href="八月销量分析.html" class="nav-btn">8月销量分析</a>
+  <a href="#" class="nav-btn active">9月销量分析</a>
   <a href="../节点总结/618复盘总结.html" class="nav-btn">618复盘</a>
   <a href="../节点总结/四月份复盘总结.html" class="nav-btn">4月复盘</a>
 </div>
 
 <div class="hero">
-  <h1><span class="mi">小米</span>手环直播间 · 8月销量分析</h1>
-  <p>2026年8月全月订单数据汇总 | 排名以<span style="color:#ffa366">销售额</span>为准</p>
+  <h1><span class="mi">小米</span>手环直播间 · 9月销量分析</h1>
+  <p>2026年9月全月订单数据汇总 | 排名以<span style="color:#ffa366">销售额</span>为准</p>
   <div class="badge-row">
-    <span class="badge green">8月1日开始</span>
+    <span class="badge green">9月1日开始</span>
     <span class="badge info">等待数据录入</span>
   </div>
 </div>
 
 <div class="container">
   <div class="icon">📅</div>
-  <h2>8月数据尚未开始</h2>
-  <p>8月销量分析页面已就绪，将从<strong>2026年8月1日</strong>开始记录数据。</p>
+  <h2>9月数据尚未开始</h2>
+  <p>9月销量分析页面已就绪，将从<strong>2026年9月1日</strong>开始记录数据。</p>
   <p>每日订单数据将通过 <code>daily_update.py</code> 自动录入系统。</p>
   <p style="margin-top:16px">届时本页面将自动展示：</p>
   <p style="color:var(--text-muted);font-size:13px">
@@ -748,12 +756,12 @@ footer {{
     ✓ 产品排名 · ✓ 周度趋势 · ✓ 竞争格局分析 · ✓ 改进建议
   </p>
   <div class="note">
-    页面生成于 {today} · 返回 <a href="七月销量分析.html" style="color:var(--clr-ours)">7月销量分析</a>
+    页面生成于 {today} · 返回 <a href="八月销量分析.html" style="color:var(--clr-ours)">8月销量分析</a>
   </div>
 </div>
 
 <footer>
-  小米手环直播间 · 8月销量分析 · 数据来源：抖音直播间订单
+  小米手环直播间 · 9月销量分析 · 数据来源：抖音直播间订单
 </footer>
 
 </body>
@@ -761,18 +769,18 @@ footer {{
 
 
 if __name__ == '__main__':
-    august = load_august_data()
+    september = load_september_data()
 
-    if august:
-        summary = build_summary(august)
-        html = generate_html(summary, august)
-        status = f'{len(august)} days of data'
+    if september:
+        summary = build_summary(september)
+        html = generate_html(summary, september)
+        status = f'{len(september)} days of data'
     else:
         html = generate_placeholder()
         summary = None
         status = 'no data yet (placeholder)'
 
-    out_path = os.path.join(DATA_DIR, '月度总结', '八月销量分析.html')
+    out_path = os.path.join(DATA_DIR, '月度总结', '九月销量分析.html')
     with open(out_path, 'w', encoding='utf-8') as f:
         f.write(html)
 
