@@ -1,5 +1,10 @@
 # history.json Data Schema
 
+> ⚠️ **本文写于 2026-07，已过期**：缺了 `zhumeng_rooms` / `feina_rooms` / `ningyun_rooms` /
+> `lequn_rooms` / `chimu_rooms` / `mile_rooms` 六个团队数组；且 `_hourly_stats` 已不再内嵌于
+> `rooms`，而是独立成 `sales_analysis/hourly/<日期>.json`。
+> **字段权威定义以 [`docs/02-数据字典.md`](docs/02-数据字典.md) 为准。**
+
 ## Top-level structure
 
 ```json

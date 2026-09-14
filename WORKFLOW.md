@@ -3,6 +3,7 @@
 > **最后更新**: 2026-09-14
 > **规则**: 每次执行前先读此文档。有新要求时及时更新此文档。
 > **怎么看**: 日常**只读顶部「⚡ 每日执行清单」**就够了；出问题或命中例外时才往下翻对应章节。
+> 📚 **知识库**: 非日常问题（字段含义 / 页面结构 / 脚本谁死谁活 / 踩过的坑）看 `docs/`，从 `docs/00-索引.md` 进。
 
 > 📌 **直播间归属**：遇到直播间属于哪个团队（我司/良米/逐梦/凝云/斐纳/机械空间）的问题，以 `直播间分类.md` 为准，先查再执行。
 > 🆕 **新直播间**：遇到 `TEAM_MAP` / `直播间分类.md` 里没出现过的新直播间名，**先找用户确认归属**再入库，不要静默兜底归「良米」。
@@ -237,6 +238,7 @@ git log --oneline -1                     # 确认落地
 | 小米AI眼镜直播间 | room_xiaomi_glasses |
 | 小米智能设备旗舰店直播间 | room_xiaomi_smart_device |
 | 小米手环官旗直播间 | room_xiaomi_band_flagship |
+| 手环预约期业绩（伪直播间，非真实渠道） | room_xiaomi_band_preorder |
 
 ### 场次映射
 - A1 → shift: 'A', A2 → shift: 'A'
@@ -508,7 +510,7 @@ git pull --rebase && git push
 | 页面 | 绝对不能改 |
 |------|-----------|
 | `index.html` | `#sidebarNav` 的模块链接必须是它的**直接子元素**（JS 用 `>` 选择器）；`#overview` 内 4 张 `.stat-card` 顺序数量不可变（JS 按 `[0]~[3]` 索引）；全局函数名（内联 `onclick` 引用） |
-| `主播业绩/业绩demo.html` | 44 个 `getElementById` 目标、`.filter-btn.active`、`#anchorMonthlyStatsPanel` 的 9 列表头 + `table-layout:fixed` |
+| `主播业绩/业绩demo.html` | 35 个唯一 id 目标（58 处 `getElementById` 调用）、`.filter-btn.active`、`#anchorMonthlyStatsPanel` 的 9 列表头 + `table-layout:fixed` |
 | `sales_analysis/index.html` | `.prow` `.rrow` `.collapsed` `.hidden` `.extra-row` `.tab-prodroom` `.roomdet-panel` |
 | 月度总结页 | id 由生成器产出，**改样式要改生成器**，只改 HTML 会被下次重跑覆盖 |
 
@@ -566,7 +568,16 @@ git pull --rebase && git push
    （`.gitignore` 已忽略 `*.bak-*`，不会污染仓库）
 2. **带严格断言再落盘**：脚本里先 `assert` 总条数、目标记录的特征值（日期/条数）、前后邻居、
    其余记录全部合法，**全过才写**。自动模式会拦截「未点名的批量删除」，带断言的最小改动才过得去。
-3. **清掉坏运行的附带产物**：如 `sales_analysis/hourly/NaT.json` 这种垃圾文件要一并删。
+3. **清掉坏运行的附带产物 —— 兄弟文件也要查，不只主文件**：
+   坏运行不止写 `history.json`，还会往 `band11_history.json`、`b10pro_history.json`、`hourly/` 里写。
+   只清主文件会留下「静默显示错数据」的尾巴。
+   ```bash
+   # 一次查完所有数据文件的 NaT 残留
+   python -c "import json,glob;[print(f,[r.get('date') for r in json.load(open(f,encoding='utf-8')) if r.get('date')=='NaT']) for f in glob.glob('sales_analysis/*_history.json')]"
+   ls sales_analysis/hourly/ | grep -v '^2026'   # 有非日期文件名 = 垃圾
+   ```
+   > 📅 2026-09-13 的 NaT 事故就漏清过 `band11_history.json` 一条，直到 09-14 才被发现
+   > ——它排在数组末尾，正好命中页面 `[length-1]` 的兜底，会**显示错数据**。详见 `docs/06-踩坑与故障.md` 第 2 条。
 4. 修完重跑一遍入库 + 自校验，确认与源文件对得上。
 
 > 2026-09-13 实战：`9.13日订单.xlsx` 首行是「待支付」（无支付完成时间），
@@ -605,3 +616,6 @@ git pull --rebase && git push
 | 2026-09-14 | 「每日总结」内容改为**结构化模版**（用户反馈「不要都是中性了」）：销售总结固定 `✅ 好` / `⚠️ 差` 两行，交接要点固定 `🎯 盯什么 + 大概多久见分晓`；每段 ≤ 90 字，超长 `add` 拒收。JSON 字段从 `summary`/`handover` 改为 `good`/`bad`/`watch`。 |
 | 2026-09-14 | **顶部新增「⚡ 每日执行清单」**：把散在「零点五/二/三点五/五/六」五处的日常步骤收成一份可直接复制的清单（🅰️ 订单 7 步 / 🅱️ 业绩 4 步 / 🅲 两个都来），含「自校验三条铁律」「📦 提交清单」「📣 回报格式」。各详细章节改为只补充规则与例外，避免重复漂移。 |
 | 2026-09-14 | 提交规则修正：**明确禁止 `git add -A`**（工作区常年有别人的半成品会被误扫），改为明确列出改动文件；补充 push 被拒时的 `stash + pull --rebase + stash pop` 处理。新增「🚑 修坏数据的标准动作」（先备份 → 带断言落盘 → 清附带产物）。 |
+| 2026-09-14 | **新增知识库 `docs/` + 根目录 `CLAUDE.md`**：把散落的字段定义/页面结构/脚本清单/历史坑收成 7 篇文档。直播间归属改为**单向生成**——`team_config.py` → `tools/gen_room_docs.py` → `docs/03` + `直播间分类.md` + `直播间服务商汇总.md`，消灭「两边同步」漂移（该漂移已实际发生过：`直播间服务商汇总.md` 曾漏了「小米耳机」）。新增 `.github/workflows/docs-check.yml` 自动拦截。 |
+| 2026-09-14 | 顺带订正两处过期事实：业绩页 `getElementById` 实为 **35 个唯一 id / 58 处调用**（原写 44）；直播间→roomId 映射表补 `room_xiaomi_band_preorder`（手环预约期业绩）。 |
+| 2026-09-14 | 修复 `band11_history.json` 里 9/13 事故遗漏的 1 条 `date:"NaT"` 垃圾记录。「修坏数据的标准动作」第 3 步补充**兄弟文件排查**（该漏清会让主打手环模块在日期查不到时显示错数据）。 |

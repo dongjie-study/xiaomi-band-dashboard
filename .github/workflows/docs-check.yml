@@ -1,0 +1,37 @@
+name: docs-check
+
+# 防止「直播间归属」再次漂移：team_config.py 改了但文档没重生成时，这里会红。
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'team_config.py'
+      - 'tools/gen_room_docs.py'
+      - '直播间分类.md'
+      - '直播间服务商汇总.md'
+      - 'docs/**'
+  pull_request:
+    paths:
+      - 'team_config.py'
+      - 'tools/gen_room_docs.py'
+      - '直播间分类.md'
+      - '直播间服务商汇总.md'
+      - 'docs/**'
+  workflow_dispatch: {}
+
+jobs:
+  room-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 生成器会调用 直播间销量汇总.py 的解析器做自校验，需要 openpyxl
+      - name: Install deps
+        run: pip install openpyxl
+
+      - name: Check room docs are up to date
+        run: python tools/gen_room_docs.py --check
