@@ -18,7 +18,7 @@ OUT_DIR = os.path.join(ROOT, "_artifacts")
 os.makedirs(OUT_DIR, exist_ok=True)
 
 PAGES = [
-    ("index",    "index.html",                          True),
+    ("index",    "workbench.html",                      True),
     ("perf",     "主播业绩/业绩demo.html",               True),
     ("sales",    "sales_analysis/index.html",            True),
     ("sept",     "月度总结/九月销量分析.html",            True),

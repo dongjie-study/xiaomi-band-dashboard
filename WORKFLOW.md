@@ -517,7 +517,7 @@ git pull --rebase && git push
 
 | 页面 | 绝对不能改 |
 |------|-----------|
-| `index.html` | `#sidebarNav` 的模块链接必须是它的**直接子元素**（JS 用 `>` 选择器）；`#overview` 内 4 张 `.stat-card` 顺序数量不可变（JS 按 `[0]~[3]` 索引）；全局函数名（内联 `onclick` 引用） |
+| `workbench.html`（原 index.html 工作台） | `#sidebarNav` 的模块链接必须是它的**直接子元素**（JS 用 `>` 选择器）；`#overview` 内 4 张 `.stat-card` 顺序数量不可变（JS 按 `[0]~[3]` 索引）；全局函数名（内联 `onclick` 引用） |
 | `主播业绩/业绩demo.html` | 35 个唯一 id 目标（58 处 `getElementById` 调用）、`.filter-btn.active`、`#anchorMonthlyStatsPanel` 的 9 列表头 + `table-layout:fixed` |
 | `sales_analysis/index.html` | `.prow` `.rrow` `.collapsed` `.hidden` `.extra-row` `.tab-prodroom` `.roomdet-panel` |
 | 月度总结页 | id 由生成器产出，**改样式要改生成器**，只改 HTML 会被下次重跑覆盖 |
@@ -628,3 +628,4 @@ git pull --rebase && git push
 | 2026-09-14 | 顺带订正两处过期事实：业绩页 `getElementById` 实为 **35 个唯一 id / 58 处调用**（原写 44）；直播间→roomId 映射表补 `room_xiaomi_band_preorder`（手环预约期业绩）。 |
 | 2026-09-14 | 修复 `band11_history.json` 里 9/13 事故遗漏的 1 条 `date:"NaT"` 垃圾记录。「修坏数据的标准动作」第 3 步补充**兄弟文件排查**（该漏清会让主打手环模块在日期查不到时显示错数据）。 |
 | 2026-09-14 | **根目录整理**：27 个 .py → 11 个、55 个 PNG → 1 个。非日常脚本进 `tools/`（月报生成器 ×4、周报、`migrate_reclassify`、`generate_headphone_report`），已结项脚本进 `archive/`，截图产物进 `_artifacts/`。**页面目录、`sales_analysis/`、日常命令一律未动**。「四、月度切换」与「📦 提交清单」的路径已同步；`tools/` 三个脚本补上了缺失的 `sys.path.insert`。 |
+| 2026-09-19 | `主播管理/话术模块.html`（手写页）新增 **小米Watch S5 41mm** 章节 `#sec-s5-41mm`：定位摘要 + 1分钟大促话术 + 3分钟塑品话术（外观/健康/人车家/续航）+ S5 41mm vs S4 41mm 升级表 + 41mm/46mm 选购话术；导航新增按钮，FAQ 补 2 条（尺寸怎么选、适合女生吗），`modules.json` 描述同步。原有「Watch5 vs S5」对比表的 S5 列标注为 **46mm** 以示区分。 |

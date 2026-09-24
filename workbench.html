@@ -1,0 +1,1238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>小米手环直播间 · 竞对分析平台</title>
+<meta name="description" content="小米手环直播间每日销量追踪、竞对对比、视频分析、主播管理一站式数据平台">
+<link rel="icon" type="image/png" href="xiaomi-logo.png">
+<link rel="stylesheet" href="common.css">
+<link rel="stylesheet" href="theme.css">
+<style>
+  /* 设计令牌统一在 theme.css，本页不再自定义 :root */
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Ambient bg grain */
+  body::before {
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background: radial-gradient(ellipse 80% 60% at 30% 20%, rgba(59,130,246,.025) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 50% at 80% 80%, rgba(249,115,22,.02) 0%, transparent 60%);
+  }
+
+  /* ===== SIDEBAR ===== */
+  .sidebar {
+    width: var(--sidebar-w);
+    /* 侧边栏内部全部用 em：在这里定一个基准字号，品牌/分组/菜单/页脚会等比放大，
+       不用逐个改。px 的间距和圆点保持不变，所以不会显得松垮。 */
+    font-size: 17.5px;
+    background: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 100;
+    overflow-y: auto;
+    border-right: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .sidebar-brand {
+    padding: 24px 20px 20px;
+    cursor: pointer;
+    transition: background var(--transition);
+    border-bottom: 1px solid var(--border-light);
+  }
+  .sidebar-brand:hover { background: var(--sidebar-hover); }
+
+  .sidebar-brand .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sidebar-brand .logo-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    object-fit: contain;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(255,105,0,.15);
+  }
+
+  .sidebar-brand .logo-text {
+    font-size: .92em;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.3;
+    letter-spacing: -.01em;
+  }
+
+  .sidebar-brand .logo-text small {
+    display: block;
+    font-weight: 400;
+    font-size: .72em;
+    color: var(--text-muted);
+    letter-spacing: .01em;
+  }
+
+  .sidebar-nav { flex: 1; padding: 8px 0; }
+
+  .sidebar-nav .nav-section {
+    padding: 16px 20px 6px;
+    font-size: .64em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--text-muted);
+  }
+
+  .sidebar-nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    margin: 1px 10px;
+    border-radius: 8px;
+    text-decoration: none;
+    color: var(--sidebar-text);
+    font-size: .86em;
+    font-weight: 500;
+    transition: all var(--transition);
+    cursor: pointer;
+    position: relative;
+  }
+
+  /* Subtle left accent on hover */
+  .sidebar-nav a::after {
+    content: '';
+    position: absolute;
+    left: 0; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 0;
+    border-radius: 0 3px 3px 0;
+    background: var(--mod);
+    transition: height .25s ease;
+  }
+
+
+  .sidebar-nav a:hover {
+    background: var(--sidebar-hover);
+    color: var(--sidebar-active);
+  }
+
+  .sidebar-nav a:hover::after {
+    height: 16px;
+  }
+
+  .sidebar-nav a.active {
+    background: var(--mi-orange-soft);
+    color: var(--mi-orange-dark);
+    font-weight: 600;
+  }
+
+  .sidebar-nav a.active::after {
+    height: 24px;
+    animation: breathe-bar 2.5s ease-in-out infinite;
+  }
+
+  @keyframes breathe-bar {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: .45; }
+  }
+
+  .sidebar-nav a .nav-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: box-shadow var(--transition), transform var(--transition);
+  }
+
+  .sidebar-nav a:hover .nav-dot,
+  .sidebar-nav a.active .nav-dot {
+    box-shadow: 0 0 8px currentColor;
+    transform: scale(1.2);
+  }
+
+
+  .sidebar-nav a .badge-nav {
+    font-size: .64em;
+    padding: 2px 7px;
+    border-radius: 10px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    background: var(--mod-bg);
+    color: var(--mod);
+  }
+
+  .sidebar-nav a .sub-arrow {
+    font-size: .65em;
+    transition: transform .25s ease;
+    opacity: .5;
+  }
+  .sidebar-nav a.expanded .sub-arrow { transform: rotate(90deg); opacity: 1; }
+
+  .sub-menu { padding: 2px 0; overflow: hidden; }
+  .sub-menu a {
+    padding: 6px 14px 6px 42px;
+    margin: 0 10px;
+    font-size: .78em;
+    font-weight: 400;
+    color: var(--text-secondary);
+    display: block;
+    text-decoration: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition);
+  }
+  .sub-menu a:hover { color: var(--text); background: var(--sidebar-hover); }
+  .sub-menu a.active { color: var(--mi-orange-dark); background: var(--mi-orange-soft); font-weight: 600; }
+
+  /* 月份项（二级） */
+  .month-item {
+    padding: 6px 14px 6px 42px;
+    margin: 0 10px;
+    font-size: .8em;
+    font-weight: 500;
+    color: var(--text-secondary);
+    display: block;
+    text-decoration: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all var(--transition);
+    position: relative;
+  }
+  .month-item:hover, .period-item:hover { color: var(--text); background: var(--sidebar-hover); }
+  .month-item.active, .period-item.active { color: var(--mi-orange-dark); background: var(--mi-orange-soft); font-weight: 600; }
+  .month-item.expanded, .period-item.expanded { color: var(--text); font-weight: 600; }
+  .month-item .sub-arrow, .period-item .sub-arrow { transition: transform .25s ease; }
+  .month-item.expanded .sub-arrow, .period-item.expanded .sub-arrow { transform: rotate(90deg); opacity: 1; }
+
+  /* 日期项（三级，更深缩进） */
+  .month-dates a {
+    padding: 5px 14px 5px 58px !important;
+    font-size: .74em !important;
+  }
+
+  .sidebar-footer {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border-light);
+    font-size: .72em;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .sidebar-footer .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    box-shadow: 0 0 0 0 rgba(34,197,94,.4);
+    animation: pulse-ring 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-ring {
+    0%   { box-shadow: 0 0 0 0 rgba(34,197,94,.4); }
+    70%  { box-shadow: 0 0 0 6px rgba(34,197,94,0); }
+    100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+  }
+
+  /* ===== MAIN CONTENT ===== */
+  .main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ===== TOP BAR ===== */
+  .topbar {
+    background: rgba(255,255,255,.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border-light);
+    padding: 0 28px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .topbar .breadcrumb {
+    font-size: .8em;
+    color: var(--text-muted);
+  }
+
+  .topbar .breadcrumb span {
+    color: var(--mi-orange);
+    font-weight: 600;
+  }
+
+  /* ===== CONTENT AREA ===== */
+  .content {
+    flex: 1;
+    overflow: auto;
+    background: transparent;
+  }
+
+  /* Overview panel */
+  /* 只在超宽屏（>2040px）兜底收一下，常规屏不产生两侧留白 */
+  .overview {
+    padding: 32px 36px 40px;
+    max-width: 1800px;
+    margin: 0 auto;
+  }
+  .overview.hidden { display: none; }
+
+  .overview h1 {
+    font-size: 1.6em;
+    font-weight: 800;
+    letter-spacing: -.025em;
+    margin-bottom: 6px;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 22px 24px;
+    border: 1px solid var(--border);
+    transition: all var(--transition);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 40%, rgba(59,130,246,.03) 50%, transparent 60%);
+    opacity: 0;
+    transition: opacity .4s ease;
+  }
+
+  .stat-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--border);
+  }
+  .stat-card:hover::after { opacity: 1; }
+
+  .stat-card .stat-label {
+    font-size: .7em;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 1.85em;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1.1;
+    letter-spacing: -.02em;
+  }
+
+  .stat-card .stat-sub {
+    font-size: .75em;
+    color: var(--text-muted);
+    margin-top: 5px;
+  }
+
+  /* 4 列：卡片窄一些，正文刚好铺满，避免右侧一大片空档 */
+  .module-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .module-card {
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 26px 24px 22px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all var(--transition);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .module-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: transparent;
+  }
+
+  /* Top gradient strip on hover */
+  .module-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 0;
+    transition: height .3s ease;
+  }
+
+  .module-card:hover::before { height: 3px; }
+
+
+  .module-card .mod-icon {
+    width: 46px; height: 46px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35em;
+    margin-bottom: 14px;
+    transition: transform var(--transition), box-shadow var(--transition);
+  }
+
+  .module-card:hover .mod-icon {
+    transform: scale(1.08);
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  }
+
+
+  .module-card h3 {
+    font-size: .95em;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+    letter-spacing: -.01em;
+    transition: color var(--transition);
+  }
+
+
+  .module-card p {
+    font-size: .8em;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    flex: 1;
+    margin-bottom: 14px;
+  }
+
+  .module-card .mod-tag {
+    font-size: .66em;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    align-self: flex-start;
+    padding: 3px 10px;
+    border-radius: 12px;
+    transition: all var(--transition);
+  }
+
+
+  .module-card:hover .mod-tag {
+    filter: brightness(.97);
+    transform: translateY(-1px);
+  }
+
+  /* ===== LEI JUN QUOTE CAROUSEL ===== */
+  .quote-carousel {
+    position: relative;
+    animation: quoteSlideIn .6s ease-out;
+    background: linear-gradient(135deg, #fffaf4 0%, var(--mi-orange-soft) 45%, #fff1e2 100%);
+    border: 1px solid #f6dcc0;
+    border-left: 4px solid var(--mi-orange);
+    border-radius: var(--radius);
+    padding: 22px 32px 16px;
+    margin-bottom: 22px;
+    overflow: hidden;
+    cursor: default;
+    box-shadow: 0 1px 3px rgba(255, 105, 0, .06);
+    text-align: center;
+    transition: box-shadow var(--transition), border-color var(--transition);
+  }
+  .quote-carousel:hover {
+    box-shadow: var(--shadow-md);
+    border-color: #ecc79c;
+    border-left-color: var(--mi-orange-dark);
+  }
+
+  /* Ambient glow — top right */
+  .quote-carousel::before {
+    content: '';
+    position: absolute;
+    top: -30px; right: -30px;
+    width: 120px; height: 120px;
+    background: radial-gradient(circle, rgba(249,115,22,.10) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  /* Quote icon line — Lei Jun silhouette area */
+  .quote-carousel .quote-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    margin-bottom: 10px;
+    font-size: .75em;
+    font-weight: 600;
+    color: #b45309;
+    letter-spacing: .04em;
+    user-select: none;
+  }
+  .quote-carousel .quote-avatar .avatar-dot {
+    display: inline-block;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--mi-orange), var(--mi-orange-dark));
+    box-shadow: 0 1px 6px rgba(255,105,0,.25);
+    vertical-align: middle;
+  }
+
+  .quote-carousel .quote-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  .quote-carousel .quote-text {
+    font-size: 1.15em;
+    font-weight: 700;
+    color: #3d2000;
+    line-height: 1.7;
+    letter-spacing: .02em;
+    padding: 0 16px;
+    transition: opacity .4s ease, transform .4s ease;
+  }
+
+  .quote-carousel .quote-text.fade-out {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  .quote-carousel .quote-author {
+    font-size: .78em;
+    color: #b45309;
+    font-weight: 500;
+    margin-top: 6px;
+    letter-spacing: .03em;
+  }
+
+  /* Large decorative quote marks */
+  .quote-carousel .quote-mark {
+    position: absolute;
+    font-size: 5em;
+    color: rgba(249,115,22,.05);
+    font-family: Georgia, 'Times New Roman', serif;
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+  }
+  .quote-carousel .quote-mark.open  { top: -6px;  left: 28px; }
+  .quote-carousel .quote-mark.close { bottom: -18px; right: 28px; }
+
+  /* Bottom bar: author + dots */
+  .quote-carousel .quote-footer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 14px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .quote-carousel .quote-dots {
+    display: flex;
+    gap: 5px;
+  }
+  .quote-carousel .quote-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #d4c4a8;
+    cursor: pointer;
+    transition: all .35s ease;
+  }
+  .quote-carousel .quote-dot.active {
+    background: var(--mi-orange);
+    width: 18px;
+    border-radius: 10px;
+    box-shadow: 0 0 6px rgba(255,105,0,.3);
+  }
+  .quote-carousel .quote-dot:hover { background: var(--mi-orange-dark); }
+
+  @media (max-width: 700px) {
+    .quote-carousel { padding: 16px 16px 14px; }
+    .quote-carousel .quote-text { font-size: .95em; padding: 0 4px; }
+    .quote-carousel .quote-mark { display: none; }
+    .quote-carousel .quote-footer { flex-direction: column; gap: 6px; }
+  }
+
+  @keyframes quoteSlideIn {
+    from { opacity: 0; transform: translateY(-12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Iframe panel */
+  .iframe-panel {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: none;
+    background: #fff;
+  }
+  .iframe-panel.show { display: block; }
+
+  /* ===== PASSWORD MODAL ===== */
+  .pw-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(4px);
+  }
+  .pw-dialog {
+    background: #fff; border-radius: 16px; padding: 32px 28px 24px;
+    width: 360px; max-width: 90vw;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+    text-align: center;
+  }
+  .pw-dialog .pw-icon { font-size: 36px; margin-bottom: 12px; }
+  .pw-dialog h3 { margin: 0 0 6px; font-size: 18px; }
+  .pw-dialog p { margin: 0 0 20px; color: #6b7280; font-size: 13px; }
+  .pw-dialog input {
+    width: 100%; padding: 10px 14px; border-radius: 10px;
+    border: 1px solid #d1d5db; font-size: 15px; text-align: center;
+    margin-bottom: 16px; outline: none; letter-spacing: 2px;
+  }
+  .pw-dialog input:focus { border-color: var(--mi-orange); box-shadow: 0 0 0 3px rgba(255,105,0,.12); }
+  .pw-dialog .pw-btns { display: flex; gap: 10px; }
+  .pw-dialog button {
+    flex: 1; padding: 10px; border-radius: 10px; border: none;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .pw-dialog .pw-submit { background: var(--mi-orange); color: #fff; }
+  .pw-dialog .pw-submit:hover { background: var(--mi-orange-dark); }
+  .pw-dialog .pw-cancel { background: #f3f4f6; color: #374151; }
+  .pw-dialog .pw-cancel:hover { background: #e5e7eb; }
+  .pw-dialog .pw-error { color: var(--danger); font-size: 12px; margin-bottom: 10px; display: none; }
+
+  /* ===== RESPONSIVE ===== */
+  /* 宽屏排 6 列：12 张卡正好 2 行，卡片保持窄，同时两侧不留白 */
+  @media (min-width: 1800px) {
+    .module-grid { grid-template-columns: repeat(6, 1fr); }
+  }
+  /* 卡片窄于 250px 就退到 3 列，不然正文会被挤成太多行 */
+  @media (max-width: 1360px) {
+    .module-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 900px) {
+    .module-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 700px) {
+    .sidebar { width: 56px; }
+    .sidebar .logo-text,
+    .sidebar-nav .nav-section,
+    .sidebar-nav a span:not(.nav-dot),
+    .sidebar-nav a .badge-nav,
+    .sidebar-nav a .sub-arrow,
+    .sidebar-footer span:not(.live-dot),
+    .sub-menu { display: none !important; }
+    .sidebar-nav a { justify-content: center; padding: 12px; margin: 1px 8px; }
+    .sidebar-nav a .nav-dot { width: 10px; height: 10px; }
+    .sidebar-nav a::after { display: none; }
+    .sidebar-brand { padding: 16px 10px; border-bottom: none; }
+    .sidebar-brand .logo { justify-content: center; }
+    .main { margin-left: 56px; }
+    .topbar { padding: 0 14px; }
+    .overview { padding: 20px 14px 24px; }
+    .module-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: 1fr 1fr; }
+    :root { --sidebar-w: 56px; }
+  }
+
+  @media (max-width: 480px) {
+    .stats-row { grid-template-columns: 1fr; }
+    .overview { padding: 16px 10px 20px; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .live-dot, .live-dot * { animation: none !important; }
+    .sidebar-nav a.active::after { animation: none !important; }
+    .stat-card::after { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<script>localStorage.setItem('mi_band_auth_v1','1');</script>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="sidebar">
+  <div class="sidebar-brand" onclick="goHome()">
+    <div class="logo">
+      <img class="logo-icon" src="xiaomi-logo.png" alt="小米">
+      <div class="logo-text">
+        分析平台<br><small>数据指挥中心</small>
+      </div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav" id="sidebarNav">
+    <!-- 由 modules.json 动态渲染 -->
+  </nav>
+
+  <div class="sidebar-footer">
+    <span class="live-dot"></span> <span id="footerUpdate">数据加载中...</span>
+  </div>
+</aside>
+
+<!-- ===== MAIN ===== -->
+<main class="main">
+  <!-- Top bar -->
+  <div class="topbar">
+    <span class="breadcrumb" id="breadcrumb">首页 / <span>工作台</span></span>
+  </div>
+
+  <!-- Content area -->
+  <div class="content">
+    <!-- Overview panel -->
+    <div class="overview" id="overview">
+      <!-- Lei Jun Quote Carousel -->
+      <div class="quote-carousel" id="quoteCarousel">
+        <div class="quote-mark open">"</div>
+        <div class="quote-mark close">"</div>
+        <div class="quote-avatar"><span class="avatar-dot"></span> 雷军名言</div>
+        <div class="quote-content">
+          <div class="quote-text" id="quoteText">站在风口上，猪都能飞起来</div>
+        </div>
+        <div class="quote-footer">
+          <div class="quote-author" id="quoteAuthor">— 雷军</div>
+          <div class="quote-dots" id="quoteDots"></div>
+        </div>
+      </div>
+
+      <h1>概览</h1>
+
+      <div class="stats-row" id="statsRow">
+        <div class="stat-card"><div class="stat-label">今日订单</div><div class="stat-value">--</div><div class="stat-sub">加载中...</div></div>
+        <div class="stat-card"><div class="stat-label">今日销售额</div><div class="stat-value">--</div><div class="stat-sub">加载中...</div></div>
+        <div class="stat-card"><div class="stat-label">监控直播间</div><div class="stat-value">--</div><div class="stat-sub">加载中...</div></div>
+        <div class="stat-card"><div class="stat-label">历史天数</div><div class="stat-value">--</div><div class="stat-sub">加载中...</div></div>
+      </div>
+
+      <div class="module-grid" id="moduleGrid">
+        <!-- 由 modules.json 动态渲染 -->
+      </div>
+    </div>
+
+    <!-- Iframe panel -->
+    <iframe class="iframe-panel" id="iframePanel" src="about:blank"></iframe>
+  </div>
+</main>
+
+<script src="sales_analysis/stats_data.js"></script>
+<script>
+// ============================================================
+// 模块配置 — 从 modules.json 加载，统一管理侧边栏和首页卡片
+// 多人协作：每个人只需在 modules.json 里添加自己的模块即可
+// ============================================================
+var modules = {};   // 全局模块注册表 { id: {url, title} }
+var __MODULE_CONFIG__ = null;
+
+fetch('modules.json?v=20260804')
+  .then(function(r) { return r.json(); })
+  .then(function(config) {
+    __MODULE_CONFIG__ = config;
+    renderSidebar(config);
+    renderModuleCards(config);
+    buildModuleRegistry(config);
+  })
+  .catch(function(e) {
+    console.error('加载 modules.json 失败:', e);
+  });
+
+// ----- 渲染侧边栏 -----
+function renderSidebar(config) {
+  var nav = document.getElementById('sidebarNav');
+  if (!nav) return;
+  var html = '';
+  config.sections.forEach(function(section) {
+    html += '<div class="nav-section">' + section.name + '</div>';
+    section.modules.forEach(function(mod) {
+      var cls = mod.id;
+      if (mod.hasSubMenu && mod.subModules) {
+        // Parent with month sub-modules → each month expands to dates
+        var subMenuId = 'subMenu_' + mod.id;
+        html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" onclick="toggleSubMenu(this, \'' + subMenuId + '\')" class="' + cls + '">';
+        html += '<span class="nav-dot"></span> <span class="nav-label">' + mod.title + '</span>';
+        if (mod.badge) html += '<span class="badge-nav">' + mod.badge + '</span>';
+        html += '<span class="sub-arrow">&#x25B8;</span></a>';
+        html += '<div class="sub-menu" id="' + subMenuId + '" style="display:none;">';
+        mod.subModules.forEach(function(sub) {
+          if (sub.monthKey) {
+            // Month → expands to show dates
+            var datesId = 'monthDates_' + sub.monthKey;
+            html += '<a class="month-item" onclick="toggleMonthDates(this, \'' + sub.monthKey + '\', \'' + datesId + '\')">';
+            html += '📅 ' + sub.title;
+            if (sub.badge) html += ' <span class="badge-nav">' + sub.badge + '</span>';
+            html += '<span class="sub-arrow" style="font-size:.65em;opacity:.5">&#x25B8;</span></a>';
+            html += '<div class="sub-menu month-dates" id="' + datesId + '" style="display:none;"></div>';
+          } else if (sub.subModules) {
+            // Nested sub-modules (e.g. 千川视频分析 → W1/W2/W3 → 核心指标/竞对数据/竞对对比)
+            var nestedId = 'nestedSub_' + sub.id;
+            html += '<a class="month-item period-item" onclick="toggleNestedSub(this, \'' + nestedId + '\')">';
+            html += '📅 ' + sub.title;
+            if (sub.badge) html += ' <span class="badge-nav">' + sub.badge + '</span>';
+            html += '<span class="sub-arrow" style="font-size:.65em;opacity:.5">&#x25B8;</span></a>';
+            html += '<div class="sub-menu month-dates nested-dates" id="' + nestedId + '" style="display:none;">';
+            sub.subModules.forEach(function(item) {
+              html += '<a data-module="' + item.id + '" data-title="' + item.title + '" data-url="' + item.url + '" data-parent="' + mod.id + '" onclick="openSubModule(this)">';
+              html += '📋 ' + item.title;
+              if (item.badge) html += ' <span class="badge-nav">' + item.badge + '</span>';
+              html += '</a>';
+            });
+            html += '</div>';
+          } else if (sub.url) {
+            // Direct link → opens URL
+            html += '<a data-module="' + sub.id + '" data-title="' + sub.title + '" data-url="' + sub.url + '" data-parent="' + mod.id + '" onclick="openSubModule(this)">';
+            html += '📋 ' + sub.title;
+            if (sub.badge) html += ' <span class="badge-nav">' + sub.badge + '</span>';
+            html += '</a>';
+          }
+        });
+        html += '</div>';
+      } else if (mod.hasSubMenu) {
+        // Legacy: dynamic date list without month grouping
+        html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" onclick="toggleSalesSub(this)" class="' + cls + '">';
+        html += '<span class="nav-dot"></span> <span class="nav-label">' + mod.title + '</span>';
+        if (mod.badge) html += '<span class="badge-nav">' + mod.badge + '</span>';
+        html += '<span class="sub-arrow">&#x25B8;</span></a>';
+        html += '<div class="sub-menu" id="salesSubMenu" style="display:none;"></div>';
+      } else if (mod.external) {
+        // External link → open in new tab
+        html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" data-external="true" onclick="openExternalModule(this)" class="' + cls + '" target="_blank">';
+        html += '<span class="nav-dot"></span> <span class="nav-label">' + mod.title + '</span>';
+        if (mod.badge) html += '<span class="badge-nav">' + mod.badge + '</span>';
+        html += '</a>';
+      } else {
+        html += '<a data-module="' + mod.id + '" data-title="' + mod.title + '" data-url="' + mod.url + '" onclick="openModule(this)" class="' + cls + '">';
+        html += '<span class="nav-dot"></span> <span class="nav-label">' + mod.title + '</span></a>';
+      }
+    });
+  });
+  nav.innerHTML = html;
+}
+
+// ----- 渲染首页模块卡片 -----
+function renderModuleCards(config) {
+  var grid = document.getElementById('moduleGrid');
+  if (!grid) return;
+  var html = '';
+  config.sections.forEach(function(section) {
+    section.modules.forEach(function(mod) {
+      var clickHandler = mod.external ? 'openExternalModule(this)' : 'openModule(this)';
+      html += '<div class="module-card ' + mod.id + '" data-module="' + mod.id + '" data-url="' + mod.url + '" onclick="' + clickHandler + '">';
+      html += '<div class="mod-icon">' + mod.icon + '</div>';
+      html += '<h3>' + mod.title + '</h3>';
+      html += '<p>' + mod.description + '</p>';
+      html += '<span class="mod-tag">' + mod.tag + '</span>';
+      html += '</div>';
+    });
+  });
+  grid.innerHTML = html;
+}
+
+// ----- 构建模块注册表 -----
+function buildModuleRegistry(config) {
+  config.sections.forEach(function(section) {
+    section.modules.forEach(function(mod) {
+      modules[mod.id] = { url: mod.url, title: mod.title };
+      if (mod.subModules) {
+        mod.subModules.forEach(function(sub) {
+          if (sub.url) {
+            modules[sub.id] = { url: sub.url, title: sub.title };
+          }
+          if (sub.subModules) {
+            sub.subModules.forEach(function(item) {
+              modules[item.id] = { url: item.url, title: item.title };
+            });
+          }
+        });
+      }
+    });
+  });
+}
+
+var iframePanel = null;
+function getIframe() {
+  if (!iframePanel) iframePanel = document.getElementById('iframePanel');
+  return iframePanel;
+}
+
+function killIframe() {
+  var iframe = getIframe();
+  if (!iframe) return;
+  iframe.classList.remove('show');
+  iframe.src = 'about:blank';
+}
+
+function clearActiveLinks() {
+  document.querySelectorAll('.sidebar-nav > a.active, .sub-menu a.active, .month-item.active, .period-item.active').forEach(function(a) { a.classList.remove('active'); });
+}
+
+var PASSWORD_MAP = { streamer: 'xiaomi2026' };
+
+// ----- 密码弹窗 -----
+function promptPassword(moduleId, callback) {
+  // Remove any existing overlay
+  var old = document.querySelector('.pw-overlay');
+  if (old) old.remove();
+
+  var overlay = document.createElement('div');
+  overlay.className = 'pw-overlay';
+  overlay.innerHTML =
+    '<div class="pw-dialog">' +
+    '<div class="pw-icon">🔒</div>' +
+    '<h3>需要密码访问</h3>' +
+    '<p>此模块已加密，请输入密码</p>' +
+    '<input type="password" id="pwInput" placeholder="请输入访问密码" autofocus>' +
+    '<div class="pw-error" id="pwError">密码错误，请重试</div>' +
+    '<div class="pw-btns">' +
+    '<button class="pw-cancel">取消</button>' +
+    '<button class="pw-submit">确认</button>' +
+    '</div></div>';
+  document.body.appendChild(overlay);
+
+  var input = document.getElementById('pwInput');
+  var error = document.getElementById('pwError');
+
+  var submit = function() {
+    if (input.value === PASSWORD_MAP[moduleId]) {
+      overlay.remove();
+      callback();
+    } else {
+      error.style.display = 'block';
+      input.value = '';
+      input.focus();
+    }
+  };
+
+  overlay.querySelector('.pw-submit').addEventListener('click', submit);
+  overlay.querySelector('.pw-cancel').addEventListener('click', function() { overlay.remove(); });
+  overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+  input.addEventListener('keydown', function(e) { if (e.key === 'Enter') submit(); });
+}
+
+// ----- 打开外部模块（新标签页） -----
+function openExternalModule(el) {
+  var url = el.dataset.url;
+  if (url) window.open(url, '_blank');
+}
+
+// ----- 打开模块（iframe 加载） -----
+function openModule(el) {
+  var m = el.dataset.module;
+  var info = modules[m];
+  if (!info || !info.url) return;
+
+  if (PASSWORD_MAP[m]) {
+    var sideLink = document.querySelector('.sidebar-nav > a[data-module="' + m + '"]');
+    promptPassword(m, function() {
+      doOpenModule(m, info);
+    });
+    return;
+  }
+
+  doOpenModule(m, info);
+}
+
+function doOpenModule(m, info) {
+  clearActiveLinks();
+  var sideLink = document.querySelector('.sidebar-nav > a[data-module="' + m + '"]');
+  if (sideLink) sideLink.classList.add('active');
+  collapseAllSubs();
+
+  killIframe();
+  document.getElementById('overview').classList.add('hidden');
+
+  var iframe = getIframe();
+  requestAnimationFrame(function() {
+    iframe.src = info.url;
+    iframe.classList.add('show');
+  });
+
+  document.getElementById('breadcrumb').innerHTML = '首页 / <span>' + info.title + '</span>';
+}
+
+// ----- 回到首页 -----
+function goHome() {
+  clearActiveLinks();
+  collapseAllSubs();
+  killIframe();
+  document.getElementById('overview').classList.remove('hidden');
+  document.getElementById('breadcrumb').innerHTML = '首页 / <span>工作台</span>';
+}
+
+// ----- 通用子菜单（一级：销售分析 → 月份）-----
+function toggleSubMenu(el, subMenuId) {
+  var menu = document.getElementById(subMenuId);
+  if (!menu) return;
+  var expanded = el.classList.contains('expanded');
+  if (expanded) {
+    menu.style.display = 'none';
+    el.classList.remove('expanded');
+    return;
+  }
+  collapseAllSubs();
+  menu.style.display = 'block';
+  el.classList.add('expanded');
+}
+
+function collapseAllSubs() {
+  document.querySelectorAll('.sub-menu').forEach(function(m) { m.style.display = 'none'; });
+  document.querySelectorAll('.sidebar-nav > a.expanded, .month-item.expanded, .period-item.expanded').forEach(function(a) { a.classList.remove('expanded'); });
+}
+
+// ----- 二级菜单：月份 → 日期 -----
+function toggleMonthDates(el, monthKey, datesId) {
+  var datesDiv = document.getElementById(datesId);
+  if (!datesDiv) return;
+  var expanded = el.classList.contains('expanded');
+  if (expanded) {
+    datesDiv.style.display = 'none';
+    el.classList.remove('expanded');
+    return;
+  }
+  // Close other month date lists and nested sub-menus
+  document.querySelectorAll('.nested-dates, .month-dates').forEach(function(m) { m.style.display = 'none'; });
+  document.querySelectorAll('.month-item.expanded, .period-item.expanded').forEach(function(a) { a.classList.remove('expanded'); });
+  // Populate dates if empty
+  if (!datesDiv.children.length) {
+    buildMonthDates(monthKey, datesDiv);
+  }
+  datesDiv.style.display = 'block';
+  el.classList.add('expanded');
+}
+
+// ----- 二级菜单：分析周期 → 报告类型（千川视频分析用）-----
+function toggleNestedSub(el, nestedId) {
+  var nestedDiv = document.getElementById(nestedId);
+  if (!nestedDiv) return;
+  var expanded = el.classList.contains('expanded');
+  if (expanded) {
+    nestedDiv.style.display = 'none';
+    el.classList.remove('expanded');
+    return;
+  }
+  // Close other nested date lists
+  document.querySelectorAll('.nested-dates, .month-dates').forEach(function(m) { m.style.display = 'none'; });
+  document.querySelectorAll('.month-item.expanded, .period-item.expanded').forEach(function(a) { a.classList.remove('expanded'); });
+  nestedDiv.style.display = 'block';
+  el.classList.add('expanded');
+}
+
+function buildMonthDates(monthKey, container) {
+  var s = window.__STATS__;
+  if (!s || !s.dates) { container.innerHTML = '<a style="color:var(--text-muted);cursor:default">暂无数据</a>'; return; }
+  var html = '';
+  s.dates.slice().reverse().forEach(function(d) {
+    if (d.startsWith(monthKey)) {
+      var shortDate = d.substring(5);
+      html += '<a onclick="openSalesDate(\'' + d + '\', this)" data-date="' + d + '">📅 ' + shortDate + '</a>';
+    }
+  });
+  if (!html) html = '<a style="color:var(--text-muted);cursor:default">暂无数据</a>';
+  container.innerHTML = html;
+}
+
+// ----- 打开子模块（直接链接型：月度总结、节点总结、千川视频分析）-----
+function openSubModule(el) {
+  var url = el.dataset.url;
+  var title = el.dataset.title;
+  var parentId = el.dataset.parent;
+  if (!url) return;
+
+  clearActiveLinks();
+  var parentLink = document.querySelector('.sidebar-nav > a[data-module="' + parentId + '"]');
+  if (parentLink) parentLink.classList.add('active');
+  el.classList.add('active');
+
+  killIframe();
+  document.getElementById('overview').classList.add('hidden');
+
+  var iframe = getIframe();
+  requestAnimationFrame(function() {
+    iframe.src = url;
+    iframe.classList.add('show');
+  });
+
+  document.getElementById('breadcrumb').innerHTML = '首页 / <span>' + title + '</span>';
+}
+
+// ----- 打开每日数据 -----
+function openSalesDate(date, el) {
+  clearActiveLinks();
+  var salesLink = document.querySelector('.sidebar-nav > a[data-module="sales"]');
+  if (salesLink) salesLink.classList.add('active');
+  var monthPrefix = date.substring(0, 7);
+  var monthItem = document.querySelector('.month-item[onclick*="' + monthPrefix + '"]');
+  if (monthItem) monthItem.classList.add('active');
+  if (el) el.classList.add('active');
+
+  killIframe();
+  document.getElementById('overview').classList.add('hidden');
+
+  var iframe = getIframe();
+  var targetUrl = 'sales_analysis/index.html#' + date;
+  requestAnimationFrame(function() {
+    iframe.src = targetUrl;
+    iframe.classList.add('show');
+  });
+  document.getElementById('breadcrumb').innerHTML = '首页 / <span>销售分析</span> / ' + date;
+}
+
+// ----- 旧版兼容：无月份分组的日期子菜单 -----
+function buildSalesDates() {
+  var s = window.__STATS__;
+  if (!s || !s.dates) return;
+  var menu = document.getElementById('salesSubMenu');
+  if (!menu) return;
+  var html = '';
+  s.dates.slice().reverse().forEach(function(d) {
+    html += '<a data-date="' + d + '" onclick="openSalesDate(\'' + d + '\', this)">&#x1F4C5; ' + d + '</a>';
+  });
+  menu.innerHTML = html;
+}
+
+function toggleSalesSub(el) {
+  var menu = document.getElementById('salesSubMenu');
+  if (!menu) return;
+  var expanded = el.classList.contains('expanded');
+  if (expanded) {
+    collapseSalesSub();
+    return;
+  }
+  if (!menu.children.length) buildSalesDates();
+  menu.style.display = 'block';
+  el.classList.add('expanded');
+}
+
+function collapseSalesSub() {
+  var menu = document.getElementById('salesSubMenu');
+  if (menu) menu.style.display = 'none';
+  var salesLink = document.querySelector('.sidebar-nav > a[data-module="sales"]');
+  if (salesLink) salesLink.classList.remove('expanded');
+}
+
+// ----- 加载概览统计数据 -----
+(function(){
+  var s = window.__STATS__;
+  if (!s) return;
+  var cards = document.querySelectorAll('.stat-card');
+  cards[0].querySelector('.stat-value').textContent = s.orders.toLocaleString() + ' 单';
+  cards[0].querySelector('.stat-sub').textContent = s.date;
+  cards[1].querySelector('.stat-value').textContent = '¥ ' + s.revenue + ' 万';
+  cards[1].querySelector('.stat-sub').textContent = '均价 ¥' + s.avg_price;
+  cards[2].querySelector('.stat-value').textContent = s.rooms + ' 间';
+  cards[2].querySelector('.stat-sub').textContent = '我方 ' + s.our_rooms + ' 间 · 竞对 ' + s.comp_rooms + ' 间';
+  cards[3].querySelector('.stat-value').textContent = s.days + ' 天';
+  cards[3].querySelector('.stat-sub').textContent = s.first_date + ' ~ ' + s.date;
+  var fu = document.getElementById('footerUpdate');
+  if (fu) fu.textContent = '数据更新至 ' + s.date;
+})();
+
+// ===== 雷军名言轮播 =====
+(function(){
+  var quotes = [
+    { text: '站在风口上，猪都能飞起来', author: '雷军' },
+    { text: '专注、极致、口碑、快', author: '雷军 · 互联网七字诀' },
+    { text: '永远相信美好的事情即将发生', author: '雷军' },
+    { text: '梦想还是要有的，万一实现了呢', author: '雷军' },
+    { text: '做感动人心、价格厚道的好产品', author: '雷军 · 小米使命' },
+    { text: '创新决定我们能飞多高，品质决定我们能走多远', author: '雷军' },
+    { text: '厚道的人运气不会太差', author: '雷军' },
+    { text: '人生是一场马拉松，不是百米冲刺', author: '雷军' }
+  ];
+
+  var textEl   = document.getElementById('quoteText');
+  var authorEl = document.getElementById('quoteAuthor');
+  var dotsEl   = document.getElementById('quoteDots');
+  var current  = 0;
+  var timer    = null;
+  var interval = 5000; // 5s
+
+  // Build dots
+  quotes.forEach(function(_, i) {
+    var dot = document.createElement('span');
+    dot.className = 'quote-dot' + (i === 0 ? ' active' : '');
+    dot.addEventListener('click', function(){ goTo(i); });
+    dotsEl.appendChild(dot);
+  });
+
+  function goTo(i) {
+    if (i === current) return;
+    // Fade out current
+    textEl.classList.add('fade-out');
+    setTimeout(function() {
+      textEl.textContent = quotes[i].text;
+      authorEl.textContent = '— ' + quotes[i].author;
+      textEl.classList.remove('fade-out');
+      // Update dots
+      var dots = dotsEl.querySelectorAll('.quote-dot');
+      dots[current].classList.remove('active');
+      dots[i].classList.add('active');
+      current = i;
+    }, 250);
+    resetTimer();
+  }
+
+  function next() {
+    var n = (current + 1) % quotes.length;
+    // Fade out
+    textEl.classList.add('fade-out');
+    setTimeout(function() {
+      textEl.textContent = quotes[n].text;
+      authorEl.textContent = '— ' + quotes[n].author;
+      textEl.classList.remove('fade-out');
+      var dots = dotsEl.querySelectorAll('.quote-dot');
+      dots[current].classList.remove('active');
+      dots[n].classList.add('active');
+      current = n;
+    }, 250);
+    resetTimer();
+  }
+
+  function resetTimer() {
+    clearInterval(timer);
+    timer = setInterval(next, interval);
+  }
+
+  // Show first quote
+  textEl.textContent = quotes[0].text;
+  authorEl.textContent = '— ' + quotes[0].author;
+
+  // Start auto-rotate
+  timer = setInterval(next, interval);
+
+  // Pause on hover
+  var carousel = document.getElementById('quoteCarousel');
+  carousel.addEventListener('mouseenter', function(){ clearInterval(timer); });
+  carousel.addEventListener('mouseleave', function(){ timer = setInterval(next, interval); });
+})();
+</script>
+</body>
+</html>
