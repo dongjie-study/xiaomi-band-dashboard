@@ -134,7 +134,7 @@ def summarize_day(df):
     zhumeng_rooms = [r for r, info in rooms.items() if info['type'] == '逐梦']
     feina_rooms = [r for r, info in rooms.items() if info['type'] == '斐纳']
     ningyun_rooms = [r for r, info in rooms.items() if info['type'] == '凝云']
-    lequn_rooms = [r for r, info in rooms.items() if info['type'] == '乐群']
+    lepan_rooms = [r for r, info in rooms.items() if info['type'] == '乐畔']
     chimu_rooms = [r for r, info in rooms.items() if info['type'] == '炽木电商']
     mile_rooms = [r for r, info in rooms.items() if info['type'] == '米乐']
     liangmi_rooms = [r for r, info in rooms.items() if info['type'] == '良米']
@@ -204,7 +204,7 @@ def summarize_day(df):
         'zhumeng_rooms': zhumeng_rooms,
         'feina_rooms': feina_rooms,
         'ningyun_rooms': ningyun_rooms,
-        'lequn_rooms': lequn_rooms,
+        'lepan_rooms': lepan_rooms,
         'chimu_rooms': chimu_rooms,
         'mile_rooms': mile_rooms,
         'liangmi_rooms': liangmi_rooms,
@@ -331,7 +331,7 @@ def print_comparison(today, yesterday=None):
     # ===== 总结 =====
     if '我司' in type_summary:
         o = type_summary['我司']
-        other_orders = sum(type_summary[t]['orders'] for t in ['机械空间','纵横','凝云','逐梦','斐纳','乐群','炽木电商','米乐','良米'] if t in type_summary)
+        other_orders = sum(type_summary[t]['orders'] for t in ['机械空间','纵横','凝云','逐梦','斐纳','乐畔','炽木电商','米乐','良米'] if t in type_summary)
         print(f"\n  【总结】")
         print(f"    我司 {o['orders']} 单 ({o['orders']/today['total_orders']*100:.1f}%), "
               f"均价 RMB {o['avg_price']:.0f}, 销售额 RMB {o['revenue']:,.0f}")

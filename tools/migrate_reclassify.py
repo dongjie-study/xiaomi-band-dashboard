@@ -28,7 +28,7 @@ BUCKETS = {
     '逐梦': 'zhumeng_rooms',
     '斐纳': 'feina_rooms',
     '凝云': 'ningyun_rooms',
-    '乐群': 'lequn_rooms',
+    '乐畔': 'lepan_rooms',
     '炽木电商': 'chimu_rooms',
     '米乐': 'mile_rooms',
     '良米': 'liangmi_rooms',
@@ -131,6 +131,10 @@ def main():
         for n, info in (day.get('rooms') or {}).items():
             info['type'] = types[n]
         day.update(new)
+        # 团队改名后（如 乐群→乐畔），旧团队名对应的 *_rooms 数组会成为残留 key。
+        # day.update() 只增不改，必须显式删掉已不在 BUCKETS 里的旧 key。
+        for k in [k for k in day if k.endswith('_rooms') and k not in new]:
+            del day[k]
     HISTORY.write_text(
         json.dumps(data, ensure_ascii=False, separators=(',', ':')),
         encoding='utf-8')
