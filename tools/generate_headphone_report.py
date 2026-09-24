@@ -219,7 +219,8 @@ def generate_html(june_summary, july_summary):
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>耳机品类销量分析报告 · 小米手环直播间</title>
-<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<script src="https://registry.npmmirror.com/echarts/5.5.0/files/dist/echarts.min.js"></script>
+<script>if(!window.echarts){document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></scr'+'ipt>')}</script>
 <style>
 :root {{
   --bg: #f0f4f8; --surface: #ffffff; --text: #0f172a; --text-secondary: #64748b;
