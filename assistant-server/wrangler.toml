@@ -1,0 +1,13 @@
+name = "xiaomi-data-assistant"
+main = "worker.js"
+compatibility_date = "2025-07-05"
+
+# 口令配置：改这里或直接在 Cloudflare 控制台改（Workers → xiaomi-data-assistant →
+# Settings → Variables），控制台改完立即生效、无需重新部署。
+# ACCESS_ENABLED = "false" 即可随时关闭口令（任何人可直接访问）。
+[vars]
+ACCESS_ENABLED = "true"
+ACCESS_CODE = "xiaomi"
+
+# DEEPSEEK_API_KEY 不要写在这里！用：
+#   npx wrangler secret put DEEPSEEK_API_KEY
