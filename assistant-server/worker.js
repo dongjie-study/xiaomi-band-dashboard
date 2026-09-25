@@ -418,6 +418,19 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
+    // CORS 预检（工作台模块页跨域调用需要）
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type',
+          'Access-Control-Max-Age': '86400',
+        },
+      });
+    }
+
     if (request.method === 'GET' && (url.pathname === '/' || url.pathname === '/index.html')) {
       return new Response(PAGE_HTML, { headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' } });
     }

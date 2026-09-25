@@ -22,6 +22,15 @@ npx wrangler deploy
 
 部署完会得到 `https://xiaomi-data-assistant.<你的子域>.workers.dev`，微信里直接发这个链接就能用。
 
+## 两种入口（都可用）
+
+1. **独立网址**：上面 workers.dev 链接，自带聊天页
+2. **工作台模块**：`数据小管家/index.html` 已注册进 `modules.json`（「数据看板」板块）。
+   部署后把 Worker 网址填到该文件顶部的 `API_BASE`（或首次打开时点右上角「设置」填，存 localStorage）。
+
+> 为什么模块页也要有后端：API key 绝不能写进 GitHub 公开页面（源码人人可见），
+> 所以聊天页必须调用部署好的 Worker，key 只存在 Worker 的 Secret 里。
+
 ## 口令管理（随时开/关，不用重新部署）
 
 配置在 Cloudflare 控制台：**Workers → xiaomi-data-assistant → Settings → Variables and Secrets**
