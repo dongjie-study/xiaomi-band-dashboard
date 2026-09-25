@@ -110,6 +110,99 @@ tbody tr.new-row:hover td { background: #fff9db; }
   .header { padding: 24px 20px; }
 }
 </style>
+<link rel="stylesheet" href="../ux-polish.css">
+<style id="ux-tail">
+/* ===== 官方数据台浅色表现层（纯样式，不动结构/逻辑）=====
+   违规红为语义主色，保留；小米橙仅作焦点/交互点缀 */
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --border: #e9ebef;
+  --border-light: #eef0f3;
+  --radius: 12px;
+  --mi-orange: #ff6900;
+}
+
+body {
+  background: #f5f6f8;
+  line-height: 1.75;
+  color: #16181d;
+}
+
+/* 标题层级与字距 */
+h1, h2, h3, h4 {
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+.header h1 { letter-spacing: -0.02em; }
+.card h3 {
+  letter-spacing: -0.005em;
+}
+
+/* 正文行高 */
+p, li, .vi-body, .vi-action, .alert-subtitle, .violation-item .vi-body {
+  line-height: 1.75;
+}
+
+/* 卡片：白底圆角细边框 + 悬停轻浮起 */
+.card, .stat-card {
+  background: #ffffff;
+  border: 1px solid #e9ebef;
+  border-radius: 12px;
+}
+.card, .stat-card, .alert-card, .violation-item {
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.card:hover, .stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -10px rgba(15, 23, 42, .12), 0 2px 6px rgba(15, 23, 42, .05);
+  border-color: #dde1e6;
+}
+
+/* 表格：行悬停淡橙 + 数字对齐 */
+table, th, td, .num, .stat-card .num, .penalty {
+  font-variant-numeric: tabular-nums;
+}
+th {
+  letter-spacing: .02em;
+  color: #5c6470;
+  background: #f7f8fa;
+}
+td, th { line-height: 1.55; }
+tbody tr { transition: background .18s ease; }
+tbody tr:hover td {
+  background: rgba(255, 105, 0, .055);
+}
+/* 保留 new-row 语义底色 */
+tbody tr.new-row td { background: #fffdf0; }
+tbody tr.new-row:hover td { background: #fff9db; }
+
+/* 引用 / 行动项条带更精致 */
+.vi-action, .alert-card {
+  border-radius: 10px;
+}
+.violation-item {
+  border-left-width: 3px;
+}
+
+/* 标签微动效 */
+.tag, .reason-tag, .new-badge, .badge-new {
+  transition: transform .16s ease, filter .16s ease, box-shadow .16s ease;
+}
+.tag:hover, .reason-tag:hover {
+  filter: brightness(.97) saturate(1.05);
+}
+
+/* 状态类只补 transition，不动 display 语义 */
+.active, .collapsed, .hidden, .expanded {
+  transition: background .2s ease, color .2s ease, border-color .2s ease,
+              opacity .2s ease, transform .2s ease;
+}
+
+/* 防横向溢出 */
+img, svg, canvas, .chart, .chart-lg { max-width: 100%; }
+table { max-width: 100%; }
+</style>
 </head>
 <body style="display:none">
 <script>
@@ -864,5 +957,6 @@ window.addEventListener('resize', ()=>{
   });
 });
 </script>
+<script src="../ux-polish.js" defer></script>
 </body>
 </html>

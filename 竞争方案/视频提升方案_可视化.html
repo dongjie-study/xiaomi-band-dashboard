@@ -243,6 +243,122 @@ tbody tr:hover td { background: #f8fafc; }
   .flow-arrow { transform: rotate(90deg); margin: 2px 0; }
 }
 </style>
+<link rel="stylesheet" href="../ux-polish.css">
+<style id="ux-tail">
+/* 页面专属表现层：浅色官方数据台 */
+.header {
+  box-shadow: 0 8px 32px -12px rgba(15, 52, 96, .35), inset 0 -1px 0 rgba(255, 105, 0, .25);
+}
+.header h1 { letter-spacing: -0.02em; }
+.nav-bar {
+  box-shadow: 0 1px 0 rgba(232, 236, 241, .9), 0 8px 24px -18px rgba(15, 23, 42, .2);
+}
+.nav-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px -4px rgba(255, 105, 0, .28);
+}
+.nav-btn.active {
+  box-shadow: 0 4px 14px -4px rgba(255, 105, 0, .4);
+}
+.kpi-card {
+  border-color: #e9ebef;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 10px 28px -18px rgba(15, 23, 42, .1);
+}
+.kpi-card:hover {
+  border-color: rgba(255, 105, 0, .25);
+  box-shadow: 0 14px 32px -14px rgba(255, 105, 0, .16), 0 2px 8px rgba(15, 23, 42, .04);
+}
+.kpi-card .values {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.section {
+  border-color: #e9ebef;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 10px 28px -18px rgba(15, 23, 42, .1);
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.section:hover {
+  transform: translateY(-2px);
+  border-color: #e2e6ed;
+  box-shadow: 0 14px 32px -14px rgba(15, 23, 42, .14), 0 2px 8px rgba(15, 23, 42, .04);
+}
+.section h2 { letter-spacing: -0.015em; }
+.dir-card {
+  border-color: #e9ebef;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 10px 28px -18px rgba(15, 23, 42, .1);
+}
+.dir-card:hover {
+  border-color: rgba(255, 105, 0, .25);
+  box-shadow: 0 14px 32px -14px rgba(255, 105, 0, .16), 0 2px 8px rgba(15, 23, 42, .04);
+}
+.template-card {
+  border-color: #e9ebef;
+  border-radius: 12px;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease;
+}
+.template-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 105, 0, .22);
+  box-shadow: 0 12px 28px -12px rgba(15, 23, 42, .14);
+}
+.template-card .t-content {
+  font-variant-numeric: tabular-nums;
+  border-radius: 10px;
+}
+.chart-box, .chart-box-sm, .chart-box-md {
+  border-radius: 12px;
+  background: linear-gradient(180deg, #fcfdfe, #fafbfc);
+}
+table { font-variant-numeric: tabular-nums; }
+th { letter-spacing: .02em; }
+tbody tr:hover td { background: rgba(255, 105, 0, .05); }
+.insight {
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 8px 20px -12px rgba(15, 23, 42, .1);
+}
+.cal-item {
+  border-color: #e9ebef;
+  border-radius: 12px;
+}
+.cal-item:hover {
+  border-color: rgba(255, 105, 0, .28);
+  box-shadow: 0 12px 28px -12px rgba(255, 105, 0, .16);
+}
+.cal-item .cal-date {
+  color: #e05800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+}
+.flow-node {
+  border-color: #e9ebef;
+  border-radius: 12px;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.flow-node:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 105, 0, .28);
+  box-shadow: 0 10px 22px -10px rgba(15, 23, 42, .16);
+}
+.tl-dot { box-shadow: 0 4px 12px -4px rgba(15, 23, 42, .22); }
+.signal-card {
+  border: 1px solid #e9ebef;
+  background: #fafbfc;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.signal-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 105, 0, .25);
+  box-shadow: 0 10px 22px -10px rgba(15, 23, 42, .14);
+}
+.hl-box {
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+.hl-orange { border-left-color: #ff6900; }
+.tag { letter-spacing: .02em; }
+</style>
 </head>
 <body style="display:none">
 <script>
@@ -663,5 +779,6 @@ var C = { ours: '#1E90FF', theirs: '#FF6B35', green: '#1da85c', orange: '#ff6900
   window.addEventListener('resize', function(){ c.resize(); });
 })();
 </script>
+<script src="../ux-polish.js" defer></script>
 </body>
 </html>

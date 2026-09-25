@@ -181,6 +181,115 @@ tr:hover { background: #fafbfc; }
   th, td { padding: 5px 3px; }
 }
 </style>
+<link rel="stylesheet" href="../ux-polish.css">
+<style id="ux-tail">
+/* ===== 官方数据台浅色表现层（纯样式，不动结构/逻辑） ===== */
+:root {
+  --bg: #f5f6f8;
+  --surface: #ffffff;
+  --border: #e9ebef;
+  --border-light: #eef0f3;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --mi-orange: #ff6900;
+}
+
+body {
+  background: #f5f6f8;
+  line-height: 1.75;
+  color: #16181d;
+}
+
+/* 标题层级与字距 */
+h1, h2, h3, h4 {
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+.hero h1 { letter-spacing: -0.02em; }
+.hero h1 .mi { color: #ff6900; }
+.section h2 {
+  letter-spacing: -0.01em;
+  color: #16181d;
+}
+.section h2::after { background: #ff6900; }
+.section h3 {
+  letter-spacing: -0.005em;
+  color: #2b3139;
+}
+
+/* 正文行高 */
+p, li, .insight, .hl-box, .note, .plan-card p, .conclusion-card p {
+  line-height: 1.75;
+}
+
+/* 卡片：白底圆角细边框 + 悬停轻浮起 */
+.section, .kpi-card, .chart-box, .key-num, .plan-card {
+  background: #ffffff;
+  border: 1px solid #e9ebef;
+  border-radius: 12px;
+}
+.section, .kpi-card, .chart-box, .key-num, .conclusion-card, .plan-card {
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.section:hover, .kpi-card:hover, .conclusion-card:hover, .plan-card:hover, .key-num:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -10px rgba(15, 23, 42, .12), 0 2px 6px rgba(15, 23, 42, .05);
+  border-color: #dde1e6;
+}
+.conclusion-card {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+.plan-card { overflow: hidden; }
+
+/* 表格：行悬停淡橙 + 数字对齐 */
+table, th, td, .num, .kpi-value, .key-num .num {
+  font-variant-numeric: tabular-nums;
+}
+th {
+  letter-spacing: .02em;
+  color: #5c6470;
+  background: #f7f8fa;
+}
+td, th { line-height: 1.55; }
+tbody tr, tr { transition: background .18s ease; }
+tbody tr:hover td, tbody tr:hover th,
+tr:hover td, tr:hover th {
+  background: rgba(255, 105, 0, .055);
+}
+
+/* 引用 / 结论条带更精致 */
+.hl-box, .insight {
+  border-radius: 10px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6), 0 1px 2px rgba(15, 23, 42, .04);
+}
+.hl-box.hl-orange {
+  background: linear-gradient(135deg, #fff8f1 0%, #fffdf0 100%);
+  border-color: #fed7aa;
+}
+.insight { border-left-width: 3px; }
+
+/* 按钮 / tab / 徽标微动效 */
+.nav-btn, .badge, .plan-tag, .tag {
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease,
+              color .16s ease, border-color .16s ease, filter .16s ease;
+}
+.nav-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(255, 105, 0, .12);
+}
+.nav-btn:active { transform: scale(.97); }
+.badge:hover { filter: brightness(.97) saturate(1.05); }
+
+/* 状态类只补 transition，不动 display 语义 */
+.active, .collapsed, .hidden, .expanded {
+  transition: background .2s ease, color .2s ease, border-color .2s ease,
+              opacity .2s ease, transform .2s ease;
+}
+
+/* 防横向溢出 */
+img, svg, canvas, .chart, .chart-box { max-width: 100%; }
+table { max-width: 100%; }
+</style>
 </head>
 <body>
 
@@ -1492,5 +1601,6 @@ var C = { ours: '#1E90FF', comp: '#FF6B35', green: '#1da85c', orange: '#ff6900',
   });
 })();
 </script>
+<script src="../ux-polish.js" defer></script>
 </body>
 </html>

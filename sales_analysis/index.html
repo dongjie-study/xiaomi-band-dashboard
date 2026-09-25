@@ -285,7 +285,78 @@
   .daily-table th, .b10pro-table th, .hour-card .hour-body th {
     position: sticky; top: 0; z-index: 2;
   }
+
+  /* ===== 视觉增强层（ux-tail）：只加表现，不碰业务选择器 ===== */
+  .content-topbar select {
+    border-color: #e4e7ec;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  }
+  .content-topbar select:focus {
+    border-color: var(--mi-orange);
+    box-shadow: 0 0 0 3px rgba(255,105,0,.14);
+  }
+  h2 {
+    letter-spacing: -.02em;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2::before {
+    content: '';
+    width: 4px; height: 18px;
+    border-radius: 2px;
+    background: var(--mi-orange);
+    flex-shrink: 0;
+  }
+  .kpi-card {
+    border-radius: 14px;
+    border-color: #e9ebef;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  }
+  .kpi-card .value {
+    letter-spacing: -.025em;
+    font-variant-numeric: tabular-nums;
+  }
+  .chart-card {
+    border-radius: 14px;
+    border-color: #e9ebef;
+    transition: transform .22s ease, box-shadow .22s ease;
+  }
+  .chart-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+  }
+  .room-card, .hour-card, .summary-box, .b10pro-kpi, .b10pro-hb-card {
+    border-radius: 14px;
+    border-color: #e9ebef;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04);
+  }
+  .hour-card .hour-header {
+    background: linear-gradient(135deg, #171b21 0%, #262c35 100%);
+  }
+  .hour-card .hour-header .hour-label { color: #f4f5f7; letter-spacing: -.01em; }
+  .hour-card .hour-header .hour-summary span { color: var(--mi-orange-2, #ff8a3d); }
+  .hour-card .hour-header .hour-summary { color: #aab2bd; }
+  .toggle-btn:active, .provider-toggle-all:active, .back-link:active, .tab-prodroom:active, .tab-roomdet:active {
+    transform: scale(.97);
+  }
+  .tab-prodroom, .tab-roomdet { transition: all .18s ease; }
+  .insight-line {
+    border-radius: 6px;
+    padding-right: 8px;
+    transition: background .18s ease;
+  }
+  .insight-line:hover { background: rgba(255,105,0,.04); }
+  .summary-box { line-height: 1.9; }
+  .prow .p-rev, .rrow .r-rev, .kpi-card .value, .b10pro-kpi .bk-val, .hb-diff {
+    font-variant-numeric: tabular-nums;
+  }
+  .team-badge { letter-spacing: .02em; }
+  .provider-table td, .room-table td, .product-table td, .daily-table td {
+    font-variant-numeric: tabular-nums;
+  }
 </style>
+<link rel="stylesheet" href="../ux-polish.css">
 </head>
 <body>
 <script>
@@ -2358,5 +2429,6 @@ function initDashboard() {
   });
 }
 </script>
+<script src="../ux-polish.js" defer></script>
 </body>
 </html>

@@ -612,7 +612,66 @@
                 font-size: 0.7rem;
             }
         }
+
+        /* ===== 视觉增强层（ux-tail）：只加表现，不碰业务选择器 ===== */
+        .quote-carousel {
+            background: linear-gradient(120deg, #171b21 0%, #2a3038 100%);
+        }
+        .quote-carousel .quote-icon { color: var(--mi-orange); }
+        .quote-carousel .quote-text { color: #f2f4f6; font-weight: 500; }
+        .quote-carousel .quote-author { color: #aab2bd; opacity: 1; }
+        .filter-panel { border-radius: 14px; }
+        .filter-btn { transition: transform .16s ease, var(--transition); }
+        .filter-btn:active { transform: scale(.96); }
+        .filter-panel .apply-btn {
+            border-radius: 18px;
+            background: linear-gradient(120deg, var(--mi-orange), var(--mi-orange-dark));
+            box-shadow: 0 4px 12px rgba(255,105,0,.28);
+        }
+        .filter-panel .apply-btn:hover {
+            background: linear-gradient(120deg, var(--mi-orange-dark), var(--mi-orange-dark));
+            transform: translateY(-1px);
+        }
+        .filter-panel input[type="date"]:focus,
+        .room-select:focus,
+        .month-select:focus {
+            border-color: var(--mi-orange);
+            box-shadow: 0 0 0 3px rgba(255,105,0,.14);
+        }
+        .overview-card {
+            border-radius: 14px;
+            transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+        }
+        .overview-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255,105,0,.25);
+        }
+        .overview-card .card-value {
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -.025em;
+        }
+        .panel, .chart-panel {
+            border-radius: 14px;
+            transition: box-shadow .22s ease, transform .22s ease;
+        }
+        .panel:hover, .chart-panel:hover {
+            box-shadow: var(--shadow-lg);
+        }
+        .panel-header {
+            letter-spacing: -.01em;
+        }
+        .panel-header .dot {
+            box-shadow: 0 0 0 3px rgba(255,105,0,.15);
+        }
+        .navbar .update-badge { letter-spacing: .02em; }
+        .rank-1, .rank-2, .rank-3, .highlight-sales, .shift-col, .sales {
+            font-variant-numeric: tabular-nums;
+        }
+        .view-toggle button { transition: transform .16s ease, var(--transition); }
+        .view-toggle button:active { transform: scale(.96); }
+        table td, table th { font-variant-numeric: tabular-nums; }
     </style>
+<link rel="stylesheet" href="../ux-polish.css">
 </head>
 <body>
     <div class="quote-carousel" id="quoteCarousel">
@@ -3455,5 +3514,6 @@
             refreshAll();
         })();
     </script>
+<script src="../ux-polish.js" defer></script>
 </body>
 </html>

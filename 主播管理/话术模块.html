@@ -217,13 +217,65 @@ tr:hover { background: #fafbfc; }
   .hero h1 { font-size: 28px; }
 }
 </style>
+<link rel="stylesheet" href="../ux-polish.css">
+<style id="ux-tail">
+/* 页面专属表现层：浅色官方数据台 */
+.hero { box-shadow: 0 8px 32px -12px rgba(15,52,96,.35), inset 0 -1px 0 rgba(255,105,0,.25); }
+.nav-bar { box-shadow: 0 1px 0 rgba(232,236,241,.9), 0 8px 24px -18px rgba(15,23,42,.2); }
+.nav-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px -4px rgba(255,105,0,.28); }
+.nav-btn.active { box-shadow: 0 4px 14px -4px rgba(255,105,0,.4); }
+.section {
+  border-color: #e9ebef;
+  box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 28px -18px rgba(15,23,42,.1);
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.section:hover {
+  transform: translateY(-2px);
+  border-color: #e2e6ed;
+  box-shadow: 0 14px 32px -14px rgba(15,23,42,.14), 0 2px 8px rgba(15,23,42,.04);
+}
+.section h2 { letter-spacing: -.015em; }
+.script-card {
+  border-color: #e6e9ee;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(15,23,42,.04);
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.script-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -12px rgba(15,23,42,.14);
+  border-color: rgba(255,105,0,.28);
+}
+.script-card .script-tag { letter-spacing: .04em; }
+.script-card .highlight { color: #e05800; }
+.feat-card { border-color: #e9ebef; border-radius: 12px; }
+.feat-card:hover { border-color: rgba(255,105,0,.3); box-shadow: 0 12px 28px -12px rgba(255,105,0,.18); }
+.qa-card { border-radius: 12px; transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.qa-card:hover {
+  transform: translateY(-1px);
+  border-color: rgba(255,105,0,.22);
+  box-shadow: 0 8px 20px -10px rgba(15,23,42,.12);
+}
+.summary-box {
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 10px 24px -14px rgba(200,120,20,.18);
+}
+table { font-variant-numeric: tabular-nums; }
+tbody tr:hover td { background: rgba(255,105,0,.05); }
+th { letter-spacing: .02em; }
+.print-btn:hover { box-shadow: 0 12px 32px -10px rgba(15,52,96,.5); filter: brightness(1.05); }
+.badge { letter-spacing: .03em; }
+@media print {
+  .section:hover, .script-card:hover, .feat-card:hover, .qa-card:hover { transform: none; box-shadow: none; }
+}
+</style>
 </head>
 <body>
 
 <!-- Hero -->
 <div class="hero">
   <h1>🎙️ 直播间<span class="mi">话术</span>模块</h1>
-  <p>小米手环10 Pro / 红米Watch 6 / 小米Watch 5 / Watch S5 全套销售话术，覆盖大促期、平播期、对比讲解、异议处理</p>
+  <p>小米手环10 Pro / 红米Watch 6 / 小米Watch 5 / Watch S5 / Watch S5 41mm 全套销售话术，覆盖大促期、平播期、对比讲解、异议处理</p>
   <div class="badge-row">
     <span class="badge warn">📢 核心话术</span>
     <span class="badge green">📋 对比话术</span>
@@ -242,6 +294,7 @@ tr:hover { background: #fafbfc; }
   <a href="#sec-10pro" class="nav-btn active">🔴 手环10 Pro</a>
   <a href="#sec-watch6" class="nav-btn">⌚ 红米Watch 6</a>
   <a href="#sec-watch5" class="nav-btn">⌚ 小米Watch 5</a>
+  <a href="#sec-s5-41mm" class="nav-btn">⌚ Watch S5 41mm</a>
   <a href="#sec-watch5-s5" class="nav-btn">⚖️ Watch5 vs S5</a>
   <a href="#sec-10pro-vs-watch6" class="nav-btn">⚖️ 10Pro vs Watch6</a>
   <a href="#sec-template" class="nav-btn">📋 通用话术模板</a>
@@ -492,6 +545,84 @@ tr:hover { background: #fafbfc; }
   </div>
 </div>
 
+<!-- ==================== 小米Watch S5 41mm ==================== -->
+<div class="section" id="sec-s5-41mm">
+  <h2>⌚ 小米Watch S5 41mm 核心话术 <span class="new-badge">新品</span></h2>
+
+  <div class="summary-box">
+    <h4>🎯 一句话定位</h4>
+    <p style="font-size:14px;">"主打<span class="highlight">女性用户和轻盈佩戴</span>，核心卖点是<strong>时尚外观 + 健康关怀 + 萌宠表盘2.0 + 澎湃OS 4人车家联动 + 长续航</strong>——专门为手腕细、戴大表显笨重的姐妹设计的小尺寸智能手表。"</p>
+  </div>
+
+  <h3>📢 大促期一分钟话术</h3>
+  <div class="script-card mini">
+    <span class="script-tag warm">⚡ 1分钟 · 快速塑品</span>
+    <p>
+      欢迎直播间的各位米粉，今天给大家上的是小米刚出的小尺寸智能手表——<span class="highlight">Watch S5 41mm</span>，专门为手腕细、戴大表显笨重的姐妹设计的，戴一整天都感觉不到束缚感。而且这次搭载了<span class="highlight">小米手表系列首款澎湃OS 4系统</span>，不光能看时间、测心率，能深度检测女性生理周期健康，还能深度操控小米汽车、看家门口智能门锁的监控，<span class="key-point">15天超长续航</span>，不用天天找充电器。
+    </p>
+  </div>
+
+  <h3>📢 平播期3分钟话术（深度塑品）</h3>
+  <div class="script-card full">
+    <span class="script-tag good">📝 3分钟 · 深度塑品</span>
+    <p>
+      <strong>1️⃣ 外观材质：</strong>这款<span class="highlight">41mm的表径，厚度才9.9毫米</span>，还做了<span class="highlight">莹白陶瓷表圈和钻石切割表冠</span>。基础款不锈钢中框，亮面拉丝质感。表带材质有真皮、氟橡胶。而且它表带连接处做了<span class="highlight">悬浮设计</span>，穿裙子、衬衫都好看，不管手腕粗细都不会卡肉。表体采用一体式透明微晶玻璃表体，双护桥设计，通体通透澄澈，时尚潮流。游泳、洗手都不用摘，<span class="highlight">5ATM防水</span>，戴着游水下50米都没问题。<span class="highlight">3000尼特峰值亮度</span>，即便在大太阳底下也能看得清。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>2️⃣ 健康监测（女性专属功能 ＋ 萌宠表盘）：</strong>姐妹们关心的健康功能也有很大提升：<span class="highlight">四灯组四PD心率传感器，心率准确率98.4%</span>，比你之前戴的手环准太多了。还专门加了<span class="highlight">女性生理周期监测</span>，不光能预测经期，还能根据你的身体状态给运动建议，比如经期适合做什么强度的运动，它都会提醒你。另外还加了<span class="highlight">饮食热量管理、紫外线强度提示</span>，出门前抬腕就能看今天的晒黑指数，不用再单独下防晒App。睡眠监测也升级到了<span class="highlight">2.0算法</span>，深睡浅睡、呼吸率都能测得明明白白，早上起来直接看报告就知道昨晚睡得好不好。<span class="highlight">4种3D萌宠形象</span>，环境/状态感知萌宠表盘与4种压力状态联动，背景可根据不同的压力状态变换颜色，动物姿态匹配悠闲、心累等不同状态，萌宠表盘背景还可映射实时时间、天气。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>3️⃣ 智能联动（人车家全打通）：</strong>家里有小米生态的姐妹一定要看这个功能：搭载的<span class="highlight">澎湃OS 4系统</span>，可以直接在手表上控小米汽车，比如你开车的时候，红灯变绿、到收费站、下匝道，手表都会振动提醒你，不用低头看导航，手表支持下载<span class="highlight">全彩离线地图导航</span>；还能当<span class="highlight">蓝牙车钥匙</span>，靠近自动解锁，夏天提前开空调都不用掏手机。家里装了小米智能门锁的，有人按门铃，手表直接显示门外监控画面，独居的姐妹安全感直接拉满。微信也升级了，开会、做饭的时候收到消息，<span class="highlight">直接语音转文字回复</span>，不用再掏手机，特别方便。
+    </p>
+    <p style="margin-top:8px;">
+      <strong>4️⃣ 续航：</strong>很多姐妹担心小表续航短，这款直接配备了<span class="highlight">590mAh的金沙江电池</span>，至长能用15天，就算开全功能监测也能用8天，比很多大表续航还长。之前戴的智能手表两三天就得充一次，这款半个月充一次就行，出差旅游都不用带充电器。
+    </p>
+  </div>
+
+  <h3>📊 Watch S5 41mm vs S4 41mm 升级点话术</h3>
+  <table>
+    <tr><th>核心区别</th><th>Xiaomi Watch S4 41mm</th><th>Xiaomi Watch S5 41mm <span class="new-badge">新品</span></th></tr>
+    <tr>
+      <td class="td-left"><strong>系统与智能</strong></td>
+      <td>澎湃OS 3.0</td>
+      <td class="up">首发澎湃OS 4</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>续航能力</strong></td>
+      <td>320mAh · 最长约8天</td>
+      <td class="up">590mAh · 至长约15天</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>屏幕亮度</strong></td>
+      <td>1500nits</td>
+      <td class="up">3000nits</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>健康检测</strong></td>
+      <td>基础心率/睡眠</td>
+      <td class="up">睡眠算法2.0 + 女性生理周期2.0</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>生态联动</strong></td>
+      <td>基础车钥匙/门卡</td>
+      <td class="up">深度控车（导航提醒/疲劳提醒）</td>
+    </tr>
+    <tr>
+      <td class="td-left"><strong>外观设计</strong></td>
+      <td>不锈钢</td>
+      <td class="up">陶瓷表圈 + 钻石切割表冠</td>
+    </tr>
+  </table>
+
+  <div class="script-card comp" style="margin-top:16px;">
+    <span class="script-tag purple">💡 选购指导话术</span>
+    <p>
+      <strong>选 Watch S5 41mm：</strong>"手腕细、平时戴大表觉得笨重，或者就想找一款又轻又能打的健康小表——41mm 小尺寸 + 9.9mm 超薄 + 陶瓷表圈，戴一整天几乎无感，拍照穿搭都好看。"<br>
+      <strong>选 Watch S5 46mm：</strong>"想要更大屏幕、更长续航（蓝牙版最长21天）、专业骑行模式——选46mm大表，功能更全、更有运动感。"
+    </p>
+  </div>
+</div>
+
 <!-- ==================== Watch 5 vs S5 ==================== -->
 <div class="section" id="sec-watch5-s5">
   <h2>⚖️ 小米Watch 5 vs Watch S5 区别话术</h2>
@@ -502,7 +633,7 @@ tr:hover { background: #fafbfc; }
   </div>
 
   <table>
-    <tr><th>维度</th><th>小米Watch 5</th><th>小米Watch S5</th></tr>
+    <tr><th>维度</th><th>小米Watch 5</th><th>小米Watch S5（46mm）</th></tr>
     <tr>
       <td class="td-left"><strong>系统定位</strong></td>
       <td>全智能手表 · 骁龙W5 Gen1 + 恒玄BES2800双芯</td>
@@ -554,7 +685,8 @@ tr:hover { background: #fafbfc; }
     <span class="script-tag purple">💡 选购指导话术</span>
     <p>
       <strong>选小米Watch 5：</strong>"如果你希望手表功能全面，能独立通话、回复消息、单独下载App，像手机一样独立使用——选Watch 5。"<br>
-      <strong>选小米Watch S5：</strong>"如果你是运动爱好者，追求超长续航和专业的运动健康监测，不需要那么复杂的功能——选S5，性价比更高。"
+      <strong>选小米Watch S5：</strong>"如果你是运动爱好者，追求超长续航和专业的运动健康监测，不需要那么复杂的功能——选S5，性价比更高。"<br>
+      <strong>小尺寸需求：</strong>"手腕细、想要小一点轻一点的，看上面的 Watch S5 41mm——同代S5的小表版本，陶瓷表圈更精致，续航最长15天。"
     </p>
   </div>
 </div>
@@ -678,7 +810,7 @@ tr:hover { background: #fafbfc; }
 
   <div class="qa-card">
     <div class="q">续航怎么样？多久充一次电？</div>
-    <div class="a">10 Pro内置350mAh电池，典型续航21天，重度使用（全天健康监测+消息推送+AOD）也能撑8天。短期出行或出门旅行不用带充电器也没关系。Watch 6是550mAh电池续航21天，Watch 5是930mAh金沙江电池待机18天/正常使用一周。</div>
+    <div class="a">10 Pro内置350mAh电池，典型续航21天，重度使用（全天健康监测+消息推送+AOD）也能撑8天。短期出行或出门旅行不用带充电器也没关系。Watch 6是550mAh电池续航21天，Watch 5是930mAh金沙江电池待机18天/正常使用一周。Watch S5 41mm是590mAh金沙江电池，至长15天，开全功能监测也能用8天。</div>
   </div>
 
   <div class="qa-card">
@@ -714,6 +846,16 @@ tr:hover { background: #fafbfc; }
   <div class="qa-card">
     <div class="q">送长辈/送礼物合适吗？</div>
     <div class="a">非常合适！健康监测功能（心率/血氧/睡眠/压力）对长辈特别实用，睡眠呼吸停止监测（Watch 6）能识别潜在的睡眠呼吸暂停风险。操作简单、续航长、价格亲民，送健康非常贴心。Watch 6和10 Pro都是很好的送礼选择。</div>
+  </div>
+
+  <div class="qa-card">
+    <div class="q">Watch S5 41mm 和 46mm 怎么选？</div>
+    <div class="a">看手腕和用途：手腕细（女生、青少年）、追求轻盈佩戴和精致外观的，选 <strong>41mm</strong>——9.9mm超薄 + 莹白陶瓷表圈，戴一整天几乎无感，至长续航15天，还新增了女性生理周期监测和3D萌宠表盘。想要更大屏幕、更长续航（蓝牙版最长21天）、专业骑行模式（码表/功率计接入）的，选 <strong>46mm</strong>。</div>
+  </div>
+
+  <div class="qa-card">
+    <div class="q">这款适合女生戴吗？</div>
+    <div class="a">S5 41mm 就是主打女性用户和轻盈佩戴的小尺寸款。41mm表径 + 9.9mm厚度，表带悬浮设计不卡肉；陶瓷表圈 + 钻石切割表冠颜值高；健康上专门做了女性生理周期监测，能按身体状态给运动建议，还有饮食热量管理和紫外线强度提示；萌宠表盘2.0会随压力状态换背景——日常穿搭和健康管理两头都照顾到。</div>
   </div>
 </div>
 
@@ -834,6 +976,6 @@ function saveAsPDF() {
   };
 }
 </script>
-
+<script src="../ux-polish.js" defer></script>
 </body>
 </html>

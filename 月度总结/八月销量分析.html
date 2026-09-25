@@ -1,3 +1,4 @@
+<!-- AI生成 -->
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -133,9 +134,34 @@ footer {
   text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 12px;
 }
 .footnote { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+/* ===== 视觉增强层（ux-tail）：只加表现，不碰业务选择器 ===== */
+.nav-btn { transition: transform .16s ease, all .25s; }
+.nav-btn:active { transform: scale(.96); }
+.hero {
+  background: linear-gradient(135deg, #171b21 0%, #2a3038 60%, #3a2c1c 100%);
+}
+.hero h1 { letter-spacing: -.03em; }
+.kpi-card { border-radius: 14px; }
+.kpi-card .value { font-variant-numeric: tabular-nums; letter-spacing: -.025em; }
+.section {
+  border-radius: 14px;
+  transition: box-shadow .22s ease;
+}
+.section:hover { box-shadow: 0 12px 28px -10px rgba(15,23,42,.14); }
+.section-title { letter-spacing: -.012em; }
+.summary-box { border-radius: 14px; }
+.chart-box, .chart-container { border-radius: 12px; }
+table td, table th { font-variant-numeric: tabular-nums; }
+.rank-num { transition: transform .16s ease; }
+tr:hover .rank-num { transform: scale(1.06); }
+/* ux-tail */
 </style>
+<link rel="stylesheet" href="../ux-polish.css">
 </head>
 <body>
+<p data-aigc-mark="1" style="margin:0 0 8px;font-size:10px;line-height:1.3;color:#6b6560;font-weight:400;">AI生成</p>
+
 
 <div class="nav-bar">
   <a href="../index.html" class="nav-btn">首页</a>
@@ -514,5 +540,6 @@ function fmtPct(n) { return n.toFixed(1) + '%'; }
 })();
 </script>
 
+<script src="../ux-polish.js" defer></script>
 </body>
 </html>

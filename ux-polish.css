@@ -1,0 +1,106 @@
+/* ============================================================
+   ux-polish.css —— 全站渐进增强表现层（2026-09）
+   设计约定：
+   - 基础规则一律写在 :where() 里（特异性 0），页面自带样式永远赢，
+     只填补“页面没写过”的表现，绝不覆盖业务选择器的状态类
+     （.active / .collapsed / .hidden / .expanded 等一概不碰）。
+   - 滚动显现仅在 html.ux-reveal 时生效，JS 失败则内容始终可见。
+   ============================================================ */
+
+/* ---------- 基础手感 ---------- */
+:where(html) {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  :where(html) { scroll-behavior: auto; }
+  :where(*, *::before, *::after) {
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+
+:where(body) {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:where(::selection) {
+  background: rgba(255, 105, 0, .18);
+}
+
+:where(a, button, input, select, textarea, [role="button"], [onclick]):focus-visible {
+  outline: 2px solid var(--mi-orange, #ff6900);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ---------- 滚动条 ---------- */
+:where(.content, .main, main, .wrap, .container, body)::-webkit-scrollbar { width: 10px; height: 10px; }
+:where(.content, .main, main, .wrap, .container, body)::-webkit-scrollbar-track { background: transparent; }
+:where(.content, .main, main, .wrap, .container, body)::-webkit-scrollbar-thumb {
+  background: #d5d9df;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+:where(.content, .main, main, .wrap, .container, body)::-webkit-scrollbar-thumb:hover {
+  background: #c2c7cf;
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+/* ---------- 表格：行悬停 / 数字对齐 ---------- */
+:where(tbody tr) {
+  transition: background .18s ease;
+}
+:where(tbody tr:hover) th,
+:where(tbody tr:hover) td {
+  background: rgba(255, 105, 0, .045);
+}
+:where(th, td) {
+  transition: background .18s ease;
+}
+:where(.num, .stat-value, .kpi-value, .kpi-number, .metric-value, .gsv, td) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 卡片 / 面板：悬停浮起 ---------- */
+:where(.card, .panel, .kpi-card, .stat-card, .module-card, .room-card, .chart-box, .section-card) {
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+:where(.card, .panel, .kpi-card, .stat-card, .module-card, .room-card, .chart-box, .section-card):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 28px -10px rgba(15, 23, 42, .16), 0 2px 6px rgba(15, 23, 42, .05);
+}
+
+/* ---------- 按钮 / 标签：微动效 ---------- */
+:where(button, .btn, .nav-btn, .filter-btn, .tab-btn, input[type="button"], input[type="submit"]) {
+  transition: transform .16s ease, box-shadow .16s ease, background .16s ease, color .16s ease, border-color .16s ease, filter .16s ease;
+}
+:where(button, .btn, .nav-btn, .filter-btn, .tab-btn, input[type="button"], input[type="submit"]):active {
+  transform: scale(.97);
+}
+:where(.badge, .tag, .mod-tag, .badge-room, .chip) {
+  transition: transform .16s ease, filter .16s ease, box-shadow .16s ease;
+}
+:where(.badge:hover, .tag:hover, .mod-tag:hover, .badge-room:hover, .chip:hover) {
+  filter: brightness(.97) saturate(1.05);
+}
+
+/* ---------- 标题：微字距（只在没写过 letter-spacing 时补） ---------- */
+:where(h1, h2, h3) {
+  letter-spacing: -.015em;
+}
+
+/* ---------- 滚动显现（仅 html.ux-reveal 时生效） ---------- */
+html.ux-reveal :where(.card, .panel, .kpi-card, .stat-card, .module-card, .room-card, .chart-box, .section, .section-card, table) {
+  opacity: 0;
+  transform: translateY(14px);
+  transition: opacity .55s ease, transform .55s ease;
+}
+html.ux-reveal :where(.card, .panel, .kpi-card, .stat-card, .module-card, .room-card, .chart-box, .section, .section-card, table).ux-in {
+  opacity: 1;
+  transform: none;
+}
+
+/* 页面未引入 JS 时的兜底：不加 html.ux-reveal 则上面规则永不生效 */

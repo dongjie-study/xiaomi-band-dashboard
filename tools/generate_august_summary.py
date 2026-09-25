@@ -279,7 +279,30 @@ footer {{
   text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 12px;
 }}
 .footnote {{ font-size: 12px; color: var(--text-muted); margin-top: 6px; }}
+
+/* ===== 视觉增强层（ux-tail）：只加表现，不碰业务选择器 ===== */
+.nav-btn {{ transition: transform .16s ease, all .25s; }}
+.nav-btn:active {{ transform: scale(.96); }}
+.hero {{
+  background: linear-gradient(135deg, #171b21 0%, #2a3038 60%, #3a2c1c 100%);
+}}
+.hero h1 {{ letter-spacing: -.03em; }}
+.kpi-card {{ border-radius: 14px; }}
+.kpi-card .value {{ font-variant-numeric: tabular-nums; letter-spacing: -.025em; }}
+.section {{
+  border-radius: 14px;
+  transition: box-shadow .22s ease;
+}}
+.section:hover {{ box-shadow: 0 12px 28px -10px rgba(15,23,42,.14); }}
+.section-title {{ letter-spacing: -.012em; }}
+.summary-box {{ border-radius: 14px; }}
+.chart-box, .chart-container {{ border-radius: 12px; }}
+table td, table th {{ font-variant-numeric: tabular-nums; }}
+.rank-num {{ transition: transform .16s ease; }}
+tr:hover .rank-num {{ transform: scale(1.06); }}
+/* ux-tail */
 </style>
+<link rel="stylesheet" href="../ux-polish.css">
 </head>
 <body>
 
@@ -660,6 +683,7 @@ function fmtPct(n) {{ return n.toFixed(1) + '%'; }}
 }})();
 </script>
 
+<script src="../ux-polish.js" defer></script>
 </body>
 </html>'''
     return html
@@ -721,7 +745,30 @@ body {{
 footer {{
   text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 12px;
 }}
+
+/* ===== 视觉增强层（ux-tail）：只加表现，不碰业务选择器 ===== */
+.nav-btn {{ transition: transform .16s ease, all .25s; }}
+.nav-btn:active {{ transform: scale(.96); }}
+.hero {{
+  background: linear-gradient(135deg, #171b21 0%, #2a3038 60%, #3a2c1c 100%);
+}}
+.hero h1 {{ letter-spacing: -.03em; }}
+.kpi-card {{ border-radius: 14px; }}
+.kpi-card .value {{ font-variant-numeric: tabular-nums; letter-spacing: -.025em; }}
+.section {{
+  border-radius: 14px;
+  transition: box-shadow .22s ease;
+}}
+.section:hover {{ box-shadow: 0 12px 28px -10px rgba(15,23,42,.14); }}
+.section-title {{ letter-spacing: -.012em; }}
+.summary-box {{ border-radius: 14px; }}
+.chart-box, .chart-container {{ border-radius: 12px; }}
+table td, table th {{ font-variant-numeric: tabular-nums; }}
+.rank-num {{ transition: transform .16s ease; }}
+tr:hover .rank-num {{ transform: scale(1.06); }}
+/* ux-tail */
 </style>
+<link rel="stylesheet" href="../ux-polish.css">
 </head>
 <body>
 
@@ -764,6 +811,7 @@ footer {{
   小米手环直播间 · 8月销量分析 · 数据来源：抖音直播间订单
 </footer>
 
+<script src="../ux-polish.js" defer></script>
 </body>
 </html>'''
 

@@ -250,6 +250,104 @@
     .flow-arrow { transform: rotate(90deg); }
   }
 </style>
+<link rel="stylesheet" href="../ux-polish.css">
+<style id="ux-tail">
+/* 页面专属表现层：浅色官方数据台 */
+.sidebar {
+  border-right-color: #e9ebef;
+  box-shadow: 1px 0 12px rgba(15, 23, 42, .04);
+}
+.sidebar-logo { letter-spacing: .04em; }
+.sidebar-logo .dot { box-shadow: 0 0 8px rgba(255, 105, 0, .55); }
+.nav-item {
+  border-radius: 0 8px 8px 0;
+  transition: color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
+}
+.nav-item:hover { transform: translateX(2px); background: rgba(255, 105, 0, .06); }
+.nav-item.active { background: rgba(255, 105, 0, .08); }
+.hero {
+  border-color: #e9ebef;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 16px 40px -20px rgba(15, 23, 42, .16);
+}
+.hero h1 { letter-spacing: -0.02em; }
+.s-header h2 { letter-spacing: -0.015em; }
+.module-card {
+  border-color: #e9ebef;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 10px 28px -18px rgba(15, 23, 42, .1);
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.module-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 105, 0, .22);
+  box-shadow: 0 14px 32px -14px rgba(15, 23, 42, .14), 0 2px 8px rgba(15, 23, 42, .04);
+}
+.kpi {
+  border-color: #e9ebef;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 10px 28px -18px rgba(15, 23, 42, .1);
+}
+.kpi:hover {
+  border-color: rgba(255, 105, 0, .25);
+  box-shadow: 0 14px 32px -14px rgba(255, 105, 0, .16), 0 2px 8px rgba(15, 23, 42, .04);
+}
+.kpi .kpi-num {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.kpi .kpi-num.c2 { color: #e05800; }
+.card {
+  border-color: #e9ebef;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 10px 28px -18px rgba(15, 23, 42, .1);
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px -14px rgba(15, 23, 42, .14), 0 2px 8px rgba(15, 23, 42, .04);
+}
+.card.accent { border-left-color: #ff6900; }
+.card h4 { letter-spacing: -0.015em; }
+.hl { border-radius: 14px; }
+.tbl {
+  border-color: #e9ebef;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+.tbl th {
+  letter-spacing: .02em;
+  background: #f8f9fc;
+}
+.tbl tbody tr:hover td { background: rgba(255, 105, 0, .05); }
+.tbl tbody tr:hover td:first-child { color: #e05800; }
+.map-card {
+  border-color: #e9ebef;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 10px 28px -18px rgba(15, 23, 42, .1);
+  transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease;
+}
+.map-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 32px -14px rgba(15, 23, 42, .14);
+}
+.map-card.m2::after { background: linear-gradient(90deg, #ff6900, #e05800); }
+.flow-node {
+  border-color: #e9ebef;
+  border-radius: 12px;
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+}
+.flow-node:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 105, 0, .28);
+  box-shadow: 0 10px 22px -10px rgba(15, 23, 42, .16);
+}
+.tl-dot { box-shadow: 0 4px 12px -4px rgba(15, 23, 42, .22); }
+.f-bar { border-radius: 8px; box-shadow: 0 2px 8px -2px rgba(15, 23, 42, .18); }
+.conclusion {
+  border-color: #e9ebef;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 16px 40px -20px rgba(255, 105, 0, .16);
+}
+</style>
 </head>
 <body style="display:none">
 <script>
@@ -638,6 +736,6 @@ document.body.style.display='';
 </div><!-- /main-inner -->
 </main>
 </div>
-
+<script src="../ux-polish.js" defer></script>
 </body>
 </html>
