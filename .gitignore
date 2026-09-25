@@ -33,3 +33,6 @@ _ui_*.png
 # 数据抢修时的临时备份（只留本地，别跟着 git add -A 进去）
 *.bak
 *.bak-*
+
+# WorkBuddy 工作记忆（会话日志，不入库）
+.workbuddy/
