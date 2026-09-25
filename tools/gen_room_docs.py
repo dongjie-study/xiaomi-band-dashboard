@@ -238,6 +238,18 @@ def render_service_md():
     return "\n".join(lines)
 
 
+# 文档头部的日期戳行（「> 最后生成：YYYY-MM-DD」/「> 最后更新：YYYY-MM-DD」）。
+# --check 比对时把它归一成占位符：戳每天都变，但只有戳变了不代表内容过期。
+# 旧版做全文比对，导致 docs-check CI 除生成器当天外每天都假警报（见交接说明第十二节）。
+# 生成/写入路径不受影响，仍写真实日期。
+STAMP_RE = re.compile(r"^(> (?:最后生成|最后更新)：)\d{4}-\d{2}-\d{2}", re.MULTILINE)
+
+
+def _norm_stamp(text):
+    """日期戳归一成 {DATE}，仅供 --check 内容比对使用。"""
+    return STAMP_RE.sub(r"\1{DATE}", text or "")
+
+
 def verify_service_md(text):
     """用真正的解析器回读生成结果，确认格式契约没被破坏。"""
     spec = importlib.util.spec_from_file_location("_svc", SERVICE_PY)
@@ -401,7 +413,9 @@ def main():
         if os.path.exists(path):
             with open(path, encoding="utf-8") as f:
                 old = f.read()
-        if old != text:
+        # --check 用归一化比对（忽略日期戳）；生成模式仍用精确比对，行为不变
+        is_stale = (_norm_stamp(old) != _norm_stamp(text)) if args.check else (old != text)
+        if is_stale:
             stale.append(path)
             if not args.check:
                 os.makedirs(os.path.dirname(path), exist_ok=True)
