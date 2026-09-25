@@ -2,7 +2,8 @@
 """
 小米手环11 首销月（9.7-10.7）我司四渠道目标进度表生成器
 
-数据源：sales_analysis/history.json（每天跑完 run_all.py sales 后自动有当日数据）
+数据源：sales_analysis/history.json + sales_analysis/band11_history.json
+       （每天跑完 run_all.py sales 后自动有当日数据）
 输出：桌面 小米手环11首销月目标进度表.xlsx
 
 用法：
@@ -18,6 +19,7 @@ from datetime import date, datetime, timedelta
 
 from openpyxl import Workbook
 from openpyxl.chart import BarChart, LineChart, Reference, Series
+from openpyxl.chart.data_source import AxDataSource, StrRef
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
@@ -49,7 +51,18 @@ MAIN_ROOMS = {r for r, _ in ROOM_TARGETS}
 OTHER_OUR_ROOMS = sorted(OUR_ROOMS - MAIN_ROOMS)
 
 HISTORY_FILE = os.path.join(ROOT, 'sales_analysis', 'history.json')
+FOCUS_FILE = os.path.join(ROOT, 'sales_analysis', 'band11_history.json')
 OUT_FILE = os.path.join(os.path.expanduser('~'), 'Desktop', '小米手环11首销月目标进度表.xlsx')
+
+# 我司 vs 良米 对比页
+VS_DAYS = 4            # 滚动窗口：永远取最新 N 天，每天重跑自动前移
+VS_COLS = 10           # 对比表列数（A~J）
+
+# 与 team_config.TEAM_COLORS 同源：我司蓝、良米灰。
+# 良米这里比 TEAM_COLORS 的 #94A3B8 深一档：#94A3B8 线在白色底上对比度只有 2.5:1，
+# 细线放上去发虚；#64748B 过 3:1，仍属同一个灰，不会和「我司蓝」混淆。
+C_OUR = '1E90FF'
+C_LM = '64748B'
 
 # ============ 样式 ============
 
@@ -144,6 +157,37 @@ def build_dates():
     return out
 
 
+def load_vs():
+    """band11_history.json → [(date, 我司台数, 良米台数, 我司GSV, 良米GSV)]，按日期升序。
+
+    这个文件是「主打手环对比」模块的数据源（daily_update._extract_focus 写入），
+    天生就是 我司 vs 良米、直播+商品卡 的手环11 口径，和线上看板同源，不另起口径。
+    ⚠️ 别用 history.json 倒推来核对这里的数字：一行多商品（`;` 拼接）两套统计处理不同，
+       会差 1 单，见 docs/06-踩坑#13 —— 以本文件为准。
+    """
+    if not os.path.exists(FOCUS_FILE):
+        return []
+    with open(FOCUS_FILE, 'r', encoding='utf-8') as f:
+        raw = json.load(f)
+
+    out = []
+    for rec in raw:
+        try:
+            d = datetime.strptime(rec['date'], '%Y-%m-%d').date()
+        except (KeyError, ValueError):
+            continue                       # 踩坑#2：残留过 date="NaT" 的坏数据
+        if not (START <= d <= END):
+            continue
+        our, lm = rec.get('our') or {}, rec.get('lm') or {}
+        out.append((d,
+                    int(our.get('live_o', 0)) + int(our.get('card_o', 0)),
+                    int(lm.get('live_o', 0)) + int(lm.get('card_o', 0)),
+                    float(our.get('live_a', 0)) + float(our.get('card_a', 0)),
+                    float(lm.get('live_a', 0)) + float(lm.get('card_a', 0))))
+    out.sort(key=lambda x: x[0])
+    return out
+
+
 # ============ Sheet 1：进度总览 ============
 
 def sheet_overview(wb, dates, daily):
@@ -234,6 +278,134 @@ def sheet_overview(wb, dates, daily):
     for col, w in zip(range(1, ncols + 1), [16, 16, 16, 18, 18, 16]):
         ws.column_dimensions[get_column_letter(col)].width = w
     return ws
+
+
+# ============ Sheet：我司 vs 良米（近 N 天） ============
+
+def sheet_vs_liangmi(wb):
+    """我司 vs 良米 近 4 天销售变化：数据表 + 两张单轴折线图（台数 / GSV）。
+
+    窗口是滚动的：永远取最新 VS_DAYS 天，重跑本脚本就自动前移。数据不足 4 天时按实际天数出。
+    返回 True 表示已建页，False 表示数据源缺失、整页跳过（不阻塞每日流程）。
+    """
+    series = load_vs()
+    if not series:
+        return False
+
+    ws = wb.create_sheet('我司vs良米')
+    ncols = VS_COLS
+    title_row(ws, f'{PRODUCT} · 我司 vs 良米 · 近{VS_DAYS}天销售变化', ncols,
+              '数据源 sales_analysis/band11_history.json（与销售看板「主打手环对比」同源）  |  '
+              '口径：手环11 下单台数 / 实付金额（直播 + 商品卡，不扣退款）')
+
+    heads = ['日期', '星期', '我司台数', '良米台数', '我司环比', '良米环比',
+             '台数差\n(我司-良米)', '我司GSV(元)', '良米GSV(元)', '我司台数占比']
+    for i, h in enumerate(heads, start=1):
+        hdr_cell(ws, 4, i, h)
+    ws.row_dimensions[4].height = 32
+
+    # 环比基准取「窗口前一天」也来自同一序列，所以窗口首日也有环比，不留空
+    rows = []
+    for i in range(max(0, len(series) - VS_DAYS), len(series)):
+        d_, our_o, lm_o, our_a, lm_a = series[i]
+        if i > 0:
+            p_our_o, p_lm_o = series[i - 1][1], series[i - 1][2]
+            our_dod = (our_o - p_our_o) / p_our_o if p_our_o else None
+            lm_dod = (lm_o - p_lm_o) / p_lm_o if p_lm_o else None
+        else:
+            our_dod = lm_dod = None
+        rows.append((d_, our_o, lm_o, our_a, lm_a, our_dod, lm_dod))
+
+    first_row = 5
+    r = first_row
+    for d_, our_o, lm_o, our_a, lm_a, our_dod, lm_dod in rows:
+        body_cell(ws, r, 1, d_.strftime('%m-%d'), bold=True)
+        body_cell(ws, r, 2, WEEKDAYS[d_.weekday()])
+        body_cell(ws, r, 3, our_o, fmt='#,##0', bold=True)
+        body_cell(ws, r, 4, lm_o, fmt='#,##0')
+        for col, v in ((5, our_dod), (6, lm_dod)):
+            c = body_cell(ws, r, col, v if v is not None else '—',
+                          fmt='+0.0%;-0.0%' if v is not None else None)
+            if v is not None:
+                c.font = Font(name=FONT, size=10, color='2E7D32' if v >= 0 else 'C62828')
+        c = body_cell(ws, r, 7, f'=C{r}-D{r}', fmt='+#,##0;-#,##0')
+        c.font = Font(name=FONT, size=10, color='2E7D32' if our_o >= lm_o else 'C62828')
+        body_cell(ws, r, 8, round(our_a, 2), fmt='#,##0.00')
+        body_cell(ws, r, 9, round(lm_a, 2), fmt='#,##0.00')
+        body_cell(ws, r, 10, f'=C{r}/(C{r}+D{r})', fmt='0.0%')
+        r += 1
+
+    last_row = r - 1
+
+    # 合计行：环比无意义，留「—」
+    body_cell(ws, r, 1, f'近{len(rows)}天合计', bold=True, fill=C_HEAD)
+    body_cell(ws, r, 2, '', fill=C_HEAD)
+    for col in (3, 4):
+        L = get_column_letter(col)
+        body_cell(ws, r, col, f'=SUM({L}{first_row}:{L}{last_row})',
+                  fmt='#,##0', bold=True, fill=C_HEAD)
+    body_cell(ws, r, 5, '—', fill=C_HEAD)
+    body_cell(ws, r, 6, '—', fill=C_HEAD)
+    body_cell(ws, r, 7, f'=C{r}-D{r}', fmt='+#,##0;-#,##0', bold=True, fill=C_HEAD)
+    for col in (8, 9):
+        L = get_column_letter(col)
+        body_cell(ws, r, col, f'=SUM({L}{first_row}:{L}{last_row})',
+                  fmt='#,##0.00', bold=True, fill=C_HEAD)
+    body_cell(ws, r, 10, f'=C{r}/(C{r}+D{r})', fmt='0.0%', bold=True, fill=C_HEAD)
+    total_row = r
+
+    # --- 折线图：两张图，各自一个 Y 轴 ---
+    # 台数和金额量级差太远，绝不叠成双轴 —— 双轴会让两条线的交叉点变成视觉巧合。
+    cats = Reference(ws, min_col=1, min_row=first_row, max_row=last_row)
+    for anchor, c1, title, ytitle, numfmt in [
+        ('L4',  3, f'每日台数（近{len(rows)}天）', '台数', '#,##0'),
+        ('L22', 8, f'每日GSV（近{len(rows)}天）',  '元',  '#,##0'),
+    ]:
+        ch = LineChart()
+        ch.title = title
+        ch.y_axis.title = ytitle
+        ch.x_axis.title = '日期'
+        ch.height, ch.width = 8.5, 17
+        ch.y_axis.numFmt = numfmt
+        ch.add_data(Reference(ws, min_col=c1, max_col=c1 + 1, min_row=4, max_row=last_row),
+                    titles_from_data=True)
+        ch.set_categories(cats)
+        for s, color in zip(ch.series, (C_OUR, C_LM)):
+            # openpyxl 的 set_categories 一律写成 numRef，但 A 列是文本日期（09-12）。
+            # 显式改成 strRef，否则部分 Excel 版本会把 X 轴画成 1/2/3/4。
+            s.cat = AxDataSource(strRef=StrRef(f=str(cats)))
+            s.smooth = False
+            s.graphicalProperties.line.solidFill = color
+            s.graphicalProperties.line.width = 2 * 12700      # 2pt
+            s.marker.symbol = 'circle'
+            s.marker.size = 7
+            s.marker.graphicalProperties.solidFill = color
+            s.marker.graphicalProperties.line.solidFill = color
+        ch.legend.position = 'b'                              # 两条线一定要有图例
+        ws.add_chart(ch, anchor)
+
+    r = total_row + 2
+    notes = [
+        '读数：蓝线 = 我司，灰线 = 良米；两张图各用一个 Y 轴，不做双轴叠加。'
+        '左边数据表就是这两张图的数值，可逐格核对。',
+        '「环比」= 对比前一天，基准取自同一序列，所以窗口首日也有环比。',
+        '⚠️ 本页数字以 band11_history.json 为准，不要用 history.json 倒推核对'
+        '（一行多商品用 `;` 拼接，两套统计对它处理不同，会差 1 单，见 docs/06-踩坑#13）。',
+        '我司 = team_config.OUR_ROOMS，良米 = team_config.LIANGMI_ROOMS，'
+        '只含卖手环的直播间（小米智能设备旗舰店直播间只卖儿童手表/路由器，不计入）。',
+    ]
+    for text in notes:
+        ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=ncols)
+        c = ws.cell(row=r, column=1, value=text)
+        c.font = Font(name=FONT, size=9, color='666666')
+        c.alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws.row_dimensions[r].height = est_height(text, 120)
+        r += 1
+
+    for col, w in zip(range(1, ncols + 1),
+                      [11, 6, 10, 10, 10, 10, 12, 13, 13, 12]):
+        ws.column_dimensions[get_column_letter(col)].width = w
+    return True
 
 
 # ============ Sheet 2：分渠道目标 ============
@@ -655,6 +827,180 @@ def sheet_daily_summary(wb, daily):
     return ws
 
 
+# ============ Sheet：周期复盘 ============
+
+PERIOD_FILE = os.path.join(ROOT, 'sales_analysis', 'period_review.json')
+
+PERIOD_WIDTHS = [14, 34, 26, 26, 26]     # A 放序号/优先级，B:E 是文字区
+
+PRI_FILL = {'P0': C_BAD, 'P1': C_WARN, 'P2': C_HEAD}
+
+
+def load_periods():
+    """周期复盘文字稿（sales_analysis/period_review.json），最新一期在最上方。
+
+    和「每日总结」同理：main() 每次从零重建工作簿，文字必须外置 ——
+    直接写进 xlsx 的内容第二次跑就没了。返回 [] 表示还没写过任何复盘。
+    """
+    if not os.path.exists(PERIOD_FILE):
+        return []
+    with open(PERIOD_FILE, 'r', encoding='utf-8') as f:
+        raw = json.load(f)
+    return raw.get('periods') or []
+
+
+def period_metrics(start, end, history):
+    """算一个复盘周期的核心数字。全部实时读，不写死在文字稿里。
+
+    环比基准 = 紧邻的、等长的上一个窗口（7 天周期就比前 7 天）。
+    """
+    days = (end - start).days + 1
+    prev_start, prev_end = start - timedelta(days=days), start - timedelta(days=1)
+
+    def window(a, b):
+        o = r = so = 0
+        for rec in history:
+            try:
+                d = datetime.strptime(rec['date'], '%Y-%m-%d').date()
+            except (KeyError, ValueError):
+                continue                      # 踩坑#2：残留 date="NaT" 的坏数据
+            if not (a <= d <= b):
+                continue
+            for info in (rec.get('rooms') or {}).values():
+                if info.get('type') != '我司':
+                    continue
+                o += int(info.get('orders', 0))
+                r += float(info.get('revenue', 0))
+            so += int(rec.get('total_orders', 0))
+        return o, r, so
+
+    our_o, our_r, store_o = window(start, end)
+    p_o, p_r, _ = window(prev_start, prev_end)
+
+    # 手环11 累计：口径同「进度总览」（我司四渠道 + 我司其他直播间）
+    cum = sum(v[1] for v in load_vs() if v[0] <= end)
+    total_days = (END - START).days + 1
+    time_rate = ((end - START).days + 1) / total_days
+
+    return {
+        'our_orders': our_o, 'our_revenue': our_r,
+        'aov': our_r / our_o if our_o else 0,
+        'dod_o': (our_o - p_o) / p_o if p_o else None,
+        'dod_r': (our_r - p_r) / p_r if p_r else None,
+        'share_o': our_o / store_o if store_o else 0,
+        'prev_orders': p_o, 'prev_revenue': p_r,
+        'cum': cum, 'cum_rate': cum / TOTAL_TARGET,
+        'time_rate': time_rate, 'pace_diff': cum / TOTAL_TARGET - time_rate,
+        'remain': TOTAL_TARGET - cum, 'remain_days': (END - end).days,
+    }
+
+
+def sheet_period_review(wb):
+    """每期一块：周期头 + 核心数据 + 做得好 / 不足 / 下周计划。
+
+    只讲周期整体经营，不含主播业绩明细。文字来自 period_review.json，
+    数字由 period_metrics() 实时算 —— 周期是封闭的，重跑结果不变。
+    """
+    periods = load_periods()
+    if not periods:
+        return False
+
+    with open(HISTORY_FILE, 'r', encoding='utf-8') as f:
+        history = json.load(f)
+
+    ws = wb.create_sheet('周期复盘')
+    ncols = len(PERIOD_WIDTHS)
+    text_w = sum(PERIOD_WIDTHS[1:])
+
+    title_row(ws, f'{PRODUCT} 首销月 · 周期复盘（做得好 / 不足 / 下周计划）', ncols,
+              '最新一期在最上方 · 历史全部保留  |  '
+              '数字由脚本实时计算，文字人工撰写'
+              '（sales_analysis/period_review.json）  |  '
+              '口径：我司全部直播间，金额为订单实付')
+    for i, w in enumerate(PERIOD_WIDTHS, start=1):
+        ws.column_dimensions[get_column_letter(i)].width = w
+
+    r = 3
+    for p in periods:
+        try:
+            start = datetime.strptime(p['start'], '%Y-%m-%d').date()
+            end = datetime.strptime(p['end'], '%Y-%m-%d').date()
+        except (KeyError, ValueError):
+            continue                      # 文字稿写坏了就跳过，不让整张表挂掉
+        m = period_metrics(start, end, history)
+
+        _merge(ws, r, 1, ncols,
+               f'{p.get("label") or f"{start:%m.%d}–{end:%m.%d} 复盘"}'
+               f'    我司 {m["our_orders"]:,} 单 / ¥{m["our_revenue"]:,.0f}'
+               f'（单量环比 {_pct(m["dod_o"])}，GSV 环比 {_pct(m["dod_r"])}）',
+               fill='FFE0B2', bold=True, size=12, height=26)
+        r += 1
+
+        for line in (
+            f'我司单量 {m["our_orders"]:,} ｜ GSV ¥{m["our_revenue"]:,.0f}'
+            f' ｜ 客单价 ¥{m["aov"]:,.0f} ｜ 全店份额 {m["share_o"]:.1%}'
+            f'（上期 {start - timedelta(days=(end - start).days + 1):%m.%d}–'
+            f'{start - timedelta(days=1):%m.%d}：'
+            f'{m["prev_orders"]:,} 单 / ¥{m["prev_revenue"]:,.0f}）',
+            f'{PRODUCT} 我司累计 {m["cum"]:,} / {TOTAL_TARGET:,} = {m["cum_rate"]:.1%}'
+            f'（时间进度 {m["time_rate"]:.1%}，进度差 {m["pace_diff"]:+.1%}）'
+            f' ｜ 剩 {m["remain"]:,} 台 / {m["remain_days"]} 天',
+        ):
+            _merge(ws, r, 1, ncols, line, fill=C_HEAD, size=9,
+                   height=est_height(line, text_w, base=13, min_h=18))
+            r += 1
+
+        if p.get('headline'):
+            _merge(ws, r, 1, ncols, f'📌 {p["headline"]}', fill=C_TOTAL,
+                   bold=True, height=est_height(f'📌 {p["headline"]}', text_w))
+            r += 1
+
+        # 1️⃣ 做得好 / 2️⃣ 不足 —— 同一套版式，只有颜色和标题不同
+        for title, key, fill in (('1️⃣  做得好的', 'good', C_OK),
+                                 ('2️⃣  不足的', 'bad', C_BAD)):
+            items = p.get(key) or []
+            if not items:
+                continue
+            _merge(ws, r, 1, ncols, title, fill=fill, bold=True, height=20)
+            r += 1
+            for i, text in enumerate(items, start=1):
+                body_cell(ws, r, 1, f'{i}', fill=fill, bold=True)
+                _merge(ws, r, 2, ncols, text, size=10,
+                       height=est_height(text, text_w))
+                r += 1
+
+        # 3️⃣ 下周计划：优先级 | 动作 | 目标
+        plan = p.get('plan') or []
+        if plan:
+            _merge(ws, r, 1, ncols, '3️⃣  下周计划', fill=C_WARN, bold=True, height=20)
+            r += 1
+            _merge(ws, r, 1, 1, '优先级', fill=C_HEAD, bold=True, align='center')
+            _merge(ws, r, 2, ncols - 1, '动作', fill=C_HEAD, bold=True, align='center')
+            _merge(ws, r, ncols, ncols, '目标', fill=C_HEAD, bold=True, align='center')
+            r += 1
+            for item in plan:
+                pri = str(item.get('pri', ''))
+                body_cell(ws, r, 1, pri, fill=PRI_FILL.get(pri, C_HEAD), bold=True)
+                action = str(item.get('action', ''))
+                _merge(ws, r, 2, ncols - 1, action, size=10,
+                       height=est_height(action, text_w - PERIOD_WIDTHS[-1]))
+                goal = str(item.get('goal', ''))
+                _merge(ws, r, ncols, ncols, goal, size=10, align='center',
+                       height=est_height(goal, PERIOD_WIDTHS[-1]))
+                r += 1
+
+        if p.get('closing'):
+            _merge(ws, r, 1, ncols, f'💡 {p["closing"]}', fill=C_TOTAL, bold=True,
+                   height=est_height(f'💡 {p["closing"]}', text_w))
+            r += 1
+
+        ws.row_dimensions[r].height = 10      # 块间空行
+        r += 1
+
+    ws.freeze_panes = 'A3'
+    return True
+
+
 def main():
     daily = load_daily()
     dates = build_dates()
@@ -662,7 +1008,11 @@ def main():
     wb.remove(wb.active)
 
     sheet_overview(wb, dates, daily)
+    if not sheet_vs_liangmi(wb):
+        print(f'[!] 跳过「我司vs良米」页：{FOCUS_FILE} 不存在或没有首销月数据')
     sheet_daily_summary(wb, daily)
+    if not sheet_period_review(wb):
+        print(f'[i] 跳过「周期复盘」页：{PERIOD_FILE} 不存在或没有复盘记录')
     sheet_by_room(wb, dates, daily)
     sheet_daily(wb, dates, daily)
     sheet_notes(wb, dates, daily)
