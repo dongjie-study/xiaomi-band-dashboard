@@ -370,6 +370,17 @@ def update(filepath, our_filepath=None):
     else:
         print(f"Loading: {filepath}")
         df = load_and_clean(filepath)
+    # 硬护栏（2026-09-26）：首行若是「待支付」等无支付时间的订单，date 会解析成 NaT，
+    # summarize_day 取第一行日期落库 → history 出现 date='NaT' 的脏记录，
+    # 进度表 load_daily 静默跳过 → 无声少一天（原靠流程第 3 步人工自校验发现，见交接说明 10.1）。
+    # 正常数据（首行有支付时间）不受此判断影响。
+    head_date = str(df['date'].iloc[0])
+    if head_date == 'NaT':
+        sys.exit(
+            '[X] 首行订单无支付完成时间（date=NaT），疑似导出时混入「待支付」订单。\n'
+            '    请重新导出 Excel 并排除「待支付」后重跑。已中止，未写入任何数据。'
+        )
+
     today = summarize_day(df)
 
     # Load history and compare
