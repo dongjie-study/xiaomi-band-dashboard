@@ -105,9 +105,18 @@ async function send(text){
 $('#f').onsubmit=e=>{e.preventDefault();send()};
 $('#codeBtn').onclick=async()=>{
   const v=$('#codeInput').value.trim();if(!v)return;
-  myCode=v;const {status}=await api('/api/chat',{messages:[{role:'user',content:'你好'}]});
-  if(status===403){$('#codeErr').textContent='口令不正确';return}
-  localStorage.setItem('dg_code',v);$('#gate').hidden=true};
+  $('#codeBtn').disabled=true;$('#codeBtn').textContent='连接中…';
+  $('#codeErr').textContent='';
+  myCode=v;
+  try{
+    const {status}=await api('/api/chat',{messages:[{role:'user',content:'你好'}]});
+    if(status===403){$('#codeErr').textContent='口令不正确';return}
+    localStorage.setItem('dg_code',v);$('#gate').hidden=true;
+  }catch(e){
+    $('#codeErr').innerHTML='连接不上后端（网络问题或地址不对）。<br>点右上角「设置」检查地址；若地址正确，<br>说明当前网络访问 workers.dev 受阻，需换网络/代理或绑定自定义域名。';
+  }finally{
+    $('#codeBtn').disabled=false;$('#codeBtn').textContent='进入';
+  }};
 $('#codeInput').onkeydown=e=>{if(e.key==='Enter')$('#codeBtn').click()};
 $('#setBtn').onclick=()=>{
   const v=prompt('小管家后端地址（wrangler deploy 得到的网址）：',base);
