@@ -102,7 +102,7 @@ git push
 git log --oneline -1                     # 确认落地
 ```
 
-- ⚠️ **不要用 `git add -A`**：工作区常年躺着别人的半成品（如 `直播间销量汇总工具.html`、`_vw.py`、`gen_watch_compare.py`），
+- ⚠️ **不要用 `git add -A`**：工作区常年躺着别人的半成品（如 `直播间销量汇总工具.html`），
   一律**只 add 本次真正改动的文件**，并在回报里说明还有哪些没提交。
 - 目录约定：**日常入口脚本在根目录**（`run_all.py` / `band11_review.py` / `generate_band11_target.py`），
   **活跃但非日常的在 `tools/`**，**已结项的在 `archive/`**，**可再生的截图产物在 `_artifacts/`**。
