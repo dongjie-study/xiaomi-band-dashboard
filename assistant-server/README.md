@@ -10,23 +10,30 @@
 
 数据源 = 本仓库 GitHub raw，**每天正常跑完订单/业绩流程并 push，小管家自动就是最新数据**，无需任何额外同步。
 
+## 线上地址（已上线，2026-09-26）
+
+| 地址 | 说明 |
+|---|---|
+| **https://data.xiaomi-exam.top** | ✅ **正式入口**，与考试系统 `xiaomi-exam.top` 共用同一个 Cloudflare 账号的域名，走子域名分流，**国内可直连、无需备案** |
+| https://xiaomi-data-assistant.1714508423.workers.dev | 备用（workers.dev 在国内被墙，只在境外/代理环境可用） |
+
+域名绑定写在 `wrangler.toml` 的 `routes`（`custom_domain = true`），改动后 `npx wrangler deploy` 即生效。
+
 ## 部署（只做一次）
 
 ```bash
 cd assistant-server
 npm install -g wrangler        # 或用 npx 代替
-npx wrangler login            # 浏览器登录 Cloudflare 账号
+npx wrangler login            # 浏览器登录 Cloudflare 账号（须与 xiaomi-exam.top 同一账号）
 npx wrangler secret put DEEPSEEK_API_KEY   # 粘贴 DeepSeek 的 sk-... key（不进代码不进 git）
-npx wrangler deploy
+npx wrangler deploy           # 同时会创建/更新 data.xiaomi-exam.top 自定义域名
 ```
-
-部署完会得到 `https://xiaomi-data-assistant.<你的子域>.workers.dev`，微信里直接发这个链接就能用。
 
 ## 两种入口（都可用）
 
-1. **独立网址**：上面 workers.dev 链接，自带聊天页
-2. **工作台模块**：`数据小管家/index.html` 已注册进 `modules.json`（「数据看板」板块）。
-   部署后把 Worker 网址填到该文件顶部的 `API_BASE`（或首次打开时点右上角「设置」填，存 localStorage）。
+1. **独立网址**：`https://data.xiaomi-exam.top`，自带聊天页，微信里直接发这个链接
+2. **工作台模块**：`数据小管家/index.html` 已注册进 `modules.json`（「数据看板」板块），
+   其 `API_BASE` 已指向 `https://data.xiaomi-exam.top/api`（也可首次打开时点右上角「设置」改，存 localStorage）
 
 > 为什么模块页也要有后端：API key 绝不能写进 GitHub 公开页面（源码人人可见），
 > 所以聊天页必须调用部署好的 Worker，key 只存在 Worker 的 Secret 里。

@@ -1,5 +1,9 @@
 # 数据小管家 · 腾讯云 CloudBase 版
 
+> ⚠️ **当前状态：备用方案，暂未部署。**
+> 小管家已通过 **Cloudflare Worker + 自定义域名 `data.xiaomi-exam.top`** 上线（国内可直连），无需腾讯云。
+> 本目录作为备用：若将来 Cloudflare 域名方案出问题，或数据/调用量需要走国内节点，可按下方步骤部署，功能完全等价。
+
 小米手环直播间销量数据问答小管家，跑在**腾讯云 CloudBase（云开发）**上，默认域名国内可直连（`*.app.tcloudbase.com`），同事不需要任何代理即可访问。
 
 > 和 `assistant-server/`（Cloudflare 版）功能完全一致：同一套 DeepSeek function calling + 同样 5 个查询工具 + 同样的项目知识库（直播间归属表、口径定义）。

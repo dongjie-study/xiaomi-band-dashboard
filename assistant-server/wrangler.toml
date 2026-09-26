@@ -2,6 +2,13 @@ name = "xiaomi-data-assistant"
 main = "worker.js"
 compatibility_date = "2025-07-05"
 
+# 自定义域名：与考试系统（xiaomi-exam.top）共用同一个 Cloudflare 账号，走「子域名分流」。
+# 部署后访问 https://data.xiaomi-exam.top （国内可直连、无需备案）；
+# 原来的 workers.dev 地址在国内被墙，仅作备用。
+routes = [
+  { pattern = "data.xiaomi-exam.top", custom_domain = true }
+]
+
 # 口令配置：改这里或直接在 Cloudflare 控制台改（Workers → xiaomi-data-assistant →
 # Settings → Variables），控制台改完立即生效、无需重新部署。
 # ACCESS_ENABLED = "false" 即可随时关闭口令（任何人可直接访问）。
