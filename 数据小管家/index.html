@@ -33,6 +33,7 @@ input[type=text]:focus{border-color:var(--blue)}
 button{background:var(--blue);color:#fff;border:0;border-radius:10px;padding:0 18px;font-size:15px;cursor:pointer}
 button:disabled{opacity:.5}
 .gate{position:fixed;inset:0;background:rgba(245,246,248,.98);display:flex;align-items:center;justify-content:center;z-index:9;padding:24px}
+.gate[hidden]{display:none!important}
 .gate .box{background:#fff;border-radius:16px;padding:26px 22px;width:100%;max-width:360px;text-align:center;border:1px solid var(--border)}
 .gate h2{font-size:16px;margin-bottom:6px}
 .gate p{font-size:12px;color:var(--sub);margin-bottom:16px;white-space:pre-line;text-align:left;line-height:1.7}
@@ -59,8 +60,9 @@ button:disabled{opacity:.5}
 <script>
 // ══════════ 配置区（换后端只改这一行） ══════════
 // 线上后端：Cloudflare Worker + 自定义域名 data.xiaomi-exam.top（国内可直连，与考试系统共用域名）
-// 备用地址：https://xiaomi-data-assistant.1714508423.workers.dev/api （workers.dev 在国内被墙）
-const API_BASE = 'https://data.xiaomi-exam.top/api';
+// 备用地址：https://xiaomi-data-assistant.1714508423.workers.dev （workers.dev 在国内被墙）
+// ⚠️ 代码里会自动拼 /api/chat 等路径，这里只填域名，【不要】带 /api 后缀
+const API_BASE = 'https://data.xiaomi-exam.top';
 // ═══════════════════════════════════════════════
 
 const $=s=>document.querySelector(s);
@@ -111,9 +113,10 @@ $('#codeBtn').onclick=async()=>{
   try{
     const {status}=await api('/api/chat',{messages:[{role:'user',content:'你好'}]});
     if(status===403){$('#codeErr').textContent='口令不正确';return}
+    if(status!==200){$('#codeErr').textContent='后端异常（HTTP '+status+'），点右上角「设置」检查地址';return}
     localStorage.setItem('dg_code',v);$('#gate').hidden=true;
   }catch(e){
-    $('#codeErr').innerHTML='连接不上后端（网络问题或地址不对）。<br>点右上角「设置」检查地址；若地址正确，<br>说明当前网络访问 workers.dev 受阻，需换网络/代理或绑定自定义域名。';
+    $('#codeErr').innerHTML='连接不上后端（网络问题或地址不对）。<br>点右上角「设置」检查地址（只填域名，不带 /api）。';
   }finally{
     $('#codeBtn').disabled=false;$('#codeBtn').textContent='进入';
   }};
