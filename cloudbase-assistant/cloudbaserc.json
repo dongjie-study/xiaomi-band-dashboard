@@ -1,0 +1,30 @@
+{
+  "version": "2.0",
+  "envId": "{{env.TCB_ENV_ID}}",
+  "framework": {
+    "name": "xiaomi-data-assistant",
+    "plugins": {}
+  },
+  "functionRoot": "cloudfunctions",
+  "functions": [
+    {
+      "name": "chat",
+      "timeout": 60,
+      "runtime": "Nodejs18.15",
+      "memorySize": 256,
+      "handler": "index.main",
+      "installDependency": false,
+      "description": "数据小管家：DeepSeek 问答查询直播间销量数据",
+      "envVariables": {
+        "ACCESS_ENABLED": "{{env.ACCESS_ENABLED}}",
+        "ACCESS_CODE": "{{env.ACCESS_CODE}}",
+        "DEEPSEEK_API_KEY": "{{env.DEEPSEEK_API_KEY}}"
+      },
+      "ignore": [
+        "node_modules",
+        "*.zip",
+        "*.md"
+      ]
+    }
+  ]
+}

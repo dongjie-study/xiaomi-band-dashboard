@@ -1,0 +1,9 @@
+# 数据资产由 tools/build_cloudbase_assets.py 生成（源数据在仓库里已有，不重复入库）
+cloudfunctions/chat/assets/
+# 打包上传用的 zip
+*.zip
+# CloudBase CLI 本地缓存与密钥
+.cloudbase/
+.env
+.dev.vars
+node_modules/
