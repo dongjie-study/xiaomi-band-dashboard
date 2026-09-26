@@ -66,10 +66,14 @@ const API_BASE = 'https://data.xiaomi-exam.top';
 // ═══════════════════════════════════════════════
 
 const $=s=>document.querySelector(s);
+// 存储保护：部分内嵌浏览器/隐私模式下 localStorage 会抛 SecurityError，不能让它炸掉整个脚本
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+// 全局错误兜底：任何脚本错误直接显示在聊天区，不再静默失败
+window.addEventListener('error',function(e){try{add('ai','⚠️ 页面脚本出错：'+(e.message||e.type)+'\n请截图发售后排查')}catch(_){}});
 const list=$('#list'),chips=$('#chips');
 const SUGGEST=['手环11首销月进度怎么样了？','9月24日我司整体卖了多少？','手环直播间最近7天走势','谁是这周销冠主播？','良米这周手环11卖了多少台？'];
-let history_=[],busy=false,myCode=localStorage.getItem('dg_code')||'';
-let base=(API_BASE||localStorage.getItem('dg_base')||'').replace(/\/+$/,'');
+let history_=[],busy=false,myCode=store.get('dg_code')||'';
+let base=(API_BASE||store.get('dg_base')||'').replace(/\/+$/,'');
 
 function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
 function add(role,text,typing){
@@ -79,7 +83,7 @@ function add(role,text,typing){
 function chipsInit(){
   if(history_.length)return;
   SUGGEST.forEach(s=>{const c=document.createElement('div');c.className='chip';c.textContent=s;
-    c.onclick=()=>{if(!busy)send(s)}};chips.appendChild(c)})}
+    c.onclick=()=>{if(!busy)send(s)};chips.appendChild(c)})}
 
 function showGate(title,hint,needInput){
   $('#gate').hidden=false;$('#gateTitle').textContent=title;$('#gateHint').innerHTML=hint;
@@ -114,7 +118,7 @@ $('#codeBtn').onclick=async()=>{
     const {status}=await api('/api/chat',{messages:[{role:'user',content:'你好'}]});
     if(status===403){$('#codeErr').textContent='口令不正确';return}
     if(status!==200){$('#codeErr').textContent='后端异常（HTTP '+status+'），点右上角「设置」检查地址';return}
-    localStorage.setItem('dg_code',v);$('#gate').hidden=true;
+    store.set('dg_code',v);$('#gate').hidden=true;
   }catch(e){
     $('#codeErr').innerHTML='连接不上后端（网络问题或地址不对）。<br>点右上角「设置」检查地址（只填域名，不带 /api）。';
   }finally{
@@ -123,7 +127,7 @@ $('#codeBtn').onclick=async()=>{
 $('#codeInput').onkeydown=e=>{if(e.key==='Enter')$('#codeBtn').click()};
 $('#setBtn').onclick=()=>{
   const v=prompt('小管家后端地址（wrangler deploy 得到的网址）：',base);
-  if(v!==null){base=v.trim().replace(/\/+$/,'');localStorage.setItem('dg_base',base);location.reload()}};
+  if(v!==null){base=v.trim().replace(/\/+$/,'');store.set('dg_base',base);location.reload()}};
 
 async function init(){
   if(!base){
