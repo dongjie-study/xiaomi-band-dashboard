@@ -18,7 +18,7 @@
 
   // ── 配置 ────────────────────────────────────────────────
   var API_BASE = 'https://data.xiaomi-exam.top';   // 只填域名，不带 /api
-  var VERSION = 'v2';
+  var VERSION = 'v3';
 
   // ── 只在顶层窗口渲染 ──────────────────────────────────────
   try { if (window.self !== window.top) return; } catch (e) { return; }
@@ -75,8 +75,8 @@
   + '  font-size:12px;line-height:1;display:flex;align-items:center;justify-content:center;cursor:pointer;border:0}'
 
   // 面板
-  + '.panel{position:fixed;right:22px;bottom:94px;width:min(456px,calc(100vw - 44px));'
-  + '  height:min(780px,calc(100vh - 130px));background:#f5f6f8;'
+  + '.panel{position:fixed;right:22px;bottom:94px;width:min(620px,calc(100vw - 56px));'
+  + '  height:min(920px,calc(100vh - 118px));background:#f5f6f8;'
   + '  border-radius:20px;overflow:hidden;display:flex;flex-direction:column;'
   + '  box-shadow:0 26px 70px rgba(15,20,30,.26),0 2px 10px rgba(0,0,0,.1);'
   + '  opacity:0;transform:translateY(18px) scale(.96);transform-origin:100% 100%;pointer-events:none;'
@@ -104,7 +104,7 @@
   + '.msg.ai .av{background:#fff3e6}'
   + '.msg.me{flex-direction:row-reverse}'
   + '.msg.me .av{background:#1E90FF;color:#fff}'
-  + '.bubble{max-width:86%;padding:10px 13px;border-radius:13px;white-space:pre-wrap;word-break:break-word;font-size:14px;line-height:1.68}'
+  + '.bubble{max-width:86%;padding:10px 13px;border-radius:13px;white-space:pre-wrap;word-break:break-word;font-size:14.5px;line-height:1.7}'
   + '.msg.ai .bubble{background:#fff;border:1px solid #e5e7eb;border-top-left-radius:4px;color:#1a1d26}'
   + '.msg.me .bubble{background:#1E90FF;color:#fff;border-top-right-radius:4px}'
   + '.typing i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#bbb;margin-right:3px;animation:dgB 1s infinite}'
@@ -458,7 +458,7 @@
     fab.style.right = r + 'px';
     fab.style.bottom = b + 'px';
     panel.style.bottom = (b + 72) + 'px';
-    panel.style.right = Math.min(Math.max(8, r), Math.max(8, window.innerWidth - 466)) + 'px';
+    panel.style.right = Math.min(Math.max(8, r), Math.max(8, window.innerWidth - 630)) + 'px';
   });
   function endDrag() {
     if (!dragging) return;

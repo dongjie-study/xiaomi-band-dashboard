@@ -19,7 +19,7 @@ import os
 import re
 import sys
 
-VERSION = "2"                      # 改了 assistant-widget.js 就把这个数字 +1
+VERSION = "3"                      # 改了 assistant-widget.js 就把这个数字 +1
 WIDGET = "assistant-widget.js"
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
