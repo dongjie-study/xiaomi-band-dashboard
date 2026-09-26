@@ -43,9 +43,9 @@ form{display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bott
 input[type=text]{flex:1;border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:15px;background:#fff;outline:none}
 input[type=text]:focus{border-color:var(--blue)}
 /* 大输入区：可多行自动长高 */
-textarea{flex:1;border:1px solid var(--border);border-radius:14px;padding:12px 14px;font:15px/1.5 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#fff;outline:none;resize:none;min-height:48px;max-height:150px}
+textarea{flex:1;border:1px solid var(--border);border-radius:14px;padding:16px 16px;font:16px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#fff;outline:none;resize:none;min-height:84px;max-height:220px}
 textarea:focus{border-color:var(--blue)}
-#send{min-height:48px;padding:0 22px;font-size:15px}
+#send{min-height:84px;padding:0 24px;font-size:16px}
 button{background:var(--blue);color:#fff;border:0;border-radius:10px;padding:0 18px;font-size:15px;cursor:pointer}
 button:disabled{opacity:.5}
 .gate{position:fixed;inset:0;background:rgba(245,246,248,.98);display:flex;align-items:center;justify-content:center;z-index:9;padding:24px}
@@ -156,7 +156,7 @@ async function send(text){
 
 $('#f').onsubmit=e=>{e.preventDefault();send()};
 // 输入区：自动长高 + Enter 发送 / Shift+Enter 换行
-$('#q').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,150)+'px'});
+$('#q').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,220)+'px'});
 $('#q').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}});
 $('#codeBtn').onclick=async()=>{
   const v=$('#codeInput').value.trim();if(!v)return;
