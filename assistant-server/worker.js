@@ -56,6 +56,65 @@ async function fetchJson(path) {
   return data;
 }
 
+// ---------- 文档目录（search_project_docs 工具用，与仓库同步） ----------
+const DOCS = {
+  '交接说明': '交接说明.md',
+  'WORKFLOW': 'WORKFLOW.md',
+  'CLAUDE': 'CLAUDE.md',
+  'docs00': 'docs/00-索引.md',
+  'docs01': 'docs/01-数据流.md',
+  'docs02': 'docs/02-数据字典.md',
+  'docs03': 'docs/03-直播间与团队.md',
+  'docs04': 'docs/04-页面与模块.md',
+  'docs05': 'docs/05-脚本清单.md',
+  'docs06': 'docs/06-踩坑与故障.md',
+  '直播间分类': '直播间分类.md',
+  '服务商汇总': '直播间服务商汇总.md',
+};
+
+async function fetchText(path) {
+  const url = RAW_BASE + path.split('/').map(encodeURIComponent).join('/');
+  const hit = CACHE.get(url);
+  if (hit && Date.now() - hit.t < CACHE_TTL) return hit.data;
+  const res = await fetch(url, { headers: { 'User-Agent': 'data-assistant/1.0' } });
+  if (!res.ok) throw new Error(`拉取 ${path} 失败（HTTP ${res.status}）`);
+  const text = await res.text();
+  CACHE.set(url, { t: Date.now(), data: text });
+  return text;
+}
+
+async function toolSearchDocs(args) {
+  const want = String(args.file || '').trim();
+  let keys = Object.keys(DOCS);
+  if (want) {
+    keys = keys.filter(k => k.toLowerCase().includes(want.toLowerCase()) || DOCS[k].toLowerCase().includes(want.toLowerCase()));
+    if (!keys.length) {
+      return { error: `没找到文档「${want}」`, available: Object.entries(DOCS).map(([k, v]) => `${k} = ${v}`) };
+    }
+  }
+  const q = String(args.query || '').trim();
+  const out = {};
+  for (const k of keys.slice(0, 3)) {
+    let text;
+    try { text = await fetchText(DOCS[k]); }
+    catch (e) { out[DOCS[k]] = '拉取失败: ' + e.message; continue; }
+    const toc = text.split('\n').filter(l => /^#{1,4} /.test(l)).slice(0, 45).join('；');
+    if (q) {
+      const paras = text.split(/\n\s*\n/);
+      const hits = [];
+      paras.forEach((p, i) => {
+        if (p.includes(q) && hits.length < 8) hits.push(paras.slice(Math.max(0, i - 1), i + 2).join('\n\n'));
+      });
+      out[DOCS[k]] = hits.length
+        ? `【${hits.length} 处命中「${q}」】\n` + hits.join('\n\n······\n\n').slice(0, 7000)
+        : `无「${q}」命中。【该文档目录】${toc}`;
+    } else {
+      out[DOCS[k]] = `【目录】${toc}\n\n【开头节选】\n` + text.slice(0, 1500);
+    }
+  }
+  return { docs: out, hint: '要更细的内容就带上 query 关键词再查一次；一次最多返回 3 份文档' };
+}
+
 // ---------- 工具实现 ----------
 
 function today() { return new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10); } // 北京时间（UTC+8）
@@ -331,6 +390,18 @@ const TOOLS = [
       parameters: { type: 'object', properties: {} },
     },
   },
+  {
+    type: 'function', function: {
+      name: 'search_project_docs',
+      description: '查询项目文档原文。回答项目本身的问题时必须用它：项目怎么运作、每日流程怎么走、规范/铁律、某个脚本是干嘛的、数据怎么入库、怎么新增直播间、页面模块有哪些、常见坑等。也可用来核实口径定义。',
+      parameters: {
+        type: 'object', properties: {
+          file: { type: 'string', description: '文档名或关键词：交接说明/WORKFLOW/CLAUDE/docs00(索引)/docs01(数据流)/docs02(数据字典)/docs03(直播间与团队)/docs04(页面与模块)/docs05(脚本清单)/docs06(踩坑)/直播间分类/服务商汇总。不填=概览全部' },
+          query: { type: 'string', description: '可选，搜索关键词（如 铁律/新增直播间/NaT/自校验），命中段落±上下文' },
+        },
+      },
+    },
+  },
 ];
 
 const TOOL_IMPLS = {
@@ -339,6 +410,7 @@ const TOOL_IMPLS = {
   query_anchor_performance: toolQueryAnchor,
   get_daily_reviews: toolDailyReviews,
   get_band11_progress: toolBand11Progress,
+  search_project_docs: toolSearchDocs,
 };
 
 // ---------- 系统提示词：项目知识库 ----------
@@ -374,6 +446,14 @@ ${roomLines}
 - 考核四渠道（我司主力间）：小米官方手环直播间、小米数码旗舰店、我司商品卡、小米官方手表。
 - 主力商品：小米手环11（当前绝对主力）、REDMI Watch 6、小米手环10 Pro、Xiaomi Watch S5、REDMI Buds 8 系列。商品名可部分匹配（如"手环11"、"S5"、"watch 6"）。
 - 数据范围：销量自 2026-06-01 起；主播业绩自 2026-08 起。
+
+## 项目全景（这个项目本身是什么）
+「小米手环直播间销量分析」= 直播间销售数据的日常入库 + 可视化平台（GitHub Pages 公开看板 + 数据小管家）。
+- 两条日常链路：① 订单 Excel → run_all.py sales 入库 → history.json（本工具的数据源）→ 看板图表；② 业绩 Excel → 解析进 主播业绩/业绩demo.html（主播 GSV 面板，anchor_records.json 由 tools/extract_anchor_records.py 从中抽取）。
+- 首销月进度：generate_band11_target.py 每天刷桌面进度表（含我司vs良米对比页、周期复盘）。
+- 文档体系：交接说明.md（总入口）、WORKFLOW.md（每日流程详解）、docs/00~06（索引/数据流/数据字典/直播间与团队/页面模块/脚本清单/踩坑与故障）、CLAUDE.md（AI 协作规范）、直播间分类.md 与 直播间服务商汇总.md（36 间归属）。
+- 三条铁律：禁止 git add -A（必须精确 add）；数据入库后必须自校验（日期完整、各直播间加总=总量、总结库校验）；生成文件（PNG/图表）不提交。
+- 回答项目知识类问题（流程/规范/脚本/坑/怎么操作）→ **用 search_project_docs 工具查文档原文再回答**，不要凭这段概览编细节。
 
 ## 回答规则
 1. 任何数字必须来自工具查询结果，禁止编造或凭记忆推测；工具报错就把错误原样转述给用户。
