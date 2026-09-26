@@ -12,7 +12,7 @@ function el() {
     disabled: false, scrollTop: 0, scrollHeight: 0,
     children: [],
     appendChild(c) { this.children.push(c); },
-    remove() {}, focus() {}, click() {},
+    remove() {}, focus() {}, click() {}, addEventListener() {},
     set onclick(f) { this._onclick = f; }, get onclick() { return this._onclick; },
     set onsubmit(f) { this._onsubmit = f; }, get onsubmit() { return this._onsubmit; },
     set onkeydown(f) { this._onkeydown = f; }, get onkeydown() { return this._onkeydown; },
