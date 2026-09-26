@@ -58,7 +58,7 @@ async function fetchJson(path) {
 
 // ---------- 工具实现 ----------
 
-function today() { return new Date().toISOString().slice(0, 10); }
+function today() { return new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10); } // 北京时间（UTC+8）
 function validDate(s) { return typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s); }
 
 async function toolQuerySales(args) {
@@ -342,37 +342,46 @@ const TOOL_IMPLS = {
 };
 
 // ---------- 系统提示词：项目知识库 ----------
-function systemPrompt() {
+function systemPrompt(latestDate) {
   const roomLines = TEAM_ORDER.map(t => {
     const rooms = Object.keys(TEAM_MAP).filter(k => TEAM_MAP[k] === t);
     return `- ${t}（${rooms.length}间）：${rooms.join('、')}`;
   }).join('\n');
-  return `你是「小米手环直播间数据分析小管家」，服务内部同事查询直播间销量数据。今天日期：${today()}。
+  return `你是「小米手环直播间数据分析小管家」，服务内部同事（小米抖音电商代运营）查询直播间销量数据。
+今天日期：${today()}（北京时间）。数据最新更新到：${latestDate}（订单数据每天晚上入库前一天，白天问"今天"就是还没有）。
 
-## 数据口径（非常重要，回答时必须说明口径）
-1. **订单口径**（query_sales/query_hourly/get_band11_progress）：来自后台导出的订单明细，金额=实付销售额。总订单量与直播间明细一致。
-2. **主播 GSV 口径**（query_anchor_performance）：主播每班次业绩，**未扣退款**，与订单口径数字对不上是正常的。
-3. **手环11 台数**：指商品「小米手环11」的订单件数，不是 GMV。
-4. 「小米手环手表直播间」归属未定，整间不入库，查不到是正常的。
-5. 每份工具返回里有 meta/latest 字段标明数据更新到哪天，回答时注明数据截至日期。
+## 时间规则（重要）
+- 用户说"今天/现在"→ 数据还没有，主动告知数据只到 ${latestDate}，并直接给出 ${latestDate} 的数据。
+- "昨天/昨天卖了多少" = ${latestDate} 那天。
+- "9月24日"之类要转成 2026-09-24；"这周/最近7天" = ${latestDate} 往前数 7 天。
+- 回答末尾注明"数据截至 ${latestDate}"。
+
+## 数据口径（非常重要，绝不能混用）
+1. **订单口径**（query_sales / query_hourly / get_band11_progress）：后台订单明细，金额=实付销售额（已扣退款），台数=订单件数。
+2. **主播 GSV 口径**（query_anchor_performance）：主播每班次业绩，**未扣退款**。GSV 普遍比订单口径金额大 10%~30%，两者放一起比较是错的；问"销冠/主播业绩/班次"才用它。
+3. 问"卖了多少台/多少单/销售额" → 订单口径；问"主播 GSV / 谁业绩好" → GSV 口径。回答时必须标注用了哪种口径。
+4. 「小米手环手表直播间」归属未定整间不入库，查不到是正常的，不是故障。
 
 ## 直播间归属表（房间名必须一字不差）
 ${roomLines}
 ⚠️ 极易混淆：「小米官方手环直播间」（我司）≠「小米手环官方直播间」（纵横）≠「小米手环直播间」（凝云）；「小米官方手表」（我司）≠「小米手表」（良米）。
+- 用户说"我们/我司/自家/我们自己" = 我司（阳光，自营团队）。
+- 用户说"官方直播间"但没说是哪家 → 列出候选让他确认，不要瞎猜。
 
-## 背景知识
-- 平台监控 36 个直播间，分属 10 个服务商团队；我司=阳光（自营），良米=主要竞对。
-- 主力商品：小米手环11（首销月 9.7~10.7，总目标 60000 台，日均需求约 1935 台）、REDMI Watch 6、小米手环10 Pro、Xiaomi Watch S5、REDMI Buds 8 系列。
-- 数据范围：销量自 2026-06-01 起；主播业绩自 2026-08 月起。
-- 考核四渠道：小米官方手环直播间、小米数码旗舰店、我司商品卡、小米官方手表。
+## 项目背景
+- 平台监控 36 个直播间，分属 10 个服务商团队；我司=阳光（自营），**良米=主要竞对**（我司重点对标对象）。
+- 当前主线：**小米手环11 首销月（2026-09-07 ~ 2026-10-07），总目标 60000 台**，日均需求约 1935 台。
+- 考核四渠道（我司主力间）：小米官方手环直播间、小米数码旗舰店、我司商品卡、小米官方手表。
+- 主力商品：小米手环11（当前绝对主力）、REDMI Watch 6、小米手环10 Pro、Xiaomi Watch S5、REDMI Buds 8 系列。商品名可部分匹配（如"手环11"、"S5"、"watch 6"）。
+- 数据范围：销量自 2026-06-01 起；主播业绩自 2026-08 起。
 
 ## 回答规则
-1. 任何数字必须来自工具查询结果，禁止编造或凭记忆推测。
-2. 日期一律用 YYYY-MM-DD 传给工具；用户说「9月20日」你要转成 2026-09-20。
-3. 用户问的直播间名如果不完整（如「手环间」），先按归属表推断成完整名再查；匹配到多个就列出让用户选。
-4. 回答简洁、给结论和关键数字，适当给环比/对比；数据较多的用小表格呈现。
-5. 不知道或数据里没有的，直接说没有，不要编。
-6. 用中文回答。`;
+1. 任何数字必须来自工具查询结果，禁止编造或凭记忆推测；工具报错就把错误原样转述给用户。
+2. 需要多个数据才能回答的问题（如"我司和良米比怎么样"、"哪个间卖得最好"），要**多调几次工具**把数据凑齐再回答，不要只查一半就开始总结。
+3. 做对比/排行时，口径必须统一（都是订单口径或都是 GSV），并说明。
+4. 回答简洁、先给结论和关键数字；数据多用小表格；适当给环比和趋势，但趋势要用查询到的多天数据算，不要拍脑袋。
+5. 用户问的直播间名不完整（如"手环间"、"数码店"）→ 按归属表推断成完整名；匹配到多个就列出让用户选。
+6. 不知道或数据里没有的，直接说没有，不要编。用中文回答。`;
 }
 
 // ---------- DeepSeek 调用 ----------
@@ -393,8 +402,13 @@ async function deepseekChat(env, messages) {
 }
 
 async function chatWithTools(env, userMessages) {
-  const messages = [{ role: 'system', content: systemPrompt() }, ...userMessages];
-  for (let round = 0; round < 6; round++) {
+  let latestDate = today();
+  try {
+    const h = await fetchJson(GH_FILE.history);
+    latestDate = h[h.length - 1].date;
+  } catch {} // 拉不到就用今天兜底
+  const messages = [{ role: 'system', content: systemPrompt(latestDate) }, ...userMessages];
+  for (let round = 0; round < 8; round++) {
     const msg = await deepseekChat(env, messages);
     if (!msg.tool_calls || !msg.tool_calls.length) return msg.content || '（空回复）';
     messages.push({ role: 'assistant', content: msg.content || '', tool_calls: msg.tool_calls });
@@ -464,10 +478,37 @@ export default {
 
       try {
         const answer = await chatWithTools(env, msgs);
+        // 对话日志：用户问题 + 小管家回答（KV 持久化，排查答错用）
+        if (env.CHAT_LOG) {
+          try {
+            const key = 'log:' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+            await env.CHAT_LOG.put(key, JSON.stringify({
+              t: new Date().toISOString(),
+              q: msgs[msgs.length - 1].content,
+              qa: msgs.map(m => m.content).join(' ⊕ '),
+              a: answer,
+            }), { expirationTtl: 60 * 60 * 24 * 30 }); // 保留 30 天
+          } catch {} // 日志失败不影响回答
+        }
         return json({ answer });
       } catch (e) {
         return json({ error: e.message }, 502);
       }
+    }
+
+    // 查对话日志：GET /api/logs?code=口令（返回最近 100 条，新的在前）
+    if (url.pathname === '/api/logs' && request.method === 'GET') {
+      const enabled = (env.ACCESS_ENABLED || 'true') === 'true';
+      if (enabled && url.searchParams.get('code') !== (env.ACCESS_CODE || '')) {
+        return json({ error: '口令不正确' }, 403);
+      }
+      if (!env.CHAT_LOG) return json({ error: '日志未启用（KV 未绑定）' }, 501);
+      const list = await env.CHAT_LOG.list({ prefix: 'log:', limit: 100 });
+      const keys = list.keys.sort((a, b) => (b.name > a.name ? 1 : -1)).slice(0, 100).map(k => k.name);
+      const logs = await Promise.all(keys.map(async k => {
+        try { return JSON.parse(await env.CHAT_LOG.get(k)); } catch { return null; }
+      }));
+      return json({ count: logs.length, logs: logs.reverse().filter(Boolean) });
     }
 
     return json({ error: 'Not Found' }, 404);

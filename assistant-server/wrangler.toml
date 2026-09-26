@@ -18,3 +18,9 @@ ACCESS_CODE = "xiaomi"
 
 # DEEPSEEK_API_KEY 不要写在这里！用：
 #   npx wrangler secret put DEEPSEEK_API_KEY
+
+# 对话日志（KV）：用户问的每条问题+小管家回答都会存下来，
+# 用 GET /api/logs?code=口令 可查最近 100 条，用于排查"答得不对"的问题。
+[[kv_namespaces]]
+binding = "CHAT_LOG"
+id = "f71d1237aeb74686ad45af01cd5e57db"
