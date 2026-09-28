@@ -39,10 +39,17 @@
     };
     observeAll();
 
-    /* 动态内容（模块渲染/切 tab 后插入的节点）也纳入 */
+    /* 动态内容（模块渲染/切 tab 后插入的节点）也纳入。
+       注意：业务页常在一次刷新里连续重写几十处 innerHTML，如果每次 mutation 都全文档
+       重扫，会造成大量无效重排（业绩页实测一次刷新会触发多次全量扫描）。
+       这里用 requestAnimationFrame 合并到下一帧只扫一次。 */
     if ('MutationObserver' in window) {
+      var scanQueued = false;
+      var raf = window.requestAnimationFrame || function (cb) { return setTimeout(cb, 16); };
       new MutationObserver(function () {
-        observeAll();
+        if (scanQueued) return;          /* 本帧已排队，跳过 */
+        scanQueued = true;
+        raf(function () { scanQueued = false; observeAll(); });
       }).observe(document.body, { childList: true, subtree: true });
     }
 
