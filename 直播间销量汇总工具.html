@@ -111,6 +111,9 @@
   table.hour .row-label{text-align:left;font-weight:500;color:#374151;width:80px;}
   td.room-name{font-weight:700;background:#e8ecf3;color:var(--ink);text-align:left;
     vertical-align:middle;min-width:130px;}
+  td.room-name.sub{background:#cbd5e1;}
+  td.room-name.grand{background:#111827;color:#f9fafb;}
+  tr.subtotal td,tr.grandtotal td{font-weight:700;}
   tr.metric-gmv td.row-label,tr.metric-gsv td.row-label{color:#1d4ed8;}
   tr.metric-spend td.row-label{color:#15803d;}
   tr.metric-refund td.row-label,tr.metric-rate td.row-label{color:#be123c;}
@@ -210,7 +213,9 @@
             <th colspan="3">小米手环11全部版本</th>
             <th colspan="3">小米手环11标准版</th>
             <th colspan="3">Xiaomi Watch S5 41mm</th>
+            <th colspan="3">手表总销量</th>
           </tr><tr>
+            <th>订单数</th><th>销售额(元)</th><th>占比</th>
             <th>订单数</th><th>销售额(元)</th><th>占比</th>
             <th>订单数</th><th>销售额(元)</th><th>占比</th>
             <th>订单数</th><th>销售额(元)</th><th>占比</th>
@@ -260,7 +265,8 @@ const IGNORED_ROOMS = new Set(["小米手环手表直播间"]);
 const CATEGORIES = [
   {name:"小米手环11全部版本", codes:new Set(["81235","81236","81244","81249","81251","81253","81254","81255","81256","81259"])},
   {name:"小米手环11标准版",   codes:new Set(["81244","81249","81254"])},
-  {name:"Xiaomi Watch S5 41mm", codes:new Set(["77889","77890","77895","77906"])}
+  {name:"Xiaomi Watch S5 41mm", codes:new Set(["77889","77890","77895","77906"])},
+  {name:"手表总销量", codes:new Set(["68698","68703","68712","77889","77890","77895","77906","70275","70279","70281","70282","70284","65337","65341","65344","75162"])}
 ];
 
 const $ = s => document.querySelector(s);
@@ -414,36 +420,41 @@ function process(rows, srcName){
 }
 
 const METRICS = ["gmv","gsv","投放","roi","净roi","退费","退费率"];
+const METRIC_CLS = ["metric-gmv","metric-gsv","metric-spend","metric-spend","metric-spend","metric-refund","metric-rate"];
+const agentMetrics = agent => agent==="我司阳光"
+  ? METRICS : METRICS.filter(m=>!["投放","roi","净roi"].includes(m));
 function renderHourTable(roomHour, hourSet){
   const hours = [...hourSet].sort();
-  // 表头
   let thead = "<tr><th class='lab'>直播间</th><th class='lab'>指标</th>";
   hours.forEach(h=> thead += `<th>${parseInt(h)}点</th>`);
   thead += "<th class='sum-col'>汇总</th></tr>";
   $("#theadHour").innerHTML = thead;
 
-  // 小时透视只分析「我司阳光」「良米」两家：我司在上、良米在下，各自直播间按gmv降序
+  // 我司在上、良米在下；各自直播间按gmv降序，并算服务商小计
   const HOUR_AGENTS = ["我司阳光","良米"];
   const IS_CARD = nick => nick.includes("商品卡");
-  const rooms = [];
-  HOUR_AGENTS.forEach(agent=>{
-    Object.entries(roomHour)
+  const groups = HOUR_AGENTS.map(agent=>{
+    const rs = Object.entries(roomHour)
       .filter(([nick])=>ROOM_TO_AGENT[nick]===agent && !IS_CARD(nick))
       .map(([nick, hm])=>({nick, hm, totalGmv:Object.values(hm).reduce((s,v)=>s+v.gmv,0)}))
-      .sort((a,b)=>b.totalGmv-a.totalGmv)
-      .forEach(r=>rooms.push(r));
+      .sort((a,b)=>b.totalGmv-a.totalGmv);
+    const sub = {};
+    hours.forEach(h=>{
+      sub[h]={gmv:0,refund:0};
+      rs.forEach(({hm})=>{ if(hm[h]){ sub[h].gmv+=hm[h].gmv; sub[h].refund+=hm[h].refund; } });
+    });
+    return {agent, rooms:rs, sub};
   });
 
   const fmt0 = n => Math.round(n).toLocaleString("zh-CN");
   const sumOf = (hm, key) => hours.reduce((s,h)=> s + (hm[h]||{gmv:0,refund:0})[key], 0);
-  let tbody = "";
-  const renderBlock = (label, hm, isTotal) => {
+  const renderBlock = (label, hm, agent, kind) => {
     let rowsHtml = "";
     const sumGmv = sumOf(hm,"gmv"), sumRefund = sumOf(hm,"refund");
-    // 良米(及合计)不带 投放/roi/净roi；我司的直播间带完整7项
-    const metrics = (ROOM_TO_AGENT[label]==="我司阳光") ? METRICS : METRICS.filter(m=>!["投放","roi","净roi"].includes(m));
-    metrics.forEach((m, idx)=>{
-      const cls = ["metric-gmv","metric-gsv","metric-spend","metric-spend","metric-spend","metric-refund","metric-rate"][idx];
+    const metrics = agentMetrics(agent);
+    const trCls = kind==="sub" ? "subtotal" : kind==="grand" ? "grandtotal" : "";
+    metrics.forEach(m=>{
+      const cls = METRIC_CLS[METRICS.indexOf(m)];
       let cells = "";
       hours.forEach(h=>{
         const d = hm[h]||{gmv:0,refund:0};
@@ -459,31 +470,34 @@ function renderHourTable(roomHour, hourSet){
           cells += `<td class="zero">0</td>`;
         }
       });
-      // 汇总列：0点~最后一小时该行总数
       let sumVal;
       if(m==="gmv") sumVal = sumGmv? fmt0(sumGmv) : "";
       else if(m==="gsv") sumVal = (sumGmv-sumRefund)? fmt0(sumGmv-sumRefund) : "";
       else if(m==="退费") sumVal = sumRefund? fmt0(sumRefund) : "";
       else if(m==="退费率") sumVal = sumGmv? (sumRefund/sumGmv*100).toFixed(1)+"%" : "—";
       else sumVal = "0";
-      const labelCell = (idx===0)
-        ? `<td class="room-name" rowspan="${metrics.length}">${label}</td>` : "";
-      rowsHtml += `<tr class="${cls}">${labelCell}<td class="row-label">${m}</td>${cells}<td class="sum">${sumVal}</td></tr>`;
+      const nameCls = kind==="sub" ? "room-name sub" : kind==="grand" ? "room-name grand" : "room-name";
+      const labelCell = (m===metrics[0])
+        ? `<td class="${nameCls}" rowspan="${metrics.length}">${label}</td>` : "";
+      rowsHtml += `<tr class="${cls} ${trCls}">${labelCell}<td class="row-label">${m}</td>${cells}<td class="sum">${sumVal}</td></tr>`;
     });
     return rowsHtml;
   };
 
-  rooms.forEach(({nick, hm})=>{ tbody += renderBlock(nick, hm, false); });
-  // 全平台合计
+  let tbody = "";
+  groups.forEach(({agent, rooms, sub})=>{
+    rooms.forEach(({nick,hm})=>{ tbody += renderBlock(nick, hm, agent, "room"); });
+    tbody += renderBlock(agent==="我司阳光"?"我司合计":"良米合计", sub, agent, "sub");
+  });
   const totalHm = {};
   hours.forEach(h=>{
-    totalHm[h] = {gmv:0,refund:0};
-    rooms.forEach(({hm})=>{ if(hm[h]){ totalHm[h].gmv+=hm[h].gmv; totalHm[h].refund+=hm[h].refund; } });
+    totalHm[h]={gmv:0,refund:0};
+    groups.forEach(({sub})=>{ totalHm[h].gmv+=sub[h].gmv; totalHm[h].refund+=sub[h].refund; });
   });
-  tbody += renderBlock("全平台合计", totalHm, true);
+  tbody += renderBlock("全平台合计", totalHm, "良米", "grand");
   $("#tbodyHour").innerHTML = tbody;
   window.__hourHours = hours;
-  window.__hourRooms = rooms;
+  window.__hourGroups = groups;
 }
 
 function barHtml(share){return `<div class="bar"><i style="width:${Math.max(share*100,1)}%"></i></div>`;}
@@ -503,37 +517,37 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{
 });
 
 async function exportHour(){
-  const hours = window.__hourHours, rooms = window.__hourRooms;
+  const hours = window.__hourHours, groups = window.__hourGroups;
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet("小时透视");
   ws.columns = [{width:20},{width:10}, ...hours.map(()=>({width:11})), {width:12}];
   const thin = {style:"thin", color:{argb:"FFD9DEE8"}};
   const border = {top:thin,left:thin,bottom:thin,right:thin};
   const HEAD="FF111827", BLUE="FFeef4ff", GREEN="FFecfdf3",
-        RED="FFfff1f2", ROOM="FFe8ecf3", SUM="FFfafbff";
+        RED="FFfff1f2", ROOM="FFe8ecf3", SUM="FFfafbff",
+        SUB="FFcbd5e1", GRAND="FF111827";
   const rowFill = {gmv:BLUE,gsv:BLUE,投放:GREEN,roi:GREEN,净roi:GREEN,退费:RED,退费率:RED};
 
-  // 表头
   let r = ws.addRow(["直播间","指标",...hours.map(h=>parseInt(h)+"点"),"汇总"]);
   r.height=22;
   r.eachCell(c=>{c.fill={type:"pattern",pattern:"solid",fgColor:{argb:HEAD}};
     c.font={bold:true,color:{argb:"FFFFFFFF"}};c.border=border;
     c.alignment={horizontal:"center",vertical:"middle"};});
 
-  const block = (label, hm)=>{
+  const block = (label, hm, agent, kind)=>{
     const start = ws.rowCount+1;
     const sumGmv = hours.reduce((s,h)=>s+(hm[h]||{gmv:0,refund:0}).gmv,0);
     const sumRefund = hours.reduce((s,h)=>s+(hm[h]||{gmv:0,refund:0}).refund,0);
-    // 良米(及合计)不带 投放/roi/净roi；我司的直播间带完整7项
-    const metrics = (ROOM_TO_AGENT[label]==="我司阳光") ? METRICS : METRICS.filter(m=>!["投放","roi","净roi"].includes(m));
-    metrics.forEach((m,idx)=>{
+    const metrics = agentMetrics(agent);
+    let first = true;
+    metrics.forEach(m=>{
       let sumVal;
       if(m==="gmv") sumVal = Math.round(sumGmv);
       else if(m==="gsv") sumVal = Math.round(sumGmv-sumRefund);
       else if(m==="退费") sumVal = Math.round(sumRefund);
       else if(m==="退费率") sumVal = sumGmv? +(sumRefund/sumGmv).toFixed(4):0;
       else sumVal = 0;
-      const row = ws.addRow([ idx===0?label:"", m, ...hours.map(h=>{
+      const row = ws.addRow([ first?label:"", m, ...hours.map(h=>{
         const d=hm[h]||{gmv:0,refund:0};
         if(m==="gmv") return Math.round(d.gmv);
         if(m==="gsv") return Math.round(d.gmv-d.refund);
@@ -541,11 +555,15 @@ async function exportHour(){
         if(m==="退费率") return d.gmv?+(d.refund/d.gmv).toFixed(4):0;
         return 0;
       }), sumVal]);
+      first = false;
       row.eachCell((cell,col)=>{
         cell.border=border;
         cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:rowFill[m]}};
-        if(col===1){cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:ROOM}};
-          cell.font={bold:true};}
+        if(col===1){
+          const nameFill = kind==="sub"?SUB:kind==="grand"?GRAND:ROOM;
+          cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:nameFill}};
+          cell.font={bold:true, color:{argb: kind==="grand"?"FFFFFFFF":"FF111827"}};
+        }
         if(col===2) cell.alignment={horizontal:"left",vertical:"middle"};
         else cell.alignment={horizontal:"right",vertical:"middle"};
         if(col===hours.length+3){
@@ -559,10 +577,13 @@ async function exportHour(){
     ws.mergeCells(start,1,start+metrics.length-1,1);
   };
 
-  rooms.forEach(({nick,hm})=>block(nick,hm));
+  groups.forEach(({agent, rooms, sub})=>{
+    rooms.forEach(({nick,hm})=>block(nick,hm,agent,"room"));
+    block(agent==="我司阳光"?"我司合计":"良米合计", sub, agent, "sub");
+  });
   const totalHm={}; hours.forEach(h=>{totalHm[h]={gmv:0,refund:0};
-    rooms.forEach(({hm})=>{if(hm[h]){totalHm[h].gmv+=hm[h].gmv;totalHm[h].refund+=hm[h].refund;}});});
-  block("全平台合计", totalHm);
+    groups.forEach(({sub})=>{totalHm[h].gmv+=sub[h].gmv;totalHm[h].refund+=sub[h].refund;});});
+  block("全平台合计", totalHm, "良米", "grand");
   ws.views=[{state:"frozen",ySplit:1,xSplit:2}];
 
   const buf=await wb.xlsx.writeBuffer();
@@ -593,9 +614,9 @@ $("#export").addEventListener("click", async ()=>{
   r2.eachCell(c=>{c.fill={type:"pattern",pattern:"solid",fgColor:{argb:HEAD}};
     c.font={bold:true,color:{argb:"FFFFFFFF"}};c.border=border;
     c.alignment={horizontal:"center",vertical:"middle"};});
-  ws.mergeCells("A1:A2");
-  ws.mergeCells("B1:D1"); ws.mergeCells("E1:G1");
-  ws.mergeCells("H1:J1"); ws.mergeCells("K1:M1");
+  ws.mergeCells(1,1,2,1);
+  ws.mergeCells(1,2,1,4);
+  CATEGORIES.forEach((c,i)=>ws.mergeCells(1,5+3*i,1,7+3*i));
   // 数据行
   window.__exportData.filter(row=>row.kind!=="header").forEach(row=>{
     const r = ws.addRow(row.cells);
