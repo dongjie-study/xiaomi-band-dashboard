@@ -2615,6 +2615,30 @@
                     { roomId: 'room_xiaomi_smart_device', shift: 'C', anchor: '李亚娴', sales: 8241.65 },
                 ],
 
+                '2026-09-27': [
+                    { roomId: 'room_xiaomi_band', shift: 'A', anchor: '申琰', sales: 15943.59 },
+                    { roomId: 'room_xiaomi_band', shift: 'B', anchor: '周亚锦', sales: 15127.6 },
+                    { roomId: 'room_xiaomi_band', shift: 'C', anchor: '徐梦洁', sales: 37523.73 },
+                    { roomId: 'room_xiaomi_band', shift: 'D', anchor: '朱泓颖', sales: 34444.61 },
+                    { roomId: 'room_xiaomi_band', shift: 'E', anchor: '陈苡好', sales: 5490.1 },
+                    { roomId: 'room_xiaomi_watch', shift: 'A', anchor: '高珊珊', sales: 15288.4 },
+                    { roomId: 'room_xiaomi_watch', shift: 'B', anchor: '郭孟航', sales: 24667.4 },
+                    { roomId: 'room_xiaomi_watch', shift: 'C', anchor: '张艳丽', sales: 30512.15 },
+                    { roomId: 'room_xiaomi_watch', shift: 'D', anchor: '王瑞', sales: 20755.95 },
+                    { roomId: 'room_xiaomi_watch', shift: 'E', anchor: '王嘉琦', sales: 7517.03 },
+                    { roomId: 'room_xiaomi_watch_flagship', shift: 'A', anchor: '王晨阳', sales: 7776.2 },
+                    { roomId: 'room_xiaomi_watch_flagship', shift: 'B', anchor: '韩嫕晴', sales: 7593.1 },
+                    { roomId: 'room_xiaomi_watch_flagship', shift: 'C', anchor: '宋紫茹', sales: 8132.6 },
+                    { roomId: 'room_xiaomi_watch_flagship', shift: 'D', anchor: '牛萌萌', sales: 6009.2 },
+                    { roomId: 'room_xiaomi_watch_flagship', shift: 'E', anchor: '高智敏', sales: 1618.1 },
+                    { roomId: 'room_xiaomi_digital', shift: 'A', anchor: '王秋鸽', sales: 16248.31 },
+                    { roomId: 'room_xiaomi_digital', shift: 'B', anchor: '张蓬元', sales: 20783.83 },
+                    { roomId: 'room_xiaomi_digital', shift: 'C', anchor: '李亚娴', sales: 38055.82 },
+                    { roomId: 'room_xiaomi_digital', shift: 'D', anchor: '李牧遥', sales: 39548.07 },
+                    { roomId: 'room_xiaomi_smart_device', shift: 'B', anchor: '梁思雅', sales: 4522.14 },
+                    { roomId: 'room_xiaomi_smart_device', shift: 'C', anchor: '方姝蓉', sales: 5075.62 },
+                ],
+
                 // 按日期添加新数据，格式同上
             };
 
@@ -3548,10 +3572,16 @@
                 document.getElementById('exportChampionRankingBtn').addEventListener('click', exportChampionRankingToExcel);
                 document.getElementById('exportDetailBtn').addEventListener('click', exportDetailToExcel);
 
+                // ⚠️ 此处不要往日期框里回填默认值。
+                // 早前这里把区间填成全量（最早~最新），会让 refreshAll 判定为"已进入自定义区间"，
+                // 从而无视「近7天」的高亮、首屏直接渲染全部天数。
+                // 后果：默认首屏 2377 行表格 / 2.2 万 DOM 节点，且随数据天数增长越来越卡。
+                // 现在日期框保持留空 = 由「近N天」按钮控制，与 .filter-btn.active 的高亮一致。
                 const allDates = getAllDates();
                 if (allDates.length) {
-                    document.getElementById('dateStart').value = allDates[0];
-                    document.getElementById('dateEnd').value = allDates[allDates.length - 1];
+                    const rangeTip = '可选范围：' + allDates[0] + ' ~ ' + allDates[allDates.length - 1];
+                    document.getElementById('dateStart').title = rangeTip;
+                    document.getElementById('dateEnd').title = rangeTip;
                 }
             }
 
