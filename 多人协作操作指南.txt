@@ -1,44 +1,59 @@
 ============================================================
   小米手环分析平台 - 多人协作操作指南
-  更新日期：2026-06-17
+  更新日期：2026-09-30
+  ⚠️ 本文只讲「多人怎么协作 / Git 怎么用」。
+     每日数据入库的完整流程以 WORKFLOW.md 顶部「⚡ 每日执行清单」为唯一准绳；
+     字段含义、页面结构、脚本、踩坑见 docs/00-索引.md 开始的知识库。
 ============================================================
 
-一、新增模块（你加新功能时）
+零、三条铁律（先看，别踩）
 ----------------------------------------------------------
 
-1. 创建你的模块 HTML 文件
-   比如新建目录：用户画像分析/index.html
+1. 两条数据流程不许互相污染
+   订单数据只走 sales_analysis/ 那条线（run_all.py sales）；
+   业绩数据只走「主播业绩/业绩demo.html」的 DAILY_RECORDS 那条线。
+   不要用一条流程的脚本去处理另一条流程的文件。
 
-2. 编辑 modules.json，在对应分类下加一行配置：
-   {
-     "id": "userprofile",
-     "title": "用户画像分析",
-     "url": "用户画像分析/index.html",
-     "icon": "👤",
-     "description": "人群画像、地域分布、消费偏好分析",
-     "tag": "User Profile"
-   }
+2. 禁止 git add -A / git add .
+   工作区常年躺着别人的半成品和临时文件，一条 -A 会全扫进提交。
+   只能精确列出本次改动的文件（见 WORKFLOW.md「📦 提交清单」）。
 
-   ★ 注意：加在数组最后面，避免跟别人的冲突
+3. 脚本生成的文件不要手改
+   改了下次跑脚本就被覆盖。要改就改生成它的 .py。
+   哪些页面是手写、哪些是脚本生成 → docs/04-页面与模块.md 第二节。
 
-3. 提交推送：
-   git add .
-   git commit -m "feat: 新增xxx模块"
+
+一、我要新增一个页面/模块
+----------------------------------------------------------
+
+1. 建你的 HTML 文件（例：用户画像分析/index.html）
+
+2. 在 modules.json 的对应 section 里追加一个模块对象（字段说明见第六节），
+   加在数组最后面，避免跟别人的改动冲突。
+   加完本地打开 workbench.html，确认侧边栏能点开。
+
+3. 精确提交推送（⚠️ 不要 git add .）：
+   git add modules.json "用户画像分析/index.html"
+   git commit -m "feat: 新增用户画像分析模块"
    git pull --rebase
    git push
 
 
-二、每日更新数据（你现在的日常操作）
+二、每日更新数据（不要手工改数据文件）
 ----------------------------------------------------------
 
-1. 修改 sales_analysis/stats_data.js
-   - 更新 date、orders、revenue、avg_price 等字段
-   - 在 dates 数组末尾追加新日期
+❌ 旧做法（已废弃，勿再照做）：手工编辑 sales_analysis/stats_data.js
+   的 date、orders、revenue 等字段。
+   stats_data.js 是 daily_update.py 的生成物，手改下次入库就被覆盖，
+   而且会和 history.json 对不上。
 
-2. 提交推送：
-   git add sales_analysis/stats_data.js
-   git commit -m "feat: 新增x月x日订单数据"
-   git push
+✅ 现在的做法：把当天的 Excel 交给执行人（或 AI 助手），按 WORKFLOW.md 顶部清单：
+   🅰️ 收到 x.xx日订单.xlsx → 7 步：认文件 → 入库（run_all.py sales）→ 自校验
+      → 看事实 → 写总结稿 → 落库并刷新进度表 → 提交推送
+   🅱️ 收到 x.xx日业绩.xlsx → 4 步：认文件 → 解析入库（DAILY_RECORDS）
+      → 自校验 → 提交推送
+   两个文件同时给到 → 两条流程各自独立跑，先各跑入库，再回收尾。
+   跑完记得 push，别人才能拉到最新数据。
 
 
 三、别人推送后，你拉取更新
@@ -48,9 +63,9 @@
    git fetch                          ← 只下载，不合并
    git diff main origin/main          ← 查看别人改了啥
    确认没问题后：
-   git pull                           ← 真正合并
+   git pull --rebase                  ← 真正合并（rebase 避免多余合并提交）
 
-2. 如果 pull 完觉得不合适，退回 pull 之前：
+2. 如果 pull 完觉得不合适，退回 pull 之前（谨慎，会丢弃本地未提交的改动）：
    git reset --hard HEAD@{1}
 
 
@@ -58,12 +73,13 @@
 ----------------------------------------------------------
 
 git status              查看当前改了哪些文件
-git diff                 查看具体改了什么内容
+git diff                查看具体改了什么内容
+git add <文件>          只暂存指定文件（本项目唯一允许的暂存方式）
 git log --oneline       查看最近提交记录
-git reflog               查看所有操作历史（包括已撤销的）
-git pull                 拉取并合并远程更新
-git pull --rebase        拉取并变基（推荐，避免多余合并提交）
-git push                 推送到远程仓库
+git reflog              查看所有操作历史（包括已撤销的）
+git fetch               只下载远程更新，不合并
+git pull --rebase       拉取并变基（推荐，避免多余合并提交）
+git push                推送到远程仓库
 git reset --hard xxx    退回到指定版本（谨慎使用）
 
 
@@ -86,21 +102,33 @@ git reset --hard xxx    退回到指定版本（谨慎使用）
    ★ 之后对方就能直接 git push 到你的仓库了
 
 
-六、模块配置说明（modules.json 字段含义）
+六、modules.json 字段说明
 ----------------------------------------------------------
 
+顶层结构：{ "sections": [ { "name": "数据看板", "modules": [ ... ] }, ... ] }
+现有 4 个 section：数据看板 / 竞争方案 / 主播管理 / 运营工具。
+完整清单与页面说明见 docs/04-页面与模块.md（**以 modules.json 现状为准**）。
+
+模块对象字段：
 字段          必填    说明
 ----------------------------------------------------------
 id            是      唯一标识，英文，别重名
-title         是      侧边栏显示的名称
-url           是      模块 HTML 文件的路径
-icon          是      首页卡片图标（emoji）
-description   是      首页卡片的描述文字
-tag           是      卡片标签文字（如 Live Sales）
-badge         否      侧边栏角标（如 HOT）
-hasSubMenu    否      是否有子菜单（目前只有销量分析用）
+title         是      侧边栏 / 卡片显示的名称
+url           是      模块 HTML 路径（external 为 true 时写外链）
+icon          否      首页卡片图标（emoji）
+description   否      首页卡片的描述文字
+tag           否      卡片标签文字（如 Live Sales）
+badge         否      角标（如 HOT / NEW）
+hasSubMenu    否      是否有子菜单；true 时必须给 subModules
+subModules    否      子菜单数组，每项 {id, title, url 或 monthKey, badge?}
+external      否      true = 外链，新窗口打开（如考试模块、千川 netlify）
 
-示例：
+  ★ hasSubMenu 目前只有销量分析、月度总结、节点总结在用。
+  ★ subModules 两种写法（照抄同类模块即可）：
+      销量分析系列： { "id": "salesSeptember", "title": "九月", "monthKey": "2026-09", "badge": "NEW" }
+      月度/节点总结： { "id": "summarySeptember", "title": "九月", "url": "月度总结/九月销量分析.html" }
+
+示例（一个完整模块）：
 {
   "id": "violations",
   "title": "违规分析",
@@ -109,3 +137,7 @@ hasSubMenu    否      是否有子菜单（目前只有销量分析用）
   "description": "小米系直播间违规判罚追踪、原因分布、处罚升级路径",
   "tag": "Violations"
 }
+
+============================================================
+  本文上传到乐享（tools/upload_to_lexiang.py），改了记得重新同步。
+============================================================
