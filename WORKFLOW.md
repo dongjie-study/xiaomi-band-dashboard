@@ -1,6 +1,6 @@
 # 每日数据处理工作流
 
-> **最后更新**: 2026-09-14
+> **最后更新**: 2026-10-02
 > **规则**: 每次执行前先读此文档。有新要求时及时更新此文档。
 > **怎么看**: 日常**只读顶部「⚡ 每日执行清单」**就够了；出问题或命中例外时才往下翻对应章节。
 > 📚 **知识库**: 非日常问题（字段含义 / 页面结构 / 脚本谁死谁活 / 踩过的坑）看 `docs/`，从 `docs/00-索引.md` 进。
@@ -461,37 +461,60 @@ git pull --rebase && git push
 
 ### 步骤
 
-1. **生成新月份总结页脚本 + 占位页**
-   - 模板：`tools/generate_september_summary.py`（内含占位页逻辑，无数据时生成占位页）。
-   - 复制为 `tools/generate_<下月英文>_summary.py`（10月 → `tools/generate_october_summary.py`），做全局替换：
+1. **复制上月生成脚本，全局替换出新月份脚本**
+   - 模板：`tools/generate_<上月英文>_summary.py`（内含占位页逻辑，无数据时生成占位页）。
+   - 复制为 `tools/generate_<下月英文>_summary.py`（如 10月 → `tools/generate_october_summary.py`），做全局替换：
 
-   | 模板（9月） | 换成（10月 为例） |
+   | 模板（9月为例） | 换成（10月为例） |
    |---|---|
    | `2026-09` | `2026-10`（⚠️ 月末天数：`2026-09-30`→`2026-10-31`） |
    | `9月` / `九月` | `10月` / `十月` |
    | `September` / `september` | `October` / `october` |
    | 周标签 `9/1-9/7` … `9/29-9/30` | `10/1-10/7` …（按当月实际天数） |
    | 改进建议文案 | 季节/节点 + 对比基准月 +1（如「与9月同期」「延续9月势头」「根据9月基准」） |
-   | 占位页「返回」链接 | 指向上一个月（如 `八月销量分析.html`） |
-   | `.nav-bar` 导航 | 插入上一个月链接（非 active）+ 当前月 active |
+   | 占位页「返回」链接 | 指向上一个月（如 `九月销量分析.html`） |
+   | `.nav-bar` 导航 | 插入上一个月链接（非 active）+ 当前月 active（⚠️ 模板里有**两处** nav） |
 
-   - 运行 `python tools/generate_<下月>_summary.py` → 生成 `月度总结/<X>月销量分析.html`。
+   - ⚠️ **替换顺序**：先替换周标签 → 再变量名/前缀 → 最后通用月份文案；nav 的「当前月 active」行要先把上月链接恢复成非 active 再插入新行，否则会被月份文案替换污染。
+   - 参考实现：`_artifacts/make_october_gen.py`（10月换月的转换脚本，含全部替换规则和断言）。
 
-2. **更新 `modules.json`**
-   - `sales.subModules` 追加：`{ "id": "sales<Month>", "title": "<X月>", "monthKey": "2026-0X", "badge": "NEW" }`，并移除上月的 `badge`。
+2. **重跑上月生成器，把上月页补全到全月**（2026-10-02 实战发现，别跳过）
+   - 上月页面往往只生成到当时的数据天数（九月页曾停在 9.10 只有 10 天）。
+   - `python tools/generate_<上月英文>_summary.py` 重跑一次，上月页即补全为全月数据。
+   - ⚠️ 重跑前先给**上月脚本的 nav 模板**也加上新月份链接（否则重跑会把上月页 nav 里的新月份链接冲掉）。
+
+3. **运行新月份脚本**
+   - `python tools/generate_<下月>_summary.py` → 生成 `月度总结/<X>月销量分析.html`。
+   - 输出应报 `Status: N days of data`（已有当月数据）或 placeholder（无数据时生成占位页）。
+
+4. **更新 `modules.json`**
+   - `sales.subModules` 追加：`{ "id": "sales<Month>", "title": "<X月>", "monthKey": "2026-XX", "badge": "NEW" }`，并移除上月的 `badge`。
    - `monthlySummary.subModules` 追加：`{ "id": "summary<Month>", "title": "<X月>", "url": "月度总结/<X>月销量分析.html", "badge": "NEW" }`。
+   - 改完跑 `python -c "import json;json.load(open('modules.json',encoding='utf-8'))"` 校验 JSON 合法。
 
-3. **更新各月页面导航**（`月度总结/` 下 6月/7月/8月/9月… HTML 的 `.nav-bar`）
-   - 每个页面都加入新月份链接；当前月标 `active`。
-
-4. **提交并推送**
+5. **验证新页面渲染**（headless Chrome，30 秒）
    ```bash
-   git add <本次新增/改动的文件> && git commit -m "feat: 新增<X>月销量分析页面及导航" && git push
+   chrome --headless=new --disable-gpu --no-sandbox --window-size=1440,900 \
+     --virtual-time-budget=7000 --dump-dom "file:///<绝对路径>/月度总结/<X>月销量分析.html"
+   ```
+   - 检查：排名表 `<tr>` 行数 = 当月出过单的直播间数、`<canvas>` 有 4 张（echarts 正常挂载）、nav 列出全部月份、title/badge/footer 月份正确。
+
+6. **提交并推送**
+   ```bash
+   git add tools/generate_<新>_<月>_summary.py tools/generate_<上月>_summary.py \
+           "月度总结/<X>月销量分析.html" "月度总结/<上月>月销量分析.html" modules.json \
+     && git commit -m "feat: 新增<X>月月度总结页，<上月>月页数据补全至全月" && git push
    ```
 
+### ⚠️ 换月最大的坑：f-string 模板里 JS 花括号必须双写
+- 生成脚本的 HTML 是 f-string：CSS/JS 里的 `{` `}` 必须写成 `{{` `}}`。
+- 九月脚本模板里 echarts 的 `{document.write(...)}` 漏了转义 → 一重跑直接 `NameError: name 'document' is not defined`（页面一直没重跑所以从未暴露，2026-10-02 才发现并修复）。
+- 复制模板后若插入任何新 JS，花括号一律双写；单花括号在 `py_compile` 时不报错，**只有运行时才炸**。
+
 ### 说明
-- 新月份总结页是**占位页**（「X月数据尚未开始」），待当月订单录入后重跑 `generate_<X>_summary.py` 即自动填充真实数据。
+- 新月份总结页初期只有零星几天数据（或占位页），**每天订单入库后重跑 `python tools/generate_<当月>_summary.py`** 即自动刷新到最新（这一步属于每日订单流程的顺手动作，别等到月末）。
 - `sales_analysis/index.html` 的日期/月份由 `history.json` 动态生成，无需手动加 tab；`modules.json` 的 `monthKey` 是首页侧边栏的月份入口。
+- 推送后 Cloudflare Pages 约 1 分钟自动部署，线上才可见。
 
 ---
 
@@ -627,6 +650,7 @@ git pull --rebase && git push
 | 2026-09-14 | 「每日总结」**大幅简化**（用户反馈「太多了没啥用」）：去掉主播业绩/班次维度（连带删除 `perf_records.py`），每天从 11~13 行压到 **4 行**；评级从 S/A/B/C 改为**好 / 一般 / 差**三档。 |
 | 2026-09-14 | 「每日总结」内容改为**结构化模版**（用户反馈「不要都是中性了」）：销售总结固定 `✅ 好` / `⚠️ 差` 两行，交接要点固定 `🎯 盯什么 + 大概多久见分晓`；每段 ≤ 90 字，超长 `add` 拒收。JSON 字段从 `summary`/`handover` 改为 `good`/`bad`/`watch`。 |
 | 2026-09-14 | **顶部新增「⚡ 每日执行清单」**：把散在「零点五/二/三点五/五/六」五处的日常步骤收成一份可直接复制的清单（🅰️ 订单 7 步 / 🅱️ 业绩 4 步 / 🅲 两个都来），含「自校验三条铁律」「📦 提交清单」「📣 回报格式」。各详细章节改为只补充规则与例外，避免重复漂移。 |
+| 2026-10-02 | **「四、月度切换」按十月换月实战重写为固定模板**（6 步）：复制上月脚本全局替换（替换顺序 + `_artifacts/make_october_gen.py` 范例）→ 重跑上月生成器补全上月页（九月页曾停在 9.10）→ 跑新月份脚本 → modules.json 加入口并校验 → headless Chrome 验证渲染 → 提交推送。新增最大坑：f-string 模板里 JS 花括号必须双写（九月脚本 `{document.write}` 漏转义、重跑即炸，已修）。明确：当月订单入库后每天顺手重跑当月生成器刷新月度总结页。 |
 | 2026-09-14 | 提交规则修正：**明确禁止 `git add -A`**（工作区常年有别人的半成品会被误扫），改为明确列出改动文件；补充 push 被拒时的 `stash + pull --rebase + stash pop` 处理。新增「🚑 修坏数据的标准动作」（先备份 → 带断言落盘 → 清附带产物）。 |
 | 2026-09-14 | **新增知识库 `docs/` + 根目录 `CLAUDE.md`**：把散落的字段定义/页面结构/脚本清单/历史坑收成 7 篇文档。直播间归属改为**单向生成**——`team_config.py` → `tools/gen_room_docs.py` → `docs/03` + `直播间分类.md` + `直播间服务商汇总.md`，消灭「两边同步」漂移（该漂移已实际发生过：`直播间服务商汇总.md` 曾漏了「小米耳机」）。新增 `.github/workflows/docs-check.yml` 自动拦截。 |
 | 2026-09-14 | 顺带订正两处过期事实：业绩页 `getElementById` 实为 **35 个唯一 id / 58 处调用**（原写 44）；直播间→roomId 映射表补 `room_xiaomi_band_preorder`（手环预约期业绩）。 |
