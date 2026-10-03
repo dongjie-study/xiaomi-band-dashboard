@@ -584,7 +584,8 @@ git pull --rebase && git push
 
 1. **逐条比对**：脚本重新解析 Excel 并按 `roomId + shift + anchor + sales` 排序，与页面上 `DAILY_RECORDS['<当天>']` 解析出来的对象数组排序后比对，必须**完全一致**（含条数）。
 2. **语法校验**：把 `DAILY_RECORDS` 整块抽出来交给 node 解析一遍，确认 43 个日期块没被破坏、最后一天是当天日期。
-3. **主播姓名归一**：
+3. **roomId 必须是英文 id**（2026-10-03 踩坑新增）：插入行的 `roomId` 一律用映射表的值（如 `room_xiaomi_band`），**不能用 Excel 中文直播间名**——页面 `getRoomById` 匹配不到会静默 fallback 成灰色未知房间，且 `extract_anchor_records.py` 的输出会中英混杂。自校验时检查生成行 `roomId` 全部落在 `ROOM_MAP` 值集内。
+4. **主播姓名归一**：
    - Excel 里的**前后空格**（如 `' 朱泓颖'`）必须 strip。
    - 姓名与页面既有写法不一致时（如「高姗姗」vs「高珊珊」），**按页面既有写法归一**，不要新建一个人。
    - 归一后要确认该名字在页面里**不是孤例**。
