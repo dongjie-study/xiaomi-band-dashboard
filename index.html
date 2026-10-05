@@ -186,9 +186,12 @@
     font-weight: 900;
     line-height: 1.12;
     letter-spacing: -.03em;
+    overflow: hidden;
+    padding-bottom: .06em;
   }
-  h1 .ln2 { white-space: nowrap; }
+  h1 .ln2 { white-space: nowrap; display: inline-block; }
   h1 .accent {
+    display: inline-block;
     color: transparent;
     background: linear-gradient(100deg, var(--orange) 8%, var(--orange-2) 55%, #ff9f56);
     -webkit-background-clip: text; background-clip: text;
@@ -213,14 +216,41 @@
   .stat b i { font-style: normal; color: var(--orange-deep); font-size: .62em; margin-left: 2px; }
   .stat span { font-size: 12px; color: var(--muted); letter-spacing: .06em; }
 
+  /* ===== 入场编排：boot 结束后分层浮起 ===== */
+  .eyebrow, .sub, .stats { opacity: 0; transform: translateY(16px); }
+  @keyframes riseIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  @keyframes lineUp { from { opacity: 0; transform: translateY(110%); } to { opacity: 1; transform: none; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  #stage.on .eyebrow  { animation: riseIn .65s ease .05s both; }
+  #stage.on h1 .accent { animation: lineUp .8s cubic-bezier(.2,.75,.2,1) .12s both; }
+  #stage.on h1 .ln2    { animation: lineUp .8s cubic-bezier(.2,.75,.2,1) .26s both; }
+  #stage.on .sub       { animation: riseIn .7s ease .42s both; }
+  #stage.on .stats     { animation: riseIn .7s ease .55s both; }
+  #stage.on .devices   { animation: fadeIn .9s ease .35s both; }
+
   .cta-row { margin-top: 36px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 
-  /* 三个入口按钮：主按钮实心 + 两个外链描边，错峰淡入 */
-  .cta-row > * { animation: ctaFade .55s ease both; }
-  .cta-row > *:nth-child(2) { animation-delay: .07s; }
-  .cta-row > *:nth-child(3) { animation-delay: .14s; }
-  .cta-row > *:nth-child(4) { animation-delay: .21s; }
+  /* 三个入口按钮：错峰淡入（跟随入场编排） */
+  #stage.on .cta-row > * { animation: ctaFade .55s ease both; }
+  #stage.on .cta-row > *:nth-child(2) { animation-delay: .62s; }
+  #stage.on .cta-row > *:nth-child(3) { animation-delay: .72s; }
+  #stage.on .cta-row > *:nth-child(4) { animation-delay: .82s; }
   @keyframes ctaFade { from { opacity: 0; } to { opacity: 1; } }
+
+  /* 光标追光（JS 驱动，跟随鼠标） */
+  .cursor-glow {
+    position: fixed; left: 0; top: 0;
+    width: 560px; height: 560px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,105,0,.10) 0%, transparent 65%);
+    filter: blur(16px);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity .5s ease;
+    will-change: transform;
+  }
+  .cursor-glow.on { opacity: 1; }
 
   .btn-ext {
     display: inline-flex; align-items: center; justify-content: center; gap: 8px;
@@ -232,7 +262,8 @@
     text-decoration: none;
     cursor: pointer;
     box-shadow: 0 8px 32px rgba(255,105,0,.35), 0 2px 6px rgba(15,23,42,.16);
-    transition: transform .2s ease, box-shadow .2s ease;
+    transform: translate(var(--mx, 0px), var(--my, 0px));
+    transition: transform .18s ease, box-shadow .2s ease;
   }
   .btn-ext::after {
     content: '\2197';
@@ -241,11 +272,11 @@
     transition: transform .2s ease, color .2s ease;
   }
   .btn-ext:hover {
-    transform: translateY(-2px);
+    transform: translate(var(--mx, 0px), calc(var(--my, 0px) - 2px));
     box-shadow: 0 14px 44px rgba(255,105,0,.5), 0 4px 10px rgba(15,23,42,.18);
   }
   .btn-ext:hover::after { transform: translate(2px, -2px); color: #16181d; }
-  .btn-ext:active { transform: translateY(0); }
+  .btn-ext:active { transform: translate(var(--mx, 0px), var(--my, 0px)) scale(.98); }
 
   #enterBtn {
     position: relative; overflow: hidden;
@@ -256,13 +287,14 @@
     background: linear-gradient(120deg, var(--orange), var(--orange-2));
     border-radius: 999px;
     box-shadow: 0 8px 28px rgba(255,105,0,.32), 0 2px 6px rgba(15,23,42,.16);
-    transition: transform .2s ease, box-shadow .2s ease;
+    transform: translate(var(--mx, 0px), var(--my, 0px));
+    transition: transform .18s ease, box-shadow .2s ease;
   }
   #enterBtn:hover {
-    transform: translateY(-2px);
+    transform: translate(var(--mx, 0px), calc(var(--my, 0px) - 2px));
     box-shadow: 0 14px 40px rgba(255,105,0,.42), 0 4px 10px rgba(15,23,42,.18);
   }
-  #enterBtn:active { transform: translateY(0); }
+  #enterBtn:active { transform: translate(var(--mx, 0px), var(--my, 0px)) scale(.98); }
   #enterBtn::after {
     content: ''; position: absolute; top: 0; bottom: 0; left: -70%;
     width: 45%;
@@ -306,10 +338,12 @@
   .shot img {
     display: block; width: 100%; height: auto;
     -webkit-user-drag: none; user-select: none; pointer-events: none;
+    transition: transform .3s ease;
   }
   .shot:hover {
     filter: drop-shadow(0 26px 38px rgba(15,23,42,.26)) drop-shadow(0 0 24px rgba(255,105,0,.32));
   }
+  .shot:hover img { transform: scale(1.045); }
 
   .s-hero {
     left: 50%; top: 50%;
@@ -394,6 +428,7 @@
     white-space: nowrap;
   }
   .ticker .track { display: inline-block; animation: marquee 36s linear infinite; }
+  .ticker:hover .track { animation-play-state: paused; }
   .ticker span { margin: 0 26px; }
   .ticker span.hot { color: var(--orange-deep); }
   .ticker .sep { color: rgba(15,23,42,.22); margin: 0 4px; }
@@ -461,6 +496,7 @@
 <canvas id="fx"></canvas>
 <div class="stage-light"></div>
 <div class="grid-floor"></div>
+<div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
 <!-- 开机引导 -->
 <div id="boot" role="status" aria-label="系统启动中">
@@ -593,6 +629,7 @@
     bootDone = true;
     boot.classList.add('done');
     document.getElementById('stage').classList.add('on');
+    startCountUp();
   }
 
   if (reduce) {
@@ -678,6 +715,55 @@
         'translate3d(' + (nx * -20) + 'px,' + (ny * -14) + 'px,0)' +
         ' rotateY(' + (nx * 7) + 'deg) rotateX(' + (-ny * 5) + 'deg)';
     });
+  }
+
+  /* ---------- 入场：统计数字滚动（只动展示，不碰数据源） ---------- */
+  function startCountUp() {
+    if (reduce) return;
+    var bs = document.querySelectorAll('.stat b');
+    var targets = [13, 3, 6];
+    targets.forEach(function (target, idx) {
+      var b = bs[idx];
+      if (!b || !b.firstChild || b.firstChild.nodeType !== 3) return;
+      var t0 = performance.now(), dur = 1150 + idx * 160;
+      requestAnimationFrame(function step(t) {
+        var p = Math.min(1, (t - t0) / dur);
+        b.firstChild.nodeValue = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+        if (p < 1) requestAnimationFrame(step);
+      });
+    });
+  }
+
+  /* ---------- 光标追光 + 按钮磁吸 ---------- */
+  if (!reduce && window.matchMedia('(pointer:fine)').matches) {
+    var glowEl = document.getElementById('cursorGlow');
+    var magBtns = Array.prototype.slice.call(document.querySelectorAll('#enterBtn, .btn-ext'));
+    var mx = -9e4, my = -9e4, gx = -9e4, gy = -9e4, glowOn = false;
+    window.addEventListener('mousemove', function (e) {
+      mx = e.clientX; my = e.clientY;
+      if (!glowOn && glowEl) { glowOn = true; gx = mx; gy = my; glowEl.classList.add('on'); }
+    });
+    (function follow() {
+      gx += (mx - gx) * .12;
+      gy += (my - gy) * .12;
+      if (glowEl && glowOn) {
+        glowEl.style.transform = 'translate3d(' + (gx - 280) + 'px,' + (gy - 280) + 'px,0)';
+      }
+      magBtns.forEach(function (btn) {
+        var r = btn.getBoundingClientRect();
+        var dx = mx - (r.left + r.width / 2);
+        var dy = my - (r.top + r.height / 2);
+        var dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 140 && dist > 0.5) {
+          btn.style.setProperty('--mx', (dx * .16).toFixed(1) + 'px');
+          btn.style.setProperty('--my', (dy * .2).toFixed(1) + 'px');
+        } else {
+          btn.style.setProperty('--mx', '0px');
+          btn.style.setProperty('--my', '0px');
+        }
+      });
+      requestAnimationFrame(follow);
+    })();
   }
 
   /* ---------- 进入工作台 ---------- */
