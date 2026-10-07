@@ -427,6 +427,7 @@ function systemPrompt(latestDate) {
 - "昨天/昨天卖了多少" = ${latestDate} 那天。
 - "9月24日"之类要转成 2026-09-24；"这周/最近7天" = ${latestDate} 往前数 7 天。
 - 回答末尾注明"数据截至 ${latestDate}"。
+- **新问题默认查最新数据**：除非用户明确指定了日期，一律以 ${latestDate} 为基准回答。对话历史里早先轮次出现过的旧数据（比如几天前查过的累计进度、某天台数）**不能直接拿来回答新问题**——数据每天都在更新，必须重新调工具查，否则就会答出过期数字。
 
 ## 数据口径（非常重要，绝不能混用）
 1. **订单口径**（query_sales / query_hourly / get_band11_progress）：后台订单明细，金额=实付销售额（已扣退款），台数=订单件数。
@@ -461,7 +462,8 @@ ${roomLines}
 3. 做对比/排行时，口径必须统一（都是订单口径或都是 GSV），并说明。
 4. 回答简洁、先给结论和关键数字；数据多用小表格；适当给环比和趋势，但趋势要用查询到的多天数据算，不要拍脑袋。
 5. 用户问的直播间名不完整（如"手环间"、"数码店"）→ 按归属表推断成完整名；匹配到多个就列出让用户选。
-6. 不知道或数据里没有的，直接说没有，不要编。用中文回答。`;
+6. 不知道或数据里没有的，直接说没有，不要编。用中文回答。
+7. 如果发现对话历史中的旧回答与本轮查询结果冲突，**以本轮查询结果为准**，并简短说明"数据已更新"。`;
 }
 
 // ---------- DeepSeek 调用 ----------
@@ -505,6 +507,107 @@ async function chatWithTools(env, userMessages) {
     }
   }
   return '查询轮次太多，换个更具体的问题试试（比如指定日期和直播间）。';
+}
+
+// ---------- 流式聊天（SSE）：边生成边推送，体感从等十几秒变成 1~2 秒出字 ----------
+// 上游 DeepSeek 开 stream:true，工具轮聚合 tool_calls，内容轮增量转发给客户端。
+async function deepseekChatStream(env, messages, onDelta) {
+  const res = await fetch('https://api.deepseek.com/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.DEEPSEEK_API_KEY}` },
+    body: JSON.stringify({
+      model: 'deepseek-chat', messages, tools: TOOLS, tool_choice: 'auto',
+      max_tokens: 3000, temperature: 0.3, stream: true,
+    }),
+  });
+  if (!res.ok || !res.body) {
+    const t = await res.text().catch(() => '');
+    throw new Error(`DeepSeek HTTP ${res.status}: ${t.slice(0, 200)}`);
+  }
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '', content = '';
+  const toolCalls = [];
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let nl;
+    while ((nl = buf.indexOf('\n')) >= 0) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line.startsWith('data:')) continue;
+      const payload = line.slice(5).trim();
+      if (payload === '[DONE]') continue;
+      let j; try { j = JSON.parse(payload); } catch { continue; }
+      const ch = j.choices && j.choices[0];
+      if (!ch) continue;
+      const d = ch.delta || {};
+      if (d.content) { content += d.content; try { onDelta(d.content); } catch {} }
+      if (d.tool_calls) {
+        for (const tc of d.tool_calls) {
+          const i = tc.index || 0;
+          if (!toolCalls[i]) toolCalls[i] = { id: '', type: 'function', function: { name: '', arguments: '' } };
+          if (tc.id) toolCalls[i].id = tc.id;
+          if (tc.function) {
+            if (tc.function.name) toolCalls[i].function.name += tc.function.name;
+            if (tc.function.arguments) toolCalls[i].function.arguments += tc.function.arguments;
+          }
+        }
+      }
+    }
+  }
+  return { content, tool_calls: toolCalls.length ? toolCalls : null };
+}
+
+async function handleChatStream(env, msgs, writer) {
+  const enc = new TextEncoder();
+  const send = (obj) => writer.write(enc.encode(`data: ${JSON.stringify(obj)}\n\n`));
+  let fullAnswer = '';
+  try {
+    let latestDate = today();
+    try {
+      const h = await fetchJson(GH_FILE.history);
+      latestDate = h[h.length - 1].date;
+    } catch {}
+    const messages = [{ role: 'system', content: systemPrompt(latestDate) }, ...msgs];
+    for (let round = 0; round < 8; round++) {
+      const { content, tool_calls } = await deepseekChatStream(env, messages, (s) => {
+        fullAnswer += s;
+        send({ t: 'delta', s });
+      });
+      if (!tool_calls) return; // 内容轮已流式发完
+      messages.push({ role: 'assistant', content: content || '', tool_calls });
+      for (const tc of tool_calls) {
+        try { send({ t: 'tool', name: tc.function.name }); } catch {}
+        let result;
+        try {
+          const args = JSON.parse(tc.function.arguments || '{}');
+          result = await (TOOL_IMPLS[tc.function.name] || (() => { throw new Error(`未知工具 ${tc.function.name}`); }))(args);
+        } catch (e) {
+          result = { error: `查询失败：${e.message}` };
+        }
+        messages.push({ role: 'tool', tool_call_id: tc.id, content: JSON.stringify(result) });
+      }
+    }
+    send({ t: 'delta', s: '\n\n（查询轮次太多，结果可能不完整，建议换个更具体的问题）' });
+  } catch (e) {
+    try { send({ t: 'error', message: e.message }); } catch {}
+  } finally {
+    try { send({ t: 'done' }); } catch {}
+    // 对话日志（与非流式一致）
+    if (env.CHAT_LOG) {
+      try {
+        const key = 'log:' + Date.now() + '-' + Math.random().toString(36).slice(2, 8);
+        await env.CHAT_LOG.put(key, JSON.stringify({
+          t: new Date().toISOString(),
+          q: msgs[msgs.length - 1].content,
+          qa: msgs.map(m => m.content).join(' ⊕ '),
+          a: fullAnswer,
+        }), { expirationTtl: 60 * 60 * 24 * 30 });
+      } catch {}
+    }
+  }
 }
 
 // ---------- HTTP 入口 ----------
@@ -574,6 +677,40 @@ export default {
       } catch (e) {
         return json({ error: e.message }, 502);
       }
+    }
+
+    // 流式聊天：POST /api/chat/stream（SSE，body 同 /api/chat）
+    if (url.pathname === '/api/chat/stream' && request.method === 'POST') {
+      const enabled = (env.ACCESS_ENABLED || 'true') === 'true';
+      let body;
+      try { body = await request.json(); } catch { return json({ error: '请求体不是合法 JSON' }, 400); }
+      if (enabled) {
+        if (!body.code || body.code !== (env.ACCESS_CODE || '')) {
+          return json({ error: '口令不正确', need_code: true }, 403);
+        }
+      }
+      if (!env.DEEPSEEK_API_KEY) return json({ error: '服务端未配置 DeepSeek API key' }, 500);
+
+      let msgs = Array.isArray(body.messages) ? body.messages : [];
+      msgs = msgs
+        .filter(m => (m.role === 'user' || m.role === 'assistant') && typeof m.content === 'string' && m.content.trim())
+        .map(m => ({ role: m.role, content: m.content.slice(0, 4000) }))
+        .slice(-20);
+      if (!msgs.length || msgs[msgs.length - 1].role !== 'user') {
+        return json({ error: '消息格式不对：需要至少一条用户消息，且最后一条是用户消息' }, 400);
+      }
+
+      const { readable, writable } = new TransformStream();
+      const writer = writable.getWriter();
+      const task = handleChatStream(env, msgs, writer).catch(() => {});
+      task.finally(() => { try { writer.close(); } catch {} });
+      return new Response(readable, {
+        headers: {
+          'Content-Type': 'text/event-stream; charset=utf-8',
+          'Cache-Control': 'no-store',
+          'Access-Control-Allow-Origin': '*',
+        },
+      });
     }
 
     // 查对话日志：GET /api/logs?code=口令（返回最近 100 条，新的在前）

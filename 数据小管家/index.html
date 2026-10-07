@@ -140,19 +140,62 @@ async function api(path,body){
   const r=await fetch(base+path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,code:myCode})}:undefined);
   return {status:r.status,data:await r.json().catch(()=>({}))}}
 
+// —— 流式请求（SSE）：回答边生成边显示 ——
+// 事件：{t:'delta',s:增量文本} {t:'tool',name} {t:'error',message} {t:'end'}；降级时一次 {t:'http',status,data}
+function sseChat(messages,onEvent){
+  return fetch(base+'/api/chat/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages,code:myCode})})
+  .then(r=>{
+    let ct='';try{ct=r.headers.get('content-type')||''}catch(e){}
+    if(!r.ok||!r.body||ct.indexOf('event-stream')<0){
+      return r.json().catch(()=>({})).then(d=>onEvent({t:'http',status:r.status,data:d}));
+    }
+    const reader=r.body.getReader(),dec=new TextDecoder();let buf='';
+    const pump=()=>reader.read().then(res=>{
+      if(res.done){onEvent({t:'end'});return}
+      buf+=dec.decode(res.value,{stream:true});
+      let i;
+      while((i=buf.indexOf('\n\n'))>=0){
+        const frame=buf.slice(0,i).trim();buf=buf.slice(i+2);
+        if(frame.startsWith('data:')){
+          const p=frame.slice(5).trim();
+          if(p&&p!=='[DONE]'){try{onEvent(JSON.parse(p))}catch(e){}}
+        }
+      }
+      return pump();
+    });
+    return pump();
+  });
+}
+
 async function send(text){
-  if(busy)return;text=text||$('#q').value.trim();if(!text)return;
+  if(busy)return;text=(text||$('#q').value.trim());if(!text)return;
   busy=true;$('#send').disabled=true;$('#q').value='';$('#q').style.height='auto';chips.style.display='none';
   history_.push({role:'user',content:text});add('me',text);
-  const typingEl=add('ai','',true);
-  try{
-    const {status,data}=await api('/api/chat',{messages:history_});
-    typingEl.remove();
-    if(status===403){history_.pop();showGate('口令不正确','请重新输入访问口令',true);return}
-    if(data.error){add('ai','出错了：'+data.error)}
-    else{history_.push({role:'assistant',content:data.answer});add('ai',data.answer)}
-  }catch(e){typingEl.remove();add('ai','网络异常，稍后再试：'+e.message)}
-  busy=false;$('#send').disabled=false}
+  const el=add('ai','',true);
+  const bubble=el.querySelector('.bubble');
+  let acc='',started=false,over=false,ok=true;
+  const paint=()=>{bubble.textContent=acc;list.scrollTop=list.scrollHeight};
+  const finishReply=()=>{bubble.classList.add('md');bubble.innerHTML=acc?mdRender(esc(acc)):'（空回复，请重试）'};
+  const finalize=()=>{if(over)return;over=true;finishReply();if(ok&&acc)history_.push({role:'assistant',content:acc});busy=false;$('#send').disabled=false};
+  const handle=ev=>{
+    if(over)return;
+    if(ev.t==='delta'){if(!started){started=true;bubble.classList.add('md')}acc+=ev.s||'';paint()}
+    else if(ev.t==='tool'){if(!started)bubble.innerHTML='<span class="typing"><i></i><i></i><i></i></span> 正在查「'+esc(ev.name||'数据')+'」…'}
+    else if(ev.t==='http'){
+      const{status,data}=ev;
+      if(status===403){ok=false;history_.pop();showGate('口令不正确','请重新输入访问口令',true);finalize();return}
+      if(data.error)acc='出错了：'+data.error;
+      else if(data.answer)acc=data.answer;
+      else acc='后端返回异常（HTTP '+status+'），请稍后再试。';
+      started=true;paint();
+    }
+    else if(ev.t==='error'){acc+=(acc?'\n\n':'')+'⚠️ '+(ev.message||'查询出错');paint()}
+  };
+  // 只带最近 4 轮上下文：请求更快，也不会把旧话题的过期数字带进新回答
+  sseChat(history_.slice(-8),handle).catch(e=>{
+    if(!started){acc='网络异常，稍后再试：'+(e&&e.message?e.message:e);started=true;paint()}
+  }).then(finalize);
+}
 
 $('#f').onsubmit=e=>{e.preventDefault();send()};
 // 输入区：自动长高 + Enter 发送 / Shift+Enter 换行

@@ -213,14 +213,14 @@
   var base = (API_BASE || store.get('dg_base') || '').replace(/\/+$/, '');
   var flagged = false;   // 后端是否开启了口令门
 
-  // 恢复会话历史
+  // 恢复会话历史（本地最多留 12 条：太长的历史会让回答变慢，还会把旧话题的过期数据带回来）
   try {
     var saved = JSON.parse(store.get('dg_hist') || '[]');
-    if (Object.prototype.toString.call(saved) === '[object Array]') history_ = saved.slice(-24);
+    if (Object.prototype.toString.call(saved) === '[object Array]') history_ = saved.slice(-12);
   } catch (e) { history_ = []; }
 
   function saveHist() {
-    try { store.set('dg_hist', JSON.stringify(history_.slice(-24))); } catch (e) {}
+    try { store.set('dg_hist', JSON.stringify(history_.slice(-12))); } catch (e) {}
   }
 
   // ── Markdown 渲染 ────────────────────────────────────────
@@ -310,6 +310,47 @@
     });
   }
 
+  // ── 流式请求（SSE）：回答边生成边显示，不再干等 ──────────
+  // 事件：{t:'delta',s:增量文本} {t:'tool',name:查询中的工具} {t:'error',message} {t:'done'} {t:'end'}
+  // 后端不支持流式时（403/旧版）自动降级为一次 {t:'http',status,data}
+  function sseChat(messages, onEvent) {
+    return fetch(base + '/api/chat/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messages: messages, code: myCode })
+    }).then(function (r) {
+      var ct = '';
+      try { ct = r.headers.get('content-type') || ''; } catch (e) {}
+      if (!r.ok || !r.body || ct.indexOf('event-stream') < 0) {
+        return r.json().catch(function () { return {}; }).then(function (d) {
+          onEvent({ t: 'http', status: r.status, data: d });
+        });
+      }
+      var reader = r.body.getReader();
+      var dec = new TextDecoder();
+      var buf = '';
+      function pump() {
+        return reader.read().then(function (res) {
+          if (res.done) { onEvent({ t: 'end' }); return; }
+          buf += dec.decode(res.value, { stream: true });
+          var i;
+          while ((i = buf.indexOf('\n\n')) >= 0) {
+            var frame = buf.slice(0, i).trim();
+            buf = buf.slice(i + 2);
+            if (frame.indexOf('data:') === 0) {
+              var payload = frame.slice(5).trim();
+              if (payload && payload !== '[DONE]') {
+                try { onEvent(JSON.parse(payload)); } catch (e) {}
+              }
+            }
+          }
+          return pump();
+        });
+      }
+      return pump();
+    });
+  }
+
   function showGate(title, hint, needInput) {
     gate.hidden = false;
     gateTitle.textContent = title;
@@ -332,31 +373,66 @@
     chips.hidden = true;
     history_.push({ role: 'user', content: text });
     add('me', text);
-    var typingEl = add('ai', '', true);
+    var el = add('ai', '', true);
+    var bubble = el.querySelector('.bubble');
+    var acc = '', started = false, over = false, ok = true;
 
-    api('/api/chat', { messages: history_ }).then(function (res) {
-      var status = res.status, data = res.data;
-      typingEl.remove();
-      if (status === 403) {
-        history_.pop(); saveHist();
-        showGate('口令不正确', '请重新输入访问口令', true);
-        return;
-      }
-      if (data && data.error) { add('ai', '出错了：' + data.error); }
-      else if (data && data.answer) {
-        history_.push({ role: 'assistant', content: data.answer });
-        add('ai', data.answer);
-      } else {
-        add('ai', '后端返回异常（HTTP ' + status + '），请稍后再试。');
-      }
-      saveHist();
-    }).catch(function (e) {
-      typingEl.remove();
-      add('ai', '网络异常，稍后再试：' + (e && e.message ? e.message : e));
-    }).then(function () {
+    function paint() {
+      bubble.textContent = acc;
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+    function finishReply() {
+      bubble.classList.add('md');
+      bubble.innerHTML = acc ? mdRender(esc(acc)) : '（空回复，请重试）';
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+    function finalize() {
+      if (over) return;
+      over = true;
+      finishReply();
+      if (ok && acc) { history_.push({ role: 'assistant', content: acc }); saveHist(); }
       busy = false;
       goBtn.disabled = false;
-    });
+    }
+
+    function handle(ev) {
+      if (over) return;
+      if (ev.t === 'delta') {
+        if (!started) { started = true; bubble.classList.add('md'); }
+        acc += ev.s || '';
+        paint();
+      } else if (ev.t === 'tool') {
+        // 首个字出来前，显示查询进度
+        if (!started) bubble.innerHTML = '<span class="typing"><i></i><i></i><i></i></span> 正在查「' + esc(ev.name || '数据') + '」…';
+      } else if (ev.t === 'http') {
+        // 非流式降级（口令错误 / 旧版后端）
+        var status = ev.status, data = ev.data || {};
+        if (status === 403) {
+          ok = false;
+          history_.pop(); saveHist();
+          showGate('口令不正确', '请重新输入访问口令', true);
+          finalize();
+          return;
+        }
+        if (data && data.error) acc = '出错了：' + data.error;
+        else if (data && data.answer) acc = data.answer;
+        else acc = '后端返回异常（HTTP ' + status + '），请稍后再试。';
+        started = true;
+        paint();
+      } else if (ev.t === 'error') {
+        acc += (acc ? '\n\n' : '') + '⚠️ ' + (ev.message || '查询出错');
+        paint();
+      }
+    }
+
+    // 只带最近 4 轮（8 条）上下文：请求更快，也不会把旧话题的过期数字带进新回答
+    sseChat(history_.slice(-8), handle).catch(function (e) {
+      if (!started) {
+        acc = '网络异常，稍后再试：' + String(e && e.message ? e.message : e);
+        started = true;
+        paint();
+      }
+    }).then(finalize);
   }
 
   // ── 开关面板 ────────────────────────────────────────────
