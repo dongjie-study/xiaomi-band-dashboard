@@ -252,8 +252,15 @@ def sheet_overview(wb, dates, daily):
             fill = C_BAD
             pace += f' ⚠️ 将超出首销月末（{END:%Y-%m-%d}）。'
     else:
-        fill = C_WARN
-        pace = '数据不足，无法推算达成日期。'
+        # remain_qty ≤ 0 = 目标已达成；此时不能再说「数据不足」（收官后 remain_days=0 也走这里）
+        if remain_qty <= 0:
+            fill = C_OK
+            pace = (f'目标已达成并超额 {abs(remain_qty):,} 台'
+                    f'（{done_total:,} / {TOTAL_TARGET:,} = {done_total / TOTAL_TARGET:.1%}），'
+                    f'首销月窗口已收官，无需推算达成日期。 ✅')
+        else:
+            fill = C_WARN
+            pace = '数据不足，无法推算达成日期。'
     ws.merge_cells(start_row=r, start_column=1, end_row=r, end_column=ncols)
     c = ws.cell(row=r, column=1, value=pace)
     c.font = Font(name=FONT, size=10, bold=True)
@@ -936,6 +943,10 @@ def sheet_period_review(wb):
                fill='FFE0B2', bold=True, size=12, height=26)
         r += 1
 
+        # 收官后 remain ≤ 0：不能再写「剩 -4,986 台」，改成超额口径
+        _tail = (f' ｜ 剩 {m["remain"]:,} 台 / {m["remain_days"]} 天'
+                 if m['remain'] > 0 else
+                 f' ｜ 已超额 {abs(m["remain"]):,} 台（目标已收官）')
         for line in (
             f'我司单量 {m["our_orders"]:,} ｜ GSV ¥{m["our_revenue"]:,.0f}'
             f' ｜ 客单价 ¥{m["aov"]:,.0f} ｜ 全店份额 {m["share_o"]:.1%}'
@@ -944,7 +955,7 @@ def sheet_period_review(wb):
             f'{m["prev_orders"]:,} 单 / ¥{m["prev_revenue"]:,.0f}）',
             f'{PRODUCT} 我司累计 {m["cum"]:,} / {TOTAL_TARGET:,} = {m["cum_rate"]:.1%}'
             f'（时间进度 {m["time_rate"]:.1%}，进度差 {m["pace_diff"]:+.1%}）'
-            f' ｜ 剩 {m["remain"]:,} 台 / {m["remain_days"]} 天',
+            f'{_tail}',
         ):
             _merge(ws, r, 1, ncols, line, fill=C_HEAD, size=9,
                    height=est_height(line, text_w, base=13, min_h=18))
