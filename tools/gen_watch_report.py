@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """单直播间周期销售分析（等长两窗口环比）→ 桌面 xlsx。
 
-默认：小米官方手表 9.29–10.7（本期） vs 9.20–9.28（上期）。
+默认：小米官方手表 9.29–10.7（本期） vs 9.20–9.28（上期）；
+任意房间、任意等长两窗口都可跑（例：--cur 2026-10-01 2026-10-07 --prev 2026-09-14 2026-09-20）。
 派生指标全部写成 Excel 公式（蓝色 = 源数据硬编码，深灰 = 公式，绿色 = 跨表引用），
 零公式错误依赖 _artifacts/verify_watch_xlsx.ps1 复核。
 
@@ -13,7 +14,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_weekly_report as W  # noqa: E402  复用 house style（字体/配色/数字格式/标题块）
@@ -550,7 +551,7 @@ def sheet_notes(wb, ctx):
     r = W.section(ws, r, '一、区间', span=2)
     r = W.bullets(ws, r, 2, [
         '本期：%s ~ %s（%d 天）' % (ctx['cur_start'], ctx['cur_end'], ctx['c']['days']),
-        '上期：%s ~ %s（%d 天，紧邻本期的等长上一窗口）' % (ctx['prev_start'], ctx['prev_end'], ctx['p']['days']),
+        '上期：%s ~ %s（%d 天%s）' % (ctx['prev_start'], ctx['prev_end'], ctx['p']['days'], ctx['prev_gap_note']),
         '房间：%s（roomId %s，team_config 归属我司）' % (ctx['room'], ctx['room_id']),
     ])
     r += 1
@@ -572,10 +573,7 @@ def sheet_notes(wb, ctx):
     r += 1
     r = W.section(ws, r, '四、口径提醒', span=2)
     r = W.bullets(ws, r, 2, [
-        '上期含 9.23 手环11 首销峰值日（本间 ¥%s，约为上期中位日的 2.9 倍），会显著抬高上期基数 —— '
-        '「销售额环比 %s」被峰值压低，剔除 9.23 后上期 8 天为 ¥%s，本期对其为 %s。' % (
-            W.num(ctx['p_peak_rev']), W.signed_pct(ctx['rev_wow']),
-            W.num(ctx['p_ex_spike']), W.signed_pct(ctx['rev_wow_ex_spike'])),
+        ctx['peak_note'],
         '订单口径与业绩口径（主播 GSV）统计对象不同：前者是平台订单表，后者是主播上报的直播间 GSV，'
         '两者绝对值不可直接相减，趋势可互相印证。',
         '本表所有派生指标（客单价/占比/环比/合计）均为 Excel 公式，未硬编码，可自行改数重算。',
@@ -609,8 +607,17 @@ def build(room, cur_start, cur_end, prev_start, prev_end, out):
     rev_wow_ex = c['revenue'] / p_ex_spike - 1 if p_ex_spike else None
     hc_tot = round(sum(v[1] for v in hc.values()), 2)
     hp_tot = round(sum(v[1] for v in hp.values()), 2)
+    # 两窗口是否紧邻（叙述与数据说明都要用，不能写死）
+    _gap = (datetime.strptime(cur_start, '%Y-%m-%d') - datetime.strptime(prev_end, '%Y-%m-%d')).days - 1
+    if _gap <= 0:
+        prev_gap_note = '，紧邻本期之前'
+    else:
+        _gs = (datetime.strptime(prev_end, '%Y-%m-%d') + timedelta(days=1)).strftime('%Y-%m-%d')
+        _ge = (datetime.strptime(cur_start, '%Y-%m-%d') - timedelta(days=1)).strftime('%Y-%m-%d')
+        prev_gap_note = '，与本期之间隔了 %d 天（%s ~ %s），不是紧邻窗口' % (_gap, _gs, _ge)
     ctx = {
         'room': room, 'room_id': room_id, 'c': c, 'p': p, 'ac': ac, 'ap': ap, 'hc': hc, 'hp': hp,
+        'prev_gap_note': prev_gap_note,
         'cur_start': cur_start, 'cur_end': cur_end, 'prev_start': prev_start, 'prev_end': prev_end,
         'cur_peak': peak['date'], 'cur_low': low['date'], 'prev_peak': ppk['date'], 'prev_low': plw['date'],
         'p_peak_rev': spike['revenue'], 'p_ex_spike': p_ex_spike,
@@ -624,101 +631,219 @@ def build(room, cur_start, cur_end, prev_start, prev_end, out):
     b11c = c['products'].get('小米手环11', {'orders': 0, 'revenue': 0})
     b11p = p['products'].get('小米手环11', {'orders': 0, 'revenue': 0})
     tail3 = sum(r['revenue'] for r in c['rows'][-3:])
-    mid3 = sum(r['revenue'] for r in c['rows'][3:6]) / 3
     top1 = sorted(ac['by_anchor'].items(), key=lambda kv: -kv[1])[:3]
+
+    # ---------------- 方向判定（叙述层全部由此生成，不写死方向） ----------------
+    def _w(v, up, down, flat, eps=0.01):
+        if v is None:
+            return flat
+        return up if v > eps else (down if v < -eps else flat)
+
+    def _pv(d, k):
+        return d['products'].get(k, {'orders': 0, 'revenue': 0})
+
+    def _hi(d):
+        """单品均价 ≥ ¥1,000 的销售额合计（高端价格带）。"""
+        return sum(v['revenue'] for v in d['products'].values()
+                   if v['orders'] > 0 and v['revenue'] / v['orders'] >= 1000)
+
+    o_wow = c['orders'] / p['orders'] - 1 if p['orders'] else None
+    a_wow = c['avg'] / p['avg'] - 1 if p['avg'] else None
+    our_o_wow = c['our_orders'] / p['our_orders'] - 1 if p['our_orders'] else None
+    sh_o_c, sh_o_p = c['orders'] / c['our_orders'], p['orders'] / p['our_orders']
+    sh_r_c, sh_r_p = c['revenue'] / c['our_revenue'], p['revenue'] / p['our_revenue']
+    sh_o_pp, sh_r_pp = 100 * (sh_o_c - sh_o_p), 100 * (sh_r_c - sh_r_p)
+    qty_w = _w(o_wow, '单量放量', '单量收缩', '单量持平')
+    prc_w = _w(a_wow, '均价上移', '均价下移', '均价持平')
+    qp_w = '量%s价%s' % (
+        '增' if (o_wow or 0) > 0.01 else ('减' if (o_wow or 0) < -0.01 else '平'),
+        '升' if (a_wow or 0) > 0.01 else ('跌' if (a_wow or 0) < -0.01 else '平'))
+    sh_w = _w(sh_o_pp / 100, '份额抬升', '份额回落', '份额基本持平', eps=0.003)
+    vs_mkt = '跑赢我司大盘' if (o_wow is not None and our_o_wow is not None and o_wow > our_o_wow) else '跑输我司大盘'
+    _shift = max([abs(100 * (v['revenue'] / c['revenue'] - _pv(p, k)['revenue'] / p['revenue']))
+                  for k, v in c['products'].items()] or [0])
+    struct_w = '商品结构大切换' if _shift >= 5 else '商品结构小幅调整'
+    prod_names = set(list(c['products']) + list(p['products']))
+    movers = sorted(prod_names, key=lambda k: -abs(_pv(c, k)['revenue'] - _pv(p, k)['revenue']))
+    mv = movers[0] if movers else ''
+    tail_rising = c['days'] >= 3 and all(c['rows'][i]['revenue'] <= c['rows'][i + 1]['revenue']
+                                         for i in range(len(c['rows']) - 3, len(c['rows']) - 1))
+    if c['days'] >= 3:
+        _bi = min(range(len(c['rows']) - 2), key=lambda i: sum(r['revenue'] for r in c['rows'][i:i + 3]))
+        low3 = c['rows'][_bi:_bi + 3]
+    else:
+        low3 = c['rows']
+    low3_avg = sum(r['revenue'] for r in low3) / len(low3)
+    hi_c, hi_p = _hi(c), _hi(p)
+    eve_c, eve_p = sum(hc[h][1] for h in range(19, 24)), sum(hp[h][1] for h in range(19, 24))
+    aft_c, aft_p = sum(hc[h][1] for h in range(12, 19)), sum(hp[h][1] for h in range(12, 19))
+    worst_h = min(range(19, 24), key=lambda h: hc[h][1] / hp[h][1] if hp[h][1] else 9e9)
+    d_eve, d_aft = W.wow(eve_c, eve_p), W.wow(aft_c, aft_p)
+    d_wh = W.wow(hc[worst_h][1], hp[worst_h][1])
+
+    def _sp(v):
+        """环比格式化：上期基数为 0 时说明是新增，避免 None 崩溃。"""
+        return W.signed_pct(v) if v is not None else '新增'
+
+    def _pp(v):
+        """百分点差值：用与 signed_pct 一致的减号字符，避免 ASCII '-' 混排。"""
+        return ('+' if v >= 0 else '−') + '%.2fpp' % abs(v)
+    hour_w = ('成交高峰从晚间前移到下午' if eve_c < eve_p and aft_c > aft_p else
+              ('晚间与下午段同步回落' if eve_c < eve_p else
+               ('晚间回升、下午回落' if aft_c < aft_p else '晚间与下午段同步回升')))
+    prev_main = max(ap['by_anchor'].items(), key=lambda kv: kv[1])[0] if ap['by_anchor'] else None
+    gone = [n for n in sorted(ap['by_anchor'], key=lambda n: -ap['by_anchor'][n]) if n not in ac['by_anchor']]
+    drop_a = [n for n, v in sorted(ac['by_anchor'].items(), key=lambda kv: -ap['by_anchor'].get(kv[0], 0))
+              if ap['by_anchor'].get(n) and v / ap['by_anchor'][n] - 1 < -0.2][:2]
+    spike_ratio = spike['revenue'] / med if med else 1.0
+    daily_c = c['revenue'] / c['days']
+    daily_p_ex = p_ex_spike / (p['days'] - 1) if p['days'] > 1 else p_ex_spike
+    if spike_ratio >= 1.3:
+        ctx['peak_note'] = ('上期含峰值日 %s（本间 ¥%s，约为上期中位日 ¥%s 的 %.1f 倍），会抬高上期基数 —— '
+                            '「销售额环比 %s」被峰值压低；剔除该日后上期 %d 天日均 ¥%s，本期日均 ¥%s（%s）。' % (
+                                spike['date'], W.num(spike['revenue']), W.num(med), spike_ratio,
+                                W.signed_pct(rev_wow), p['days'] - 1, W.num(daily_p_ex),
+                                W.num(daily_c), W.signed_pct(daily_c / daily_p_ex - 1)))
+        ctx['peak_head'] = ('基数提醒：上期含 %s 峰值日 ¥%s（约为上期中位日 ¥%s 的 %.1f 倍），剔除该日后上期日均 ¥%s，'
+                            '本期日均 ¥%s（%s）—— 表内「销售额环比 %s」被峰值基数压低。' % (
+                                spike['date'], W.num(spike['revenue']), W.num(med), spike_ratio,
+                                W.num(daily_p_ex), W.num(daily_c), W.signed_pct(daily_c / daily_p_ex - 1),
+                                W.signed_pct(rev_wow)))
+    else:
+        ctx['peak_note'] = ('上期无异常峰值日（上期峰值日 %s ¥%s，约为上期中位日 ¥%s 的 %.1f 倍），两窗口基数可比，'
+                            '环比数字可直接解读。' % (
+                                spike['date'], W.num(spike['revenue']), W.num(med), spike_ratio))
+        ctx['peak_head'] = ('基数提醒：上期无异常峰值日（峰值日 %s ¥%s，约为中位日的 %.1f 倍），两窗口可直接对比。' % (
+            spike['date'], W.num(spike['revenue']), spike_ratio))
+
     ctx['headline'] = [
-        '单量放量、均价下移：本期 %s 单（环比 %s）、销售额 ¥%s（%s）、客单 ¥%s（%s）—— 量增价跌，靠 REDMI Watch 6 走量。' % (
-            W.num(c['orders']), W.signed_pct(c['orders'] / p['orders'] - 1), W.num(c['revenue']),
-            W.signed_pct(rev_wow), W.num(c['avg']), W.signed_pct(c['avg'] / p['avg'] - 1)),
-        '份额明显抬升：占我司单量 %s → %s（%+.2fpp），占我司金额 %s → %s（%+.2fpp）；同期我司全店单量 %s → %s（%s），本间是逆势增量。' % (
-            W.pct(p['orders'] / p['our_orders']), W.pct(c['orders'] / c['our_orders']),
-            100 * (c['orders'] / c['our_orders'] - p['orders'] / p['our_orders']),
-            W.pct(p['revenue'] / p['our_revenue']), W.pct(c['revenue'] / c['our_revenue']),
-            100 * (c['revenue'] / c['our_revenue'] - p['revenue'] / p['our_revenue']),
-            W.num(p['our_orders']), W.num(c['our_orders']), W.signed_pct(c['our_orders'] / p['our_orders'] - 1)),
-        '商品结构大切换：Watch 6 占比 %s → %s（¥%s → ¥%s，%s）；上期占 %.1f%% 的 Xiaomi Watch S5 掉到 %.1f%%（¥%s → ¥%s，%s）；手环11 补量 %d → %d 单（%s）。' % (
-            W.pct(w6p['revenue'] / p['revenue']), W.pct(w6c['revenue'] / c['revenue']),
+        '%s、%s：本期 %s 单（环比 %s）、销售额 ¥%s（%s）、客单 ¥%s（%s）—— %s%s。' % (
+            qty_w, prc_w, W.num(c['orders']), W.signed_pct(o_wow), W.num(c['revenue']),
+            W.signed_pct(rev_wow), W.num(c['avg']), W.signed_pct(a_wow), qp_w,
+            ('，结构上最大变动来自 %s（¥%s → ¥%s，%s）' % (
+                mv, W.num(_pv(p, mv)['revenue']), W.num(_pv(c, mv)['revenue']),
+                W.signed_pct(_pv(c, mv)['revenue'] / _pv(p, mv)['revenue'] - 1))
+             if (mv and _pv(p, mv)['revenue']) else '')),
+        '%s：占我司单量 %s → %s（%s），占我司金额 %s → %s（%s）；同期我司全店单量 %s → %s（%s），'
+        '本间 %s → %s 单（%s），%s。' % (
+            sh_w, W.pct(sh_o_p), W.pct(sh_o_c), _pp(sh_o_pp), W.pct(sh_r_p), W.pct(sh_r_c), _pp(sh_r_pp),
+            W.num(p['our_orders']), W.num(c['our_orders']), W.signed_pct(our_o_wow),
+            W.num(p['orders']), W.num(c['orders']), W.signed_pct(o_wow), vs_mkt),
+        '%s：Watch 6 占本间销售额 %s → %s（¥%s → ¥%s，%s）；Xiaomi Watch S5 占比 %.1f%% → %.1f%%（¥%s → ¥%s，%s）；'
+        '小米手环11 %d → %d 单（%s）。' % (
+            struct_w, W.pct(w6p['revenue'] / p['revenue']), W.pct(w6c['revenue'] / c['revenue']),
             W.num(w6p['revenue']), W.num(w6c['revenue']), W.signed_pct(w6c['revenue'] / w6p['revenue'] - 1),
             100 * s5p['revenue'] / p['revenue'], 100 * s5c['revenue'] / c['revenue'],
             W.num(s5p['revenue']), W.num(s5c['revenue']), W.signed_pct(s5c['revenue'] / s5p['revenue'] - 1),
             b11p['orders'], b11c['orders'], W.signed_pct(b11c['orders'] / b11p['orders'] - 1)),
-        '末段连续走强：逐日从 %s ¥%s → 低点 %s ¥%s → 峰值 %s ¥%s；最后三天合计 ¥%s，占本期 %.1f%%。' % (
-            c['rows'][0]['date'], W.num(c['rows'][0]['revenue']), low['date'], W.num(low['revenue']),
-            peak['date'], W.num(peak['revenue']), W.num(tail3), 100 * tail3 / c['revenue']),
-        '主播侧同步走强：业绩 GSV ¥%s（%s），前三 %s；上期主力张艳丽 ¥%s → ¥%s（%s）。' % (
+        '末段节奏%s：逐日 %s ¥%s → 低点 %s ¥%s → 峰值 %s ¥%s；最后三天合计 ¥%s，占本期 %.1f%%。' % (
+            '（连续三天抬升）' if tail_rising else '', c['rows'][0]['date'], W.num(c['rows'][0]['revenue']),
+            low['date'], W.num(low['revenue']), peak['date'], W.num(peak['revenue']),
+            W.num(tail3), 100 * tail3 / c['revenue']),
+        '主播侧%s：业绩 GSV ¥%s（%s），前三 %s%s。' % (
+            _w(ac['total'] / ap['total'] - 1 if ap['total'] else None, '同步走强', '同步走弱', '基本持平'),
             W.num(ac['total']), W.signed_pct(ac['total'] / ap['total'] - 1),
             '、'.join('%s ¥%s（%s）' % (n, W.num(v), W.signed_pct(v / ap['by_anchor'].get(n, 0) - 1)
                                      if ap['by_anchor'].get(n) else '新增') for n, v in top1),
-            W.num(ap['by_anchor'].get('张艳丽', 0)), W.num(ac['by_anchor'].get('张艳丽', 0)),
-            W.signed_pct(ac['by_anchor'].get('张艳丽', 0) / ap['by_anchor']['张艳丽'] - 1)),
-        '基数提醒：上期含 %s 首销峰值日 ¥%s（约为上期中位日 ¥%s 的 %.1f 倍），剔除后上期 8 天 ¥%s，本期对其为 %s —— '
-        '表内「销售额环比 %s」被峰值基数压低。' % (
-            spike['date'], W.num(spike['revenue']), W.num(med), spike['revenue'] / med,
-            W.num(p_ex_spike), W.signed_pct(rev_wow_ex), W.signed_pct(rev_wow)),
+            ('；上期主力 %s ¥%s → ¥%s（%s）' % (
+                prev_main, W.num(ap['by_anchor'][prev_main]), W.num(ac['by_anchor'].get(prev_main, 0)),
+                W.signed_pct(ac['by_anchor'].get(prev_main, 0) / ap['by_anchor'][prev_main] - 1))
+             if prev_main else '')),
+        ctx['peak_head'],
     ]
-    ctx['good'] = [
-        '单量逆势 %s：我司全店同窗口单量 %s → %s（%s），本间 %s → %s 单（%s），份额从 %s 抬到 %s。' % (
-            W.signed_pct(c['orders'] / p['orders'] - 1),
-            W.num(p['our_orders']), W.num(c['our_orders']), W.signed_pct(c['our_orders'] / p['our_orders'] - 1),
-            W.num(p['orders']), W.num(c['orders']), W.signed_pct(c['orders'] / p['orders'] - 1),
-            W.pct(p['orders'] / p['our_orders']), W.pct(c['orders'] / c['our_orders'])),
-        'Watch 6 顶成主力：%s → %s 单（%s），¥%s → ¥%s（%s），占本间销售额 %s → %s。' % (
-            W.num(w6p['orders']), W.num(w6c['orders']), W.signed_pct(w6c['orders'] / w6p['orders'] - 1),
-            W.num(w6p['revenue']), W.num(w6c['revenue']), W.signed_pct(w6c['revenue'] / w6p['revenue'] - 1),
-            W.pct(w6p['revenue'] / p['revenue']), W.pct(w6c['revenue'] / c['revenue'])),
-        '末段三天（%s ~ %s）连续放量：¥%s / ¥%s / ¥%s，收官日 %s 创本期峰值 ¥%s。' % (
+    # 做得好的：逐条判定是否真的成立，不成立就不写（避免出现「−12.7% 却说放量」这类反向话术）
+    _good = []
+    if o_wow is not None and our_o_wow is not None and o_wow > our_o_wow:
+        _good.append('跑赢我司大盘：我司全店同窗口单量 %s → %s（%s），本间 %s → %s 单（%s），占我司单量 %s → %s。' % (
+            W.num(p['our_orders']), W.num(c['our_orders']), W.signed_pct(our_o_wow),
+            W.num(p['orders']), W.num(c['orders']), W.signed_pct(o_wow), W.pct(sh_o_p), W.pct(sh_o_c)))
+    _up = [(k, _pv(p, k)['orders'], _pv(c, k)['orders'], _pv(p, k)['revenue'], _pv(c, k)['revenue'])
+           for k in prod_names
+           if _pv(p, k)['revenue'] >= 20000 and _pv(c, k)['revenue'] > _pv(p, k)['revenue'] * 1.1]
+    _up.sort(key=lambda t: -(t[4] - t[3]))
+    if _up:
+        k, op_, oc_, rp_, rc_ = _up[0]
+        _good.append('%s 放量：¥%s → ¥%s（%s），%s → %s 单（%s），占本间销售额 %s → %s。' % (
+            k, W.num(rp_), W.num(rc_), W.signed_pct(rc_ / rp_ - 1), W.num(op_), W.num(oc_),
+            W.signed_pct(oc_ / op_ - 1) if op_ else '新增', W.pct(rp_ / p['revenue']), W.pct(rc_ / c['revenue'])))
+    if tail_rising and tail3 > c['revenue'] / c['days'] * 3:
+        _good.append('末段抬升（%s ~ %s）：¥%s / ¥%s / ¥%s，最后三天占本期 %.1f%%，收官日 %s 创本期峰值 ¥%s。' % (
             c['rows'][-3]['date'], c['rows'][-1]['date'], W.num(c['rows'][-3]['revenue']),
             W.num(c['rows'][-2]['revenue']), W.num(c['rows'][-1]['revenue']),
-            c['rows'][-1]['date'], W.num(peak['revenue'])),
-        '主播侧转化站住：%s；班次看 %s。' % (
-            '、'.join('%s %s' % (n, W.signed_pct(v / ap['by_anchor'][n] - 1) if ap['by_anchor'].get(n) else '新增')
-                     for n, v in top1),
-            '、'.join('%s班 %s' % (s, W.signed_pct(ac['by_shift'][s] / ap['by_shift'][s] - 1))
-                     for s in sorted(ac['by_shift']) if ap['by_shift'].get(s))),
-        '手环11 在手表间补量：%d → %d 单（%s），¥%s → ¥%s。' % (
+            100 * tail3 / c['revenue'], peak['date'], W.num(peak['revenue'])))
+    _up_a = sorted([(n, v, ap['by_anchor'][n]) for n, v in ac['by_anchor'].items()
+                    if ap['by_anchor'].get(n) and ap['by_anchor'][n] >= 20000 and v > ap['by_anchor'][n]],
+                   key=lambda t: -(t[1] - t[2]))
+    if _up_a:
+        _good.append('主播侧转化：%s。' % '、'.join(
+            '%s ¥%s（%s）' % (n, W.num(v), W.signed_pct(v / pv - 1)) for n, v, pv in _up_a[:3]))
+    if a_wow is not None and a_wow > 0.01:
+        _good.append('均价上移：¥%s → ¥%s（%s）；¥1,000+ 价格带占本间 %.1f%% → %.1f%%。' % (
+            W.num(p['avg']), W.num(c['avg']), W.signed_pct(a_wow), 100 * hi_p / p['revenue'], 100 * hi_c / c['revenue']))
+    if b11c['orders'] > b11p['orders'] and (not _up or _up[0][0] != '小米手环11'):
+        _good.append('手环11 在手表间补量：%d → %d 单（%s），¥%s → ¥%s。' % (
             b11p['orders'], b11c['orders'], W.signed_pct(b11c['orders'] / b11p['orders'] - 1),
-            W.num(b11p['revenue']), W.num(b11c['revenue'])),
-    ]
-    ctx['bad'] = [
-        '均价 %s（¥%s → ¥%s）：高客单结构被稀释 —— S5 占比 %.1f%% → %.1f%%，Watch 6 + 手环11 合计占比 %.1f%% → %.1f%%。' % (
-            W.signed_pct(c['avg'] / p['avg'] - 1), W.num(p['avg']), W.num(c['avg']),
-            100 * s5p['revenue'] / p['revenue'], 100 * s5c['revenue'] / c['revenue'],
-            100 * (w6p['revenue'] + b11p['revenue']) / p['revenue'],
-            100 * (w6c['revenue'] + b11c['revenue']) / c['revenue']),
-        '金额增速远低于单量：+%s vs +%s（剔除上期峰值日后金额 %s，但结构问题仍在）。' % (
-            W.signed_pct(rev_wow).lstrip('+'), W.signed_pct(c['orders'] / p['orders'] - 1).lstrip('+'),
-            W.signed_pct(rev_wow_ex)),
-        'S5 断档：¥%s → ¥%s（%s），本期无同价位替代（Xiaomi Watch 5 仅 ¥%s）。' % (
+            W.num(b11p['revenue']), W.num(b11c['revenue'])))
+    ctx['good'] = _good[:5] or ['本期无突出增长项，重点看下方风险与建议。']
+    # 不足与风险：同样逐条判定，方向不符的不写
+    _bad = []
+    if rev_wow < 0 or (o_wow or 0) < 0:
+        _bad.append('收入端回落：销售额 ¥%s → ¥%s（%s）、单量 %s → %s 单（%s）—— 两项%s。' % (
+            W.num(p['revenue']), W.num(c['revenue']), W.signed_pct(rev_wow),
+            W.num(p['orders']), W.num(c['orders']), W.signed_pct(o_wow),
+            '双降' if (rev_wow < 0 and (o_wow or 0) < 0) else '一升一降'))
+    if a_wow is not None and a_wow < -0.01:
+        _bad.append('均价 %s（¥%s → ¥%s）：高客单结构被稀释 —— S5 占比 %.1f%% → %.1f%%，'
+                    'Watch 6 + 手环11 合计占比 %.1f%% → %.1f%%。' % (
+                        W.signed_pct(a_wow), W.num(p['avg']), W.num(c['avg']),
+                        100 * s5p['revenue'] / p['revenue'], 100 * s5c['revenue'] / c['revenue'],
+                        100 * (w6p['revenue'] + b11p['revenue']) / p['revenue'],
+                        100 * (w6c['revenue'] + b11c['revenue']) / c['revenue']))
+    _bad.append('¥1,000+ 价格带：占比 %.1f%% → %.1f%%（¥%s → ¥%s）—— %s。' % (
+        100 * hi_p / p['revenue'], 100 * hi_c / c['revenue'], W.num(hi_p), W.num(hi_c),
+        '高端占比回升，但绝对量仍小，客单价缺支撑' if hi_c >= hi_p else '高端缺位，客单价被低价单品拉低'))
+    if s5c['revenue'] < s5p['revenue'] * 0.7:
+        _bad.append('S5 掉档：¥%s → ¥%s（%s），本期无同价位替代（Xiaomi Watch 5 仅 ¥%s）。' % (
             W.num(s5p['revenue']), W.num(s5c['revenue']), W.signed_pct(s5c['revenue'] / s5p['revenue'] - 1),
-            W.num(c['products'].get('Xiaomi Watch 5', {'revenue': 0})['revenue'])),
-        '晚间时段被削弱：19:00–23:59 金额 ¥%s → ¥%s（%s），其中 20:00 单小时 ¥%s → ¥%s（%s）；'
-        '同期 12:00–18:59 下午段 ¥%s → ¥%s（%s）—— 成交高峰从晚间高客单时段前移到下午。' % (
-            W.num(sum(hp[h][1] for h in range(19, 24))), W.num(sum(hc[h][1] for h in range(19, 24))),
-            W.signed_pct(sum(hc[h][1] for h in range(19, 24)) / sum(hp[h][1] for h in range(19, 24)) - 1),
-            W.num(hp[20][1]), W.num(hc[20][1]), W.signed_pct(hc[20][1] / hp[20][1] - 1),
-            W.num(sum(hp[h][1] for h in range(12, 19))), W.num(sum(hc[h][1] for h in range(12, 19))),
-            W.signed_pct(sum(hc[h][1] for h in range(12, 19)) / sum(hp[h][1] for h in range(12, 19)) - 1)),
-        '中段塌陷：%s ~ %s 三天日均仅 ¥%s，是本期低谷；同期我司日均 ¥%s。' % (
-            c['rows'][3]['date'], c['rows'][5]['date'], W.num(mid3), W.num(c['our_revenue'] / c['days'])),
-        '主播换血：上期在手表间出摊的 %s 本期均未出摊，张艳丽 %s、王嘉琦 %s，经验与稳定性存在断档风险。' % (
-            '、'.join(n for n in ['王瑞', '高珊珊', '李晓洋', '李牧遥', '刘垚', '方姝蓉'] if ap['by_anchor'].get(n) and not ac['by_anchor'].get(n)),
-            W.signed_pct(ac['by_anchor'].get('张艳丽', 0) / ap['by_anchor']['张艳丽'] - 1),
-            W.signed_pct(ac['by_anchor'].get('王嘉琦', 0) / ap['by_anchor']['王嘉琦'] - 1)),
-    ]
+            W.num(c['products'].get('Xiaomi Watch 5', {'revenue': 0})['revenue'])))
+    else:
+        _bad.append('高端依赖单点：S5 ¥%s → ¥%s（%s），价格带上移主要靠这一款，需盯库存与排期。' % (
+            W.num(s5p['revenue']), W.num(s5c['revenue']), W.signed_pct(s5c['revenue'] / s5p['revenue'] - 1)))
+    _bad.append('时段结构：19:00–23:59 ¥%s → ¥%s（%s），其中 %02d:00 单小时 ¥%s → ¥%s（%s）；'
+                '12:00–18:59 下午段 ¥%s → ¥%s（%s）—— %s。' % (
+                    W.num(eve_p), W.num(eve_c), _sp(d_eve),
+                    worst_h, W.num(hp[worst_h][1]), W.num(hc[worst_h][1]), _sp(d_wh),
+                    W.num(aft_p), W.num(aft_c), _sp(d_aft), hour_w))
+    _bad.append('低谷三天（%s ~ %s）日均 ¥%s，是本期最低段；本期日均 ¥%s、同期我司日均 ¥%s。' % (
+        low3[0]['date'], low3[-1]['date'], W.num(low3_avg), W.num(daily_c),
+        W.num(c['our_revenue'] / c['days'])))
+    if gone or drop_a:
+        _parts = []
+        if gone:
+            _parts.append('上期在岗的 %s 本期未出摊' % '、'.join(gone[:5]))
+        if drop_a:
+            _parts.append('、'.join('%s %s' % (n, W.signed_pct(ac['by_anchor'][n] / ap['by_anchor'][n] - 1))
+                                   for n in drop_a) + ' 明显回落')
+        _bad.append('主播供给波动：%s —— 经验与稳定性存在断档风险。' % '；'.join(_parts))
+    ctx['bad'] = _bad[:6]
     top_hours = sorted(range(24), key=lambda h: -hc[h][1])[:3]
     ctx['plan'] = [
-        '稳 Watch 6：本期日均 %.0f 单、峰值日 %d 单，主推位与库存优先保障，避免断货丢单。' % (
-            w6c['orders'] / c['days'], max(r['orders'] for r in c['rows'])),
-        '补齐高客单：S5 断档后 ¥1,000+ 价位本期只剩 ¥%s，把 Watch S5 / Watch 5 重新排进高转化时段（本期金额前三时段：%s）。' % (
-            W.num(sum(c['products'].get(k, {'revenue': 0})['revenue'] for k in ['Xiaomi Watch S5', 'Xiaomi Watch 5'])),
+        '稳 Watch 6：本期日均 %.0f 单、单日峰值 %d 单（占本间销售额 %s），主推位与库存优先保障，避免断货丢单。' % (
+            w6c['orders'] / c['days'], max(r['orders'] for r in c['rows']), W.pct(w6c['revenue'] / c['revenue'])),
+        '补齐高客单：¥1,000+ 价格带本期 ¥%s（占本间 %.1f%%），把 Watch S5 / Watch 5 重新排进高转化时段'
+        '（本期金额前三时段：%s）。' % (
+            W.num(hi_c), 100 * hi_c / c['revenue'],
             '、'.join('%02d:00（¥%s）' % (h, W.num(hc[h][1])) for h in top_hours)),
-        '主播排班固化：把 %s 的班次固定为主推班，张艳丽/王嘉琦回到重点时段恢复手感。' % (
-            '、'.join(n for n, _ in top1)),
-        '复盘 %s ~ %s 中段塌陷：对照同期大盘与排播表，确认是流量下滑还是排班/货盘问题。' % (
-            c['rows'][3]['date'], c['rows'][5]['date']),
-        '搭售抬客单：用手环11（本期 %d 单，均价 ¥%s）+ 腕带/耳机做组合，把客单从 ¥%s 往 ¥%s 拉。' % (
+        '主播排班固化：把 %s 的班次固定为主推班%s。' % (
+            '、'.join(n for n, _ in top1),
+            ('，%s 回到重点时段恢复手感' % '、'.join(drop_a)) if drop_a else ''),
+        '复盘低谷三天（%s ~ %s，日均 ¥%s）：对照同期大盘与排播表，确认是流量下滑还是排班/货盘问题。' % (
+            low3[0]['date'], low3[-1]['date'], W.num(low3_avg)),
+        '搭售抬客单：用手环11（本期 %d 单，均价 ¥%s）+ 腕带/耳机做组合，把客单价从 ¥%s %s。' % (
             b11c['orders'], W.num(b11c['revenue'] / b11c['orders'] if b11c['orders'] else 0),
-            W.num(c['avg']), W.num(p['avg'])),
+            W.num(c['avg']),
+            ('继续往上抬（上期 ¥%s，本期已高于上期）' % W.num(p['avg'])) if c['avg'] >= p['avg']
+            else ('拉回上期 ¥%s 的水平' % W.num(p['avg']))),
     ]
 
     wb = Workbook()
@@ -774,7 +899,12 @@ def main(argv=None):
     ap.add_argument('--prev', nargs=2, default=['2026-09-20', '2026-09-28'])
     ap.add_argument('--out', default=None)
     a = ap.parse_args(argv)
-    out = a.out or os.path.join(W.DESKTOP, '小米官方手表_9.29-10.7销售分析.xlsx')
+    if a.out:
+        out = a.out
+    else:
+        # 默认文件名跟着窗口走（房间名_起-止销售分析.xlsx），换窗口不必手写 --out
+        md = lambda s: '%d.%d' % (int(s[5:7]), int(s[8:10]))
+        out = os.path.join(W.DESKTOP, '%s_%s-%s销售分析.xlsx' % (a.room, md(a.cur[0]), md(a.cur[1])))
     return build(a.room, a.cur[0], a.cur[1], a.prev[0], a.prev[1], out)
 
 
