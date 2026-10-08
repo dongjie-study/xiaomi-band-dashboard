@@ -705,11 +705,13 @@ def build_text(x):
     d_prev = [s for s in x['series'] if s['date'] < BRAND_START][-1]
 
     x['headline'] = [
-        '① 推荐口径（紧邻可比、剔除 S5 首销 9.23-9.24）：前 %s ~ %s（可用 %d 天）%.2f%% → 后 %s ~ %s（%d 天）%.2f%%（%+.2f pp）。'
+        '① 推荐口径（紧邻可比、剔除 S5 首销 9.23-9.24）：前 %s ~ %s（可用 %d 天）%.2f%% → 后 %s ~ %s（%d 天）%.2f%%（%+.2f pp）'
+        '——份额是上线前的 %.2f 倍、相对 %+.1f%%，这是本报告主推的品专效果数字。'
         '等长 4 天版（%s ~ %s vs %s ~ %s）：%.2f%% → %.2f%%（%+.2f pp）。'
         '品专上线首日 %s 占比即 %.2f%%，前一交易日 %s 为 %.2f%%。' % (
             b_rec['b0'], b_rec['b1'], b_rec['days'], b_rec['shA_b'] * 100,
             b_rec['a0'], b_rec['a1'], b_rec['a_days'], b_rec['shA_a'] * 100, b_rec['dp'],
+            b_rec['shA_a'] / b_rec['shA_b'], (b_rec['shA_a'] / b_rec['shA_b'] - 1) * 100,
             b_eq['b0'], b_eq['b1'], b_eq['a0'], b_eq['a1'], b_eq['shA_b'] * 100, b_eq['shA_a'] * 100, b_eq['dp'],
             BRAND_START, d_first['rv'] / d_first['a'] * 100, d_prev['date'], d_prev['rv'] / d_prev['a'] * 100),
         '② 九月基线（"之前"的粗口径）：九整月 %s ~ %s（%d 天）%.2f%% → 品专后 %.2f%%（%+.2f pp）；'
