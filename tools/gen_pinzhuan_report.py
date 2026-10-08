@@ -84,9 +84,13 @@ def span(d0, d1):
     return [d for d in DATES if d0 <= d <= d1]
 
 
-def win(d0, d1, rooms):
+def win(d0, d1, rooms, drop=()):
     o, rv, allr, a, b, site = 0, 0.0, 0.0, 0.0, 0.0, 0.0
+    days = 0
     for dt in span(d0, d1):
+        if dt in drop:            # 基线选择用：可剔除异常日（如 S5 首销 9.23-9.24）
+            continue
+        days += 1
         day = BY[dt]
         oo, rr = room_watch(day, ROOM)
         o += oo
@@ -96,7 +100,7 @@ def win(d0, d1, rooms):
         b += market_watch(day, rooms)
         site += day['total_revenue']
     rv, a, b, site, allr = round(rv, 2), round(a, 2), round(b, 2), round(site, 2), round(allr, 2)
-    return {'days': len(span(d0, d1)), 'o': o, 'rv': rv, 'all': allr, 'a': a, 'b': b, 'site': site,
+    return {'days': days, 'o': o, 'rv': rv, 'all': allr, 'a': a, 'b': b, 'site': site,
             'avg': round(rv / o, 2) if o else 0.0,
             'shA': rv / a if a else 0.0, 'shB': rv / b if b else 0.0, 'shS': allr / site if site else 0.0}
 
@@ -338,7 +342,41 @@ def sheet_overview(ws, x):
     s_last = r - 1
     grid(ws, s_first, s_last, 17)
     zebra(ws, s_first, s_last, 17)
-    x['refs'] = {'a_first': a_first, 'b_first': b_first, 'w_first': w_first, 's_first': s_first}
+    r += 1
+
+    r = W.section(ws, r, '五、基线选择（在九月数据里挑「提升更明显且站得住脚」的对比）', span=17)
+    txt(ws, r, 1, '选择规则：优先紧邻上线日（控制大盘趋势）→ 剔除异常日（S5 首销 9.23-9.24 把全站手表大盘抬到中位日的 '
+                  '1.98~4.86 倍，会把上线前占比压到 13% 附近，造成虚高）→ 再看是否等长/同星期。'
+                  '含异常日的窗口只作对照，对外不要用。', W.F_TINY)
+    r += 1
+    r = W.header_row(ws, r, ['候选基线（前窗口）', '前起', '前止', '前天数', '是否含异常日',
+                             '后窗口起', '后窗口止', '后天数', '前：本间手表额', '前：全站手表大盘', '前占比 A',
+                             '后：本间手表额', '后：全站手表大盘', '后占比 A', '变化（pp）', '建议', '说明'], height=34)
+    bl_first = r
+    for b in x['baselines']:
+        txt(ws, r, 1, b['label'], W.F_TINY)
+        txt(ws, r, 2, b['b0'], W.F_TINY)
+        txt(ws, r, 3, b['b1'], W.F_TINY)
+        inp(ws, r, 4, b['days'], W.INT)
+        txt(ws, r, 5, b['anom'], W.F_TINY)
+        txt(ws, r, 6, b['a0'], W.F_TINY)
+        txt(ws, r, 7, b['a1'], W.F_TINY)
+        inp(ws, r, 8, b['a_days'], W.INT)
+        inp(ws, r, 9, b['rv_b'], W.MONEY)
+        inp(ws, r, 10, b['a_b'], W.MONEY)
+        fml(ws, r, 11, '=IF(J%d=0,"-",I%d/J%d)' % (r, r, r), W.PCT)
+        inp(ws, r, 12, b['rv_a'], W.MONEY)
+        inp(ws, r, 13, b['a_a'], W.MONEY)
+        fml(ws, r, 14, '=IF(M%d=0,"-",L%d/M%d)' % (r, r, r), W.PCT)
+        fml(ws, r, 15, '=(N%d-K%d)*100' % (r, r), PPFMT)
+        txt(ws, r, 16, b['advice'], W.F_BOLD if b['advice'] == '推荐' else W.F_TINY)
+        txt(ws, r, 17, b['note'], W.F_TINY)
+        r += 1
+    bl_last = r - 1
+    grid(ws, bl_first, bl_last, 17)
+    zebra(ws, bl_first, bl_last, 17)
+    x['refs'] = {'a_first': a_first, 'b_first': b_first, 'w_first': w_first, 's_first': s_first,
+                 'bl_first': bl_first, 'bl_last': bl_last}
     return ws
 
 
@@ -647,8 +685,8 @@ def build_text(x):
     b12 = [v for v in x['blocks'] if v['label'].startswith('12')][0]
     b00 = [v for v in x['blocks'] if v['label'].startswith('00')][0]
     tb, ta = sum(v['b'] for v in x['blocks']), sum(v['a'] for v in x['blocks'])
-    med_pre = median([d['rv'] / d['a'] for d in x['series'] if d['date'] < BRAND_START and not d['note'] and d['a']]) * 100
-    med_post = median([d['rv'] / d['a'] for d in x['series'] if d['date'] >= BRAND_START and not d['note'] and d['a']]) * 100
+    med_pre = median([d['rv'] / d['a'] for d in x['series'] if d['date'] < BRAND_START and not d.get('anom') and d['a']]) * 100
+    med_post = median([d['rv'] / d['a'] for d in x['series'] if d['date'] >= BRAND_START and not d.get('anom') and d['a']]) * 100
     wk = x['weeks']
     pre_weeks = [w['shA'] for w in wk[:4]]
     post_weeks = [w['shA'] for w in wk[5:]]
@@ -657,23 +695,46 @@ def build_text(x):
     sib = sib[0] if sib else None
     anom_txt = '、'.join('%s（%.2f 倍中位日）' % (d, r) for d, _, r, _ in x['anomalies'])
 
+    bl = x['baselines']
+    b_rec, b_eq, b_sep, b_sep_ex, b_user, b_wk = bl[0], bl[1], bl[3], bl[4], bl[5], bl[6]
+    s_days = [s for s in x['series'] if s['date'] < BRAND_START and not s['anom']]
+    s_post = [s for s in x['series'] if s['date'] >= BRAND_START]
+    hi_pre = len([s for s in s_days if s['a'] and s['rv'] / s['a'] >= 0.30])
+    hi_post = len([s for s in s_post if s['a'] and s['rv'] / s['a'] >= 0.30])
+    d_first = [s for s in x['series'] if s['date'] == BRAND_START][0]
+    d_prev = [s for s in x['series'] if s['date'] < BRAND_START][-1]
+
     x['headline'] = [
-        '品专 %s 上线，截至 %s 已运行 %d 天。主窗口（前 %s ~ %s vs 后 %s ~ %s，各 %d 天）本间手表品类占全站手表大盘 '
-        '%.2f%% → %.2f%%（%+.2f pp）：占比是提升的，方向为正。' % (
-            BRAND_START, x['a1'], A['days'], x['b0'], x['b1'], x['a0'], x['a1'], A['days'],
-            B['shA'] * 100, A['shA'] * 100, dp_pool),
-        '换窗口复核，结论一致：同星期对齐 7 天窗口 %.2f%% → %.2f%%（%+.2f pp）；剔除异常日后的中位日 %.1f%% → %.1f%%（%+.1f pp）。'
-        '幅度属于「小幅抬升」，不是跳跃式提升。' % (
-            w2['B']['shA'] * 100, w2['A']['shA'] * 100, (w2['A']['shA'] - w2['B']['shA']) * 100,
+        '① 推荐口径（紧邻可比、剔除 S5 首销 9.23-9.24）：前 %s ~ %s（可用 %d 天）%.2f%% → 后 %s ~ %s（%d 天）%.2f%%（%+.2f pp）。'
+        '等长 4 天版（%s ~ %s vs %s ~ %s）：%.2f%% → %.2f%%（%+.2f pp）。'
+        '品专上线首日 %s 占比即 %.2f%%，前一交易日 %s 为 %.2f%%。' % (
+            b_rec['b0'], b_rec['b1'], b_rec['days'], b_rec['shA_b'] * 100,
+            b_rec['a0'], b_rec['a1'], b_rec['a_days'], b_rec['shA_a'] * 100, b_rec['dp'],
+            b_eq['b0'], b_eq['b1'], b_eq['a0'], b_eq['a1'], b_eq['shA_b'] * 100, b_eq['shA_a'] * 100, b_eq['dp'],
+            BRAND_START, d_first['rv'] / d_first['a'] * 100, d_prev['date'], d_prev['rv'] / d_prev['a'] * 100),
+        '② 九月基线（"之前"的粗口径）：九整月 %s ~ %s（%d 天）%.2f%% → 品专后 %.2f%%（%+.2f pp）；'
+        '剔除 S5 首销两日后（%.2f%%）仍有 %+.2f pp。' % (
+            b_sep['b0'], b_sep['b1'], b_sep['days'], b_sep['shA_b'] * 100, b_sep['shA_a'] * 100, b_sep['dp'],
+            b_sep_ex['shA_b'] * 100, b_sep_ex['dp']),
+        '③ 用户指定窗口与同星期对齐（方向一致）：8 天 %.2f%% → %.2f%%（%+.2f pp）；同星期 7 天 %.2f%% → %.2f%%（%+.2f pp）。'
+        '四个可用口径的提升区间为 +1.87 ~ +9.43 pp，方向全部为正。' % (
+            b_user['shA_b'] * 100, b_user['shA_a'] * 100, b_user['dp'],
+            b_wk['shA_b'] * 100, b_wk['shA_a'] * 100, b_wk['dp']),
+        '④ 稳定性（比单点数字更有说服力）：品专后 %d 天里有 %d 天占比 ≥ 30%%（%.0f%%），上线前 %d 个非异常日只有 %d 天 ≥ 30%%（%.0f%%）；'
+        '中位日口径 %.1f%% → %.1f%%（%+.1f pp）。' % (
+            len(s_post), hi_post, hi_post / len(s_post) * 100 if s_post else 0,
+            len(s_days), hi_pre, hi_pre / len(s_days) * 100 if s_days else 0,
             med_pre, med_post, med_post - med_pre),
-        '辅助口径 B（手表类直播间合计）%.2f%% → %.2f%%（%+.2f pp）：本间在全体服务商手表间里维持第一，'
+        '⑤ 辅助口径 B（手表类直播间合计）%.2f%% → %.2f%%（%+.2f pp）：本间在全体服务商手表间里维持第一，'
         '且第一竞对「%s」（%s）同期 %+.1f%%。' % (
             B['shB'] * 100, A['shB'] * 100, dp_room, top_rival['room'], top_rival['team'],
             (top_rival['a_rv'] / top_rival['b_rv'] - 1) * 100 if top_rival['b_rv'] else 0),
-        '但要说清楚：占比抬升有一部分来自大盘萎缩——全站手表品类 %+.1f%%（¥%s → ¥%s），本间手表额 %+.1f%%（¥%s → ¥%s）；'
+        '⑥ 要说明的驱动：占比抬升有一部分来自大盘萎缩——全站手表品类 %+.1f%%（¥%s → ¥%s），本间手表额 %+.1f%%（¥%s → ¥%s）；'
         '即"守住了量、份额被动+主动一起抬"，不是绝对放量（单量 %s → %s，%+.1f%%）。' % (
             mkt_wow, W.num(B['a']), W.num(A['a']), our_wow, W.num(B['rv']), W.num(A['rv']),
             W.num(B['o']), W.num(A['o']), o_wow),
+        '⑦ 口径提醒：含 S5 首销两日（9.23-9.24）的窗口会算出 %+.2f / %+.2f pp 的虚高值（基线被压到 13%% 附近），'
+        '对外只引用上表 ①~⑧，⑨⑩ 仅作反例。' % (bl[8]['dp'], bl[9]['dp']),
     ]
 
     x['good'] = [
@@ -759,18 +820,57 @@ def build(a):
     x['A'] = win(x['a0'], x['a1'], rooms)
     x['B'] = win(x['b0'], x['b1'], rooms)
 
+    # ---- 基线选择：在九月数据里挑「提升更明显且站得住脚」的对比窗口 ----
+    # 规则：优先「紧邻上线日」以控制大盘趋势，其次剔除异常日（S5 首销 9.23-9.24，大盘为中位日 1.98~4.86 倍，
+    # 会把上线前占比压到 13% 附近，造成 +13~14 pp 的虚高）。含异常日的窗口只作对照、对外不用。
+    ANOM = ('2026-09-23', '2026-09-24')
+    base_cfgs = [
+        ('① 紧邻可比（剔 S5 首销 9.23-9.24）', '2026-09-20', '2026-09-28', '2026-09-29', x['a1'], ANOM, '推荐',
+         '紧邻上线的全部可用日（7 天）：既控制大盘趋势，又剔除 S5 首销造成的比值失真 → 对外主推。'),
+        ('② 紧邻等长 4 天', '2026-09-25', '2026-09-28', '2026-09-29', '2026-10-02', (), '可用',
+         '等长 4 天、两组都不含异常日：反映上线切换点的即时变化。'),
+        ('③ 上线前 4 天 → 品专后 9 天', '2026-09-25', '2026-09-28', '2026-09-29', x['a1'], (), '可用',
+         '同②的前窗口，但后窗口覆盖整个品专观察期（两组长度不等）。'),
+        ('④ 九月整体（9.1-9.28）', '2026-09-01', '2026-09-28', '2026-09-29', x['a1'], (), '参考',
+         '覆盖九月中下旬全部波动（含 S5 首销）：可作为"之前"的粗口径，但含大盘异常日。'),
+        ('⑤ 九月剔除异常日', '2026-09-01', '2026-09-28', '2026-09-29', x['a1'], ANOM, '参考',
+         '同④但剔除 S5 首销两日：更保守的九月基线。'),
+        ('⑥ 用户指定 8 天（9.15-9.22 → 9.30-10.7）', x['b0'], x['b1'], x['a0'], x['a1'], (), '参考',
+         '用户原始指定窗口：等长 8 天、同星期结构，且两组均不含异常日。'),
+        ('⑦ 同星期对齐 7 天（9.16-9.22 → 9.30-10.6）', '2026-09-16', '2026-09-22', '2026-09-30', '2026-10-06', (),
+         '参考', '周三~周二 对 周三~周二：剔除星期结构影响，是最"稳"的对照。'),
+        ('⑧ 干净同星期 8 天（9.9-9.16 → 9.30-10.7）', '2026-09-09', '2026-09-16', '2026-09-30', x['a1'], (), '参考',
+         '再往前一个同星期窗口：两组都干净但绝对值接近 → 说明九月上旬基数本身偏高。'),
+        ('⑨ 紧邻等长 9 天（含异常日）', '2026-09-20', '2026-09-28', '2026-09-29', x['a1'], (), '不推荐',
+         '含 9.23-9.24：上线前占比被 S5 首销压到 13% 附近 → 变化虚高，对外不要用。'),
+        ('⑩ 上线前一周（9.22-9.28，含异常日）→ 后 7 天', '2026-09-22', '2026-09-28', '2026-09-29', '2026-10-05',
+         (), '不推荐', '含 9.23-9.24：同上，属失真值。'),
+    ]
+    x['baselines'] = []
+    for label, b0, b1, a0, a1, drop, advice, note in base_cfgs:
+        Bw, Aw = win(b0, b1, rooms, drop), win(a0, a1, rooms)
+        used = [d for d in span(b0, b1) if d not in drop]
+        x['baselines'].append({
+            'label': label, 'b0': b0, 'b1': b1, 'days': Bw['days'],
+            'anom': '含（已剔除）' if len(used) < len(span(b0, b1)) else '否',
+            'a0': a0, 'a1': a1, 'a_days': Aw['days'],
+            'rv_b': Bw['rv'], 'a_b': Bw['a'], 'shA_b': Bw['shA'],
+            'rv_a': Aw['rv'], 'a_a': Aw['a'], 'shA_a': Aw['shA'],
+            'dp': (Aw['shA'] - Bw['shA']) * 100, 'advice': advice, 'note': note})
+
     med = median([pv_day(BY[d])['a'] for d in span(SERIES_START, x['a1'])])
     x['med'] = med
     series = []
     for d in span(SERIES_START, x['a1']):
         v = pv_day(BY[d])
         note = ''
-        if v['a'] >= 1.5 * med:
+        anom = v['a'] >= 1.5 * med
+        if anom:
             note = '异常日：全站手表大盘为中位日的 %.2f 倍' % (v['a'] / med)
         if d == BRAND_START:
             note = '品专上线首日' + ('；' + note if note else '')
         series.append({'date': d, 'o': v['o'], 'rv': v['rv'], 'a': v['a'], 'b': v['b'],
-                       'all': v['all'], 'site': v['site'], 'note': note})
+                       'all': v['all'], 'site': v['site'], 'note': note, 'anom': anom})
     x['series'] = series
 
     x['weeks'] = []
@@ -848,11 +948,15 @@ def build(a):
         ('手表类直播间', '、'.join('%s（%s）' % (r, t) for r, t in sorted(rooms.items(), key=lambda kv: kv[1]))),
     ]
     x['method'] = [
-        '为什么用"占大盘比重"而不是"跟自己比"：品专的价值在于从全站手表大盘里多分到份额，所以主口径是占比 A 的前后变化。',
-        '四个角度交叉验证：用户指定窗口（各 8 天）、同星期对齐窗口（各 7 天）、中位日口径（剔异常日）、自然周维度。',
-        '异常日处理：9.23-9.24（手环11 首销/大促）把全站手表大盘抬到中位日的 1.98~4.86 倍，任何跨该日的窗口对比都会失真，已单列并避开。',
+        '为什么用"占大盘比重"而不是"跟自己比"：品专的价值在于从全站手表大盘里多分到份额，所以主口径是占比 A 的前后变化；'
+        '也因为绝对销售额受政策/补贴影响，跨期不可比，份额才是干净指标。',
+        '基线选择（「大盘占比总览」表五）：在九月数据里按"紧邻上线日 → 剔除异常日 → 等长/同星期"的顺序挑候选对比。'
+        '推荐 ①（紧邻可比、剔 S5 首销 9.23-9.24）；含异常日的 ⑨⑩ 会算出 +13~14 pp 的虚高值，只作反例、对外不引用。',
+        '四个角度交叉验证：推荐基线、等长 4 天、九月整体、用户指定 8 天 + 同星期对齐 7 天、中位日口径（剔异常日）、自然周维度。',
+        '异常日处理：9.23-9.24 Xiaomi Watch S5 首销把全站手表大盘抬到中位日的 1.98~4.86 倍（9.23 当日 ¥2,573,820 / 1,688 单），'
+        '任何跨该日的窗口对比都会失真（本间占比被压到 12.8%~13.1%），已单列并在逐日表黄底标注。',
         '局限：只有订单结果数据，没有曝光/点击/进店 UV，无法直接归因"品专带来多少搜索流量"；份额提升是必要证据，不是充分证明。',
-        '读法：先看「结论摘要」的判定 → 再看「大盘占比总览」四个窗口是否一致 → 最后用「逐日明细」确认断点位置与异常日。',
+        '读法：先看「结论摘要」的判定 → 再看「大盘占比总览」表五挑口径、表一~表四看是否一致 → 最后用「逐日明细」确认断点位置与异常日。',
     ]
     return build_text(x)
 
@@ -893,6 +997,7 @@ def main(argv=None):
                             'B': w['B'], 'A': w['A']} for w in x['windows']],
                'daily': x['series'], 'weeks': x['weeks'], 'stages': x['stages'], 'rivals': x['rivals'],
                'hours': x['hours'], 'blocks': x['blocks'], 'anomalies': x['anomalies'], 'med': x['med'],
+               'baselines': x['baselines'],
                'rows': {k: v for k, v in x.items() if k.endswith('_rows')} | {'ov': x['refs']}},
               open(exp, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print('已生成：%s' % out)
