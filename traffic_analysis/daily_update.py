@@ -119,6 +119,8 @@ PEER_METRICS = [
 ANOM_RATIO = 2.5          # 达到这个倍数 → 判定口径异常，剔除出互动率合算
 ANOM_WARN_RATIO = 0.6     # 达到这个倍数（但没到 2.5）→ 只提示留意，不剔除
 ANOM_MIN_VIEWS = 150      # 观看数太小的渠道比率本就不稳定，不参与异常判定
+ANOM_MIN_INTER = 50       # ★ 但「观看少、互动多」恰恰是最典型的错口径（如 37 观看 / 1010 互动），
+                          #   所以互动数本身够大（≥50）时照样判异常，否则把这种渠道算进互动率会得出 101% 这种数
 
 
 # ============================================================ 工具
@@ -342,6 +344,19 @@ def _strip_ext(name):
     return m.group(1) if m else name
 
 
+def strip_all_ext(name):
+    """反复剥扩展名：「小米官方手表10.9日流量.xlsx.xlsx」要剥成「小米官方手表10.9日流量」。
+    ★ 有人的导出是双后缀，只剥一层会在直播间名/日志里留一个 .xlsx 尾巴。
+    """
+    out = str(name or '')
+    for _ in range(4):
+        got = _strip_ext(out)
+        if got == out:
+            break
+        out = got
+    return out
+
+
 def parse_date_from_name(path):
     """从文件名/目录名抽日期：支持 10.11 / 10-11 / 10月11日 / 2026-10-11 / 1011。"""
     base = _strip_ext(os.path.basename(path))
@@ -407,10 +422,10 @@ def common_dir(paths):
         return os.path.dirname(os.path.abspath(paths[0]))
 
 
-def resolve_date(paths, d=None, rows_by_sheet=None):
+def resolve_date(paths, d=None, rows_by_sheet=None, d_src=None):
     """日期推定：--date > 所在文件夹名（如「10.10日流量」）> 文件名 > 表内单元格 > 文件修改时间。"""
     if d:
-        return d, '--date'
+        return d, (d_src or '--date')
     if isinstance(paths, str):
         paths = [paths]
     # ★ 坑一：os.path.basename('…/10.10日流量/') 返回空串（补假文件名也没用，basename 结果永远是假名）
@@ -430,6 +445,21 @@ def resolve_date(paths, d=None, rows_by_sheet=None):
     got = ms[-1]
     print('⚠️ 文件名和表内都没有日期，按文件修改时间推定 %s；如不对请用 --date YYYY-MM-DD 指定' % got)
     return got, '文件修改时间'
+
+
+def group_by_date(paths):
+    """按文件名里的日期分组：一次可以传多天的表（例如 Downloads 里 10.8 和 10.9 混在一起）。
+
+    返回 (groups, rest)：groups = [(日期, [路径…]), …] 按日期升序；rest = 文件名里没日期的路径。
+    """
+    buckets, rest = {}, []
+    for p in paths:
+        got = parse_date_from_name(p)
+        if got:
+            buckets.setdefault(got, []).append(p)
+        else:
+            rest.append(p)
+    return sorted(buckets.items()), rest
 
 
 def is_live_duration(v):
@@ -528,7 +558,8 @@ def analyze_room(rows, hi, idx, ch, sheet_name, src_file, aw=None, debug=False):
         v, it = c.get('views') or 0, c.get('interactions') or 0
         ratio = (it / v) if v else None
         c['interaction_ratio'] = round(ratio, 4) if ratio is not None else None
-        c['anomaly'] = bool(v >= ANOM_MIN_VIEWS and ratio is not None and ratio >= ANOM_RATIO)
+        big = (v >= ANOM_MIN_VIEWS) or (it >= ANOM_MIN_INTER)   # 观看够多 或 互动本身够大
+        c['anomaly'] = bool(big and ratio is not None and ratio >= ANOM_RATIO)
         c['suspect'] = bool(not c['anomaly'] and v >= ANOM_MIN_VIEWS and ratio is not None and ratio >= ANOM_WARN_RATIO)
         if c['anomaly']:
             anomalies.append(c['name'])
@@ -614,7 +645,8 @@ def sum_rooms(rooms):
         v, it = agg.get('views') or 0, agg.get('interactions') or 0
         ratio = (it / v) if v else None
         agg['interaction_ratio'] = round(ratio, 4) if ratio is not None else None
-        agg['anomaly'] = bool(v >= ANOM_MIN_VIEWS and ratio is not None and ratio >= ANOM_RATIO)
+        big = (v >= ANOM_MIN_VIEWS) or (it >= ANOM_MIN_INTER)
+        agg['anomaly'] = bool(big and ratio is not None and ratio >= ANOM_RATIO)
         agg['suspect'] = bool(not agg['anomaly'] and v >= ANOM_MIN_VIEWS and ratio is not None and ratio >= ANOM_WARN_RATIO)
     merged_order = [n for n, _v in sorted(((n, a.get('views') or 0) for n, a in merged_ch.items()), key=lambda x: -x[1])]
     return {
@@ -659,6 +691,13 @@ def evaluate_rules(m, tot):
             disp = '%.2f 倍' % pv
         else:
             disp = '%s 元' % f'{pv:,.0f}'
+        # ★ 互动率 > 100% 是平台两列口径不一致（互动次数按动作计数、观看按人头计数），
+        #   这种数不当成「达标」也不当成「不达标」，标成暂不判定并在 why 里说清原因。
+        #   注：PLATFORM_RULES 里这条规则的 key 是 interaction_rate（用剔除异常渠道后的 ok_totals 算），
+        #   但两个 key 都兜住，免得以后换口径时护栏悄悄失效。
+        if key in ('interaction_rate', 'view_interaction_rate') and pv is not None and pv > 100:
+            status = 'unknown'
+            why = '互动次数已超过观看次数，属平台两列口径不一致（互动按动作计、观看按人头计），今日这项不判定'
         rng = ('≥ %g' % lo) if hi is None else ('%g ~ %g' % (lo, hi))
         rng += '%' if unit == '%' else (' 倍' if unit == '倍' else ' 元')
         out.append({'key': key, 'label': label, 'status': status, 'unit': unit,
@@ -820,7 +859,10 @@ def build_insights(cur, prev, dod, rules, channels, compare=None):
     for r in bad:
         lines['rules'].append('⚠️ %s %s，%s平台参考区间 %s。%s' % (
             r['label'], r['value_disp'], '低于' if r['status'] == 'low' else '高于', r['range'], r['why']))
-    if not bad:
+    for r in rules:
+        if r['status'] == 'unknown' and r['value'] is not None:
+            lines['rules'].append('❓ %s %s，%s。' % (r['label'], r['value_disp'], r['why']))
+    if not bad and not any(r['status'] == 'unknown' and r['value'] is not None for r in rules):
         lines['rules'].append('✅ 全部核心指标落在平台推荐区间内，当前分发逻辑健康，重点是保住这套节奏。')
 
     if prev:
@@ -1036,6 +1078,9 @@ def build_scope(rec, prev_rec, scope):
         'scope': scope, 'room': scope, 'is_all': scope == ALL_SCOPE,
         # 页面拿 date/prev_date 显示「数据日期 / 对比基准」，缺了会显示成首日无对比
         'date': rec.get('date'), 'prev_date': (prev_rec or {}).get('date'),
+        # 状态条右侧的「更新于」：用日文件里的 updated_at（内容没变时 write_day 会保留旧值，
+        # 所以重建不会让这个时间戳乱跳；日报体自己不再生成时间戳，避免无谓的 git 改动）
+        'generated_at': rec.get('updated_at') or rec.get('created_at'),
         'prev_scope_exists': bool(prev),
         'totals': cur['totals'], 'metrics': cur['metrics'], 'ok_totals': cur.get('ok_totals'),
         'source_file': cur.get('source_file'), 'source_sheet': cur.get('sheet'),
@@ -1191,13 +1236,13 @@ def expand_inputs(paths):
     return res
 
 
-def ingest_one_day(paths, d=None, room=None, sheet=None, force=False, quiet=False, debug=False):
+def ingest_one_day(paths, d=None, room=None, sheet=None, force=False, quiet=False, debug=False, d_src=None):
     book = None
     try:
         book = parse_xlsx(paths[0], sheet=sheet)
     except ExcelizeError:
         book = None
-    d, how = resolve_date(paths, d=d, rows_by_sheet=book)
+    d, how = resolve_date(paths, d=d, rows_by_sheet=book, d_src=d_src)
     if d[:7] < START_YM:
         raise SystemExit('❌ %s 早于流量分析起始月份 %s（规则：数据不得早于 10 月）' % (d, START_YM))
 
@@ -1214,7 +1259,7 @@ def ingest_one_day(paths, d=None, room=None, sheet=None, force=False, quiet=Fals
     for p in paths:
         if not os.path.exists(p):
             raise SystemExit('❌ 找不到文件：%s' % p)
-        stem = os.path.splitext(os.path.basename(p))[0]
+        stem = strip_all_ext(os.path.basename(p))   # ★ 双后缀（.xlsx.xlsx）要全剥掉，否则直播间名会带尾巴
         rn = room or guess_room(stem, known)
         if not rn:
             raise SystemExit('❌ 认不出「%s」属于哪个直播间。请用 --room 指定直播间名。' % os.path.basename(p))
@@ -1311,7 +1356,7 @@ def check():
 
 def main():
     ap = argparse.ArgumentParser(description='流量分析每日入库 + 环比 + 平台规则匹配 + 日报')
-    ap.add_argument('xlsx', nargs='*', help='流量 xlsx 或文件夹（一天多间就传整个文件夹）')
+    ap.add_argument('xlsx', nargs='*', help='流量 xlsx 或文件夹（一天多间传整个文件夹；多天混传也行，会按文件名日期分批入库）')
     ap.add_argument('--date', help='覆盖日期 YYYY-MM-DD')
     ap.add_argument('--room', help='直播间名（单个文件时用；文件夹模式自动从文件名认）')
     ap.add_argument('--sheet', help='指定 sheet 名')
@@ -1333,10 +1378,25 @@ def main():
     paths = expand_inputs(a.xlsx)
     if not paths:
         raise SystemExit('❌ 没找到任何 xlsx')
-    r = ingest_one_day(paths, d=a.date, room=a.room, sheet=a.sheet, force=a.force, debug=a.debug)
-    if r['guesses']:
-        print('   ℹ️ 以下直播间名是从文件名推出来的，如果不对请用 --room 指定：%s' % '、'.join(r['guesses']))
-    print('   累计 %d 天，索引已刷新' % r['n_days'])
+    folder_date = parse_date_from_name(os.path.basename(common_dir(paths)))
+    groups, rest = group_by_date(paths)
+    if a.date or folder_date or len(groups) <= 1:
+        # 单天：沿用原有推定顺序（--date > 文件夹名 > 文件名 > 表内日期 > 文件修改时间）
+        results = [ingest_one_day(paths, d=a.date, room=a.room, sheet=a.sheet, force=a.force, debug=a.debug)]
+    else:
+        # ★ 多天混传（例如 Downloads 里同时有 10.8 与 10.9 的表）：按文件名日期分批入库，各出各的日报
+        print('📅 这批文件里有 %d 个日期，按日期分批入库：%s' % (
+            len(groups), '、'.join('%s（%d 份）' % (d, len(ps)) for d, ps in groups)))
+        results = [ingest_one_day(ps, d=d, d_src='文件名', room=a.room, sheet=a.sheet, force=a.force, debug=a.debug)
+                   for d, ps in groups]
+        if rest:
+            print('ℹ️ 另有 %d 份文件名里没日期，按文件夹/修改时间推定：%s' % (
+                len(rest), '、'.join(os.path.basename(x) for x in rest)))
+            results.append(ingest_one_day(rest, d=None, room=a.room, sheet=a.sheet, force=a.force, debug=a.debug))
+    for r in results:
+        if r['guesses']:
+            print('   ℹ️ 以下直播间名是从文件名推出来的，如果不对请用 --room 指定：%s' % '、'.join(r['guesses']))
+    print('   累计 %d 天，索引已刷新' % results[-1]['n_days'])
     return 0
 
 

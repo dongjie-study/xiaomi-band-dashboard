@@ -4,9 +4,10 @@
 
 给桌面上的「刷流量数据.bat」调用，也可以手动跑：
 
-    python traffic_analysis/run_daily.py                      # 自动找桌面 流量数据.xlsx / 流量数据 文件夹 / 最新的「xx流量」文件夹
+    python traffic_analysis/run_daily.py                      # 自动找（桌面 流量数据.xlsx / 流量数据 文件夹 / 桌面+下载里最新的「xx流量」文件夹与散装表）
     python traffic_analysis/run_daily.py "D:\\x\\10.11流量.xlsx"
     python traffic_analysis/run_daily.py "C:\\Users\\Administrator\\Desktop\\10.10日流量"   # 文件夹：多直播间一天一次入库
+    python traffic_analysis/run_daily.py "下载\\A10.8日流量.xlsx" "下载\\A10.9日流量.xlsx"     # 多份/多天一起给也行，按日期自动分批
     python traffic_analysis/run_daily.py --no-push            # 只入库+提交，不推
     python traffic_analysis/run_daily.py --rebuild-only       # 只重建 index.json + 全部日报
 
@@ -24,31 +25,73 @@ if hasattr(sys.stderr, 'reconfigure'):
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRAFFIC = os.path.join(ROOT, 'traffic_analysis')
 DESKTOP = os.path.join(os.path.expanduser('~'), 'Desktop')
+DOWNLOADS = os.path.join(os.path.expanduser('~'), 'Downloads')
+SEARCH_DIRS = [DESKTOP, DOWNLOADS]
 DEFAULT_XLSX = os.path.join(DESKTOP, '流量数据.xlsx')
 DEFAULT_DIR = os.path.join(DESKTOP, '流量数据')
 GIT_ADD_PATHS = ['traffic_analysis/data', 'traffic_analysis/reports']
+TABLE_EXT = ('.xlsx', '.xls', '.csv')
+
+# 复用入库脚本的日期解析（文件名「A10.8日流量.xlsx」、文件夹名「10.10日流量」都能认）
+sys.path.insert(0, TRAFFIC)
+try:
+    import daily_update as _du
+except Exception:                                     # noqa: BLE001 —— 解析不到就退化成「用今天」
+    _du = None
+
+
+def date_of_label(name):
+    """从文件名 / 文件夹名推日期（YYYY-MM-DD），推不出返回 None。"""
+    if _du is None:
+        return None
+    try:
+        return _du.parse_date_from_name(os.path.basename(str(name).rstrip('\\/')))
+    except Exception:                                 # noqa: BLE001
+        return None
+
+
+def _scan():
+    """在桌面 + 下载里找「名字含流量」的文件夹与散装表（排除 ~$ 临时文件）。"""
+    folders, files = [], []
+    for base in SEARCH_DIRS:
+        if not os.path.isdir(base):
+            continue
+        for name in os.listdir(base):
+            if name.startswith('~$') or '流量' not in name:
+                continue
+            p = os.path.join(base, name)
+            if os.path.isdir(p):
+                folders.append(p)
+            elif name.lower().endswith(TABLE_EXT):
+                files.append(p)
+    folders.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+    files.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+    return folders, files
 
 
 def find_default_input():
-    """不带参数时自动找当天要入库的东西（先单文件、再文件夹、再桌面上最新的「xx流量」文件夹）。
+    """不带参数时自动找要入库的东西，返回**列表**（可能同时含文件夹和散装表、跨多天）。
 
-    多直播间的一天是「一个文件夹装几份表」（如 10.10日流量/ 里 6 份），
-    文件名就是直播间名，所以文件夹也算合法输入。
+    优先级：桌面「流量数据.xlsx」 > 桌面「流量数据」文件夹 >
+    桌面+下载里最新的「xx流量」文件夹（再加上散装表；与文件夹同一天的表跳过，避免同一天入库两遍）。
     """
     if os.path.isfile(DEFAULT_XLSX):
-        return DEFAULT_XLSX
+        return [DEFAULT_XLSX]
     if os.path.isdir(DEFAULT_DIR):
-        return DEFAULT_DIR
-    if os.path.isdir(DESKTOP):
-        cands = []
-        for name in os.listdir(DESKTOP):
-            p = os.path.join(DESKTOP, name)
-            if os.path.isdir(p) and '流量' in name:
-                cands.append((os.path.getmtime(p), p))
-        if cands:
-            cands.sort(reverse=True)
-            return cands[0][1]
-    return None
+        return [DEFAULT_DIR]
+    folders, files = _scan()
+    out = []
+    folder_date = None
+    if folders:
+        out.append(folders[0])
+        folder_date = date_of_label(folders[0])
+    for f in files:
+        d = date_of_label(f)
+        if folder_date and d == folder_date:
+            continue
+        if f not in out:
+            out.append(f)
+    return out
 
 
 def xlsx_count(path):
@@ -57,9 +100,33 @@ def xlsx_count(path):
         return 0
     n = 0
     for name in os.listdir(path):
-        if name.lower().endswith(('.xlsx', '.xls', '.csv')):
+        if name.lower().endswith(TABLE_EXT):
             n += 1
     return n
+
+
+def label_from_sources(sources):
+    """提交信息里的日期标签：从输入文件名/文件夹名推，如「10.8」「10.8-10.9」「10.8、10.10」。"""
+    ds = []
+    for s in sources or []:
+        d = date_of_label(s)
+        if d and d not in ds:
+            ds.append(d)
+    if not ds:
+        from datetime import date
+        t = date.today()
+        return '%d.%d' % (t.month, t.day)
+    ds.sort()
+
+    def md(x):
+        _y, m, dd = x.split('-')
+        return '%d.%d' % (int(m), int(dd))
+
+    if len(ds) == 1:
+        return md(ds[0])
+    if len(ds) == 2:
+        return md(ds[0]) + '-' + md(ds[1])
+    return '、'.join(md(x) for x in ds)
 
 
 def log(msg=''):
@@ -100,6 +167,7 @@ def main():
         log('❌ 找不到入库脚本：%s' % update_py)
         return 1
 
+    sources = []
     # ---------- 1. 入库 ----------
     if rebuild_only:
         log('\n[1/3] 只重建 index.json + 全部日报（--rebuild-only）…')
@@ -108,24 +176,32 @@ def main():
             return 1
     else:
         if argv:
-            src = os.path.abspath(argv[0])
+            sources = [os.path.abspath(a) for a in argv]
         else:
-            src = find_default_input()
-            if src:
-                log('\n    自动找到输入：%s' % src)
-        if not src or not os.path.exists(src):
-            log('\n❌ 找不到流量表 / 流量文件夹：%s' % (src or DEFAULT_XLSX))
-            log('   两种放法（随便选一种，都在桌面）：')
-            log('     A. 单份表 → 命名「流量数据.xlsx」')
-            log('     B. 多间直播间 → 放一个文件夹，如「10.10日流量\\」里面装 6 份表，文件名就是直播间名')
-            log('   然后双击桌面「刷流量数据.bat」；或手动指定：python traffic_analysis/run_daily.py "<路径>"')
+            sources = find_default_input()
+            if sources:
+                log('\n    自动找到 %d 个输入：' % len(sources))
+                for s in sources:
+                    if os.path.isdir(s):
+                        log('      - %s（%d 份表）' % (s, xlsx_count(s)))
+                    else:
+                        log('      - %s' % s)
+        missing = [s for s in sources if not os.path.exists(s)]
+        if not sources or missing:
+            log('\n❌ 找不到流量表 / 流量文件夹：%s' % ('、'.join(missing) if missing else DEFAULT_XLSX))
+            log('   放法（随便选一种）：')
+            log('     A. 单份表 → 桌面命名为「流量数据.xlsx」')
+            log('     B. 多间直播间 → 桌面放一个文件夹，如「10.10日流量\\」里面装 6 份表，文件名就是直播间名')
+            log('     C. 多天多间 → 直接把表丢进「下载」文件夹，文件名带日期（如 A直播间10.8日流量.xlsx），本脚本会按日期分批入库')
+            log('   然后双击桌面「刷流量数据.bat」；或手动指定：python traffic_analysis/run_daily.py "<路径>" "<路径2>"')
             return 1
         log('\n[1/3] 解析入库 + 生成日报 …')
-        if os.path.isdir(src):
-            log('    源文件夹：%s（%d 份表 = %d 个直播间）' % (src, xlsx_count(src), xlsx_count(src)))
-        else:
-            log('    源文件：%s' % src)
-        if not run_py(update_py, [src]):
+        for s in sources:
+            if os.path.isdir(s):
+                log('    源文件夹：%s（%d 份表）' % (s, xlsx_count(s)))
+            else:
+                log('    源文件：%s' % s)
+        if not run_py(update_py, sources):
             log('\n❌ 入库失败，已中止，未做任何提交。上面有具体报错。')
             return 1
 
@@ -136,9 +212,7 @@ def main():
     if ok:
         log('    本次数据无变化，跳过提交。')
     else:
-        from datetime import date
-        d = date.today()
-        msg = 'feat: 流量数据 %d.%d日更新' % (d.month, d.day)
+        msg = 'feat: 流量数据 %s日更新' % label_from_sources(sources)
         ok, _ = run_git(['commit', '-m', msg])
         if not ok:
             log('❌ git commit 失败，数据已入库但未提交。')

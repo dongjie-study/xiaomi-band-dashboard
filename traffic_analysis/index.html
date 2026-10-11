@@ -111,6 +111,7 @@
   .tf-pill.ok   { background: #e8f7f0; color: #047857; }
   .tf-pill.warn { background: #fff2e6; color: #e65100; }
   .tf-pill.bad  { background: #fdecec; color: #b91c1c; }
+ .tf-pill.flat { background: #f1f3f5; color: #64748b; }
 
   .tf-summary-box {
     border-radius: 12px; padding: 15px 18px; margin: 14px 0 0;
@@ -544,14 +545,19 @@ function renderReport(r){
     + esc(r.scope || ALL) + (r.scope === ALL ? '（各直播间汇总）' : '') + '</span>';
 
   var ins = r.insights || {};
-  var bad = (r.rules || []).filter(function(x){ return x.status === 'low' || x.status === 'high'; });
-  var okN = (r.rules || []).length - bad.length;
+  var rules = r.rules || [];
+  var bad = rules.filter(function(x){ return x.status === 'low' || x.status === 'high'; });
+  var nojudge = rules.filter(function(x){ return x.status === 'unknown' && x.value != null; });
+  var okN = rules.filter(function(x){ return x.status === 'ok'; }).length;
   var verdict = bad.length === 0 ? { cls: 'ok', txt: '规则匹配：全部达标 ✔' }
               : (bad.length <= 2 ? { cls: 'warn', txt: '规则匹配：' + bad.length + ' 项待优化' }
                                  : { cls: 'bad', txt: '规则匹配：' + bad.length + ' 项不达标 ⚠' });
+  if (bad.length === 0 && nojudge.length)
+    verdict = { cls: 'ok', txt: '规则匹配：达标 ' + okN + ' 项，' + nojudge.length + ' 项暂不判定' };
   document.getElementById('tfReportPills').innerHTML =
       '<span class="tf-pill ' + verdict.cls + '">' + esc(verdict.txt) + '</span>　'
-    + '<span class="tf-pill">达标 ' + okN + ' / ' + (r.rules || []).length + '</span>　'
+    + '<span class="tf-pill">达标 ' + okN + ' / ' + rules.length + '</span>'
+    + (nojudge.length ? '<span class="tf-pill flat">' + nojudge.length + ' 项暂不判定</span>' : '')
     + '<span class="tf-pill">渠道 ' + (r.channels || []).length + ' 个</span>'
     + (r.excluded_share ? '<span class="tf-pill warn">口径异常剔除互动 ' + fmtNum(r.excluded_share*100, 1) + '%</span>' : '');
 
@@ -570,18 +576,21 @@ function renderReport(r){
     high:    { txt: '⚠️ 偏高',   cls: 'warn' },
     unknown: { txt: '— 无数据', cls: '' }
   };
-  document.getElementById('tfRuleRows').innerHTML = (r.rules || []).map(function(x){
+  document.getElementById('tfRuleRows').innerHTML = rules.map(function(x){
     var prevRule = p ? ruleOf(p, x.key) : null;
     var prevTxt = prevRule && prevRule.value != null ? fmtNum(prevRule.value, x.unit === '%' ? 2 : 0) : '—';
     var dd = deltaPP(x.value, prevRule ? prevRule.value : null);
-    var st = statusMap[x.status] || statusMap.unknown;
+    /* unknown 分两种：有值但口径不可比（今日不判定）/ 根本没数据 */
+    var st = (x.status === 'unknown')
+        ? (x.value != null ? { txt: '— 暂不判定', cls: 'flat', title: x.why } : statusMap.unknown)
+        : (statusMap[x.status] || statusMap.unknown);
     return '<tr>'
       + '<td class="ch-name">' + esc(x.label) + '</td>'
       + '<td>' + esc(x.value_disp) + '</td>'
       + '<td>' + esc(prevTxt) + (prevTxt === '—' ? '' : (x.unit === '%' ? '%' : (x.unit ? ' ' + x.unit : ''))) + '</td>'
       + '<td class="c-' + (dd.cls === 'flat' ? 'flat' : dd.cls) + '">' + esc(dd.arrow + ' ' + dd.txt) + '</td>'
       + '<td>' + esc(x.range) + '</td>'
-      + '<td><span class="tf-pill ' + st.cls + '">' + esc(st.txt) + '</span></td>'
+      + '<td><span class="tf-pill ' + st.cls + '"' + (st.title ? ' title="' + esc(st.title) + '"' : '') + '>' + esc(st.txt) + '</span></td>'
       + '</tr>';
   }).join('');
 
