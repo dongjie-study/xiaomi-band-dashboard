@@ -41,21 +41,26 @@
   /* ===== 通用卡片 ===== */
   .tf-card {
     background: var(--bg-card, #fff); border: 1px solid var(--border-light, #e2e8f0);
-    border-radius: 14px; padding: 18px 20px; margin-bottom: 16px;
+    border-radius: 14px; padding: 20px 22px; margin-bottom: 18px;
     box-shadow: 0 1px 3px rgba(15,23,42,.04);
   }
-  .tf-card > h2, .tf-card > h3 { margin: 0 0 14px; font-size: 1.02em; font-weight: 700; color: var(--text-primary, #1e293b); }
+  .tf-card > h2, .tf-card > h3 { margin: 0 0 15px; font-size: 1.02em; font-weight: 700; color: var(--text-primary, #1e293b); }
   .tf-card > h3 { font-size: .95em; }
   .tf-sub { font-size: .8em; color: var(--text-secondary, #64748b); font-weight: 500; margin-left: 8px; }
-  .tf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .tf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
   @media (max-width: 900px) { .tf-row { grid-template-columns: 1fr; } }
+  @media (max-width: 760px) { .tf-card { padding: 15px 14px; margin-bottom: 14px; } }
 
   /* ===== 顶部状态条 ===== */
   .tf-status {
-    border-radius: 12px; padding: 13px 18px; margin-bottom: 16px; font-size: .86em;
-    display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap;
+    border-radius: 12px; padding: 11px 16px; margin-bottom: 14px; font-size: .86em;
+    display: flex; align-items: center; gap: 8px 10px; flex-wrap: wrap;
     border: 1px solid var(--border-light, #e2e8f0); background: var(--bg-card, #fff);
   }
+  .tf-status .st-sep { color: #cbd5e1; }
+  .tf-status .st-files { color: #94a3b8; cursor: help; border-bottom: 1px dashed #cbd5e1; }
+  .tf-status .st-time { margin-left: auto; color: #94a3b8; font-variant-numeric: tabular-nums; }
+  @media (max-width: 760px) { .tf-status .st-time { margin-left: 0; } }
   .tf-status.demo { border: 2px solid #FFD700; background: linear-gradient(135deg, #fffdf0 0%, #fff 100%); }
   .tf-status b { color: var(--mi-orange, #ff6900); }
   .tf-status .tf-badge {
@@ -71,9 +76,26 @@
   @media (max-width: 760px)  { .tf-grid.g4, .tf-grid.g3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 520px)  { .tf-grid.g4, .tf-grid.g3 { grid-template-columns: 1fr; } }
 
+  /* 指标区分组小标题：把 16 张卡分成「规模 / 成交 / 效率」三段，扫读更快 */
+  .tf-sec {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    margin: 17px 0 10px; font-size: .82em; font-weight: 800; color: #475569; letter-spacing: .3px;
+  }
+  .tf-sec:first-of-type { margin-top: 3px; }
+  .tf-sec::before { content: ''; width: 3px; height: 13px; border-radius: 2px; background: var(--mi-orange, #ff6900); }
+  .tf-sec .tip { font-size: .95em; font-weight: 500; color: #94a3b8; letter-spacing: 0; }
+
+  /* 一句话结论条 */
+  .tf-headline {
+    font-size: 1.02em; font-weight: 700; color: var(--text-primary, #1e293b);
+    margin: 0 0 16px; padding: 11px 16px; border-radius: 10px;
+    background: var(--bg-card, #fff); border: 1px solid var(--border-light, #e2e8f0);
+    border-left: 3px solid var(--mi-orange, #ff6900);
+  }
+
   .tf-metric {
     background: var(--bg-card, #fff); border: 1px solid var(--border-light, #e2e8f0);
-    border-radius: 12px; padding: 13px 15px 11px; position: relative; overflow: hidden;
+    border-radius: 12px; padding: 14px 16px 12px; position: relative; overflow: hidden;
     transition: box-shadow .18s ease, transform .18s ease;
   }
   .tf-metric:hover { box-shadow: 0 4px 14px rgba(15,23,42,.08); transform: translateY(-1px); }
@@ -85,7 +107,7 @@
   .tf-metric .m-label { font-size: .76em; color: var(--text-secondary, #64748b); font-weight: 600; }
   .tf-metric .m-unit { font-size: .9em; font-weight: 500; opacity: .65; margin-left: 2px; }
   .tf-metric .m-value {
-    font-size: 1.62em; font-weight: 800; line-height: 1.22; margin: 5px 0 6px;
+    font-size: 1.55em; font-weight: 800; line-height: 1.22; margin: 6px 0 7px;
     color: var(--text-primary, #1e293b); font-variant-numeric: tabular-nums;
     word-break: break-all;
   }
@@ -95,7 +117,8 @@
   }
   .tf-metric .m-delta.up   { background: #fff2e6; color: #e65100; }
   .tf-metric .m-delta.down { background: #e8f7f0; color: #047857; }
-  .tf-metric .m-prev { font-size: .74em; color: #94a3b8; margin-top: 7px; font-variant-numeric: tabular-nums; }
+  .tf-metric .m-prev { font-size: .74em; color: #94a3b8; margin-top: 8px; font-variant-numeric: tabular-nums; }
+  @media (max-width: 760px) { .tf-metric .m-value { font-size: 1.35em; } }
   .tf-metric .m-prev b { color: #64748b; font-weight: 600; }
 
   /* ===== 每日总结报告 ===== */
@@ -156,8 +179,8 @@
   td.c-flat { color: #94a3b8; }
 
   /* ===== 图表 ===== */
-  .tf-chart { width: 100%; height: 320px; }
-  .tf-chart.short { height: 280px; }
+  .tf-chart { width: 100%; height: 290px; }
+  .tf-chart.short { height: 262px; }
 
   /* ===== 加载 / 空态 ===== */
   #tfLoading {
@@ -189,11 +212,17 @@
   .tf-bars .num { flex: 0 0 auto; font-weight: 700; color: var(--text-primary, #1e293b); font-variant-numeric: tabular-nums; min-width: 54px; text-align: right; }
   .tf-bars .rel { flex: 0 0 auto; font-size: .95em; font-weight: 700; }
   .tf-bars .rel.up { color: #e65100; } .tf-bars .rel.down { color: #047857; }
+  /* 表格单元格里的行内进度条（GPM 相对同业中位数） */
+  .tf-bars.inline { justify-content: flex-end; gap: 7px; }
+  .tf-bars.inline .bar { flex: 0 0 72px; min-width: 72px; }
+  table.tf-table tr.hl td { background: #fff8f1; }
+  /* 同业基准表里的「最好 / 最差」直播间名单独换行，避免数值和人名挤成一行 */
+  table.tf-table.mini td .tf-sub { display: block; margin: 2px 0 0; font-size: .92em; color: #94a3b8; }
   .tf-link { color: var(--mi-orange, #ff6900); font-weight: 700; cursor: pointer; text-decoration: none; border-bottom: 1px dashed rgba(255,105,0,.4); }
   .tf-link:hover { border-bottom-style: solid; }
-  .tf-extra { display: flex; flex-wrap: wrap; gap: 8px 26px; margin: 2px 0 14px; padding: 11px 15px; border-radius: 11px; background: #f8fafc; border: 1px dashed var(--border-light, #e2e8f0); }
+  .tf-extra { display: flex; flex-wrap: wrap; gap: 8px 28px; margin: 16px 0 2px; padding: 10px 16px; border-radius: 11px; background: #f8fafc; border: 1px dashed var(--border-light, #e2e8f0); }
   .tf-extra .e { font-size: .82em; color: var(--text-secondary, #64748b); }
-  .tf-extra .e b { font-size: 1.18em; color: var(--text-primary, #1e293b); font-weight: 800; margin-left: 5px; font-variant-numeric: tabular-nums; }
+  .tf-extra .e b { font-size: 1.12em; color: var(--text-primary, #1e293b); font-weight: 800; margin-left: 5px; font-variant-numeric: tabular-nums; }
   table.tf-table tr.suspect td { background: #fffef6; }
   table.tf-table .tag-suspect {
     display: inline-block; font-size: .78em; font-weight: 700; padding: 1px 6px; margin-left: 5px;
@@ -235,16 +264,17 @@
 
   <div id="tfContent">
     <div class="tf-status" id="tfStatus"></div>
-    <h2 id="tfHeadline" style="font-size:1.05em;margin:2px 0 14px;color:var(--text-primary,#1e293b);"></h2>
+    <h2 id="tfHeadline" class="tf-headline"></h2>
 
     <!-- 一、核心指标三件套 -->
     <div class="tf-card">
       <h3>核心指标 · 绝对值 / 前一日 / 环比 <span class="tf-sub" id="tfMetricSub"></span></h3>
+      <div class="tf-sec">流量规模 <span class="tip">曝光 / 观看 / 互动 / 涨粉</span></div>
       <div class="tf-grid g4" id="tfGridA"></div>
-      <div style="height:12px"></div>
+      <div class="tf-sec">商品与成交 <span class="tip">商品曝光 → 点击 → 成交 → 支付</span></div>
       <div class="tf-grid g4" id="tfGridB"></div>
-      <div style="height:12px"></div>
-      <div class="tf-grid g3" id="tfGridC"></div>
+      <div class="tf-sec">效率指标 <span class="tip">比率类 · 环比用百分点（pp）表示</span></div>
+      <div class="tf-grid g4" id="tfGridC"></div>
       <div class="tf-extra" id="tfExtra"></div>
     </div>
 
@@ -465,11 +495,18 @@ function renderStatus(r){
   var el = document.getElementById('tfStatus');
   var isDemo = !!r.demo;
   var src = r.source_file || '—';
+  /* 一天可能有好几个源文件（6 个直播间 = 6 份表），折叠成「N 个源文件」，悬停看完整清单 */
+  var files = String(src).split(/[+\uFF0B]/).map(function(x){ return x.trim(); }).filter(function(x){ return x; });
+  var filesTxt = files.length > 1 ? (files.length + ' 个源文件') : (files[0] || '—');
   el.className = 'tf-status' + (isDemo ? ' demo' : '');
   el.innerHTML =
       (isDemo ? '<span class="tf-badge">示例数据</span>' : '<span class="tf-badge" style="background:#e8f7f0;color:#047857;">已同步</span>')
-    + '<span>数据日期 <b>' + esc(r.date) + '</b>　源文件 <b>' + esc(src) + '</b>　'
-    + (r.prev_date ? '对比基准 ' + esc(r.prev_date) : '无前一日对比') + '　更新于 ' + esc(r.generated_at || '') + '</span>'
+    + '<span>数据日期 <b>' + esc(r.date) + '</b></span>'
+    + '<span class="st-sep">·</span>'
+    + '<span>' + (r.prev_date ? '对比基准 <b>' + esc(r.prev_date) + '</b>' : '首日入库 · 无前一日对比') + '</span>'
+    + '<span class="st-sep">·</span>'
+    + '<span class="st-files" title="' + esc(files.join('\n')) + '">' + esc(filesTxt) + '</span>'
+    + '<span class="st-time">更新于 ' + esc(r.generated_at || '') + '</span>'
     + (isDemo ? '<span style="flex:1 1 100%;color:#92400e;">当前展示的是 <b>示例数据</b>，用于预览页面效果。上传真实流量表后同一天会被直接覆盖，示例数据不会残留。</span>' : '');
 }
 
@@ -632,43 +669,43 @@ function renderPeer(r){
   var peers = r.peer_benchmark || [];
   if (!peers.length){ block.style.display = 'none'; return; }
   var m = r.metrics || {};
+  /* peer_benchmark 用短 key（evr/ctr/cvr/roi），metrics 用长 key（exposure_view_rate/…）；
+     且 % 类指标在 metrics 里存的是小数、在 peer 里存的是百分数 —— 两边都必须换算，
+     否则「本直播间」那列要么是「—」要么差 100 倍（曾出现过 11.82% 显示成 0.12%） */
+  var PEER_KEY = { evr: 'exposure_view_rate', ctr: 'product_ctr', cvr: 'click_cvr', roi: 'qianchuan_roi' };
+  function peerVal(p){
+    var raw = m[PEER_KEY[p.key] || p.key];
+    if (raw == null) return null;
+    return p.unit === '%' ? raw * 100 : raw;
+  }
   var rows = peers.map(function(p){
     /* 中位数/最好/最差都来自「本店各直播间」，所以「本直播间」那一列取当前 scope 的值 */
-    var v = m[p.key];
+    var v = peerVal(p);
     var nd = p.decimals == null ? (p.unit === '%' ? 2 : 0) : p.decimals;
     var ratio = (v == null || !p.median) ? null : v / p.median;
     var relTxt = ratio == null ? '—' : ((ratio >= 1 ? '+' : '') + ((ratio - 1) * 100).toFixed(0) + '%');
     var relCls = ratio == null ? '' : (ratio >= 1.02 ? 'up' : (ratio <= 0.98 ? 'down' : 'flat'));
     function dv(o){ return o == null ? '—' : (fmtNum(o.value, nd) + (p.unit || '')); }
-    return '<tr>'
+    /* GPM 行把「相对中位数」画成行内进度条：条满 = 同业中位数的 2 倍，中位数落在正中 */
+    var relCell = relTxt;
+    if (p.key === 'gpm' && ratio != null){
+      var barCls = ratio >= 1.02 ? '' : (ratio <= 0.98 ? 'low' : 'mid');
+      var barW = Math.max(4, Math.min(100, ratio * 50));
+      relCell = '<div class="tf-bars inline">'
+              + '<span class="bar ' + barCls + '"><i style="width:' + barW.toFixed(1) + '%"></i></span>'
+              + '<span class="rel ' + relCls + '">' + relTxt + '</span></div>';
+    }
+    return '<tr' + (p.key === 'gpm' ? ' class="hl"' : '') + '>'
       + '<td class="ch-name">' + esc(p.label) + '</td>'
       + '<td>' + (v == null ? '—' : fmtNum(v, nd) + (p.unit || '')) + '</td>'
       + '<td>' + fmtNum(p.median, nd) + (p.unit || '') + '</td>'
       + '<td>' + dv(p.best) + '<span class="tf-sub">' + esc(p.best ? p.best.name : '') + '</span></td>'
       + '<td>' + dv(p.worst) + '<span class="tf-sub">' + esc(p.worst ? p.worst.name : '') + '</span></td>'
-      + '<td class="c-' + relCls + '">' + relTxt + '</td>'
+      + '<td class="c-' + relCls + '">' + relCell + '</td>'
       + '</tr>';
   }).join('');
-  var bar = '';
-  var gidx = -1;
-  for (var i=0;i<peers.length;i++){ if (peers[i].key === 'gpm') gidx = i; }
-  if (gidx >= 0){
-    var pg = peers[gidx];
-    var vv = (m.gpm == null ? null : m.gpm);
-    if (vv != null && pg.median){
-      var ratio2 = vv / pg.median;
-      var cls = ratio2 >= 1.02 ? '' : (ratio2 <= 0.98 ? 'low' : 'mid');
-      var w = Math.max(3, Math.min(100, ratio2 * 100 / 2));
-      bar = '<div class="tf-bars" style="margin:10px 0 2px;">'
-          + '<span class="tf-sub" style="margin:0;">GPM 相对同业中位数</span>'
-          + '<span class="bar ' + cls + '"><i style="width:' + w.toFixed(1) + '%"></i></span>'
-          + '<span class="num">' + fmtInt(vv) + ' / ' + fmtInt(pg.median) + ' 元</span>'
-          + '<span class="rel ' + (ratio2 >= 1.02 ? 'up' : (ratio2 <= 0.98 ? 'down' : '')) + '">'
-          + ((ratio2 >= 1 ? '+' : '') + ((ratio2 - 1) * 100).toFixed(0)) + '%)</span></div>';
-    }
-  }
   block.style.display = '';
-  document.getElementById('tfPeerBody').innerHTML = rows + (bar ? '<tr><td colspan="6" style="background:#fff;">' + bar + '</td></tr>' : '');
+  document.getElementById('tfPeerBody').innerHTML = rows;
 }
 
 function pctOrDash(v, nd){ return (v == null || v === '') ? '—' : fmtNum(v, nd == null ? 2 : nd) + '%'; }
