@@ -3,22 +3,24 @@
 
 链路（与 sales_analysis/daily_update.py 同构，但完全独立，互不污染）：
 
-    x.xx日流量.xlsx / 流量数据.xlsx
+    流量表（每直播间一份）.xlsx
         └─▶ traffic_analysis/daily_update.py
-                ├─▶ traffic_analysis/data/YYYY/YYYY-MM-DD.json   ⭐ 主库（一天一个文件）
-                ├─▶ traffic_analysis/data/index.json             （日期索引，页面用它出月份/日期下拉）
-                └─▶ traffic_analysis/reports/YYYY-MM-DD.json     ⭐ 日报 + 指标卡（页面直接渲染）
+                ├─▶ traffic_analysis/data/YYYY/YYYY-MM-DD.json          ⭐ 主库（一天一个文件，含各直播间）
+                ├─▶ traffic_analysis/data/index.json                    （月份/日期/直播间索引，页面下拉用它）
+                └─▶ traffic_analysis/reports/YYYY/YYYY-MM-DD/*.json     ⭐ 日报（all.json + 每间一份）
 
 用法：
-    python traffic_analysis/daily_update.py "C:\\Users\\Administrator\\Desktop\\10.11日流量.xlsx"
-    python traffic_analysis/daily_update.py <xlsx> --date 2026-10-11 --room 小米官方手环直播间
+    python traffic_analysis/daily_update.py "C:/Users/Administrator/Desktop/10.10日流量"   # 整个文件夹
+    python traffic_analysis/daily_update.py a.xlsx b.xlsx --date 2026-10-10
     python traffic_analysis/daily_update.py --rebuild          # 只重建 index.json + 全部日报
     python traffic_analysis/daily_update.py --check            # 体检，不写文件
 
 约定：
-  * 数据起始 **10 月份**，早于 10 月的文件直接拒绝（见 RULES 里的 START_YM）。
+  * 数据起始 **10 月份**，早于 10 月的文件直接拒绝（START_YM）。
   * 列名**看含义不看字面**（关键词匹配），不要求固定表头文字。
-  * 同一天重复入库 = upsert（覆盖当天，不追加）。
+  * 表里「较上周期」「同行同级优秀值」两行直接忽略；「整体」行是该直播间合计（真值）。
+  * 一天多个文件 = 多个直播间，合并进同一天的日文件；同一直播间重复入库 = 覆盖。
+  * 真实数据不会被示例数据覆盖（除非 --force）。
 """
 import argparse
 import glob
@@ -26,11 +28,14 @@ import json
 import os
 import re
 import sys
+import zipfile
+from datetime import date, datetime
+from xml.etree import ElementTree as ET
+
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 if hasattr(sys.stderr, 'reconfigure'):
     sys.stderr.reconfigure(encoding='utf-8', errors='replace')
-from datetime import date, datetime, timedelta
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRAFFIC_DIR = os.path.join(ROOT, 'traffic_analysis')
@@ -40,44 +45,79 @@ REPORT_DIR = os.path.join(TRAFFIC_DIR, 'reports')
 # 流量分析数据起始月份（规则：不得早于 10 月）
 START_YM = '2026-10'
 
+# 「全店」= 6 个直播间简单相加（各间观看人数会重复计算，非去重 UV，仅用于看总盘子）
+ALL_SCOPE = '全店'
+ALL_SCOPE_FULL = '全店（各直播间合计）'
+
 # ============================================================ 列名口径
-# (内部字段, 中文名, 单位, 关键词候选) —— 按 order 优先级做「关键词匹配」
+# (内部字段, 中文名, 单位, 关键词候选) —— 按含义匹配，不要求表头字面一致
 COLS = [
     ('impressions',      '直播间曝光次数', '次', ['直播间曝光次数', '直播曝光次数', '曝光次数', '曝光量', '曝光']),
     ('views',            '直播间观看次数', '次', ['直播间观看次数', '直播间观看人次', '观看次数', '观看人次', '观看人数', '观看']),
     ('interactions',     '直播间互动次数', '次', ['直播间互动次数', '互动次数', '互动量', '互动']),
     ('new_followers',    '新增粉丝数',    '人', ['新增粉丝数', '新增粉丝', '涨粉数', '涨粉', '新增关注']),
     ('product_impressions', '商品曝光次数', '次', ['商品曝光次数', '商品曝光', '商品展现次数', '商品展现']),
-    ('product_clicks',   '商品点击次数', '次', ['商品点击次数', '商品点击', '点击次数', '点击量']),
-    ('paid_orders',      '成交订单数',    '单', ['成交订单数', '成交订单量', '成交订单', '订单数', '支付订单数', '成交件数']),
+    ('product_clicks',   '商品点击次数',  '次', ['商品点击次数', '商品点击', '点击次数', '点击量']),
+    ('paid_orders',      '成交订单数',    '单', ['成交订单数', '成交订单量', '成交订单', '订单数', '支付订单数']),
     ('paid_amount',      '用户支付金额', '元', ['用户支付金额', '支付金额', '成交金额', '支付gmv', 'gmv', '销售额']),
 ]
+# 补充字段（只有「整体」行有值，渠道行为空）
+EXTRA_COLS = [
+    ('live_duration',  '直播时长',   '',  ['直播时长']),
+    ('avg_watch_time', '人均观看时长', '', ['人均观看时长']),
+    ('qianchuan',      '千川消耗',  '元', ['千川消耗', '千川花费', '投放消耗']),
+]
+# 表里必须跳过的行（用户明确要求忽略前两个）
+SKIP_ROW_NAMES = ['较上周期', '环比上周期', '同行同级优秀值', '同行同层优秀值', '行业均值', '行业优秀值']
+TOTAL_ROW_NAMES = ['整体', '全部', '合计', '总计', '汇总', '全店']
 CHANNEL_KEYS = ['渠道名称', '流量渠道', '渠道', '来源渠道', '流量来源', '来源', '渠道名']
-IGNORE_ROW_NAMES = {'同行同级优秀值', '同行同层优秀值', '行业均值', '合计', '总计', '汇总'}
 
 # 单位换算：单元格里可能写「1.2万」「3,456」「12.5%」
 UNIT_FACTOR = {'万': 10000.0, 'w': 10000.0, 'W': 10000.0, 'k': 1000.0, 'K': 1000.0, '千': 1000.0}
 
 # ============================================================ 平台规则阈值
-# 抖音直播电商 带货口碑/流量分发 常用观测区间（行业经验值，可按实际调）
+# 依据 2026-10-10 六个直播间的真实分布 + 抖音/快手/淘宝直播公开的流量分发逻辑校准：
+#   EVR 4.5~9.1%   互动率 9.4~27.6%   商品点击率 3.0~12.0%   点击→成交 0.9~8.5%
+#   涨粉率 0.28~0.78%   GPM 2019~5938 元   千川 ROI 14.0~46.5
+# 比率类阈值单位是「百分数」（如 3.5 = 3.5%）。
 PLATFORM_RULES = [
-    # (指标key, 名称, 下限, 上限, 单位, 平台含义)  —— 比率类阈值单位是「百分数」，如 8 = 8%
-    ('exposure_view_rate', '曝光→观看率', 8.0, 30.0, '%',
-     '直播间曝光后愿意进来的人占比。低于 8% 说明封面/标题/贴片没吸引力，平台会判定「推荐了没人看」而收量。'),
-    ('interaction_rate', '观看→互动率', 3.0, 15.0, '%',
-     '进来的人愿不愿意说话（评论/点赞/加团/停留）。低于 3% 会被判定为低质直播间，进入「推荐—无互动—减少推荐」负循环。'),
-    ('product_ctr', '商品点击率', 5.0, 30.0, '%',
-     '商品卡曝光后被点开的比例。低于 5% 通常是排品顺序/讲解节奏问题：主推品没在前 30 分钟曝光。'),
-    ('click_cvr', '点击→成交转化率', 5.0, 40.0, '%',
-     '点开商品的人最终下单的比例。低于 5% 要看价格力、库存、运费险、支付引导。'),
-    ('new_follower_rate', '涨粉率', 0.5, 10.0, '%',
-     '观看人数转化成粉丝的比例。涨粉是平台判断直播间「值得持续分发」的重要正反馈，低于 0.5% 说明没有引导关注动作。'),
-    ('gpm', 'GPM（千次观看成交额）', 200.0, None, '元',
-     '每 1000 次观看带来的支付金额。这是平台最核心的分发指标——GPM 高就继续给量，GPM 掉就收量。'),
+    # (key, 名称, 下限, 上限, 单位, 平台含义)
+    ('exposure_view_rate', '曝光→观看率', 3.5, None, '%',
+     '直播间曝光后愿意点进来的人占比。低于 3.5% 说明封面/标题/贴片没吸引力，平台判定「推了没人看」直接收量。'),
+    ('interaction_rate', '观看→互动率', 5.0, None, '%',
+     '进来的人愿不愿意说话（评论/点赞/加团/停留）。低于 5% 会被判低质直播间，进入「推荐—无互动—少推荐」负循环；已剔除口径异常的渠道。'),
+    ('product_ctr', '商品点击率', 4.0, 25.0, '%',
+     '商品卡曝光后被点开的比例。低于 4% 通常是排品顺序/讲解节奏问题：主推品没在前 30 分钟曝光。'),
+    ('click_cvr', '点击→成交转化率', 1.5, 10.0, '%',
+     '点开商品的人最终下单的比例。低于 1.5% 要看价格力、库存、运费险、支付引导。'),
+    ('new_follower_rate', '涨粉率', 0.2, 3.0, '%',
+     '观看人数转化成粉丝的比例。涨粉是平台判断「值得持续分发」的正反馈，低于 0.2% 说明没有引导关注动作。'),
+    ('gpm', 'GPM（千次观看成交额）', 2000.0, None, '元',
+     '每 1000 次观看带来的支付金额，平台最核心的分发指标。本店客单价 157~694 元，品类基线取 2000 元；GPM 高就继续给量，掉就收量。'),
+    ('qianchuan_roi', '千川投放 ROI', 10.0, None, '倍',
+     '支付金额 ÷ 千川消耗。低于 10 倍说明付费流量买贵了，要继续放量必须先优化转化率或出价。'),
+]
+# 按「本店各直播间」横向对比时，用中位数做参照的指标
+# 同业横向基准用的指标：key 必须与 room_compare() 产出的行字段同名（比率都是百分数）
+PEER_METRICS = [
+    ('gpm', 'GPM（元/千次观看）', '元', 0),
+    ('aov', '客单价（元/单）', '元', 0),
+    ('uv_value', 'UV 价值（元/次观看）', '元', 2),
+    ('evr', '曝光→观看率', '%', 2),
+    ('interaction_rate', '观看→互动率', '%', 2),
+    ('ctr', '商品点击率', '%', 2),
+    ('cvr', '点击→成交转化率', '%', 2),
+    ('new_follower_rate', '涨粉率', '%', 2),
+    ('roi', '千川投放 ROI（倍）', '倍', 2),
 ]
 
-# 异常渠道：这些渠道的「互动次数 > 观看次数」，计数口径不一致，不参与互动率合算
-ANOMALY_CHANNELS = {'个人主页&店铺&橱窗', '个人主页&店铺&橱窗 ', '活动页'}
+# 异常渠道自动判定：互动次数 ÷ 观看次数 ≥ 阈值，就认为这两列的统计口径不一致。
+# 实测六个直播间：多数渠道落在 10%~40%，少数渠道异常放大到 64%~2372%。
+# 取保守阈值 2.5 —— 只剔除「明显不可能」的（互动比观看还多数倍），不误伤 40%~80% 的正常偏差，
+# 被剔除的渠道会在日报里逐条列出并写明原因，宁少剔不错剔。
+ANOM_RATIO = 2.5          # 达到这个倍数 → 判定口径异常，剔除出互动率合算
+ANOM_WARN_RATIO = 0.6     # 达到这个倍数（但没到 2.5）→ 只提示留意，不剔除
+ANOM_MIN_VIEWS = 150      # 观看数太小的渠道比率本就不稳定，不参与异常判定
 
 
 # ============================================================ 工具
@@ -90,14 +130,14 @@ def num(v):
     s = str(v).strip().replace(',', '').replace('，', '')
     if s in ('', '-', '—', '--', '/', 'N/A', 'n/a', 'null', 'None'):
         return 0.0
-    m = re.match(r'^(-?[\d.]+)\s*([万wWkK千]?)\s*%?$', s)
+    pct = s.endswith('%')
+    s2 = s[:-1] if pct else s
+    m = re.match(r'^(-?[\d.]+)\s*([万wWkK千]?)\s*$', s2)
     if not m:
-        m2 = re.search(r'(-?\d[\d.]*)', s)
-        if not m2:
-            return 0.0
-        return float(m2.group(1))
-    val = float(m.group(1))
-    return val * UNIT_FACTOR.get(m.group(2), 1.0)
+        m2 = re.search(r'(-?\d[\d.]*)', s2)
+        return float(m2.group(1)) if m2 else 0.0
+    val = float(m.group(1)) * UNIT_FACTOR.get(m.group(2), 1.0)
+    return val / 100.0 if pct else val
 
 
 def norm(s):
@@ -112,12 +152,6 @@ def pct(v, nd=2):
     return None if v is None else round(v * 100, nd)
 
 
-def signed(v, nd=1):
-    if v is None:
-        return '—'
-    return ('+' if v >= 0 else '') + ('%.' + str(nd) + 'f') + '%%' % (v * 100)
-
-
 def fmt_int(v):
     return '—' if v is None else f'{v:,.0f}'
 
@@ -126,11 +160,116 @@ def fmt_num(v, nd=2):
     return '—' if v is None else f'{v:,.{nd}f}'
 
 
-# ============================================================ 解析 xlsx
+def fmt_pct(v, nd=2):
+    return '—' if v is None else f'{v * 100:.{nd}f}%'
+
+
+def r6(v):
+    return round(v, 6) if isinstance(v, float) else v
+
+
+# ============================================================ 解析 xlsx（不依赖 openpyxl）
+class ExcelizeError(Exception):
+    """这个 xlsx 读不出表格结构。"""
+
+
+def _col_to_idx(ref):
+    s = re.sub(r'\d', '', ref or '')
+    n = 0
+    for ch in s:
+        n = n * 26 + (ord(ch) - 64)
+    return n - 1
+
+
+def parse_sheet_xml(xml_bytes):
+    """把 worksheet XML 解析成 {行号: [单元格字符串, ...]}（已按列号补空、已反转义）。"""
+    try:
+        root = ET.fromstring(xml_bytes)
+    except ET.ParseError as e:
+        raise ExcelizeError('工作表 XML 解析失败：%s' % e)
+    ns = ''
+    if root.tag.startswith('{'):
+        ns = root.tag[:root.tag.index('}') + 1]
+    sd = root.find(ns + 'sheetData')
+    if sd is None:
+        return {}
+    out = {}
+    for ri, row in enumerate(sd.findall(ns + 'row'), start=1):
+        rnum = int(row.get('r') or ri)
+        cells = {}
+        maxi = -1
+        for c in row.findall(ns + 'c'):
+            ref = c.get('r') or ''
+            i = _col_to_idx(ref) if ref else (maxi + 1)
+            if i < 0:
+                i = 0
+            t = c.get('t') or ''
+            val = ''
+            if t == 'inlineStr' or t == 'str':
+                vn = c.find(ns + 'v')
+                node = c.find(ns + 'is')
+                if node is not None:
+                    val = ''.join(x.text or '' for x in node.iter(ns + 't'))
+                elif vn is not None and vn.text is not None:
+                    val = vn.text
+            else:
+                vn = c.find(ns + 'v')
+                if vn is not None and vn.text is not None:
+                    val = vn.text
+                else:
+                    node = c.find(ns + 'is')
+                    if node is not None:
+                        val = ''.join(x.text or '' for x in node.iter(ns + 't'))
+            cells[i] = val.strip()
+            maxi = max(maxi, i)
+        out[rnum] = [] if maxi < 0 else [cells.get(i, '') for i in range(maxi + 1)]
+    return out
+
+
+def sheet_names_from_zip(z):
+    """列 zip 里的工作表名（按 workbook.xml 里的顺序）。"""
+    try:
+        xml = z.read('xl/workbook.xml').decode('utf-8', 'replace')
+        return re.findall(r'<sheet[^>]*name="([^"]*)"', xml)
+    except KeyError:
+        return []
+
+
+def parse_xlsx(path, sheet=None):
+    """解析 xlsx → {sheet名: {行号: [值,...]}}。
+
+    ★ 关键：Go Excelize 导出的表没有 sharedStrings.xml，全部是 inline t="str"。
+    openpyxl 读这类文件只会看到 A1 一格（实测 16 行数据全丢），所以这里自己解 zip + XML。
+    """
+    try:
+        z = zipfile.ZipFile(path)
+    except Exception as e:
+        raise ExcelizeError('不是能打开的 xlsx（%s）' % e)
+    try:
+        names = [n for n in z.namelist() if re.match(r'^xl/worksheets/sheet\d+\.xml$', n)]
+        names.sort(key=lambda n: int(re.search(r'(\d+)', os.path.basename(n)).group(1)))
+        if not names:
+            raise ExcelizeError('zip 里没有工作表（xl/worksheets/sheetN.xml）')
+        cn = sheet_names_from_zip(z)
+        out = {}
+        for i, n in enumerate(names):
+            label = cn[i] if i < len(cn) else os.path.basename(n)
+            out[label] = parse_sheet_xml(z.read(n))
+        if sheet:
+            for k in out:
+                if k == sheet or norm(k) == norm(sheet):
+                    return {k: out[k]}
+            raise ExcelizeError('找不到 sheet「%s」，现有：%s' % (sheet, '、'.join(out.keys())))
+        return out
+    finally:
+        z.close()
+
+
 def find_header(rows):
     """在前 15 行里找表头行：命中「渠道」列 + 至少 3 个指标列。返回 (行号, {字段: 列号}, 渠道列号)。"""
     best = None
-    for i, row in enumerate(rows[:15]):
+    for i in sorted(rows.keys())[:15]:
+        row = rows[i]
         cells = [norm(c) for c in row]
         ch_idx = None
         for k in CHANNEL_KEYS:
@@ -144,151 +283,287 @@ def find_header(rows):
         if ch_idx is None:
             continue
         idx = {}
-        for field, _label, _unit, kws in COLS:
+        hit_how = {}
+        for field, _label, _unit, kws in COLS + EXTRA_COLS:
+            # ★ 两段式：先全表找「完全相等」的列名，找不到才退化成「包含」
+            #   （否则「直播时长」会被「直播间曝光次数」这种长关键词的包含匹配抢走）
+            hit = None
             for kw in kws:
                 nkw = norm(kw)
-                hit = None
                 for j, c in enumerate(cells):
                     if c and c == nkw:
                         hit = j
                         break
-                if hit is None:
+                if hit is not None:
+                    break
+            used = 'exact'
+            if hit is None:
+                for kw in kws:
+                    nkw = norm(kw)
                     for j, c in enumerate(cells):
                         if c and nkw in c:
                             hit = j
                             break
-                if hit is not None:
-                    idx[field] = hit
-                    break
+                    if hit is not None:
+                        break
+                used = 'fuzzy'
+            if hit is not None:
+                idx[field] = hit
+                hit_how[field] = used
         if len(idx) >= 3 and (best is None or len(idx) > len(best[1])):
-            best = (i, idx, ch_idx)
+            best = (i, idx, ch_idx, hit_how)
     return best
 
 
-def parse_date_from_name(path):
-    """从文件名抽日期：支持 10.11 / 10-11 / 2026-10-11 / 1011 等写法。"""
-    base = os.path.splitext(os.path.basename(path))[0]
-    m = re.search(r'(20\d{2})[-._年]?(\d{1,2})[-._月]?(\d{1,2})', base)
-    if m:
-        y, mo, d = int(m.group(1)), int(m.group(2)), int(m.group(3))
-        return date(y, mo, d).isoformat()
-    # 10.11 / 10-11 / 10月11日
-    m = re.search(r'(?<!\d)(\d{1,2})\s*[.\-月/]\s*(\d{1,2})\s*日?(?!\d)', base)
-    if m:
-        mo, d = int(m.group(1)), int(m.group(2))
-        return date(2026, mo, d).isoformat()
-    # 1011（4 位，仅当整串像日期时）
-    m = re.search(r'(?<!\d)(1[0-2])(0[1-9]|[12]\d|3[01])(?!\d)', base)
-    if m:
-        return date(2026, int(m.group(1)), int(m.group(2))).isoformat()
-    return None
-
-
-def date_from_sheet(path, sheet=None):
-    """表内找日期：扫描前若干行列头区域里的日期字面量（如 2026-10-11 / 10月11日 / 10.11）。"""
-    try:
-        import openpyxl
-        wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
-    except Exception:
-        return None
-    cands = []
-    try:
-        names = [sheet] if sheet else list(wb.sheetnames)
-        for sn in names:
-            if sn not in wb.sheetnames:
-                continue
-            ws = wb[sn]
-            for i, row in enumerate(ws.iter_rows(min_row=1, max_row=6, max_col=8, values_only=True)):
-                for cell in row:
-                    s = str(cell or '').strip()
-                    if not s:
-                        continue
-                    d = None
-                    m = re.search(r'(20\d{2})\s*[-./年]\s*(\d{1,2})\s*[-./月]\s*(\d{1,2})', s)
-                    if m:
-                        try:
-                            d = date(int(m.group(1)), int(m.group(2)), int(m.group(3))).isoformat()
-                        except ValueError:
-                            d = None
-                    if not d:
-                        m = re.search(r'(?<!\d)(\d{1,2})\s*[.\-月/]\s*(\d{1,2})\s*[日号]?(?!\d)', s)
-                        if m:
-                            try:
-                                d = date(2026, int(m.group(1)), int(m.group(2))).isoformat()
-                            except ValueError:
-                                d = None
-                    if d:
-                        cands.append(d)
-            if cands:
-                break
-    finally:
-        try:
-            wb.close()
-        except Exception:
-            pass
-    if not cands:
-        return None
-    return sorted(cands)[-1]
-
-
-def date_from_mtime(path):
-    """兜底：用文件修改时间当日期（导出的当天文件基本就是当天）。"""
-    return date.fromtimestamp(os.path.getmtime(path)).isoformat()
-
-
-def resolve_date(path, d=None, sheet=None):
-    """日期三级推定：命令行 --date > 文件名 > 表内单元格 > 文件修改时间。"""
-    if d:
-        return d, '--date'
-    got = parse_date_from_name(path)
-    if got:
-        return got, '文件名'
-    got = date_from_sheet(path, sheet=sheet)
-    if got:
-        return got, '表内日期'
-    got = date_from_mtime(path)
-    print(f'⚠️ 文件名和表内都没有日期，按文件修改时间推定 {got}；如不对请用 --date YYYY-MM-DD 指定')
-    return got, '文件修改时间'
-
-
-def parse_workbook(path, sheet=None):
-    """解析工作簿 → (表头信息, 渠道明细 dict)。多 sheet 时自动挑「有渠道列且行数最多」的那个。"""
-    import openpyxl
-    wb = openpyxl.load_workbook(path, data_only=True, read_only=True)
-    names = [sheet] if sheet else list(wb.sheetnames)
+def pick_sheet(book):
+    """多 sheet 时挑「有渠道列且渠道行最多」的那个。"""
     best = None
-    for sn in names:
-        ws = wb[sn]
-        rows = [list(r) for r in ws.iter_rows(values_only=True)]
-        rows = [r for r in rows if any(c is not None and str(c).strip() != '' for c in r)]
+    for sn, rows in book.items():
         if not rows:
             continue
         hdr = find_header(rows)
         if not hdr:
             continue
-        hi, idx, ch = hdr
-        chan = {}
-        for r in rows[hi + 1:]:
-            if len(r) <= ch:
-                continue
-            name = str(r[ch]).strip() if r[ch] is not None else ''
-            if not name or name in IGNORE_ROW_NAMES or norm(name) in {norm(x) for x in IGNORE_ROW_NAMES}:
-                continue
-            rec = {}
-            for field, _l, _u, _k in COLS:
-                rec[field] = num(r[idx[field]]) if (idx.get(field) is not None and len(r) > idx[field]) else 0.0
-            chan[name] = rec
-        if chan and (best is None or len(chan) > len(best[1])):
-            best = (sn, chan, sorted(idx.keys()))
-    wb.close()
-    return best
+        hi, idx, ch, how = hdr
+        n = sum(1 for i in sorted(rows.keys()) if i > hi and len(rows[i]) > ch and str(rows[i][ch]).strip())
+        if best is None or n > best[0]:
+            best = (n, sn, rows, hi, idx, ch, how)
+    if not best:
+        return None
+    return best[1], best[2], best[3], best[4], best[5], best[6]
 
 
-# ============================================================ 指标计算
+# ============================================================ 日期推定
+def _strip_ext(name):
+    """去掉扩展名。★ 不能用 os.path.splitext —— 它把「10.10日流量」当成 (10, .10日流量)，
+    因为日文/中文字符不参与「扩展名」判定，第一个点就被当成分隔符，日期直接丢一半。"""
+    m = re.match(r'^(.*).(xlsx|xls|csv|txt|json)$', name, flags=re.I)
+    return m.group(1) if m else name
+
+
+def parse_date_from_name(path):
+    """从文件名/目录名抽日期：支持 10.11 / 10-11 / 10月11日 / 2026-10-11 / 1011。"""
+    base = _strip_ext(os.path.basename(path))
+    m = re.search(r'(20\d{2})[-._年]?(\d{1,2})[-._月]?(\d{1,2})', base)
+    if m:
+        try:
+            return date(int(m.group(1)), int(m.group(2)), int(m.group(3))).isoformat()
+        except ValueError:
+            pass
+    # ★ 「10.10日流量」这种要能匹配：日/号后缀是可选的，且 (?!\d) 不能卡在「日」上
+    #   （旧写法 [.\-月/] 的字符类里「月」没问题，但 \s*日?(?!\d) 在「日」后还要求非数字 → 10.10日 反而失配）
+    m = re.search(r'(?<![\d.])(\d{1,2})\s*月\s*(\d{1,2})\s*[日号]?', base)
+    if m:
+        try:
+            return date(2026, int(m.group(1)), int(m.group(2))).isoformat()
+        except ValueError:
+            pass
+    m = re.search(r'(?<![\d.])(\d{1,2})[.\-/](\d{1,2})(?![\d.])', base)
+    if m:
+        try:
+            return date(2026, int(m.group(1)), int(m.group(2))).isoformat()
+        except ValueError:
+            pass
+    m = re.search(r'(?<![\d.])(1[0-2])(0[1-9]|[12]\d|3[01])(?!\d)', base)
+    if m:
+        try:
+            return date(2026, int(m.group(1)), int(m.group(2))).isoformat()
+        except ValueError:
+            pass
+    return None
+
+
+def date_from_sheet(rows_by_sheet):
+    """表内找日期：扫前 6 行 × 前 8 列里的日期字面量，取最大日期。"""
+    cands = []
+    for _sn, rows in (rows_by_sheet or {}).items():
+        for i in sorted(rows.keys())[:6]:
+            for cell in (rows[i] or [])[:8]:
+                s = str(cell or '').strip()
+                if not s:
+                    continue
+                m = re.search(r'(20\d{2})\s*[-./年]\s*(\d{1,2})\s*[-./月]\s*(\d{1,2})', s)
+                if m:
+                    try:
+                        cands.append(date(int(m.group(1)), int(m.group(2)), int(m.group(3))).isoformat())
+                    except ValueError:
+                        pass
+                    continue
+                m = re.search(r'(?<!\d)(\d{1,2})\s*[.\-月/]\s*(\d{1,2})\s*[日号]?(?!\d)', s)
+                if m:
+                    try:
+                        cands.append(date(2026, int(m.group(1)), int(m.group(2))).isoformat())
+                    except ValueError:
+                        pass
+    return sorted(cands)[-1] if cands else None
+
+
+def common_dir(paths):
+    try:
+        ds = [os.path.dirname(os.path.abspath(p)) for p in paths]
+        return os.path.commonpath(ds) if len(set(ds)) == 1 else ds[0]
+    except Exception:
+        return os.path.dirname(os.path.abspath(paths[0]))
+
+
+def resolve_date(paths, d=None, rows_by_sheet=None):
+    """日期推定：--date > 所在文件夹名（如「10.10日流量」）> 文件名 > 表内单元格 > 文件修改时间。"""
+    if d:
+        return d, '--date'
+    if isinstance(paths, str):
+        paths = [paths]
+    # ★ 坑一：os.path.basename('…/10.10日流量/') 返回空串（补假文件名也没用，basename 结果永远是假名）
+    # ★ 坑二：'+ os.sep' 也不行——basename 会吃掉整段目录名
+    # 正确做法：拿目录名本身去解析
+    got = parse_date_from_name(os.path.basename(common_dir(paths)))
+    if got:
+        return got, '所在文件夹'
+    names = [x for x in (parse_date_from_name(p) for p in paths) if x]
+    if names:
+        return max(names), '文件名'
+    if rows_by_sheet:
+        got = date_from_sheet(rows_by_sheet)
+        if got:
+            return got, '表内日期'
+    ms = sorted(date.fromtimestamp(os.path.getmtime(p)).isoformat() for p in paths)
+    got = ms[-1]
+    print('⚠️ 文件名和表内都没有日期，按文件修改时间推定 %s；如不对请用 --date YYYY-MM-DD 指定' % got)
+    return got, '文件修改时间'
+
+
+def is_live_duration(v):
+    s = str(v or '').strip()
+    if not s:
+        return False
+    if re.match(r'^\d{1,3}:\d{2}(:\d{2})?$', s):
+        return True
+    return bool(re.search(r'\d+\s*(小时|分钟|秒|天)', s))
+
+
+def parse_duration_minutes(v):
+    """'23小时57分钟29秒' / '1天' / '1:23:45' → 分钟数。"""
+    s = str(v or '').strip()
+    if not s or not is_live_duration(s):
+        return None
+    if re.match(r'^\d{1,3}:\d{2}(:\d{2})?$', s):
+        parts = [int(x) for x in s.split(':')]
+        return parts[0] * 60 + parts[1]
+    mins = 0.0
+    for pat, factor in ((r'(\d+(?:\.\d+)?)\s*天', 1440.0), (r'(\d+(?:\.\d+)?)\s*(?:小时|时)', 60.0),
+                        (r'(\d+(?:\.\d+)?)\s*(?:分钟|分)', 1.0), (r'(\d+(?:\.\d+)?)\s*秒', 1.0 / 60.0)):
+        m = re.search(pat, s)
+        if m and not (factor == 1.0 and re.search(r'\d\s*(?:小时|时)', s) and '钟' not in s):
+            mins += float(m.group(1)) * factor
+    return round(mins, 2) if mins else None
+
+
+# ============================================================ 单个直播间分析
+def _debug(debug, *a):
+    if debug:
+        print('      ·', *a)
+
+
+def analyze_room(rows, hi, idx, ch, sheet_name, src_file, aw=None, debug=False):
+    """把一个直播间的工作表 → {channels, totals, ok_totals, metrics, ...}。
+
+    aw = find_header 返回的「列名 → 精确/模糊」映射，仅用于 --debug 打印。
+    """
+    field_keys = [f for f, _l, _u, _k in COLS]
+    channels = []
+    did_totals = None
+    extras = {}
+    skipped = []
+    for i in sorted(rows.keys()):
+        if i <= hi:
+            continue
+        row = rows[i] or []
+        if len(row) <= ch:
+            continue
+        name = str(row[ch] or '').strip()
+        if not name:
+            continue
+        if name in SKIP_ROW_NAMES or norm(name) in {norm(x) for x in SKIP_ROW_NAMES}:
+            skipped.append(name)
+            continue
+        rec = {}
+        for f in field_keys:
+            j = idx.get(f)
+            rec[f] = round(num(row[j]), 4) if (j is not None and len(row) > j) else 0.0
+        if name in TOTAL_ROW_NAMES:
+            did_totals = rec
+            for f, _l, _u, _k in EXTRA_COLS:
+                j = idx.get(f)
+                if j is not None and len(row) > j and str(row[j] or '').strip() not in ('', '—'):
+                    extras[f] = str(row[j]).strip()
+            continue
+        rec['name'] = name
+        channels.append(rec)
+
+    # 合计：优先用表里的「整体」行（真值），没有才自己加总
+    src = '表内整体行'
+    if did_totals:
+        totals = dict(did_totals)
+    else:
+        totals = {f: round(sum(c.get(f, 0.0) for c in channels), 4) for f in field_keys}
+        src = '渠道加总'
+    for f, _l, _u, _k in EXTRA_COLS:
+        v = extras.get(f)
+        if f == 'qianchuan':
+            totals[f] = round(num(v), 4)
+        elif f == 'live_duration':
+            totals[f] = parse_duration_minutes(v)
+        else:
+            # 人均观看时长是「58秒」这种带单位的文本，原样留着（前端直接显示）
+            totals[f] = (str(v).strip() if v is not None else None)
+
+    sum_ch = {f: round(sum(c.get(f, 0.0) for c in channels), 4) for f in field_keys}
+    mismatch = {f: round(sum_ch[f] - (totals.get(f) or 0), 4) for f in field_keys}
+
+    # 异常渠道：互动次数 ÷ 观看次数 ≥ ANOM_RATIO → 两个数口径不一致，不参与互动率合算
+    #            达到 ANOM_WARN_RATIO 但没到 ANOM_RATIO → 只挂提示，数据照常参与合算
+    anomalies = []
+    warnings = []
+    for c in channels:
+        v, it = c.get('views') or 0, c.get('interactions') or 0
+        ratio = (it / v) if v else None
+        c['interaction_ratio'] = round(ratio, 4) if ratio is not None else None
+        c['anomaly'] = bool(v >= ANOM_MIN_VIEWS and ratio is not None and ratio >= ANOM_RATIO)
+        c['suspect'] = bool(not c['anomaly'] and v >= ANOM_MIN_VIEWS and ratio is not None and ratio >= ANOM_WARN_RATIO)
+        if c['anomaly']:
+            anomalies.append(c['name'])
+        elif c['suspect']:
+            warnings.append(c['name'])
+    ok_totals = {f: round(sum(c.get(f, 0.0) for c in channels if not c['anomaly']), 4) for f in field_keys}
+    excluded_inter = round((totals.get('interactions') or 0) - (ok_totals.get('interactions') or 0), 4)
+
+    metrics = compute_metrics(totals, ok_totals)
+    metrics['qianchuan_roi'] = div(totals.get('paid_amount'), totals.get('qianchuan'))
+    if totals.get('live_duration'):
+        metrics['orders_per_hour'] = div(totals.get('paid_orders'), (totals.get('live_duration') or 0) / 60.0)
+        metrics['gmv_per_hour'] = div(totals.get('paid_amount'), (totals.get('live_duration') or 0) / 60.0)
+
+    return {
+        'sheet': sheet_name, 'source_file': src_file,
+        'channels': {c['name']: {k: v for k, v in c.items() if k != 'name'} for c in channels},
+        'channel_order': [c['name'] for c in channels],
+        'totals': {k: r6(v) for k, v in totals.items()},
+        'ok_totals': ok_totals,
+        'metrics': {k: r6(v) for k, v in metrics.items()},
+        'totals_source': src,
+        'row_sum_mismatch': {k: v for k, v in mismatch.items() if abs(v) > 0.5},
+        'anomaly_channels': anomalies,
+        'suspect_channels': warnings,
+        'excluded_interactions': excluded_inter,
+        'excluded_share': round(div(excluded_inter, totals.get('interactions')) or 0.0, 4),
+        'skipped_rows': skipped,
+        'extras': extras,
+    }
+
+
 def compute_metrics(tot, ok_tot=None):
     """由合计字段算派生指标。ok_tot 用于互动率（剔除口径异常的渠道）。"""
     o = ok_tot or tot
-    m = {
+    return {
         'exposure_view_rate': div(tot['views'], tot['impressions']),
         'view_interaction_rate': div(tot['interactions'], tot['views']),
         'interaction_rate': div(o['interactions'], o['views']),
@@ -299,6 +574,9 @@ def compute_metrics(tot, ok_tot=None):
         'gpm': div(tot['paid_amount'] * 1000.0, tot['views']),
         'uv_value': div(tot['paid_amount'], tot['views']),
         'aov': div(tot['paid_amount'], tot['paid_orders']),
+        'qianchuan_roi': None,
+        'live_duration': tot.get('live_duration'),
+        'qianchuan': tot.get('qianchuan'),
         'funnel': [
             {'key': 'impressions', 'label': '直播间曝光', 'value': tot['impressions']},
             {'key': 'views', 'label': '直播间观看', 'value': tot['views']},
@@ -307,15 +585,63 @@ def compute_metrics(tot, ok_tot=None):
             {'key': 'paid_orders', 'label': '成交订单', 'value': tot['paid_orders']},
         ],
     }
-    return m
 
 
+def sum_rooms(rooms):
+    """把多个直播间相加成「全店」口径。"""
+    field_keys = [f for f, _l, _u, _k in COLS]
+    keys = field_keys + ['qianchuan']
+    tot = {k: round(sum((r['totals'].get(k) or 0) for r in rooms.values()), 4) for k in keys}
+    live = round(sum((r['totals'].get('live_duration') or 0) for r in rooms.values()), 2)
+    tot['live_duration'] = live
+    ok_tot = {f: round(sum((r['ok_totals'].get(f) or 0) for r in rooms.values()), 4) for f in field_keys}
+    m = compute_metrics(tot, ok_tot)
+    m['qianchuan_roi'] = div(tot.get('paid_amount'), tot.get('qianchuan'))
+    if live:
+        m['orders_per_hour'] = div(tot.get('paid_orders'), live / 60.0)
+        m['gmv_per_hour'] = div(tot.get('paid_amount'), live / 60.0)
+    total_inter = round(sum((r['totals'].get('interactions') or 0) for r in rooms.values()), 4)
+    excl = round(sum((r.get('excluded_interactions') or 0) for r in rooms.values()), 4)
+    # 全店视角的渠道明细：同名渠道跨直播间相加，比率按合计值重算（异常/可疑标记同 analyze_room 口径）
+    merged_ch = {}
+    for one in rooms.values():
+        for name, ch in (one.get('channels') or {}).items():
+            agg = merged_ch.setdefault(name, {f: 0.0 for f in field_keys})
+            for f in field_keys:
+                agg[f] = round(agg[f] + (ch.get(f) or 0.0), 4)
+    for name, agg in merged_ch.items():
+        v, it = agg.get('views') or 0, agg.get('interactions') or 0
+        ratio = (it / v) if v else None
+        agg['interaction_ratio'] = round(ratio, 4) if ratio is not None else None
+        agg['anomaly'] = bool(v >= ANOM_MIN_VIEWS and ratio is not None and ratio >= ANOM_RATIO)
+        agg['suspect'] = bool(not agg['anomaly'] and v >= ANOM_MIN_VIEWS and ratio is not None and ratio >= ANOM_WARN_RATIO)
+    merged_order = [n for n, _v in sorted(((n, a.get('views') or 0) for n, a in merged_ch.items()), key=lambda x: -x[1])]
+    return {
+        'sheet': '多直播间合计',
+        'source_file': '＋'.join(sorted({(r.get('source_file') or '') for r in rooms.values()})),
+        'channels': merged_ch, 'channel_order': merged_order,
+        'totals': {k: r6(v) for k, v in tot.items()},
+        'ok_totals': ok_tot,
+        'metrics': {k: r6(v) for k, v in m.items()},
+        'totals_source': '各直播间相加',
+        'row_sum_mismatch': {},
+        'anomaly_channels': sorted({a for r in rooms.values() for a in (r.get('anomaly_channels') or [])}),
+        'suspect_channels': sorted({a for r in rooms.values() for a in (r.get('suspect_channels') or [])}),
+        'excluded_interactions': excl,
+        'excluded_share': round(div(excl, total_inter) or 0.0, 4),
+        'skipped_rows': [],
+        'extras': {},
+        'is_all': True,
+    }
+
+
+# ============================================================ 规则 / 环比 / 渠道 / 洞察
 def evaluate_rules(m, tot):
-    """平台规则匹配：逐条判 优/正常/偏低/偏高。比率类统一换算成百分数展示。"""
+    """平台规则匹配：逐条判 达标/偏低/偏高。比率类统一换算成百分数展示。"""
     out = []
     for key, label, lo, hi, unit, why in PLATFORM_RULES:
         v = m.get(key)
-        pv = v * 100 if (v is not None and unit == '%') else v
+        pv = v * 100 if (unit == '%' and v is not None) else v
         if pv is None:
             status = 'unknown'
         elif lo is not None and pv < lo:
@@ -327,19 +653,21 @@ def evaluate_rules(m, tot):
         if pv is None:
             disp = '—'
         elif unit == '%':
-            disp = f'{pv:.2f}%'
+            disp = '%.2f%%' % pv
+        elif unit == '倍':
+            disp = '%.2f 倍' % pv
         else:
-            disp = f'{pv:,.0f} 元'
-        rng = (f'≥ {lo:g}' if hi is None else f'{lo:g} ~ {hi:g}') + ('%' if unit == '%' else ' 元')
-        out.append({
-            'key': key, 'label': label, 'status': status, 'unit': unit,
-            'value': pv, 'value_disp': disp, 'range': rng, 'why': why,
-        })
+            disp = '%s 元' % f'{pv:,.0f}'
+        rng = ('≥ %g' % lo) if hi is None else ('%g ~ %g' % (lo, hi))
+        rng += '%' if unit == '%' else (' 倍' if unit == '倍' else ' 元')
+        out.append({'key': key, 'label': label, 'status': status, 'unit': unit,
+                    'value': round(pv, 4) if pv is not None else None,
+                    'value_disp': disp, 'range': rng, 'why': why})
     return out
 
 
-def day_over_day(cur, prev, prev_date):
-    """逐指标环比：绝对值 + 前一日 + 环比%。cur/prev 为入库 payload（含 totals/metrics）。"""
+def day_over_day(cur, prev):
+    """逐指标环比：绝对值 + 前一日 + 环比%（比率类给百分点差 pp）。"""
     ct = (cur or {}).get('totals') or {}
     pt = (prev or {}).get('totals') or {}
     cm = (cur or {}).get('metrics') or {}
@@ -349,19 +677,23 @@ def day_over_day(cur, prev, prev_date):
         c = ct.get(field)
         p = pt.get(field) if pt else None
         chg = (c / p - 1) if (p not in (None, 0) and c is not None) else None
-        rows.append({'key': field, 'label': label, 'unit': unit, 'cur': c, 'prev': p,
-                     'chg': chg, 'is_rate': False,
+        rows.append({'key': field, 'label': label, 'unit': unit, 'cur': c, 'prev': p, 'chg': chg, 'is_rate': False,
                      'dir': ('up' if (chg or 0) > 0 else ('down' if (chg or 0) < 0 else 'flat')) if chg is not None else 'na'})
     for key, label, unit, nd in [
         ('exposure_view_rate', '曝光→观看率', '%', 2), ('interaction_rate', '观看→互动率', '%', 2),
         ('product_ctr', '商品点击率', '%', 2), ('click_cvr', '点击→成交转化率', '%', 2),
         ('new_follower_rate', '涨粉率', '%', 2), ('gpm', 'GPM', '元', 0),
         ('uv_value', 'UV 价值', '元', 2), ('aov', '客单价', '元', 2),
+        ('qianchuan_roi', '千川 ROI', '倍', 2),
     ]:
         c = cm.get(key)
         p = pm.get(key) if pm else None
-        cd = round(c * 100, nd) if c is not None else None
-        pd_ = round(p * 100, nd) if p is not None else None
+        if unit == '%':
+            cd = round(c * 100, nd) if c is not None else None
+            pd_ = round(p * 100, nd) if p is not None else None
+        else:
+            cd = round(c, nd) if c is not None else None
+            pd_ = round(p, nd) if p is not None else None
         diff = round(cd - pd_, nd) if (cd is not None and pd_ is not None) else None
         rows.append({'key': key, 'label': label, 'unit': unit, 'cur': cd, 'prev': pd_,
                      'chg': (diff / abs(pd_) if (diff is not None and pd_) else None),
@@ -371,11 +703,15 @@ def day_over_day(cur, prev, prev_date):
 
 
 def channel_rows(cur, prev):
-    """渠道明细 + 环比。"""
+    """渠道明细 + 环比 + 占比。"""
     cur_ch = (cur or {}).get('channels') or {}
+    order = (cur or {}).get('channel_order') or list(cur_ch.keys())
     prev_ch = (prev or {}).get('channels') or {}
     rows = []
-    for name, rec in sorted(cur_ch.items(), key=lambda kv: -(kv[1].get('views') or 0)):
+    for name in order:
+        rec = cur_ch.get(name)
+        if rec is None:
+            continue
         p = prev_ch.get(name) or {}
         v = rec.get('views')
         pi = rec.get('product_impressions')
@@ -393,95 +729,130 @@ def channel_rows(cur, prev):
             'share': None,
             'prev_views': p.get('views'),
             'chg': (v / p['views'] - 1) if (p.get('views') and v is not None) else None,
-            'anomaly': name in ANOMALY_CHANNELS,
+            'anomaly': bool(rec.get('anomaly')),
+            'suspect': bool(rec.get('suspect')),
+            'interaction_ratio': pct(rec.get('interaction_ratio')),
         })
+    rows.sort(key=lambda x: -(x['views'] or 0))
     tv = sum((x['views'] or 0) for x in rows)
     for x in rows:
         x['share'] = pct(div(x['views'], tv))
     return rows
 
 
-def build_insights(cur, prev, dod, rules, channels):
+def build_insights(cur, prev, dod, rules, channels, compare=None):
     """生成「数据表现 / 平台规则匹配 / 优化建议」三段文字。"""
     t = cur['totals']
     m = cur['metrics']
     lines = {'headline': [], 'data': [], 'rules': [], 'actions': []}
 
-    # —— 数据表现
     if prev:
-        dv = dod and [r for r in dod if r['key'] == 'views'][0]
-        lines['headline'].append(
-            f"观看 {fmt_int(t['views'])} 次（前一日 {fmt_int(dv['prev'])}，{('+' if (dv['chg'] or 0)>=0 else '')}{fmt_num((dv['chg'] or 0)*100,1)}%）"
-        )
+        dv = [r for r in dod if r['key'] == 'views'][0]
+        sign = '+' if (dv['chg'] or 0) >= 0 else ''
+        lines['headline'].append('观看 %s 次（前一日 %s，%s%s%%）' % (
+            fmt_int(t['views']), fmt_int(dv['prev']), sign, fmt_num((dv['chg'] or 0) * 100, 1)))
+    else:
+        lines['headline'].append('观看 %s 次（首日入库，无前一日可比）' % fmt_int(t['views']))
+
+    if prev:
         for key in ('impressions', 'product_clicks', 'paid_orders', 'paid_amount'):
             r = [x for x in dod if x['key'] == key][0]
             arrow = '↑' if r['dir'] == 'up' else ('↓' if r['dir'] == 'down' else '→')
-            lines['data'].append(
-                f"{r['label']} {fmt_int(r['cur'])} {r['unit']}，前一日 {fmt_int(r['prev'])}，{arrow} {abs((r['chg'] or 0)*100):.1f}%"
-            )
+            lines['data'].append('%s %s %s，前一日 %s，%s %.1f%%' % (
+                r['label'], fmt_int(r['cur']), r['unit'], fmt_int(r['prev']), arrow, abs((r['chg'] or 0) * 100)))
         for key, label in (('exposure_view_rate', '曝光→观看率'), ('interaction_rate', '观看→互动率'),
                            ('product_ctr', '商品点击率'), ('click_cvr', '点击→成交转化率')):
             r = [x for x in dod if x['key'] == key][0]
             if r['cur'] is None or r['prev'] is None:
                 continue
-            lines['data'].append(
-                f"{label} {r['cur']:.2f}%（前一日 {r['prev']:.2f}%，{(r['pp_diff'] or 0):+.2f}pp）"
-            )
+            lines['data'].append('%s %.2f%%（前一日 %.2f%%，%+.2fpp）' % (label, r['cur'], r['prev'], (r['pp_diff'] or 0)))
     else:
-        lines['headline'].append(f"观看 {fmt_int(t['views'])} 次（首日入库，无前一日可比）")
+        lines['data'].append('曝光→观看率 %s、观看→互动率 %s、商品点击率 %s、点击→成交 %s、涨粉率 %s' % (
+            fmt_pct(m.get('exposure_view_rate')), fmt_pct(m.get('interaction_rate')), fmt_pct(m.get('product_ctr')),
+            fmt_pct(m.get('click_cvr')), fmt_pct(m.get('new_follower_rate'))))
         lines['data'].append('⚠️ 没有前一日数据，环比一栏留空；第二天起自动出环比。')
 
-    # 最大涨/跌渠道
-    chg_ok = [c for c in channels if c['chg'] is not None and (c['prev_views'] or 0) >= 50]
-    if chg_ok:
-        up = max(chg_ok, key=lambda c: c['chg'])
-        dn = min(chg_ok, key=lambda c: c['chg'])
-        lines['data'].append(f"渠道里 {up['name']} 涨得最猛（观看 {up['chg']*100:+.1f}%）；{dn['name']} 掉得最多（{dn['chg']*100:+.1f}%）")
+    if channels:
+        top = channels[0]
+        lines['data'].append('渠道结构：%s 贡献观看 %s 次（占 %s%%），共 %d 个入口' % (
+            top['name'], fmt_int(top['views']), fmt_num(top['share'], 1), len(channels)))
+        chg_ok = [c for c in channels if c['chg'] is not None and (c['prev_views'] or 0) >= 50]
+        if chg_ok:
+            up = max(chg_ok, key=lambda c: c['chg'])
+            dn = min(chg_ok, key=lambda c: c['chg'])
+            lines['data'].append('渠道里 %s 涨得最猛（观看 %+.1f%%）；%s 掉得最多（%+.1f%%）' % (
+                up['name'], up['chg'] * 100, dn['name'], dn['chg'] * 100))
 
-    # —— 平台规则匹配
-    bad = [r for r in rules if r['status'] in ('low', 'high')]
+    if compare and len(compare) > 1:
+        by_views = sorted(compare, key=lambda x: -(x['views'] or 0))
+        lead = by_views[0]
+        rests = '、'.join('%s 占 %s%%' % (x['name'], fmt_num(x['view_share'], 1)) for x in by_views[1:4])
+        lines['data'].append('直播间对比：%s 观看最多（%s 次，占 %s%%）；%s' % (
+            lead['name'], fmt_int(lead['views']), fmt_num(lead['view_share'], 1), rests))
+        pool = [x for x in compare if x.get('gpm')]
+        if pool:
+            best = max(pool, key=lambda x: x['gpm'])
+            worst = min(pool, key=lambda x: x['gpm'])
+            lines['data'].append('变现效率：%s GPM %s 元最高，%s %s 元最低（差 %s%%）' % (
+                best['name'], fmt_int(best['gpm']), worst['name'], fmt_int(worst['gpm']),
+                fmt_num((best['gpm'] / worst['gpm'] - 1) * 100, 0) if worst['gpm'] else '—'))
+
+    anom = cur.get('anomaly_channels') or []
+    if anom:
+        tail = ('；被剔除的互动数占全场 %.1f%%，若占比过高请找平台核对两列口径。' % ((cur.get('excluded_share') or 0) * 100)
+                if (cur.get('excluded_share') or 0) > 0.15 else '。')
+        lines['data'].append('ℹ️ 渠道「%s」口径异常（互动次数 ÷ 观看次数 ≥ %.0f%%），已从互动率合算中剔除%s' % (
+            '、'.join(anom), ANOM_RATIO * 100, tail))
+
+    if prev:
+        pv = prev['totals'].get('views')
+        dv = (t['views'] / pv - 1) if pv else None
+        if dv is not None and abs(dv) >= 0.30:
+            lines['data'].append(('⚠️ ' if dv < 0 else '🚀 ') + '观看量单日%s %.0f%%，%s' % (
+                '下滑' if dv < 0 else '暴涨', abs(dv) * 100,
+                '若为下滑需排查是否被限流/断播' if dv < 0 else '注意承接能力是否跟得上'))
+
     good = [r for r in rules if r['status'] == 'ok']
+    bad = [r for r in rules if r['status'] in ('low', 'high')]
     if good:
-        lines['rules'].append('✅ 达标：' + '、'.join(f"{r['label']} {r['value_disp']}（平台参考 {r['range']}）" for r in good))
+        lines['rules'].append('✅ 达标：' + '、'.join('%s %s（平台参考 %s）' % (r['label'], r['value_disp'], r['range']) for r in good))
     for r in bad:
-        direction = '低于' if r['status'] == 'low' else '高于'
-        lines['rules'].append(f"⚠️ {r['label']} {r['value_disp']}，{direction}平台参考区间 {r['range']}。{r['why']}")
+        lines['rules'].append('⚠️ %s %s，%s平台参考区间 %s。%s' % (
+            r['label'], r['value_disp'], '低于' if r['status'] == 'low' else '高于', r['range'], r['why']))
     if not bad:
         lines['rules'].append('✅ 全部核心指标落在平台推荐区间内，当前分发逻辑健康，重点是保住这套节奏。')
 
-    # —— 优化建议（按规则命中的短板给动作）
-    def has(k, st='low'):
-        return any(r['key'] == k and r['status'] == st for r in rules)
-    if has('gpm') or has('click_cvr'):
-        lines['actions'].append('**转化端**：GPM/转化率是平台给量的第一指标。把主推品提到开场前 30 分钟，配合「限时直降 + 库存倒计时」逼单；检查到手价与竞对同款价差，价格力不足时优先用赠品而非降标价。')
-    if has('product_ctr'):
-        lines['actions'].append('**商品卡**：点击率偏低说明福袋/主图/讲解节奏没把商品推到观众面前。每 10 分钟口播一次主推品并置顶商品卡，商品标题前 8 个字放「型号 + 核心卖点 + 价格」。')
-    if has('interaction_rate'):
-        lines['actions'].append('**互动**：开播 5 分钟做「扣1抽奖」，每 15 分钟一次福袋；把「点关注亮灯牌」写进话术循环，互动率是平台判断是否继续推流的直接信号。')
-    if has('exposure_view_rate'):
-        lines['actions'].append('**封面/标题**：曝光进不来人是推荐位素材问题。今日换 2 组封面（产品特写 + 价格钩子），标题带「今晚 8 点直降」，隔天对比曝光→观看率。')
-    if has('new_follower_rate'):
-        lines['actions'].append('**涨粉**：涨粉率低 = 缺关注引导。每场安排 3 次「关注的家人扣关注，抽手环」，把加粉丝团作为抽奖门槛。')
-    if not lines['actions']:
-        lines['actions'].append('**守成**：数据在全绿区间，重点不是加动作而是「复制今天」——把本场排品顺序、开播时间、话术节奏固化成模板，明天照跑。')
-
-    # —— 异常与波动
-    if prev:
-        dv = t['views'] / prev['totals']['views'] - 1 if prev['totals'].get('views') else None
-        if dv is not None and abs(dv) >= 0.30:
-            lines['data'].append(('⚠️ ' if dv < 0 else '🚀 ') + f"观看量单日{'下滑' if dv<0 else '暴涨'} {abs(dv)*100:.0f}%，{'若为下滑需排查是否被限流/断播' if dv<0 else '注意承接能力是否跟得上'}")
-    neg = [x for x in cur.get('channels', {}) if x in ANOMALY_CHANNELS]
-    if neg:
-        lines['data'].append('ℹ️ 渠道「' + '、'.join(neg) + '」口径异常（互动次数 > 观看次数），已从互动率合算中剔除。')
-
-    # —— 判断是否「可能被限流/断播」（观看下滑 + 曝光下滑，但进人率没降 = 不是素材问题）
     if prev:
         prev_t = prev['totals']
         v_chg = (t.get('views') or 0) / prev_t['views'] - 1 if prev_t.get('views') else 0
         i_chg = (t.get('impressions') or 0) / prev_t['impressions'] - 1 if prev_t.get('impressions') else 0
-        evr_c = m.get('exposure_view_rate'); evr_p = (prev.get('metrics') or {}).get('exposure_view_rate')
+        evr_c, evr_p = m.get('exposure_view_rate'), (prev.get('metrics') or {}).get('exposure_view_rate')
         if v_chg < -0.15 and i_chg < -0.15 and evr_c is not None and evr_p and evr_c >= evr_p:
-            lines['rules'].append('🔎 判断：曝光和观看同比例下滑、但「曝光→观看率」没降 → 不是封面/素材问题，更像是**平台减少推流**（时段竞争加剧、历史 GPM 拖累、或场次时长不足）。优先核对是否断播、是否被限流提示。')
+            lines['rules'].append('🔎 判断：曝光和观看同比例下滑，但「曝光→观看率」没降 → 不是封面/素材问题，更像**平台减少了推流**（时段竞争加剧、历史 GPM 拖累、或场次时长不足）。优先核对是否断播、是否有违规限流提示。')
+
+    def has(k, st='low'):
+        return any(r['key'] == k and r['status'] == st for r in rules)
+
+    if has('gpm') or has('click_cvr') or has('qianchuan_roi'):
+        lines['actions'].append('**转化端**：GPM/ROI 是平台给量的第一指标。把主推品提到开场前 30 分钟，配合「限时直降 + 库存倒计时」逼单；检查到手价与竞对同款价差，价格力不足时优先用赠品而不是降标价。')
+    if has('product_ctr'):
+        lines['actions'].append('**商品卡**：点击率偏低说明福袋/主图/讲解节奏没把商品推到观众面前。每 10 分钟口播一次主推品并置顶商品卡，商品标题前 8 个字放「型号 + 核心卖点 + 价格」。')
+    if has('interaction_rate'):
+        lines['actions'].append('**互动**：开播 5 分钟做「扣1抽奖」，每 15 分钟一次福袋；把「点关注亮灯牌」写进话术循环——互动率是平台判断是否继续推流的直接信号。')
+    if has('exposure_view_rate'):
+        lines['actions'].append('**封面/标题**：曝光进不来人是推荐位素材问题。今天换 2 组封面（产品特写 + 价格钩子），标题带「今晚 8 点直降」，隔天对比曝光→观看率。')
+    if has('new_follower_rate'):
+        lines['actions'].append('**涨粉**：涨粉率低 = 缺关注引导。每场安排 3 次「关注的家人扣关注，抽手环」，把加粉丝团作为抽奖门槛。')
+    if compare and len(compare) > 1:
+        weak = [x for x in compare if x.get('view_share') is not None and x['view_share'] < 5]
+        if weak:
+            lines['actions'].append('**流量分配**：%s 观看占比不足 5%%，属于「开播了但平台没给量」。先补齐这间的开播时长与场次稳定性（平台按历史场次给初始流量），再谈投放。' % '、'.join(x['name'] for x in weak))
+        top2 = sorted([x for x in compare if x.get('gpm')], key=lambda x: -(x['gpm'] or 0))[:2]
+        if top2:
+            lines['actions'].append('**复制高效场**：%s 是本店变现效率最高的两间，把它们的排品顺序、开播时段、话术脚本抄到低效直播间。' % '、'.join(
+                '%s（GPM %s 元、客单价 %s 元）' % (x['name'], fmt_int(x['gpm']), fmt_int(x.get('aov'))) for x in top2))
+    if not lines['actions']:
+        lines['actions'].append('**守成**：数据全绿，重点不是加动作而是「复制今天」——把本场排品顺序、开播时间、话术节奏固化成模板，明天照跑。')
 
     return lines
 
@@ -489,6 +860,14 @@ def build_insights(cur, prev, dod, rules, channels):
 # ============================================================ 落盘
 def day_path(d):
     return os.path.join(DATA_DIR, d[:4], d + '.json')
+
+
+def report_dir_for(d):
+    return os.path.join(REPORT_DIR, d[:4], d)
+
+
+def report_path(d, scope):
+    return os.path.join(report_dir_for(d), scope + '.json')
 
 
 def load_day(d):
@@ -516,117 +895,370 @@ def write_day(d, payload):
     return p
 
 
+def day_is_demo(rec):
+    rooms = (rec or {}).get('rooms') or {}
+    if not rooms:
+        return bool((rec or {}).get('demo'))
+    return all((r.get('demo') for r in rooms.values()))
+
+
 def write_index():
-    dates = all_dates()
     days = []
-    for d in dates:
+    for d in all_dates():
         rec = load_day(d) or {}
+        rooms = rec.get('rooms') or {}
+        t = rec.get('totals') or {}
         days.append({
-            'date': d, 'room': rec.get('room'),
-            'views': (rec.get('totals') or {}).get('views'),
-            'impressions': (rec.get('totals') or {}).get('impressions'),
-            'paid_orders': (rec.get('totals') or {}).get('paid_orders'),
-            'paid_amount': (rec.get('totals') or {}).get('paid_amount'),
+            'date': d, 'pretty': '%d月%d日' % (int(d[5:7]), int(d[8:10])),
+            'demo': day_is_demo(rec), 'rooms': list(rooms.keys()), 'n_rooms': len(rooms),
+            'views': t.get('views'), 'impressions': t.get('impressions'),
+            'paid_orders': t.get('paid_orders'), 'paid_amount': t.get('paid_amount'),
+            'gpm': round((rec.get('metrics') or {}).get('gpm') or 0) or None,
+            'roi': (rec.get('metrics') or {}).get('qianchuan_roi'),
         })
     months = {}
     for x in days:
         months.setdefault(x['date'][:7], []).append(x['date'])
     idx = {
         'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
-        'start_month': START_YM,
-        'months': [{'ym': k, 'label': f'{int(k[5:7])}月', 'count': len(v),
-                    'dates': sorted(v, reverse=True)} for k, v in sorted(months.items())],
+        'start_month': START_YM, 'all_scope': ALL_SCOPE,
+        'months': [{'ym': k, 'label': '%d月' % int(k[5:7]), 'count': len(v), 'dates': sorted(v, reverse=True)}
+                   for k, v in sorted(months.items())],
         'days': days,
     }
-    p = os.path.join(DATA_DIR, 'index.json')
     os.makedirs(DATA_DIR, exist_ok=True)
+    p = os.path.join(DATA_DIR, 'index.json')
     with open(p, 'w', encoding='utf-8') as f:
         json.dump(idx, f, ensure_ascii=False, indent=1)
     return p, idx
 
 
-def write_report(d, payload, prev):
-    dod = day_over_day(payload, prev, prev['date'] if prev else None)
-    rules = evaluate_rules(payload['metrics'], payload['totals'])
-    channels = channel_rows(payload, prev)
-    ins = build_insights(payload, prev, dod, rules, channels)
-    rpt = {
-        'date': d, 'room': payload.get('room'), 'source_file': payload.get('source_file'),
-        'prev_date': prev['date'] if prev else None,
-        'totals': payload['totals'], 'metrics': payload['metrics'],
-        'dod': dod, 'rules': rules, 'channels': channels, 'insights': ins,
-        'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+def room_compare(rec):
+    """全店视角：各直播间横向对比行。"""
+    rooms = (rec or {}).get('rooms') or {}
+    if len(rooms) <= 1:
+        return []
+    tot_views = sum((r['totals'].get('views') or 0) for r in rooms.values())
+    gmps = sorted([(r['metrics'].get('gpm') or 0) for r in rooms.values()])
+    med_gpm = gmps[len(gmps) // 2] if gmps else None
+    rows = []
+    for name, r in rooms.items():
+        t, m = r['totals'], r['metrics']
+        rows.append({
+            'name': name, 'views': t.get('views'), 'impressions': t.get('impressions'),
+            'view_share': pct(div(t.get('views'), tot_views)),
+            'paid_amount': t.get('paid_amount'), 'paid_orders': t.get('paid_orders'),
+            'evr': pct(m.get('exposure_view_rate')), 'ctr': pct(m.get('product_ctr')),
+            'cvr': pct(m.get('click_cvr')), 'gpm': round(m.get('gpm')) if m.get('gpm') else None,
+            'aov': round(m.get('aov')) if m.get('aov') else None,
+            'roi': m.get('qianchuan_roi'),
+            'uv_value': round(m['uv_value'], 4) if m.get('uv_value') is not None else None,
+            'interaction_rate': pct(m.get('interaction_rate')),
+            'new_follower_rate': pct(m.get('new_follower_rate')),
+            'anomaly_channels': r.get('anomaly_channels') or [],
+            'suspect_channels': r.get('suspect_channels') or [],
+            'vs_peer_gpm': (round((m.get('gpm') or 0) / med_gpm, 2) if (med_gpm and m.get('gpm')) else None),
+        })
+    rows.sort(key=lambda x: -(x['views'] or 0))
+    return rows
+
+
+def peer_benchmark(compare):
+    """横向对比：各指标中位数（本店各间的参照线）。"""
+    out = []
+    if not compare or len(compare) < 2:
+        return out
+    for key, label, unit, nd in PEER_METRICS:
+        vals = sorted(x[key] for x in compare if x.get(key) is not None)
+        if not vals:
+            continue
+        pool = [x for x in compare if x.get(key) is not None]
+        best = max(pool, key=lambda x: x[key])
+        worst = min(pool, key=lambda x: x[key])
+        out.append({'key': key, 'label': label, 'unit': unit, 'decimals': nd,
+                    'median': round(vals[len(vals) // 2], 0 if unit == '元' else nd),
+                    'best': {'name': best['name'], 'value': round(best[key], nd)},
+                    'worst': {'name': worst['name'], 'value': round(worst[key], nd)}})
+    return out
+
+
+def build_scope(rec, prev_rec, scope):
+    """生成某个 scope（全店 / 某直播间）的完整日报体。"""
+    if scope == ALL_SCOPE:
+        cur = {k: v for k, v in rec.items() if k != 'rooms'}
+        prev = ({k: v for k, v in prev_rec.items() if k != 'rooms'} if prev_rec else None)
+    else:
+        cur = (rec.get('rooms') or {}).get(scope)
+        prev = ((prev_rec or {}).get('rooms') or {}).get(scope) if prev_rec else None
+    if not cur:
+        return None
+    dod = day_over_day(cur, prev)
+    rules = evaluate_rules(cur['metrics'], cur['totals'])
+    channels = channel_rows(cur, prev)
+    # 全店与单间都带上「各直播间横向对比」：单间视角里它用来回答
+    # 「我这间在全店排第几」，页面的同业横向基准表也依赖它。
+    compare = room_compare(rec)
+    ins = build_insights(cur, prev, dod, rules, channels,
+                         compare=compare if scope == ALL_SCOPE else None)
+    return {
+        # room 与 scope 同值：scope='全店' 时 room 也写 '全店'。
+        # 前端会拿 r.room || r.scope 当显示名，保留 room 是为了兼容旧版页面的读取路径。
+        'scope': scope, 'room': scope, 'is_all': scope == ALL_SCOPE,
+        # 页面拿 date/prev_date 显示「数据日期 / 对比基准」，缺了会显示成首日无对比
+        'date': rec.get('date'), 'prev_date': (prev_rec or {}).get('date'),
+        'prev_scope_exists': bool(prev),
+        'totals': cur['totals'], 'metrics': cur['metrics'], 'ok_totals': cur.get('ok_totals'),
+        'source_file': cur.get('source_file'), 'source_sheet': cur.get('sheet'),
+        'totals_source': cur.get('totals_source'),
+        'anomaly_channels': cur.get('anomaly_channels') or [],
+        'suspect_channels': cur.get('suspect_channels') or [],
+        'excluded_share': cur.get('excluded_share'),
+        'row_sum_mismatch': cur.get('row_sum_mismatch') or {},
+        'dod': dod, 'rules': rules, 'channels': channels,
+        'room_compare': compare, 'peer_benchmark': peer_benchmark(compare),
+        'insights': ins,
     }
-    os.makedirs(REPORT_DIR, exist_ok=True)
-    with open(os.path.join(REPORT_DIR, d + '.json'), 'w', encoding='utf-8') as f:
-        json.dump(rpt, f, ensure_ascii=False, indent=1)
+
+
+def write_report(d, rec, prev_rec):
+    rpt = {
+        'date': d, 'prev_date': (prev_rec or {}).get('date'),
+        'demo': day_is_demo(rec),
+        'rooms': list((rec.get('rooms') or {}).keys()),
+        'all_scope': ALL_SCOPE, 'source_files': rec.get('source_files') or {},
+        'generated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'scopes': {},
+    }
+    for scope in [ALL_SCOPE] + list((rec.get('rooms') or {}).keys()):
+        s = build_scope(rec, prev_rec, scope)
+        if s:
+            rpt['scopes'][scope] = s
     return rpt
 
 
-def rebuild_reports():
+def refresh_all_scope(rec):
+    """全店口径永远由各直播间现算。
+    日文件里存的合计可能是旧版脚本写的（例如早期版本不带渠道明细），
+    重建日报时重算一遍，避免「rooms 有 6 间但全店渠道是空的」这种自相矛盾。"""
+    rooms = rec.get('rooms') or {}
+    if not rooms:
+        return rec
+    agg = sum_rooms(rooms)
+    out = dict(rec)
+    for k in ('channels', 'channel_order', 'totals', 'ok_totals', 'metrics', 'totals_source',
+              'anomaly_channels', 'suspect_channels', 'excluded_interactions', 'excluded_share',
+              'row_sum_mismatch', 'skipped_rows'):
+        if k in agg:
+            out[k] = agg[k]
+    return out
+
+
+def rebuild_reports(quiet=False):
     dates = all_dates()
-    prev = None
+    prev_rec = None
     for d in dates:
-        cur = load_day(d)
+        cur = refresh_all_scope(load_day(d) or {})
         if not cur:
             continue
-        write_report(d, cur, prev)
-        prev = cur
-    p, idx = write_index()
-    return dates, p, idx
+        rpt = write_report(d, cur, prev_rec)
+        dd = report_dir_for(d)
+        os.makedirs(dd, exist_ok=True)
+        want = {'%s.json' % k for k in rpt['scopes']}
+        for p in glob.glob(os.path.join(dd, '*.json')):
+            if os.path.basename(p) not in want:
+                os.remove(p)
+        for k, s in rpt['scopes'].items():
+            with open(os.path.join(dd, k + '.json'), 'w', encoding='utf-8') as f:
+                json.dump(s, f, ensure_ascii=False, indent=1)
+        prev_rec = cur
+        if not quiet:
+            rooms = list((cur.get('rooms') or {}).keys())
+            print('   日报 %s  直播间 %d 个%s' % (d, len(rooms), '' if len(rooms) != 1 else '（%s）' % rooms[0]))
+    ip, idx = write_index()
+    return dates, ip, idx
+
+
+# ============================================================ 猜直播间名
+def guess_room(stem, known):
+    """用文件名猜直播间名：先精确/包含匹配已是 key 的名字，再抽「xx直播间/旗舰店」片段。"""
+    s = str(stem or '').strip()
+    ns = norm(s)
+    if not ns:
+        return None
+    for k in known:
+        if norm(k) == ns:
+            return k
+    cands = [k for k in known if len(k) >= 4 and (norm(k) in ns or ns in norm(k))]
+    if cands:
+        return max(cands, key=lambda x: len(x))
+    m = re.search(r'(小米[\u4e00-\u9fa5A-Za-z0-9&]{2,20}?(?:直播间|旗舰店直播间|旗舰店))', s)
+    if m:
+        return m.group(1)
+    m = re.search(r'([\u4e00-\u9fa5A-Za-z0-9&]{2,20}?(?:直播间|旗舰店))', s)
+    return m.group(1) if m else None
+
+
+_KNOWN_CACHE = None
+
+
+def known_rooms():
+    """历史入库过的直播间名 + team_config 里的名单。"""
+    global _KNOWN_CACHE
+    if _KNOWN_CACHE is not None:
+        return _KNOWN_CACHE
+    out = set()
+    for d in all_dates():
+        rec = load_day(d) or {}
+        out.update((rec.get('rooms') or {}).keys())
+    try:
+        sys.path.insert(0, ROOT)
+        import team_config
+        for attr in dir(team_config):
+            if attr.startswith('_'):
+                continue
+            v = getattr(team_config, attr)
+            if isinstance(v, dict):
+                for k in v.keys():
+                    # ★ 全收：TEAM_MAP 里「小米官方手表」「小米数码旗舰店」这类名字不含「直播间/旗舰店」，
+                    #   但真实导出文件名正好就是它们，必须能精确命中
+                    if isinstance(k, str) and len(k) >= 4:
+                        out.add(k)
+            elif isinstance(v, (list, tuple, set)):
+                for k in v:
+                    if isinstance(k, str) and ('直播间' in k or '旗舰店' in k):
+                        out.add(k)
+    except Exception:
+        pass
+    _KNOWN_CACHE = out
+    return out
 
 
 # ============================================================ 主流程
-def ingest(xlsx, d=None, room=None, sheet=None):
-    if not os.path.exists(xlsx):
-        raise SystemExit(f'❌ 找不到文件：{xlsx}')
-    d, how = resolve_date(xlsx, d=d, sheet=sheet)
+def expand_inputs(paths):
+    out = []
+    for p in paths:
+        if os.path.isdir(p):
+            out.extend(sorted(glob.glob(os.path.join(p, '*.xlsx'))))
+        else:
+            out.append(p)
+    seen, res = set(), []
+    for p in out:
+        a = os.path.abspath(p)
+        if a not in seen:
+            seen.add(a)
+            res.append(p)
+    return res
+
+
+def ingest_one_day(paths, d=None, room=None, sheet=None, force=False, quiet=False, debug=False):
+    book = None
+    try:
+        book = parse_xlsx(paths[0], sheet=sheet)
+    except ExcelizeError:
+        book = None
+    d, how = resolve_date(paths, d=d, rows_by_sheet=book)
     if d[:7] < START_YM:
-        raise SystemExit(f'❌ {d} 早于流量分析起始月份 {START_YM}（规则：数据不得早于 10 月）')
+        raise SystemExit('❌ %s 早于流量分析起始月份 %s（规则：数据不得早于 10 月）' % (d, START_YM))
 
-    parsed = parse_workbook(xlsx, sheet=sheet)
-    if not parsed:
-        raise SystemExit('❌ 没找到「渠道名称 + 指标」表头。请确认导出的是直播流量渠道明细表')
-    sn, chan, fields = parsed
-
-    tot = {f: 0.0 for f, _l, _u, _k in COLS}
-    for rec in chan.values():
-        for k, v in rec.items():
-            tot[k] += v
-    ok = {k: v for k, v in chan.items() if k not in ANOMALY_CHANNELS}
-    ok_tot = {f: sum(c.get(f, 0.0) for c in ok.values()) for f, _l, _u, _k in COLS}
-
-    payload = {
-        'date': d, 'room': room or '全店（全渠道汇总）', 'source_file': os.path.basename(xlsx),
-        'source_sheet': sn, 'matched_fields': fields,
-        'channels': {k: {kk: round(vv, 4) for kk, vv in v.items()} for k, v in chan.items()},
-        'totals': {k: round(v, 4) for k, v in tot.items()},
-        'ok_totals': {k: round(v, 4) for k, v in ok_tot.items()},
-        'updated_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+    payload = load_day(d) or {
+        'date': d, 'demo': False, 'source_files': {}, 'rooms': {},
+        'created_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
     }
-    payload['metrics'] = compute_metrics(payload['totals'], payload['ok_totals'])
-    payload['metrics'] = {k: (round(v, 6) if isinstance(v, float) else v) for k, v in payload['metrics'].items()}
+    payload.setdefault('rooms', {})
+    payload.setdefault('source_files', {})
+    payload['demo'] = False
 
-    existed = os.path.exists(day_path(d))
+    known = known_rooms()
+    added, replaced, guesses = [], [], []
+    for p in paths:
+        if not os.path.exists(p):
+            raise SystemExit('❌ 找不到文件：%s' % p)
+        stem = os.path.splitext(os.path.basename(p))[0]
+        rn = room or guess_room(stem, known)
+        if not rn:
+            raise SystemExit('❌ 认不出「%s」属于哪个直播间。请用 --room 指定直播间名。' % os.path.basename(p))
+        if not room and rn not in known:
+            guesses.append(rn)
+        book = parse_xlsx(p, sheet=sheet)
+        picked = pick_sheet(book)
+        if not picked:
+            raise SystemExit('❌ %s：没找到「渠道名称 + 指标」表头，请确认导出的是直播流量渠道明细表' % os.path.basename(p))
+        sn, rows, hi, idx, ch, how_cols = picked   # ★ 不能叫 how —— 会覆盖上面 resolve_date 的日期来源
+        res = analyze_room(rows, hi, idx, ch, sn, os.path.basename(p), aw=how_cols, debug=debug)
+        if debug:
+            print('   [debug] %s / sheet「%s」表头第 %d 行，渠道列第 %d 列，命中 %d 个字段' % (
+                os.path.basename(p), sn, hi, ch + 1, len(idx)))
+            for f, j in sorted(idx.items(), key=lambda kv: kv[1]):
+                raw = (rows[hi][j] if (j < len(rows[hi])) else '')
+                print('           %-20s ← 第 %d 列「%s」(%s)' % (f, j + 1, raw, how_cols.get(f, '?')))
+        res['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        existed = rn in payload['rooms']
+        payload['rooms'][rn] = res
+        payload['source_files'][rn] = os.path.basename(p)
+        (replaced if existed else added).append(rn)
+
+    if not payload['rooms']:
+        raise SystemExit('❌ 这一天没有任何可用的直播间数据')
+
+    payload.update(sum_rooms(payload['rooms']))
+    payload['date'] = d
+    payload['demo'] = all((r.get('demo') for r in payload['rooms'].values()))
+    payload['updated_at'] = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+    existed_day = os.path.exists(day_path(d))
     p = write_day(d, payload)
-    dates, ip, idx = rebuild_reports()
-    return {'date': d, 'path': p, 'channels': len(chan), 'totals': payload['totals'],
-            'metrics': payload['metrics'], 'overwrote': existed, 'n_days': len(dates), 'index': ip}
+    if not quiet:
+        print('%s%s  （日期来源：%s）  %s' % ('⚠️ 同日已有数据，已覆盖：' if existed_day else '✔ 入库：', d, how, os.path.relpath(p, ROOT)))
+        for rn in list(payload['rooms'].keys()):
+            r = payload['rooms'][rn]
+            t, m = r['totals'], r['metrics']
+            print('   [%s] %s  源文件 %s' % ('新增' if rn in added else '更新', rn, r.get('source_file')))
+            print('          曝光 %s  观看 %s  互动 %s  涨粉 %s' % (fmt_int(t.get('impressions')), fmt_int(t.get('views')), fmt_int(t.get('interactions')), fmt_int(t.get('new_followers'))))
+            print('          商品曝光 %s  点击 %s  成交 %s 单  支付 %s 元' % (fmt_int(t.get('product_impressions')), fmt_int(t.get('product_clicks')), fmt_int(t.get('paid_orders')), fmt_num(t.get('paid_amount'))))
+            print('          曝光→观看 %s  互动率 %s  商品点击率 %s  点击→成交 %s  涨粉 %s' % (
+                fmt_pct(m.get('exposure_view_rate')), fmt_pct(m.get('interaction_rate')), fmt_pct(m.get('product_ctr')),
+                fmt_pct(m.get('click_cvr')), fmt_pct(m.get('new_follower_rate'))))
+            print('          GPM %s 元  UV %s 元  客单价 %s 元  千川 ROI %s' % (
+                fmt_num(m.get('gpm'), 0), fmt_num(m.get('uv_value')), fmt_num(m.get('aov'), 0), fmt_num(m.get('qianchuan_roi'))))
+            if r.get('anomaly_channels'):
+                print('          ⚠️ 口径异常渠道（互动÷观看 ≥ %.1f 倍，已剔除互动率合算）：%s，剔除互动数占全场 %.1f%%' % (
+                    ANOM_RATIO, '、'.join(r['anomaly_channels']), r.get('excluded_share', 0) * 100))
+            if r.get('suspect_channels'):
+                print('          ℹ️ 需要留意（互动÷观看 ≥ %.1f 倍但未剔除）：%s' % (
+                    ANOM_WARN_RATIO, '、'.join(r['suspect_channels'])))
+            if r.get('row_sum_mismatch'):
+                print('          ⚠️ 渠道加总与「整体」行不一致：%s' % r['row_sum_mismatch'])
+        t, m = payload['totals'], payload['metrics']
+        print('   ── 全店（%d 个直播间相加）' % len(payload['rooms']))
+        print('      观看 %s  支付 %s 元  订单 %s 单  GPM %s 元  客单价 %s 元  ROI %s' % (
+            fmt_int(t.get('views')), fmt_num(t.get('paid_amount')), fmt_int(t.get('paid_orders')),
+            fmt_num(m.get('gpm'), 0), fmt_num(m.get('aov'), 0), fmt_num(m.get('qianchuan_roi'))))
+    dates, ip, idx = rebuild_reports(quiet=True)
+    return {'date': d, 'path': p, 'date_how': how, 'rooms': payload['rooms'], 'totals': payload['totals'],
+            'metrics': payload['metrics'], 'added': added, 'replaced': replaced, 'guesses': guesses,
+            'n_days': len(dates), 'index': ip, 'payload': payload}
 
 
 def check():
     dates = all_dates()
-    print(f'流量入库天数：{len(dates)}')
+    print('流量入库天数：%d' % len(dates))
     if dates:
-        print(f'  最早 {dates[0]}   最新 {dates[-1]}')
+        print('  最早 %s   最新 %s' % (dates[0], dates[-1]))
     bad = []
     for d in dates:
-        rec = load_day(d)
-        t = (rec or {}).get('totals') or {}
+        rec = load_day(d) or {}
+        t = rec.get('totals') or {}
         if not t.get('impressions') and not t.get('views'):
             bad.append(d + ' 曝光/观看全为 0')
-        if not os.path.exists(os.path.join(REPORT_DIR, d + '.json')):
-            bad.append(d + ' 缺日报')
+        if rec.get('demo'):
+            bad.append(d + ' 目前只有示例数据（demo），等真实流量表')
+        for rn, r in (rec.get('rooms') or {}).items():
+            if not os.path.exists(report_path(d, rn)):
+                bad.append('%s 缺 %s 的日报' % (d, rn))
+            if r.get('row_sum_mismatch'):
+                bad.append('%s %s 渠道加总与整体行不一致 %s' % (d, rn, r['row_sum_mismatch']))
+        if not os.path.exists(report_path(d, ALL_SCOPE)):
+            bad.append(d + ' 缺全店日报')
     if bad:
         print('⚠️ 问题：')
         for b in bad:
@@ -638,32 +1270,32 @@ def check():
 
 def main():
     ap = argparse.ArgumentParser(description='流量分析每日入库 + 环比 + 平台规则匹配 + 日报')
-    ap.add_argument('xlsx', nargs='?', help='流量 xlsx 路径')
+    ap.add_argument('xlsx', nargs='*', help='流量 xlsx 或文件夹（一天多间就传整个文件夹）')
     ap.add_argument('--date', help='覆盖日期 YYYY-MM-DD')
-    ap.add_argument('--room', help='直播间名（默认「全店（全渠道汇总）」）')
+    ap.add_argument('--room', help='直播间名（单个文件时用；文件夹模式自动从文件名认）')
     ap.add_argument('--sheet', help='指定 sheet 名')
+    ap.add_argument('--force', action='store_true', help='保留位（同一直播间重复入库默认覆盖）')
     ap.add_argument('--rebuild', action='store_true', help='只重建 index.json + 全部日报')
     ap.add_argument('--check', action='store_true', help='体检，不写文件')
+    ap.add_argument('--debug', action='store_true', help='打印表头匹配细节（列名是精确命中还是模糊命中）')
     a = ap.parse_args()
 
     if a.check:
         return check()
     if a.rebuild or not a.xlsx:
         dates, ip, idx = rebuild_reports()
-        print(f'✔ 重建完成：{len(dates)} 天，索引 {os.path.relpath(ip, ROOT)}')
+        print('✔ 重建完成：%d 天，索引 %s' % (len(dates), os.path.relpath(ip, ROOT)))
         for mm in idx['months']:
-            print(f"   {mm['ym']}  {mm['count']} 天")
+            print('   %s  %d 天' % (mm['ym'], mm['count']))
         return 0
 
-    r = ingest(a.xlsx, a.date, a.room, a.sheet)
-    t, m = r['totals'], r['metrics']
-    print(('⚠️ 同日已有数据，已覆盖：' if r['overwrote'] else '✔ 入库：') + f"{r['date']}  {os.path.relpath(r['path'], ROOT)}")
-    print(f"   源文件   {os.path.basename(a.xlsx)}  渠道 {r['channels']} 个")
-    print(f"   曝光 {fmt_int(t['impressions'])}  观看 {fmt_int(t['views'])}  互动 {fmt_int(t['interactions'])}  涨粉 {fmt_int(t['new_followers'])}")
-    print(f"   商品曝光 {fmt_int(t['product_impressions'])}  商品点击 {fmt_int(t['product_clicks'])}  成交 {fmt_int(t['paid_orders'])} 单  支付 {fmt_num(t['paid_amount'])} 元")
-    print(f"   曝光→观看 {fmt_num(pct(m['exposure_view_rate']))}%  互动率 {fmt_num(pct(m['interaction_rate']))}%  "
-          f"商品点击率 {fmt_num(pct(m['product_ctr']))}%  点击→成交 {fmt_num(pct(m['click_cvr']))}%  GPM {fmt_num(m['gpm'],0)} 元")
-    print(f"   累计 {r['n_days']} 天，索引已刷新")
+    paths = expand_inputs(a.xlsx)
+    if not paths:
+        raise SystemExit('❌ 没找到任何 xlsx')
+    r = ingest_one_day(paths, d=a.date, room=a.room, sheet=a.sheet, force=a.force, debug=a.debug)
+    if r['guesses']:
+        print('   ℹ️ 以下直播间名是从文件名推出来的，如果不对请用 --room 指定：%s' % '、'.join(r['guesses']))
+    print('   累计 %d 天，索引已刷新' % r['n_days'])
     return 0
 
 

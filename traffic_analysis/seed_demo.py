@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 """流量分析 · 示例数据生成器（真实数据到位前的占位）。
 
-生成 2026-10-01 ~ 2026-10-11 的「抖音直播流量渠道明细」，渠道口径与真实导出
-（直播间曝光次数 / 直播间观看次数 / 直播间互动次数 / 新增粉丝数 /
-  商品曝光次数 / 商品点击次数 / 成交订单数 / 用户支付金额）完全一致。
+生成 2026-10-01 ~ 2026-10-07 的「抖音直播流量渠道明细」，**结构与真实导出完全一致**：
+每份表 12 个渠道 + 「整体」行，8 个计数指标 + 直播时长 / 人均观看时长 / 千川消耗。
 
-    python traffic_analysis/seed_demo.py            # 灌入示例数据
+    python traffic_analysis/seed_demo.py            # 灌入示例数据（默认 7 天）
     python traffic_analysis/seed_demo.py --days 3   # 只灌 10-01~10-03
     python traffic_analysis/seed_demo.py --clear    # 清空示例数据
 
-⚠️ 示例数据仅用于把页面跑起来看效果。用户上传真实流量表后，
-   同一天会被 daily_update.py 直接覆盖（upsert），不会残留。
+⚠️ 示例数据只用于把页面跑起来看效果。真实流量表入库时同一天会被 daily_update.py
+   直接覆盖（upsert），不会残留；示例数据在页面上会显示金色「示例数据」提示条。
+   默认只灌到 10-07，就是为了不跟 10.10 的真实数据撞车。
 """
 import argparse
 import json
@@ -26,113 +26,182 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import daily_update as du  # noqa: E402
 
-ROOM = '全店（全渠道汇总）'
 START = date(2026, 10, 1)
 
-# 渠道基准占比（按观看次数），覆盖抖音直播常见的 7 个流量入口
+# 渠道基准占比（按观看次数），渠道名与真实导出逐字一致
 CHANNELS = [
-    ('直播推荐',              0.330),
-    ('粉丝关注',              0.180),
-    ('直播广场',              0.140),
-    ('个人主页&店铺&橱窗',    0.120),   # 口径异常渠道：互动 > 观看
-    ('活动页',                0.085),   # 口径异常渠道
-    ('同城',                  0.075),
-    ('搜索',                  0.070),
+    ('推荐feed',                0.300),
+    ('直播广场',                0.100),
+    ('同城',                    0.020),
+    ('直播推荐-其他推荐场景',   0.030),
+    ('短视频引流',              0.140),
+    ('关注',                    0.090),
+    ('搜索',                    0.110),
+    ('个人主页&店铺&橱窗',      0.085),
+    ('抖音商城推荐',            0.060),
+    ('活动页',                  0.025),
+    ('头条西瓜',                0.020),
+    ('其他',                    0.020),
 ]
-ANOM = {'个人主页&店铺&橱窗', '活动页'}
+# 每天总会有 1~2 个渠道的「互动次数」比「观看次数」还大（平台两列口径不一致），保留这个特征
+SUSPECT_CHANNELS = ['直播广场', '关注', '搜索', '活动页']
 
-# 每日大盘基准观看人数（国庆假期高，节后回落再爬升）
-DAILY_VIEWS = {
-    '10-01': 1_240_000, '10-02': 1_305_000, '10-03': 1_258_000, '10-04': 1_182_000,
-    '10-05': 1_096_000, '10-06': 1_020_000, '10-07': 1_112_000, '10-08': 986_000,
-    '10-09': 1_064_000, '10-10': 1_158_000, '10-11': 872_000,   # 11 号是当天未跑满
-}
+# 5 个示例直播间（真实名单是 6 个，示例少一个也无所谓）：
+#   base_views 日均观看、gpm 千次观看成交额、evr 曝光→观看率、ctr 商品点击率、cvr 点击→成交率
+ROOMS = [
+    {'name': '小米官方手环直播间', 'base_views': 38000, 'aov': 325, 'evr': 0.045, 'ctr': 0.120, 'cvr': 0.022, 'fans': 0.0057, 'roi': 40.0},
+    {'name': '小米官方手表',       'base_views': 52000, 'aov': 566, 'evr': 0.065, 'ctr': 0.074, 'cvr': 0.010, 'fans': 0.0040, 'roi': 36.0},
+    {'name': '小米官方耳机直播间', 'base_views': 3000,  'aov': 247, 'evr': 0.050, 'ctr': 0.067, 'cvr': 0.021, 'fans': 0.0030, 'roi': 14.0},
+    {'name': '小米官旗手表直播间', 'base_views': 6800,  'aov': 694, 'evr': 0.058, 'ctr': 0.054, 'cvr': 0.011, 'fans': 0.0043, 'roi': 21.0},
+    {'name': '小米数码旗舰店',     'base_views': 48000, 'aov': 322, 'evr': 0.052, 'ctr': 0.105, 'cvr': 0.024, 'fans': 0.0049, 'roi': 46.0},
+]
+# GPM 由「客单价 × 点击→成交率」反推（客单价 × 成交订单数 = 支付金额，两者必须自洽，
+# 否则示例数据的「客单价」会离谱 —— 之前直接拍 GPM 就把官旗手表推到 823 元/单）。
+
+# 每日大盘系数（国庆高，节后回落）
+DAY_FACTOR = {'10-01': 1.14, '10-02': 1.18, '10-03': 1.12, '10-04': 1.04,
+              '10-05': 0.97, '10-06': 0.92, '10-07': 1.00}
 
 
-def gen_day(d: date) -> dict:
-    """造一天的渠道明细（确定性伪随机，同一天结果稳定）。"""
-    key = d.isoformat()[5:]
-    base_views = DAILY_VIEWS.get(key, 1_050_000)
-    rnd = random.Random(20261000 + d.day)
+def gen_room_day(prof, d: date) -> dict:
+    """造一个直播间一天的渠道明细（确定性伪随机，同一天同一直播间结果稳定）。"""
+    rnd = random.Random(hash((prof['name'], d.isoformat())) & 0x7FFFFFFF)
+    factor = DAY_FACTOR.get(d.isoformat()[5:], 1.0) * rnd.uniform(0.94, 1.06)
+    base_views = prof['base_views'] * factor
 
     channels = {}
     for name, share in CHANNELS:
-        w = share * rnd.uniform(0.86, 1.16)
-        v = base_views * w
-        # 异常渠道：互动次数比观看次数还大（口径不一致），保留特征
-        ir_ratio = rnd.uniform(1.05, 1.35) if name in ANOM else rnd.uniform(0.048, 0.078)
-        evr = rnd.uniform(0.100, 0.128)
-        ctr = rnd.uniform(0.062, 0.088)
-        cvr = rnd.uniform(0.046, 0.064)
-        # GPM 定在 150~200 元区间：太大会把「客单价」推到 200 元+/单，
-        # 与单品 100~160 元的实际售价不符（客单价 = 支付金额/成交订单数）。
-        gpm = rnd.uniform(150, 200)
-        rec = {
-            'impressions':         v / evr,
-            'views':               v,
-            'interactions':        v * ir_ratio,
-            'new_followers':       v * rnd.uniform(0.0075, 0.0125),
-            'product_impressions': 250_000 / 7.0 * rnd.uniform(0.85, 1.18),
-            'product_clicks':      (250_000 / 7.0 * rnd.uniform(0.85, 1.18)) * ctr,
-            'paid_orders':         (250_000 / 7.0 * rnd.uniform(0.85, 1.18)) * ctr * cvr,
-            'paid_amount':         v * gpm / 1000.0,
+        v = max(0.0, base_views * share * rnd.uniform(0.82, 1.20))
+        if v < 8:                      # 小渠道偶尔真的没人进来，保留这种稀疏特征
+            v = float(rnd.choice([0, 0, 1, 2, 4, 7]))
+        evr = prof['evr'] * rnd.uniform(0.88, 1.14)
+        impressions = (v / evr) if evr else 0.0
+        # 互动次数：正常渠道是观看的 8%~26%；「口径异常」渠道偶尔冲到 1.0~2.6 倍
+        if name in SUSPECT_CHANNELS and rnd.random() < 0.12 and v >= 600:
+            ir = rnd.uniform(1.0, 2.6)
+        elif name in SUSPECT_CHANNELS:
+            ir = rnd.uniform(0.08, 0.24)
+        else:
+            ir = rnd.uniform(0.08, 0.24)
+        pimp = v * rnd.uniform(5.4, 7.8)
+        ctr = prof['ctr'] * rnd.uniform(0.86, 1.16)
+        pclk = pimp * ctr
+        cvr = prof['cvr'] * rnd.uniform(0.82, 1.22)
+        orders = pclk * cvr
+        # 支付金额 = 成交订单数 × 该渠道客单价（客单价按渠道上下浮动 ±8%，这样
+        # 「客单价 = 支付金额 ÷ 成交订单数」这个恒等式在渠道层也成立，全店客单价才贴近真实）
+        channels[name] = {
+            'impressions':         round(impressions, 4),
+            'views':               round(v, 4),
+            'interactions':        round(v * ir, 4),
+            'new_followers':       round(v * prof['fans'] * rnd.uniform(0.80, 1.20), 4),
+            'product_impressions': round(pimp, 4),
+            'product_clicks':      round(pclk, 4),
+            'paid_orders':         round(orders, 4),
+            'paid_amount':         round(orders * prof['aov'] * rnd.uniform(0.92, 1.08), 4),
         }
-        channels[name] = {k: round(x, 4) for k, x in rec.items()}
     return channels
 
 
-def build_payload(d: date) -> dict:
-    channels = gen_day(d)
-    tot = {f: 0.0 for f, _l, _u, _k in du.COLS}
-    for rec in channels.values():
-        for k, v in rec.items():
-            tot[k] += v
-    ok = {k: v for k, v in channels.items() if k not in du.ANOMALY_CHANNELS}
-    ok_tot = {f: sum(c.get(f, 0.0) for c in ok.values()) for f, _l, _u, _k in du.COLS}
-    payload = {
-        'date': d.isoformat(), 'room': ROOM, 'demo': True,
-        'source_file': '（示例数据 · seed_demo.py）', 'source_sheet': '示例',
-        'matched_fields': [f for f, _l, _u, _k in du.COLS],
-        'channels': channels,
-        'totals': {k: round(v, 4) for k, v in tot.items()},
-        'ok_totals': {k: round(v, 4) for k, v in ok_tot.items()},
+def build_room(prof, d: date) -> dict:
+    """把渠道明细组装成 analyze_room 的同款结构（totals / ok_totals / metrics / extras）。"""
+    channels = gen_room_day(prof, d)
+    fields = [f for f, _l, _u, _k in du.COLS]
+    totals = {f: round(sum(c.get(f, 0.0) for c in channels.values()), 4) for f in fields}
+    order = [n for n, _s in CHANNELS]
+    recs = [dict(channels[n], name=n) for n in order]
+    anomalies, suspects = [], []
+    for c in recs:
+        v, it = c.get('views') or 0, c.get('interactions') or 0
+        ratio = (it / v) if v else None
+        c['interaction_ratio'] = round(ratio, 4) if ratio is not None else None
+        c['anomaly'] = bool(v >= du.ANOM_MIN_VIEWS and ratio is not None and ratio >= du.ANOM_RATIO)
+        c['suspect'] = bool(not c['anomaly'] and v >= du.ANOM_MIN_VIEWS and ratio is not None and ratio >= du.ANOM_WARN_RATIO)
+        if c['anomaly']:
+            anomalies.append(c['name'])
+        elif c['suspect']:
+            suspects.append(c['name'])
+    ok_totals = {f: round(sum(c.get(f, 0.0) for c in recs if not c['anomaly']), 4) for f in fields}
+    excluded = round((totals.get('interactions') or 0) - (ok_totals.get('interactions') or 0), 4)
+
+    rnd = random.Random((hash((prof['name'], d.isoformat(), 'x')) & 0x7FFFFFFF))
+    minutes = {'小米官方手环直播间': 1440.0, '小米数码旗舰店': 1440.0}.get(prof['name'], round(rnd.uniform(560, 1020), 2))
+    qianchuan = round((totals['paid_amount'] / prof['roi']) * rnd.uniform(0.9, 1.1), 2)
+    totals['live_duration'] = minutes
+    totals['qianchuan'] = qianchuan
+    totals['avg_watch_time'] = '%d秒' % int(rnd.uniform(38, 62))
+
+    metrics = du.compute_metrics(totals, ok_totals)
+    metrics['qianchuan_roi'] = du.div(totals['paid_amount'], qianchuan)
+    metrics['orders_per_hour'] = du.div(totals['paid_orders'], minutes / 60.0)
+    metrics['gmv_per_hour'] = du.div(totals['paid_amount'], minutes / 60.0)
+    return {
+        'sheet': '流量趋势', 'source_file': '（示例数据 · seed_demo.py）',
+        'channels': {c['name']: {k: v for k, v in c.items() if k != 'name'} for c in recs},
+        'channel_order': order,
+        'totals': {k: (round(v, 6) if isinstance(v, float) else v) for k, v in totals.items()},
+        'ok_totals': ok_totals,
+        'metrics': {k: (round(v, 6) if isinstance(v, float) else v) for k, v in metrics.items()},
+        'totals_source': '渠道加总（示例）',
+        'row_sum_mismatch': {},
+        'anomaly_channels': anomalies,
+        'suspect_channels': suspects,
+        'excluded_interactions': excluded,
+        'excluded_share': round(du.div(excluded, totals.get('interactions')) or 0.0, 4),
+        'skipped_rows': [],
+        'extras': {'qianchuan': qianchuan, 'live_duration': minutes, 'avg_watch_time': totals['avg_watch_time']},
+        'demo': True,
         'updated_at': du.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
     }
-    payload['metrics'] = {k: (round(v, 6) if isinstance(v, float) else v)
-                          for k, v in du.compute_metrics(tot, ok_tot).items()}
+
+
+def build_payload(d: date) -> dict:
+    rooms = {p['name']: build_room(p, d) for p in ROOMS}
+    payload = {
+        'date': d.isoformat(), 'demo': True,
+        'source_files': {p['name']: '（示例数据 · seed_demo.py）' for p in ROOMS},
+        'rooms': rooms,
+        'created_at': du.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+    }
+    payload.update(du.sum_rooms(rooms))
+    payload['demo'] = True
+    payload['updated_at'] = du.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     return payload
+
+
+def clear():
+    n = 0
+    for dd in du.all_dates():
+        p = du.day_path(dd)
+        try:
+            rec = json.load(open(p, encoding='utf-8'))
+        except Exception:
+            continue
+        if du.day_is_demo(rec):
+            os.remove(p)
+            n += 1
+    du.rebuild_reports(quiet=True)
+    print('✔ 已清空 %d 天示例数据' % n)
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--days', type=int, default=11, help='生成天数（从 10-01 起，默认 11 天）')
-    ap.add_argument('--clear', action='store_true', help='清空示例数据')
+    ap.add_argument('--days', type=int, default=7, help='生成天数（从 10-01 起，默认 7 天，避免撞真实数据）')
+    ap.add_argument('--clear', action='store_true', help='清空示例数据（只删 demo 日文件）')
     a = ap.parse_args()
 
     if a.clear:
-        n = 0
-        for dd in du.all_dates():
-            p = du.day_path(dd)
-            rec = json.load(open(p, encoding='utf-8'))
-            if rec.get('demo'):
-                os.remove(p)
-                rp = os.path.join(du.REPORT_DIR, dd + '.json')
-                if os.path.exists(rp):
-                    os.remove(rp)
-                n += 1
-        du.rebuild_reports()
-        print(f'✔ 已清空 {n} 天示例数据')
+        clear()
         return 0
 
     for i in range(a.days):
-        d = START + timedelta(days=i)
-        payload = build_payload(d)
-        du.write_day(d.isoformat(), payload)
-    dates, ip, idx = du.rebuild_reports()
-    print(f'✔ 示例数据已灌入：{len(dates)} 天（{dates[0]} ~ {dates[-1]}）')
+        dd = START + timedelta(days=i)
+        du.write_day(dd.isoformat(), build_payload(dd))
+    dates, _ip, idx = du.rebuild_reports(quiet=True)
+    print('✔ 示例数据已灌入：%d 天（%s ~ %s），每天 %d 个直播间' % (
+        len(dates), dates[0], dates[-1], len(ROOMS)))
     for mm in idx['months']:
-        print(f"   {mm['ym']}  {mm['count']} 天")
-    print(f"   索引 {os.path.relpath(ip, os.path.dirname(du.ROOT))}")
+        print('   %s  %d 天：%s' % (mm['ym'], mm['count'], '、'.join(mm['dates'])))
     return 0
 
 

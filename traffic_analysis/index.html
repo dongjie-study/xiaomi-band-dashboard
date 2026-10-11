@@ -176,6 +176,30 @@
     color: #b45309; font-family: Consolas, Monaco, monospace;
   }
   #tfContent { display: none; }
+
+  /* ===== 直播间对比 / 同业横向基准 ===== */
+  table.tf-table.mini { min-width: 560px; font-size: .8em; }
+  table.tf-table.mini th, table.tf-table.mini td { padding: 6px 9px; }
+  .tf-bars { display: flex; align-items: center; gap: 8px; }
+  .tf-bars .bar { flex: 1 1 auto; min-width: 60px; height: 7px; border-radius: 4px; background: #f1f5f9; overflow: hidden; }
+  .tf-bars .bar > i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg,#ffb066,#ff6900); }
+  .tf-bars .bar.mid > i { background: linear-gradient(90deg,#9fb3c8,#64748b); }
+  .tf-bars .bar.low > i { background: linear-gradient(90deg,#9be3c9,#10b981); }
+  .tf-bars .num { flex: 0 0 auto; font-weight: 700; color: var(--text-primary, #1e293b); font-variant-numeric: tabular-nums; min-width: 54px; text-align: right; }
+  .tf-bars .rel { flex: 0 0 auto; font-size: .95em; font-weight: 700; }
+  .tf-bars .rel.up { color: #e65100; } .tf-bars .rel.down { color: #047857; }
+  .tf-link { color: var(--mi-orange, #ff6900); font-weight: 700; cursor: pointer; text-decoration: none; border-bottom: 1px dashed rgba(255,105,0,.4); }
+  .tf-link:hover { border-bottom-style: solid; }
+  .tf-extra { display: flex; flex-wrap: wrap; gap: 8px 26px; margin: 2px 0 14px; padding: 11px 15px; border-radius: 11px; background: #f8fafc; border: 1px dashed var(--border-light, #e2e8f0); }
+  .tf-extra .e { font-size: .82em; color: var(--text-secondary, #64748b); }
+  .tf-extra .e b { font-size: 1.18em; color: var(--text-primary, #1e293b); font-weight: 800; margin-left: 5px; font-variant-numeric: tabular-nums; }
+  table.tf-table tr.suspect td { background: #fffef6; }
+  table.tf-table .tag-suspect {
+    display: inline-block; font-size: .78em; font-weight: 700; padding: 1px 6px; margin-left: 5px;
+    border-radius: 5px; background: #fffbeb; color: #b45309;
+  }
+  table.tf-table tr.me td { background: #fff8f1; }
+  table.tf-table tr.me .ch-name::after { content: ' ◀ 当前'; font-size: .84em; color: #e65100; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -193,6 +217,7 @@
   <span class="spacer"></span>
   <select id="monthSelect" onchange="switchMonth(this.value)" title="选择月份"></select>
   <select id="daySelect" onchange="switchDay(this.value)" title="选择日期"></select>
+  <select id="scopeSelect" onchange="switchScope(this.value)" title="选择直播间"></select>
 </div>
 
 <div class="content-body">
@@ -219,6 +244,7 @@
       <div class="tf-grid g4" id="tfGridB"></div>
       <div style="height:12px"></div>
       <div class="tf-grid g3" id="tfGridC"></div>
+      <div class="tf-extra" id="tfExtra"></div>
     </div>
 
     <!-- 二、流量漏斗 -->
@@ -241,6 +267,34 @@
     <div class="tf-card">
       <h3>转化率趋势 <span class="tf-sub">曝光→观看率 / 商品点击率 / 点击→成交率 / 涨粉率</span></h3>
       <div class="tf-chart" id="chartRate"></div>
+    </div>
+
+    <!-- 三·5、各直播间对比 + 同业横向基准 -->
+    <div class="tf-card" id="tfCompareCard">
+      <h3>各直播间流量对比 <span class="tf-sub">全店视角 · 同一天各直播间的流量效率差异</span></h3>
+      <div class="tf-table-wrap">
+        <table class="tf-table mini">
+          <thead>
+            <tr>
+              <th>直播间</th><th>观看次数</th><th>流量占比</th><th>曝光→观看率</th>
+              <th>商品点击率</th><th>点击→成交率</th><th>GPM</th><th>客单价</th>
+              <th>支付金额</th><th>千川 ROI</th><th>对比同业 GPM</th>
+            </tr>
+          </thead>
+          <tbody id="tfCompareBody"></tbody>
+        </table>
+      </div>
+      <div class="tf-block" id="tfPeerBlock" style="display:none;">
+        <div class="b-title">📐 同业横向基准（本店各直播间之间的中位数 / 最好 / 最差）</div>
+        <div class="tf-table-wrap">
+          <table class="tf-table mini">
+            <thead>
+              <tr><th>指标</th><th>本直播间</th><th>同业中位数</th><th>最好</th><th>最差</th><th>相对中位数</th></tr>
+            </thead>
+            <tbody id="tfPeerBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- 四、每日总结分析报告 -->
@@ -287,7 +341,14 @@
       <h3>渠道流量明细 <span class="tf-sub">按观看次数排序 · 含环比</span></h3>
       <div class="tf-table-wrap">
         <table class="tf-table">
-          <thead id="tfChannelHead"></thead>
+          <thead>
+            <tr>
+              <th>渠道</th><th>观看次数</th><th>占比</th><th>环比</th><th>曝光次数</th>
+              <th>曝光→观看率</th><th>互动次数</th><th>观看→互动率</th><th>新增粉丝</th>
+              <th>商品点击</th><th>商品点击率</th><th>成交订单</th><th>点击→成交率</th>
+              <th>支付金额</th><th>GPM</th>
+            </tr>
+          </thead>
           <tbody id="tfChannelBody"></tbody>
         </table>
       </div>
@@ -301,15 +362,19 @@
    流量分析页 · 渲染逻辑
    数据来源：
      ./data/index.json                     月份 + 日期索引（由 daily_update.py 生成）
-     ./reports/YYYY-MM-DD.json             每日流量数据 + 环比 + 平台规则 + 每日总结报告
+     ./data/YYYY/YYYY-MM-DD.json           当日各直播间的渠道明细（全店 + 每个直播间）
+    ./reports/YYYY/YYYY-MM-DD/<scope>.json  日报：环比 + 平台规则 + 渠道明细 + 直播间对比 + 每日总结
    与销售分析页完全独立：只读 traffic_analysis/ 下的数据，不写、不影响任何销售数据。
    ============================================================ */
 
+var ALL = '全店';          // 「全店」= 各直播间汇总这一档
 var INDEX = null;          // data/index.json
-var REPORT = null;         // 当前选中日期的日报
+var REPORT = null;         // 当前选中日期 + 直播间的日报
 var CURDAY = null;         // 当前选中日期 YYYY-MM-DD
 var PREVDAY = null;        // 前一日 YYYY-MM-DD
-var CACHE = {};            // 日报缓存
+var SCOPE = ALL;           // 当前选中的直播间（'全店' = 全店汇总）
+var CACHE = {};            // 日报缓存：key = 日期|scope
+var DAYCACHE = {};         // 日数据缓存（含全部直播间，趋势图跨日取数用）
 var CHARTS = {};           // echarts 实例
 var BUST = '?_=' + (function(){ var d = new Date(); return d.getFullYear() + ('0'+(d.getMonth()+1)).slice(-2) + ('0'+d.getDate()).slice(-2) + ('0'+d.getHours()).slice(-2) + ('0'+d.getMinutes()).slice(-2); })();
 
@@ -326,7 +391,16 @@ function fmtCompact(v){
 }
 function fmtMd(d){ if (!d) return '—'; var p = d.split('-'); return Number(p[1]) + '月' + Number(p[2]) + '日'; }
 function getMonth(d){ return (d || '').substring(0, 7); }
-function rpt(d){ return CACHE[d] || null; }
+function ckey(d, s){ return d + '|' + (s || ALL); }
+function rpt(d, s){ return CACHE[ckey(d, s || SCOPE)] || null; }
+/* 某个直播间在某天的「数据」（不含环比/规则），趋势图与跨日对比用它 */
+function scopeData(d, s){
+  var dd = DAYCACHE[d];
+  if (!dd) return null;
+  s = s || SCOPE;
+  if (s === ALL) return dd;
+  return (dd.rooms || {})[s] || null;
+}
 function dodOf(r, key){ if (!r || !r.dod) return null; for (var i=0;i<r.dod.length;i++){ if (r.dod[i].key === key) return r.dod[i]; } return null; }
 function ruleOf(r, key){ if (!r || !r.rules) return null; for (var i=0;i<r.rules.length;i++){ if (r.rules[i].key === key) return r.rules[i]; } return null; }
 function chOf(r, name){ if (!r || !r.channels) return null; for (var i=0;i<r.channels.length;i++){ if (r.channels[i].name === name) return r.channels[i]; } return null; }
@@ -446,11 +520,28 @@ function renderMetrics(r){
                pm && pm.aov != null ? pm.aov : null);
 
   document.getElementById('tfMetricSub').textContent =
-    r.prev_date ? ('对比 ' + fmtMd(r.prev_date) + '　·　▲ 表示提升，▼ 表示下降') : '暂无前一日数据，环比留空';
+    r.scope + (r.prev_date ? ('　对比 ' + fmtMd(r.prev_date) + '（同一直播间）　·　▲ 表示提升，▼ 表示下降') : '　暂无前一日数据，环比留空');
+
+  /* 补充指标：直播时长 / 人均观看时长 / 千川消耗 / 千川 ROI / 每小时产出 */
+  var EX = [
+    { key: 'live_duration',  label: '直播时长',     fmt: function(v){ return v == null ? '—' : fmtNum(v/60, 1) + ' 小时'; } },
+    { key: 'avg_watch_time', label: '人均观看时长', fmt: function(v){ return (v == null || v === '') ? '—' : String(v); } },
+    { key: 'qianchuan',      label: '千川消耗',     fmt: function(v){ return v == null ? '—' : fmtNum(v, 0) + ' 元'; } },
+    { key: 'qianchuan_roi',  label: '千川投放 ROI', fmt: function(v){ return v == null ? '—' : fmtNum(v, 2) + ' 倍'; } },
+    { key: 'orders_per_hour',label: '每小时成交',   fmt: function(v){ return v == null ? '—' : fmtNum(v, 1) + ' 单/小时'; } },
+    { key: 'gmv_per_hour',   label: '每小时成交额', fmt: function(v){ return v == null ? '—' : fmtNum(v, 0) + ' 元/小时'; } }
+  ];
+  var exHtml = EX.filter(function(it){ return m[it.key] != null && m[it.key] !== ''; }).map(function(it){
+    return '<span class="e">' + esc(it.label) + '<b>' + esc(it.fmt(m[it.key])) + '</b></span>';
+  }).join('');
+  var extraEl = document.getElementById('tfExtra');
+  extraEl.innerHTML = exHtml;
+  extraEl.style.display = exHtml ? 'flex' : 'none';
 }
 
 function renderReport(r){
-  document.getElementById('tfReportDate').innerHTML = fmtMd(r.date) + ' 流量总结分析报告 <span class="tf-sub">' + (r.room || '') + '</span>';
+  document.getElementById('tfReportDate').innerHTML = fmtMd(r.date) + ' 流量总结分析报告 <span class="tf-sub">'
+    + esc(r.scope || ALL) + (r.scope === ALL ? '（各直播间汇总）' : '') + '</span>';
 
   var ins = r.insights || {};
   var bad = (r.rules || []).filter(function(x){ return x.status === 'low' || x.status === 'high'; });
@@ -461,7 +552,8 @@ function renderReport(r){
   document.getElementById('tfReportPills').innerHTML =
       '<span class="tf-pill ' + verdict.cls + '">' + esc(verdict.txt) + '</span>　'
     + '<span class="tf-pill">达标 ' + okN + ' / ' + (r.rules || []).length + '</span>　'
-    + '<span class="tf-pill">渠道 ' + (r.channels || []).length + ' 个</span>';
+    + '<span class="tf-pill">渠道 ' + (r.channels || []).length + ' 个</span>'
+    + (r.excluded_share ? '<span class="tf-pill warn">口径异常剔除互动 ' + fmtNum(r.excluded_share*100, 1) + '%</span>' : '');
 
   document.getElementById('tfHeadline').innerHTML = '📈 ' + esc(r.date) + '　' + (ins.headline || []).map(function(x){ return mdInline(x); }).join('　|　');
   document.getElementById('tfHeadlineList').innerHTML = (ins.headline || []).map(function(x){ return '<li>' + mdInline(x) + '</li>'; }).join('')
@@ -486,34 +578,117 @@ function renderReport(r){
     return '<tr>'
       + '<td class="ch-name">' + esc(x.label) + '</td>'
       + '<td>' + esc(x.value_disp) + '</td>'
-      + '<td>' + esc(prevTxt) + (x.unit === '%' && prevTxt !== '—' ? '%' : (x.unit === '元' && prevTxt !== '—' ? ' 元' : '')) + '</td>'
+      + '<td>' + esc(prevTxt) + (prevTxt === '—' ? '' : (x.unit === '%' ? '%' : (x.unit ? ' ' + x.unit : ''))) + '</td>'
       + '<td class="c-' + (dd.cls === 'flat' ? 'flat' : dd.cls) + '">' + esc(dd.arrow + ' ' + dd.txt) + '</td>'
       + '<td>' + esc(x.range) + '</td>'
       + '<td><span class="tf-pill ' + st.cls + '">' + esc(st.txt) + '</span></td>'
       + '</tr>';
   }).join('');
+
+  renderPeer(r);
 }
+
+/* ---------------- 各直播间对比 + 同业横向基准 ---------------- */
+function renderCompare(r){
+  var rows = r.room_compare || [];
+  var sub = document.querySelector('#tfCompareCard h3 .tf-sub');
+  if (sub) sub.textContent = r.scope === ALL
+      ? '全店视角 · 同一天各直播间的流量效率差异（点直播间名可切换）'
+      : '全店视角 · 当前看的是「' + r.scope + '」，点其他直播间名可直接切换';
+  var body = document.getElementById('tfCompareBody');
+  if (!rows.length){ body.innerHTML = '<tr><td colspan="11">当天只入库了一个直播间，暂时没有横向对比</td></tr>'; return; }
+  body.innerHTML = rows.map(function(x){
+    var rel = x.vs_peer_gpm == null ? null : x.vs_peer_gpm;
+    var relTxt = rel == null ? '—' : ((rel >= 1 ? '+' : '') + ((rel - 1) * 100).toFixed(0) + '%');
+    var relCls = rel == null ? '' : (rel >= 1.02 ? 'up' : (rel <= 0.98 ? 'down' : 'flat'));
+    return '<tr class="' + (!r.is_all && x.name === r.scope ? 'me' : '') + '">'
+      + '<td class="ch-name"><a class="tf-link" onclick="switchScope(' + JSON.stringify(x.name).replace(/"/g,'&quot;') + ')">' + esc(x.name) + '</a></td>'
+      + '<td>' + fmtInt(x.views) + '</td>'
+      + '<td>' + fmtNum(x.view_share, 1) + '%</td>'
+      + '<td>' + fmtNum(x.evr, 2) + '%</td>'
+      + '<td>' + fmtNum(x.ctr, 2) + '%</td>'
+      + '<td>' + fmtNum(x.cvr, 2) + '%</td>'
+      + '<td>' + fmtInt(x.gpm) + '</td>'
+      + '<td>' + fmtInt(x.aov) + '</td>'
+      + '<td>' + fmtCompact(x.paid_amount) + '</td>'
+      + '<td>' + (x.roi == null ? '—' : fmtNum(x.roi, 1) + ' 倍') + '</td>'
+      + '<td class="c-' + relCls + '">' + relTxt + '</td>'
+      + '</tr>';
+  }).join('');
+}
+
+/* 同业横向基准：本直播间在中位数 / 最好 / 最差里的位置 */
+function renderPeer(r){
+  var block = document.getElementById('tfPeerBlock');
+  var peers = r.peer_benchmark || [];
+  if (!peers.length){ block.style.display = 'none'; return; }
+  var m = r.metrics || {};
+  var rows = peers.map(function(p){
+    /* 中位数/最好/最差都来自「本店各直播间」，所以「本直播间」那一列取当前 scope 的值 */
+    var v = m[p.key];
+    var nd = p.decimals == null ? (p.unit === '%' ? 2 : 0) : p.decimals;
+    var ratio = (v == null || !p.median) ? null : v / p.median;
+    var relTxt = ratio == null ? '—' : ((ratio >= 1 ? '+' : '') + ((ratio - 1) * 100).toFixed(0) + '%');
+    var relCls = ratio == null ? '' : (ratio >= 1.02 ? 'up' : (ratio <= 0.98 ? 'down' : 'flat'));
+    function dv(o){ return o == null ? '—' : (fmtNum(o.value, nd) + (p.unit || '')); }
+    return '<tr>'
+      + '<td class="ch-name">' + esc(p.label) + '</td>'
+      + '<td>' + (v == null ? '—' : fmtNum(v, nd) + (p.unit || '')) + '</td>'
+      + '<td>' + fmtNum(p.median, nd) + (p.unit || '') + '</td>'
+      + '<td>' + dv(p.best) + '<span class="tf-sub">' + esc(p.best ? p.best.name : '') + '</span></td>'
+      + '<td>' + dv(p.worst) + '<span class="tf-sub">' + esc(p.worst ? p.worst.name : '') + '</span></td>'
+      + '<td class="c-' + relCls + '">' + relTxt + '</td>'
+      + '</tr>';
+  }).join('');
+  var bar = '';
+  var gidx = -1;
+  for (var i=0;i<peers.length;i++){ if (peers[i].key === 'gpm') gidx = i; }
+  if (gidx >= 0){
+    var pg = peers[gidx];
+    var vv = (m.gpm == null ? null : m.gpm);
+    if (vv != null && pg.median){
+      var ratio2 = vv / pg.median;
+      var cls = ratio2 >= 1.02 ? '' : (ratio2 <= 0.98 ? 'low' : 'mid');
+      var w = Math.max(3, Math.min(100, ratio2 * 100 / 2));
+      bar = '<div class="tf-bars" style="margin:10px 0 2px;">'
+          + '<span class="tf-sub" style="margin:0;">GPM 相对同业中位数</span>'
+          + '<span class="bar ' + cls + '"><i style="width:' + w.toFixed(1) + '%"></i></span>'
+          + '<span class="num">' + fmtInt(vv) + ' / ' + fmtInt(pg.median) + ' 元</span>'
+          + '<span class="rel ' + (ratio2 >= 1.02 ? 'up' : (ratio2 <= 0.98 ? 'down' : '')) + '">'
+          + ((ratio2 >= 1 ? '+' : '') + ((ratio2 - 1) * 100).toFixed(0)) + '%)</span></div>';
+    }
+  }
+  block.style.display = '';
+  document.getElementById('tfPeerBody').innerHTML = rows + (bar ? '<tr><td colspan="6" style="background:#fff;">' + bar + '</td></tr>' : '');
+}
+
+function pctOrDash(v, nd){ return (v == null || v === '') ? '—' : fmtNum(v, nd == null ? 2 : nd) + '%'; }
 
 function renderChannels(r){
   var p = rpt(r.prev_date);
-  var head = '<tr><th>渠道</th><th>观看次数</th><th>占比</th><th>环比</th><th>曝光次数</th><th>曝光→观看率</th>'
-           + '<th>商品点击</th><th>商品点击率</th><th>成交订单</th><th>点击→成交率</th><th>支付金额</th><th>GPM</th></tr>';
-  document.getElementById('tfChannelHead').innerHTML = head;
   document.getElementById('tfChannelBody').innerHTML = (r.channels || []).map(function(c){
     var all = delta(c.views, c.prev_views);
-    var pc = chOf(p, c.name);
     var allTxt = (c.prev_views == null) ? '—' : (all.arrow + ' ' + all.txt);
-    return '<tr class="' + (c.anomaly ? 'anomaly' : '') + '">'
-      + '<td class="ch-name">' + esc(c.name) + (c.anomaly ? '<span class="tag-anom">口径异常</span>' : '') + '</td>'
+    var tag = c.anomaly ? '<span class="tag-anom">口径异常</span>'
+            : (c.suspect ? '<span class="tag-suspect">互动率偏高</span>' : '');
+    var cls = c.anomaly ? 'anomaly' : (c.suspect ? 'suspect' : '');
+    /* 口径异常的渠道，其「观看→互动率」不可信，直接留空 */
+    var irTxt = c.anomaly ? '—' : pctOrDash(c.ir);
+    var irCls = (c.suspect && !c.anomaly) ? 'c-up' : '';
+    return '<tr class="' + cls + '">'
+      + '<td class="ch-name">' + esc(c.name) + tag + '</td>'
       + '<td>' + fmtInt(c.views) + '</td>'
       + '<td>' + fmtNum(c.share, 1) + '%</td>'
       + '<td class="c-' + (all.cls === 'flat' ? 'flat' : all.cls) + '">' + esc(allTxt) + '</td>'
       + '<td>' + fmtCompact(c.impressions) + '</td>'
-      + '<td>' + fmtNum(c.evr, 2) + '%</td>'
+      + '<td>' + pctOrDash(c.evr) + '</td>'
+      + '<td>' + fmtInt(c.interactions) + '</td>'
+      + '<td class="' + irCls + '">' + irTxt + '</td>'
+      + '<td>' + fmtInt(c.new_followers) + '</td>'
       + '<td>' + fmtCompact(c.product_clicks) + '</td>'
-      + '<td>' + fmtNum(c.ctr, 2) + '%</td>'
+      + '<td>' + pctOrDash(c.ctr) + '</td>'
       + '<td>' + fmtInt(c.paid_orders) + '</td>'
-      + '<td>' + fmtNum(c.cvr, 2) + '%</td>'
+      + '<td>' + pctOrDash(c.cvr) + '</td>'
       + '<td>' + fmtCompact(c.paid_amount) + '</td>'
       + '<td>' + (c.gpm == null ? '—' : fmtInt(c.gpm)) + '</td>'
       + '</tr>';
@@ -577,15 +752,36 @@ function trendWindow(r){
   return upto.slice(-14);
 }
 
+/* 趋势序列：同一直播间跨日取数（该日没有这个间就断开，不编造） */
+function seriesOf(r, key, isRate){
+  var out = [];
+  var days = trendWindow(r);
+  for (var i=0;i<days.length;i++){
+    var sd = scopeData(days[i], SCOPE);
+    var v = sd && sd.metrics ? sd.metrics[key] : null;
+    if (v == null){ out.push(null); continue; }
+    out.push(isRate ? +(v * 100).toFixed(2) : Math.round(v));
+  }
+  return out;
+}
+function seriesTotals(r, key){
+  var out = [];
+  var days = trendWindow(r);
+  for (var i=0;i<days.length;i++){
+    var sd = scopeData(days[i], SCOPE);
+    out.push((sd && sd.totals && sd.totals[key] != null) ? Math.round(sd.totals[key]) : null);
+  }
+  return out;
+}
+
 function renderTrend(r){
   var c = initChart('chartTrend');
   if (!c) return;
   var days = trendWindow(r);
-  var reports = days.map(function(d){ return rpt(d); }).filter(Boolean);
-  var labels = reports.map(function(x){ return x.date.substring(5); });
-  var views = reports.map(function(x){ return Math.round(x.totals.views || 0); });
-  var imps = reports.map(function(x){ return Math.round(x.totals.impressions || 0); });
-  var evr = reports.map(function(x){ return x.metrics.exposure_view_rate == null ? null : +(x.metrics.exposure_view_rate*100).toFixed(2); });
+  var labels = days.map(function(d){ return d.substring(5); });
+  var views = seriesTotals(r, 'views');
+  var imps = seriesTotals(r, 'impressions');
+  var evr = seriesOf(r, 'exposure_view_rate', true);
   c.setOption({
     grid: { left: 8, right: 42, top: 40, bottom: 30, containLabel: true },
     tooltip: { trigger: 'axis' },
@@ -602,18 +798,19 @@ function renderTrend(r){
     ]
   });
   var sub = document.getElementById('tfTrendSub');
-  if (sub) sub.textContent = labels.length ? (labels[0] + ' ~ ' + labels[labels.length-1] + '　共 ' + labels.length + ' 天') : '';
+  if (sub) sub.textContent = labels.length
+    ? (SCOPE + '　' + labels[0] + ' ~ ' + labels[labels.length-1] + '　共 ' + labels.length + ' 天')
+    : SCOPE;
 }
 
 function renderRateTrend(r){
   var c = initChart('chartRate');
   if (!c) return;
   var days = trendWindow(r);
-  var reports = days.map(function(d){ return rpt(d); }).filter(Boolean);
-  var labels = reports.map(function(x){ return x.date.substring(5); });
+  var labels = days.map(function(d){ return d.substring(5); });
   function series(name, key, color, nd){
     return { name: name, type: 'line', smooth: true, symbolSize: 5, connectNulls: true,
-      data: reports.map(function(x){ var v = x.metrics[key]; return v == null ? null : +(v*100).toFixed(nd == null ? 2 : nd); }),
+      data: seriesOf(r, key, true),
       lineStyle: { width: 2, color: color }, itemStyle: { color: color },
       tooltip: { valueFormatter: function(v){ return v + '%'; } } };
   }
@@ -639,6 +836,18 @@ function renderAllCharts(){
   renderTrend(REPORT);
   renderRateTrend(REPORT);
 }
+/* scope 切换后重画趋势（需要先把该 scope 近 14 天的日报读进来） */
+function reloadCharts(){
+  var days = trendWindow(REPORT || { date: CURDAY });
+  ensureRange(days, SCOPE).then(function(){
+    ensureRange(days.map(function(d){
+      var i = INDEX.days.map(function(x){ return x.date; }).indexOf(d);
+      return i > 0 ? INDEX.days[i-1].date : null;
+    }).filter(Boolean), SCOPE).then(function(){
+      renderTrend(REPORT); renderRateTrend(REPORT);
+    });
+  });
+}
 
 window.addEventListener('resize', function(){
   Object.keys(CHARTS).forEach(function(k){ if (CHARTS[k]) CHARTS[k].resize(); });
@@ -657,15 +866,31 @@ function fetchJson(url, optional){
     throw e;
   });
 }
-function loadReport(d){
+function loadDay(d){
   if (!d) return Promise.resolve(null);
-  if (CACHE[d]) return Promise.resolve(CACHE[d]);
-  return fetchJson('./reports/' + d + '.json', true).then(function(j){ if (j) CACHE[d] = j; return j; });
+  if (DAYCACHE[d]) return Promise.resolve(DAYCACHE[d]);
+  return fetchJson('./data/' + d.substring(0,4) + '/' + d + '.json', true).then(function(j){
+    if (j) DAYCACHE[d] = j;
+    return j;
+  });
 }
-function ensureRange(days){
-  var need = days.filter(function(d){ return !CACHE[d]; });
+/* 日报路径 reports/YYYY/YYYY-MM-DD/<scope>.json（scope 就是文件名，全店也是） */
+function loadReport(d, s){
+  if (!d) return Promise.resolve(null);
+  s = s || SCOPE;
+  var k = ckey(d, s);
+  if (CACHE[k]) return Promise.resolve(CACHE[k]);
+  return loadDay(d).then(function(dd){
+    /* 该日没有这个直播间就别去猜文件（避免 404 污染控制台） */
+    if (dd && dd.rooms && s !== ALL && !dd.rooms[s]) return null;
+    return fetchJson('./reports/' + d.substring(0,4) + '/' + d + '/' + encodeURIComponent(s) + '.json', true)
+      .then(function(j){ if (j) CACHE[k] = j; return j; });
+  });
+}
+function ensureRange(days, s){
+  var need = (days || []).filter(function(d){ return !CACHE[ckey(d, s)]; });
   if (!need.length) return Promise.resolve();
-  return Promise.all(need.map(loadReport));
+  return Promise.all(need.map(function(d){ return loadReport(d, s); }));
 }
 
 /* ---------------- 联动：日期下拉 / 月份下拉 / hash ---------------- */
@@ -703,6 +928,52 @@ function fillDaySelect(ym, days, cur){
   sel.disabled = list.length === 0;
 }
 
+/* 直播间下拉：全店 + 当天有数据的各直播间（数量随日期变化） */
+function fillScopeSelect(rooms, cur){
+  var sel = document.getElementById('scopeSelect');
+  var list = [ALL].concat(rooms || []);
+  var sig = list.join('|');
+  if (sel.getAttribute('data-sig') !== sig){
+    sel.innerHTML = list.map(function(n){
+      return '<option value="' + esc(n) + '">' + esc(n === ALL ? ('全店（' + (rooms || []).length + ' 个直播间汇总）') : n) + '</option>';
+    }).join('');
+    sel.setAttribute('data-sig', sig);
+  }
+  if (list.indexOf(cur) < 0) cur = ALL;
+  sel.value = cur;
+  sel.disabled = list.length <= 1;
+}
+
+/* 切换直播间 / 全店：只重画，不改变已选日期 */
+function switchScope(s){
+  if (!s || s === SCOPE) return;
+  SCOPE = s;
+  var sel = document.getElementById('scopeSelect');
+  if (sel) sel.value = s;
+  if (!INDEX || !CURDAY) return;
+  var statusEl = document.getElementById('tfStatus');
+  if (s !== ALL && ROSTER.length && ROSTER.indexOf(s) < 0){
+    if (statusEl) statusEl.innerHTML = '<span class="tf-badge">无数据</span><span>这天没有「' + esc(s) + '」的流量数据（该直播间当天未开播或未导出）。</span>';
+    return;
+  }
+  ensureRange([CURDAY, PREVDAY].filter(Boolean), SCOPE).then(function(){
+    var r = rpt(CURDAY, SCOPE);
+    if (!r){
+      if (statusEl) statusEl.innerHTML = '<span class="tf-badge">无数据</span><span>这天没有「' + esc(s) + '」的流量数据。</span>';
+      return;
+    }
+    REPORT = r;
+    renderStatus(r);
+    renderMetrics(r);
+    renderCompare(r);
+    renderReport(r);
+    renderChannels(r);
+    reloadCharts();
+  })['catch'](function(e){
+    if (statusEl) statusEl.innerHTML = '<span class="tf-badge">加载失败</span><span>' + esc(e.message) + '</span>';
+  });
+}
+
 function showDay(d){
   if (!INDEX) return;
   if (!INDEX.days.some(function(x){ return x.date === d; })) return;
@@ -717,10 +988,21 @@ function showDay(d){
   PREVDAY = i > 0 ? INDEX.days[i-1].date : null;
   CURDAY = d;
 
+  var meta = INDEX.days.filter(function(x){ return x.date === d; })[0] || {};
+  ROSTER = (meta.rooms || []).slice();
+  fillScopeSelect(ROSTER, SCOPE);
+  if (SCOPE !== ALL && ROSTER.length && ROSTER.indexOf(SCOPE) < 0){
+    /* 该直播间这天没开播（或没导出），自动落回全店 */
+    SCOPE = ALL;
+    fillScopeSelect(ROSTER, SCOPE);
+  }
+
   var window14 = INDEX.days.map(function(x){ return x.date; }).filter(function(x){ return x <= d; }).slice(-14);
   var need = [d].concat(PREVDAY ? [PREVDAY] : []).concat(window14);
-  ensureRange(need).then(function(){
-    var r = rpt(d);
+  Promise.all([loadDay(d), loadDay(PREVDAY)].concat(need.map(loadDay))).then(function(){
+    return ensureRange(need, SCOPE);
+  }).then(function(){
+    var r = rpt(d, SCOPE);
     if (!r){
       document.getElementById('tfEmpty').style.display = 'block';
       document.getElementById('tfEmpty').innerHTML = '<span class="ico">🧩</span>已入库 ' + esc(d) + '，但缺少日报文件。<br>跑一下 <code>python traffic_analysis/daily_update.py --rebuild</code> 即可补上。';
@@ -731,6 +1013,7 @@ function showDay(d){
     REPORT = r;
     renderStatus(r);
     renderMetrics(r);
+    renderCompare(r);
     renderReport(r);
     renderChannels(r);
     document.getElementById('tfLoading').style.display = 'none';
