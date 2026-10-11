@@ -4,8 +4,9 @@
 
 给桌面上的「刷流量数据.bat」调用，也可以手动跑：
 
-    python traffic_analysis/run_daily.py                      # 默认读桌面 流量数据.xlsx
+    python traffic_analysis/run_daily.py                      # 自动找桌面 流量数据.xlsx / 流量数据 文件夹 / 最新的「xx流量」文件夹
     python traffic_analysis/run_daily.py "D:\\x\\10.11流量.xlsx"
+    python traffic_analysis/run_daily.py "C:\\Users\\Administrator\\Desktop\\10.10日流量"   # 文件夹：多直播间一天一次入库
     python traffic_analysis/run_daily.py --no-push            # 只入库+提交，不推
     python traffic_analysis/run_daily.py --rebuild-only       # 只重建 index.json + 全部日报
 
@@ -22,8 +23,43 @@ if hasattr(sys.stderr, 'reconfigure'):
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TRAFFIC = os.path.join(ROOT, 'traffic_analysis')
-DEFAULT_XLSX = os.path.join(os.path.expanduser('~'), 'Desktop', '流量数据.xlsx')
+DESKTOP = os.path.join(os.path.expanduser('~'), 'Desktop')
+DEFAULT_XLSX = os.path.join(DESKTOP, '流量数据.xlsx')
+DEFAULT_DIR = os.path.join(DESKTOP, '流量数据')
 GIT_ADD_PATHS = ['traffic_analysis/data', 'traffic_analysis/reports']
+
+
+def find_default_input():
+    """不带参数时自动找当天要入库的东西（先单文件、再文件夹、再桌面上最新的「xx流量」文件夹）。
+
+    多直播间的一天是「一个文件夹装几份表」（如 10.10日流量/ 里 6 份），
+    文件名就是直播间名，所以文件夹也算合法输入。
+    """
+    if os.path.isfile(DEFAULT_XLSX):
+        return DEFAULT_XLSX
+    if os.path.isdir(DEFAULT_DIR):
+        return DEFAULT_DIR
+    if os.path.isdir(DESKTOP):
+        cands = []
+        for name in os.listdir(DESKTOP):
+            p = os.path.join(DESKTOP, name)
+            if os.path.isdir(p) and '流量' in name:
+                cands.append((os.path.getmtime(p), p))
+        if cands:
+            cands.sort(reverse=True)
+            return cands[0][1]
+    return None
+
+
+def xlsx_count(path):
+    """文件夹里有几份表（用于打印「6 份表 = 6 个直播间」）。"""
+    if not os.path.isdir(path):
+        return 0
+    n = 0
+    for name in os.listdir(path):
+        if name.lower().endswith(('.xlsx', '.xls', '.csv')):
+            n += 1
+    return n
 
 
 def log(msg=''):
@@ -71,15 +107,25 @@ def main():
             log('❌ 重建失败，已中止，未做任何提交。')
             return 1
     else:
-        xlsx = os.path.abspath(argv[0]) if argv else DEFAULT_XLSX
-        if not os.path.exists(xlsx):
-            log('\n❌ 找不到流量表：%s' % xlsx)
-            log('   请把当天导出的流量表放到桌面并命名为「流量数据.xlsx」，再双击「刷流量数据.bat」；')
-            log('   或手动指定路径：python traffic_analysis/run_daily.py "桌面上的某个.xlsx"')
+        if argv:
+            src = os.path.abspath(argv[0])
+        else:
+            src = find_default_input()
+            if src:
+                log('\n    自动找到输入：%s' % src)
+        if not src or not os.path.exists(src):
+            log('\n❌ 找不到流量表 / 流量文件夹：%s' % (src or DEFAULT_XLSX))
+            log('   两种放法（随便选一种，都在桌面）：')
+            log('     A. 单份表 → 命名「流量数据.xlsx」')
+            log('     B. 多间直播间 → 放一个文件夹，如「10.10日流量\\」里面装 6 份表，文件名就是直播间名')
+            log('   然后双击桌面「刷流量数据.bat」；或手动指定：python traffic_analysis/run_daily.py "<路径>"')
             return 1
         log('\n[1/3] 解析入库 + 生成日报 …')
-        log('    源文件：%s' % xlsx)
-        if not run_py(update_py, [xlsx]):
+        if os.path.isdir(src):
+            log('    源文件夹：%s（%d 份表 = %d 个直播间）' % (src, xlsx_count(src), xlsx_count(src)))
+        else:
+            log('    源文件：%s' % src)
+        if not run_py(update_py, [src]):
             log('\n❌ 入库失败，已中止，未做任何提交。上面有具体报错。')
             return 1
 

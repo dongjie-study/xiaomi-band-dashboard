@@ -887,8 +887,29 @@ def all_dates():
     return sorted(out)
 
 
+def _strip_times(obj):
+    """去掉时间戳后的副本 —— 用来判断「重灌同一天是否真的没变化」。"""
+    import copy as _copy
+    o = _copy.deepcopy(obj or {})
+    o.pop('updated_at', None)
+    o.pop('generated_at', None)
+    for r in (o.get('rooms') or {}).values():
+        if isinstance(r, dict):
+            r.pop('updated_at', None)
+    return o
+
+
 def write_day(d, payload):
     p = day_path(d)
+    old = load_day(d) if os.path.exists(p) else None
+    if old and _strip_times(old) == _strip_times(payload):
+        # 内容一模一样（只是又跑了一遍同一份表）→ 保留原时间戳，
+        # 否则每次双击「刷流量数据.bat」都会产生一个只有时间戳变化的空提交。
+        payload['updated_at'] = old.get('updated_at')
+        for rn, r in (payload.get('rooms') or {}).items():
+            o_room = (old.get('rooms') or {}).get(rn) or {}
+            if o_room.get('updated_at'):
+                r['updated_at'] = o_room['updated_at']
     os.makedirs(os.path.dirname(p), exist_ok=True)
     with open(p, 'w', encoding='utf-8') as f:
         json.dump(payload, f, ensure_ascii=False, indent=1)
@@ -928,6 +949,14 @@ def write_index():
     }
     os.makedirs(DATA_DIR, exist_ok=True)
     p = os.path.join(DATA_DIR, 'index.json')
+    if os.path.exists(p):
+        try:
+            with open(p, encoding='utf-8') as f:
+                old_idx = json.load(f)
+            if _strip_times(old_idx) == _strip_times(idx):
+                idx['generated_at'] = old_idx.get('generated_at')   # 没实质变化就别改时间戳
+        except Exception:
+            pass
     with open(p, 'w', encoding='utf-8') as f:
         json.dump(idx, f, ensure_ascii=False, indent=1)
     return p, idx
