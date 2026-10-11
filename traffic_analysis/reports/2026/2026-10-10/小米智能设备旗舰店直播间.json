@@ -167,7 +167,7 @@
    "unit": "%",
    "cur": 9.13,
    "prev": 8.47,
-   "chg": 0.07792207792207792,
+   "chg": 0.07847906949282635,
    "pp_diff": 0.66,
    "is_rate": true,
    "dir": "up"
@@ -178,7 +178,7 @@
    "unit": "%",
    "cur": 9.35,
    "prev": 10.51,
-   "chg": -0.11037107516650808,
+   "chg": -0.11072743357780883,
    "pp_diff": -1.16,
    "is_rate": true,
    "dir": "down"
@@ -189,7 +189,7 @@
    "unit": "%",
    "cur": 3.01,
    "prev": 2.62,
-   "chg": 0.14885496183206107,
+   "chg": 0.14821455821761023,
    "pp_diff": 0.39,
    "is_rate": true,
    "dir": "up"
@@ -200,7 +200,7 @@
    "unit": "%",
    "cur": 8.46,
    "prev": 14.54,
-   "chg": -0.41815680880330125,
+   "chg": -0.4182005777961205,
    "pp_diff": -6.08,
    "is_rate": true,
    "dir": "down"
@@ -211,7 +211,7 @@
    "unit": "%",
    "cur": 0.78,
    "prev": 0.57,
-   "chg": 0.368421052631579,
+   "chg": 0.36248682824025286,
    "pp_diff": 0.21,
    "is_rate": true,
    "dir": "up"
@@ -222,7 +222,7 @@
    "unit": "元",
    "cur": 4817.0,
    "prev": 7912.0,
-   "chg": -0.3911779575328615,
+   "chg": -0.3911592796906798,
    "pp_diff": -3095.0,
    "is_rate": true,
    "dir": "down"
@@ -233,7 +233,7 @@
    "unit": "元",
    "cur": 4.82,
    "prev": 7.91,
-   "chg": -0.3906447534766119,
+   "chg": -0.3911593038436177,
    "pp_diff": -3.09,
    "is_rate": true,
    "dir": "down"
@@ -244,8 +244,8 @@
    "unit": "元",
    "cur": 157.19,
    "prev": 142.86,
-   "chg": 0.10030799384012319,
-   "pp_diff": 14.33,
+   "chg": 0.10036348141637938,
+   "pp_diff": 14.34,
    "is_rate": true,
    "dir": "up"
   },
@@ -255,7 +255,7 @@
    "unit": "倍",
    "cur": 15.04,
    "prev": 17.96,
-   "chg": -0.16258351893095768,
+   "chg": -0.16281348200195964,
    "pp_diff": -2.92,
    "is_rate": true,
    "dir": "down"
@@ -610,7 +610,7 @@
    "suspect_channels": [
     "关注"
    ],
-   "vs_peer_gpm": 0.53
+   "vs_peer_gpm": 0.58
   },
   {
    "name": "小米数码旗舰店",
@@ -632,7 +632,7 @@
    "suspect_channels": [
     "直播广场"
    ],
-   "vs_peer_gpm": 1.2
+   "vs_peer_gpm": 1.32
   },
   {
    "name": "小米官方手环直播间",
@@ -654,7 +654,7 @@
    "suspect_channels": [
     "直播广场"
    ],
-   "vs_peer_gpm": 1.23
+   "vs_peer_gpm": 1.36
   },
   {
    "name": "小米官旗手表直播间",
@@ -676,7 +676,7 @@
    "suspect_channels": [
     "搜索"
    ],
-   "vs_peer_gpm": 0.82
+   "vs_peer_gpm": 0.9
   },
   {
    "name": "小米官方耳机直播间",
@@ -698,7 +698,7 @@
    "suspect_channels": [
     "搜索"
    ],
-   "vs_peer_gpm": 0.42
+   "vs_peer_gpm": 0.46
   },
   {
    "name": "小米智能设备旗舰店直播间",
@@ -718,7 +718,7 @@
    "new_follower_rate": 0.78,
    "anomaly_channels": [],
    "suspect_channels": [],
-   "vs_peer_gpm": 1.0
+   "vs_peer_gpm": 1.1
   }
  ],
  "peer_benchmark": [
@@ -727,7 +727,7 @@
    "label": "GPM（元/千次观看）",
    "unit": "元",
    "decimals": 0,
-   "median": 4817,
+   "median": 4382.0,
    "best": {
     "name": "小米官方手环直播间",
     "value": 5938
@@ -742,7 +742,7 @@
    "label": "客单价（元/单）",
    "unit": "元",
    "decimals": 0,
-   "median": 325,
+   "median": 324.0,
    "best": {
     "name": "小米官旗手表直播间",
     "value": 694
@@ -757,7 +757,7 @@
    "label": "UV 价值（元/次观看）",
    "unit": "元",
    "decimals": 2,
-   "median": 5.0,
+   "median": 4.38,
    "best": {
     "name": "小米官方手环直播间",
     "value": 5.94
@@ -772,7 +772,7 @@
    "label": "曝光→观看率",
    "unit": "%",
    "decimals": 2,
-   "median": 5.75,
+   "median": 5.46,
    "best": {
     "name": "小米智能设备旗舰店直播间",
     "value": 9.13
@@ -787,7 +787,7 @@
    "label": "观看→互动率",
    "unit": "%",
    "decimals": 2,
-   "median": 11.07,
+   "median": 10.96,
    "best": {
     "name": "小米官旗手表直播间",
     "value": 27.59
@@ -802,7 +802,7 @@
    "label": "商品点击率",
    "unit": "%",
    "decimals": 2,
-   "median": 7.43,
+   "median": 7.04,
    "best": {
     "name": "小米官方手环直播间",
     "value": 11.99
@@ -817,7 +817,7 @@
    "label": "点击→成交转化率",
    "unit": "%",
    "decimals": 2,
-   "median": 2.16,
+   "median": 2.15,
    "best": {
     "name": "小米智能设备旗舰店直播间",
     "value": 8.46
@@ -832,7 +832,7 @@
    "label": "涨粉率",
    "unit": "%",
    "decimals": 2,
-   "median": 0.49,
+   "median": 0.46,
    "best": {
     "name": "小米智能设备旗舰店直播间",
     "value": 0.78
@@ -847,7 +847,7 @@
    "label": "千川投放 ROI（倍）",
    "unit": "倍",
    "decimals": 2,
-   "median": 36.17,
+   "median": 28.95,
    "best": {
     "name": "小米数码旗舰店",
     "value": 46.5

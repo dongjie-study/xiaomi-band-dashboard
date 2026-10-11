@@ -47,8 +47,10 @@
   .tf-card > h2, .tf-card > h3 { margin: 0 0 15px; font-size: 1.02em; font-weight: 700; color: var(--text-primary, #1e293b); }
   .tf-card > h3 { font-size: .95em; }
   .tf-sub { font-size: .8em; color: var(--text-secondary, #64748b); font-weight: 500; margin-left: 8px; }
-  .tf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-  @media (max-width: 900px) { .tf-row { grid-template-columns: 1fr; } }
+  .tf-row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+  /* ★ 这里必须是 minmax(0, 1fr)：裸 1fr 的最小值是 auto，图表 canvas 的 min-content 会把
+     轨道顶到 663px，宽窗口加载后再缩窄（旋转屏幕 / WebView 改尺寸）就出现整页横向滚动 */
+  @media (max-width: 900px) { .tf-row { grid-template-columns: minmax(0, 1fr); } }
   @media (max-width: 760px) { .tf-card { padding: 15px 14px; margin-bottom: 14px; } }
 
   /* ===== 顶部状态条 ===== */
@@ -74,7 +76,7 @@
   .tf-grid.g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   @media (max-width: 1100px) { .tf-grid.g4 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
   @media (max-width: 760px)  { .tf-grid.g4, .tf-grid.g3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-  @media (max-width: 520px)  { .tf-grid.g4, .tf-grid.g3 { grid-template-columns: 1fr; } }
+  @media (max-width: 520px)  { .tf-grid.g4, .tf-grid.g3 { grid-template-columns: minmax(0, 1fr); } }
 
   /* 指标区分组小标题：把 16 张卡分成「规模 / 成交 / 效率」三段，扫读更快 */
   .tf-sec {
@@ -719,7 +721,7 @@ function renderChannels(r){
             : (c.suspect ? '<span class="tag-suspect">互动率偏高</span>' : '');
     var cls = c.anomaly ? 'anomaly' : (c.suspect ? 'suspect' : '');
     /* 口径异常的渠道，其「观看→互动率」不可信，直接留空 */
-    var irTxt = c.anomaly ? '—' : pctOrDash(c.ir);
+    var irTxt = c.anomaly ? '—' : pctOrDash(c.interaction_ratio);
     var irCls = (c.suspect && !c.anomaly) ? 'c-up' : '';
     return '<tr class="' + cls + '">'
       + '<td class="ch-name">' + esc(c.name) + tag + '</td>'

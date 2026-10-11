@@ -28,6 +28,7 @@ import json
 import os
 import re
 import shutil
+import statistics
 import sys
 import zipfile
 from datetime import date, datetime
@@ -728,15 +729,20 @@ def day_over_day(cur, prev):
     ]:
         c = cm.get(key)
         p = pm.get(key) if pm else None
+        # ★ 派生指标的差必须用「原始值先差、再 round」：若先把两边各自 round 到 nd 位再相减，
+        #   会出现同页两个数（卡片用 raw metrics 算 delta，报告 bullet 用这里），例如
+        #   卡片 +0.08pp 而报告 +0.09pp（10-10 全店 曝光→观看率）。
+        raw_diff = (c - p) if (c is not None and p is not None) else None
         if unit == '%':
             cd = round(c * 100, nd) if c is not None else None
             pd_ = round(p * 100, nd) if p is not None else None
+            diff = round(raw_diff * 100, nd) if raw_diff is not None else None
         else:
             cd = round(c, nd) if c is not None else None
             pd_ = round(p, nd) if p is not None else None
-        diff = round(cd - pd_, nd) if (cd is not None and pd_ is not None) else None
+            diff = round(raw_diff, nd) if raw_diff is not None else None
         rows.append({'key': key, 'label': label, 'unit': unit, 'cur': cd, 'prev': pd_,
-                     'chg': (diff / abs(pd_) if (diff is not None and pd_) else None),
+                     'chg': (raw_diff / abs(p) if (raw_diff is not None and p) else None),
                      'pp_diff': diff, 'is_rate': True,
                      'dir': ('up' if (diff or 0) > 0 else ('down' if (diff or 0) < 0 else 'flat')) if diff is not None else 'na'})
     return rows
@@ -820,8 +826,17 @@ def build_insights(cur, prev, dod, rules, channels, compare=None):
         if chg_ok:
             up = max(chg_ok, key=lambda c: c['chg'])
             dn = min(chg_ok, key=lambda c: c['chg'])
-            lines['data'].append('渠道里 %s 涨得最猛（观看 %+.1f%%）；%s 掉得最多（%+.1f%%）' % (
-                up['name'], up['chg'] * 100, dn['name'], dn['chg'] * 100))
+            # ★ 按符号分支措辞：涨跌看 max/min，若全是上涨，min 那个也是涨的，
+            #   固定写「掉得最多（+3.2%）」会自相矛盾（10-10 数码旗舰店、10-09 智能设备都踩过）。
+            if up['chg'] <= 0:
+                lines['data'].append('渠道里 %s 相对最抗跌（观看 %+.1f%%）；当日各入口环比全为负' % (
+                    up['name'], up['chg'] * 100))
+            elif dn['chg'] >= 0:
+                lines['data'].append('渠道里 %s 涨得最猛（观看 %+.1f%%）；当日各入口环比全为正' % (
+                    up['name'], up['chg'] * 100))
+            else:
+                lines['data'].append('渠道里 %s 涨得最猛（观看 %+.1f%%）；%s 掉得最多（%+.1f%%）' % (
+                    up['name'], up['chg'] * 100, dn['name'], dn['chg'] * 100))
 
     if compare and len(compare) > 1:
         by_views = sorted(compare, key=lambda x: -(x['views'] or 0))
@@ -841,8 +856,11 @@ def build_insights(cur, prev, dod, rules, channels, compare=None):
     if anom:
         tail = ('；被剔除的互动数占全场 %.1f%%，若占比过高请找平台核对两列口径。' % ((cur.get('excluded_share') or 0) * 100)
                 if (cur.get('excluded_share') or 0) > 0.15 else '。')
-        lines['data'].append('ℹ️ 渠道「%s」口径异常（互动次数 ÷ 观看次数 ≥ %.0f%%），已从互动率合算中剔除%s' % (
-            '、'.join(anom), ANOM_RATIO * 100, tail))
+        # ★ 判定在「房间内」做，全店列表是多间并集：不能写成「全店该渠道 ≥250%」，
+        #   否则与页面渠道表（按全店合计比值打标签，全店比值往往 <250%）对不上。
+        lines['data'].append('ℹ️ 渠道「%s」在部分直播间内口径异常（互动次数 ÷ 观看次数 ≥ %.0f%%），'
+                             '对应房间的这些渠道已从互动率合算中剔除%s' % (
+                                 '、'.join(anom), ANOM_RATIO * 100, tail))
 
     if prev:
         pv = prev['totals'].get('views')
@@ -1011,8 +1029,10 @@ def room_compare(rec):
     if len(rooms) <= 1:
         return []
     tot_views = sum((r['totals'].get('views') or 0) for r in rooms.values())
-    gmps = sorted([(r['metrics'].get('gpm') or 0) for r in rooms.values()])
-    med_gpm = gmps[len(gmps) // 2] if gmps else None
+    gmps = sorted([g for g in ((r['metrics'].get('gpm') or 0) for r in rooms.values()) if g])
+    # ★ 偶数个直播间时 len//2 取的是「上中位」（6 间取第 4 小），会系统性偏高；
+    #   用 statistics.median 取真中位数（两中间值平均）。
+    med_gpm = statistics.median(gmps) if gmps else None
     rows = []
     for name, r in rooms.items():
         t, m = r['totals'], r['metrics']
@@ -1048,7 +1068,7 @@ def peer_benchmark(compare):
         best = max(pool, key=lambda x: x[key])
         worst = min(pool, key=lambda x: x[key])
         out.append({'key': key, 'label': label, 'unit': unit, 'decimals': nd,
-                    'median': round(vals[len(vals) // 2], 0 if unit == '元' else nd),
+                    'median': round(statistics.median(vals), nd),
                     'best': {'name': best['name'], 'value': round(best[key], nd)},
                     'worst': {'name': worst['name'], 'value': round(worst[key], nd)}})
     return out
