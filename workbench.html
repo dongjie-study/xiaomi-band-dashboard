@@ -1000,7 +1000,7 @@
 var modules = {};   // 全局模块注册表 { id: {url, title} }
 var __MODULE_CONFIG__ = null;
 
-fetch('modules.json?v=20260804')
+fetch('modules.json?v=20261011b')
   .then(function(r) { return r.json(); })
   .then(function(config) {
     __MODULE_CONFIG__ = config;
@@ -1032,8 +1032,8 @@ function renderSidebar(config) {
         mod.subModules.forEach(function(sub) {
           if (sub.monthKey) {
             // Month → expands to show dates
-            var datesId = 'monthDates_' + sub.monthKey;
-            html += '<a class="month-item" onclick="toggleMonthDates(this, \'' + sub.monthKey + '\', \'' + datesId + '\')">';
+            var datesId = 'monthDates_' + mod.id + '_' + sub.monthKey;
+            html += '<a class="month-item" data-month-module="' + mod.id + '" data-month-key="' + sub.monthKey + '" onclick="toggleMonthDates(this, \'' + sub.monthKey + '\', \'' + datesId + '\', \'' + mod.id + '\')">';
             html += '📅 ' + sub.title;
             if (sub.badge) html += ' <span class="badge-nav">' + sub.badge + '</span>';
             html += '<span class="sub-arrow" style="font-size:.65em;opacity:.5">&#x25B8;</span></a>';
@@ -1255,7 +1255,7 @@ function collapseAllSubs() {
 }
 
 // ----- 二级菜单：月份 → 日期 -----
-function toggleMonthDates(el, monthKey, datesId) {
+function toggleMonthDates(el, monthKey, datesId, modId) {
   var datesDiv = document.getElementById(datesId);
   if (!datesDiv) return;
   var expanded = el.classList.contains('expanded');
@@ -1269,7 +1269,7 @@ function toggleMonthDates(el, monthKey, datesId) {
   document.querySelectorAll('.month-item.expanded, .period-item.expanded').forEach(function(a) { a.classList.remove('expanded'); });
   // Populate dates if empty
   if (!datesDiv.children.length) {
-    buildMonthDates(monthKey, datesDiv);
+    buildMonthDates(monthKey, datesDiv, modId);
   }
   datesDiv.style.display = 'block';
   el.classList.add('expanded');
@@ -1292,7 +1292,8 @@ function toggleNestedSub(el, nestedId) {
   el.classList.add('expanded');
 }
 
-function buildMonthDates(monthKey, container) {
+function buildMonthDates(monthKey, container, modId) {
+  if (modId && modId !== 'sales') { buildModuleMonthDates(modId, monthKey, container); return; }
   var s = window.__STATS__;
   if (!s || !s.dates) { container.innerHTML = '<a style="color:var(--text-muted);cursor:default">暂无数据</a>'; return; }
   var html = '';
@@ -1304,6 +1305,52 @@ function buildMonthDates(monthKey, container) {
   });
   if (!html) html = '<a style="color:var(--text-muted);cursor:default">暂无数据</a>';
   container.innerHTML = html;
+}
+
+// ----- 其它模块的「月份 → 日期」列表（例如流量分析：日期来自 traffic_analysis/data/index.json）-----
+var MODULE_DATE_SOURCE = {
+  traffic: 'traffic_analysis/data/index.json'
+};
+
+function buildModuleMonthDates(modId, monthKey, container) {
+  var src = MODULE_DATE_SOURCE[modId];
+  if (!src) { container.innerHTML = '<a style="color:var(--text-muted);cursor:default">暂无数据</a>'; return; }
+  container.innerHTML = '<a style="color:var(--text-muted);cursor:default">加载中…</a>';
+  fetch(src, { cache: 'no-store' })
+    .then(function(r) { return r.json(); })
+    .then(function(idx) {
+      var dates = (idx.days || []).map(function(x) { return x.date; }).sort().reverse();
+      var html = '';
+      dates.forEach(function(d) {
+        if (d.indexOf(monthKey) === 0) {
+          html += '<a onclick="openModuleDate(\'' + modId + '\', \'' + src.replace(/data\/index\.json$/, 'index.html') + '\', \'' + d + '\', this)" data-date="' + d + '">📅 ' + d.substring(5) + '</a>';
+        }
+      });
+      container.innerHTML = html || '<a style="color:var(--text-muted);cursor:default">暂无数据</a>';
+    })
+    .catch(function() { container.innerHTML = '<a style="color:var(--text-muted);cursor:default">暂无数据</a>'; });
+}
+
+// ----- 打开某个模块的某一天（流量分析等按月分组的模块）-----
+function openModuleDate(modId, baseUrl, date, el) {
+  clearActiveLinks();
+  var link = document.querySelector('.sidebar-nav > a[data-module="' + modId + '"]');
+  var title = link ? (link.dataset.title || modId) : modId;
+  if (link) link.classList.add('active');
+  var monthItem = document.querySelector('.month-item[data-month-module="' + modId + '"][data-month-key="' + date.substring(0, 7) + '"]');
+  if (monthItem) monthItem.classList.add('active');
+  if (el) el.classList.add('active');
+
+  killIframe();
+  document.getElementById('overview').classList.add('hidden');
+
+  var iframe = getIframe();
+  var targetUrl = baseUrl + '#' + date;
+  requestAnimationFrame(function() {
+    iframe.src = targetUrl;
+    iframe.classList.add('show');
+  });
+  document.getElementById('breadcrumb').innerHTML = '首页 / <span>' + title + '</span> / ' + date;
 }
 
 // ----- 打开子模块（直接链接型：月度总结、节点总结、千川视频分析）-----
@@ -1336,7 +1383,8 @@ function openSalesDate(date, el) {
   var salesLink = document.querySelector('.sidebar-nav > a[data-module="sales"]');
   if (salesLink) salesLink.classList.add('active');
   var monthPrefix = date.substring(0, 7);
-  var monthItem = document.querySelector('.month-item[onclick*="' + monthPrefix + '"]');
+  var monthItem = document.querySelector('.month-item[data-month-module="sales"][data-month-key="' + monthPrefix + '"]')
+    || document.querySelector('.month-item[onclick*="' + monthPrefix + '"]');
   if (monthItem) monthItem.classList.add('active');
   if (el) el.classList.add('active');
 
