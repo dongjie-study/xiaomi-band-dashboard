@@ -12,6 +12,8 @@ const GH_FILE = {
   dailySummary: 'sales_analysis/daily_summary.json',
   anchor: '主播业绩/anchor_records.json',
   hourly: (d) => `sales_analysis/hourly/${d}.json`,
+  trafficIndex: 'traffic_analysis/data/index.json',
+  trafficDay: (d) => `traffic_analysis/data/${d.slice(0, 4)}/${d}.json`,
 };
 
 // ---------- 团队归属（与 team_config.py 同步维护） ----------
@@ -249,6 +251,104 @@ async function toolQueryHourly(args) {
   };
 }
 
+async function toolQueryTraffic(args) {
+  // 可用日期以 index.json 为准
+  let index;
+  try { index = await fetchJson(GH_FILE.trafficIndex); }
+  catch { return { error: '流量分析数据还没入库（traffic_analysis/data/index.json 拉取失败）' }; }
+  const days = (index.days || []).map(d => d.date).sort();
+  if (!days.length) return { error: '流量分析还没有任何数据' };
+  const latest = days[days.length - 1];
+  const date = validDate(args.date) ? args.date : latest;
+  if (!days.includes(date)) return { error: `${date} 没有流量数据。可用日期：${days.join('、')}（不填 date = 最新 ${latest}）` };
+
+  let data;
+  try { data = await fetchJson(GH_FILE.trafficDay(date)); }
+  catch { return { error: `${date} 的流量日文件拉取失败` }; }
+
+  const ROOM_KEYS = ['小米官方手环直播间', '小米官方手表', '小米官方耳机直播间', '小米官旗手表直播间', '小米数码旗舰店', '小米智能设备旗舰店直播间'];
+  const BASE = ['impressions', 'views', 'interactions', 'new_followers', 'product_impressions', 'product_clicks', 'paid_orders', 'paid_amount'];
+  const pct = (x) => (x == null ? null : (x * 100).toFixed(2) + '%');
+  const round1 = (x) => (x == null ? null : Math.round(x * 10) / 10);
+
+  // 解析直播间（支持部分匹配）
+  let roomKey = null;
+  if (args.room) {
+    const q = String(args.room).trim();
+    const hits = ROOM_KEYS.filter(k => k === q || k.includes(q) || q.includes(k));
+    if (!hits.length) return { error: `没有「${q}」的流量数据。有数据的直播间：${ROOM_KEYS.join('、')}` };
+    if (hits.length > 1) return { error: `「${q}」匹配到多个直播间：${hits.join('、')}，请用完整名` };
+    roomKey = hits[0];
+    if (!(data.rooms || {})[roomKey]) return { error: `${date} 没有「${roomKey}」的流量数据` };
+  }
+
+  const summarizeMetrics = (m) => ({
+    '曝光→观看率': pct(m.exposure_view_rate),
+    '互动率(口径已净化)': pct(m.interaction_rate),
+    '商品点击率': pct(m.product_ctr),
+    '点击→成交转化率': pct(m.click_cvr),
+    '涨粉率': pct(m.new_follower_rate),
+    'GPM(元/千次观看)': round1(m.gpm),
+    '客单价(元)': round1(m.aov),
+    'UV价值(元)': m.uv_value,
+    '千川ROI': round1(m.qianchuan_roi),
+  });
+
+  if (!roomKey) {
+    // 全店视角：量级加总 + 每间核心指标一行
+    const sum = {}; for (const k of BASE) sum[k] = 0;
+    let qc = 0;
+    const perRoom = {};
+    for (const [rk, rv] of Object.entries(data.rooms || {})) {
+      const t = rv.totals || {}, m = rv.metrics || {};
+      for (const k of BASE) sum[k] += (t[k] || 0);
+      qc += parseFloat(rv.extras?.qianchuan || 0) || 0;
+      perRoom[rk] = {
+        观看次数: t.views, 曝光次数: t.impressions, 成交订单: t.paid_orders, 支付金额: Math.round(t.paid_amount || 0),
+        GPM: round1(m.gpm), 千川ROI: round1(m.qianchuan_roi),
+        '曝光→观看率': pct(m.exposure_view_rate), '商品点击率': pct(m.product_ctr), '点击→成交': pct(m.click_cvr),
+        客单价: round1(m.aov), 涨粉率: pct(m.new_follower_rate),
+      };
+    }
+    const warn = [];
+    if ((data.anomaly_channels || []).length) warn.push(`口径异常渠道（互动≥观看2.5倍，已剔除合算）：${data.anomaly_channels.join('、')}`);
+    if ((data.suspect_channels || []).length) warn.push(`可疑渠道（互动/观看比偏高，仅提示）：${data.suspect_channels.join('、')}`);
+    return {
+      unit: `${date} 流量分析 · 全店（${Object.keys(data.rooms || {}).length} 间合计，观看人数未去重）`,
+      全店合计: {
+        曝光次数: sum.impressions, 观看次数: sum.views, 互动次数: sum.interactions, 新增粉丝: sum.new_followers,
+        商品曝光: sum.product_impressions, 商品点击: sum.product_clicks,
+        成交订单: sum.paid_orders, 支付金额: Math.round(sum.paid_amount), 千川消耗: Math.round(qc),
+      },
+      各直播间: perRoom,
+      提示: ['需要某间的分渠道明细（推荐feed/直播广场/同城…）→ 传 room 参数', ...warn],
+    };
+  }
+
+  // 单间视角：totals + 派生指标 + 分渠道明细
+  const rv = data.rooms[roomKey];
+  const channels = {};
+  for (const [ck, cv] of Object.entries(rv.channels || {})) {
+    channels[ck] = {
+      曝光: cv.impressions, 观看: cv.views, 互动: cv.interactions, 涨粉: cv.new_followers,
+      商品曝光: cv.product_impressions, 商品点击: cv.product_clicks,
+      成交订单: cv.paid_orders, 支付金额: Math.round(cv.paid_amount || 0),
+      ...(cv.anomaly ? { '⚠️': '口径异常（互动≥观看2.5倍），数据不可信' } : (cv.suspect ? { '❓': '互动/观看比偏高，留意' } : {})),
+    };
+  }
+  return {
+    unit: `${date} 流量分析 · ${roomKey}`,
+    合计: { ...rv.totals, 千川消耗: rv.extras?.qianchuan },
+    派生指标: summarizeMetrics(rv.metrics || {}),
+    漏斗: (rv.metrics?.funnel || []).map(f => `${f.label} ${f.value}`),
+    分渠道明细: channels,
+    直播时长: rv.extras?.live_duration, 人均观看时长: rv.extras?.avg_watch_time,
+    提示: (data.anomaly_channels || []).length || (data.suspect_channels || []).length
+      ? `本店异常/可疑渠道：${[...(data.anomaly_channels || []), ...(data.suspect_channels || [])].join('、') || '无'}`
+      : undefined,
+  };
+}
+
 async function toolQueryAnchor(args) {
   const data = await fetchJson(GH_FILE.anchor);
   const records = data.records || {};
@@ -392,6 +492,19 @@ const TOOLS = [
   },
   {
     type: 'function', function: {
+      name: 'query_traffic',
+      description: '查询流量分析数据（直播间流量与转化漏斗，自 2026-10-08 起）：曝光/观看/互动/涨粉/商品曝光点击/成交/支付金额，及派生指标（曝光→观看率、互动率、商品点击率、点击→成交率、涨粉率、GPM、客单价、UV价值、千川ROI）。不填 room=全店各间对比；填 room 可看分流量渠道明细（推荐feed/直播广场/同城等）。不填 date=最新一天。',
+      parameters: {
+        type: 'object', properties: {
+          date: { type: 'string', description: 'YYYY-MM-DD，不填=最新' },
+          room: { type: 'string', description: '直播间名（6间：小米官方手环直播间/小米官方手表/小米官方耳机直播间/小米官旗手表直播间/小米数码旗舰店/小米智能设备旗舰店直播间）' },
+          channel: { type: 'string', description: '流量渠道名（需配合 room 使用），如 推荐feed' },
+        },
+      },
+    },
+  },
+  {
+    type: 'function', function: {
       name: 'search_project_docs',
       description: '查询项目文档原文。回答项目本身的问题时必须用它：项目怎么运作、每日流程怎么走、规范/铁律、某个脚本是干嘛的、数据怎么入库、怎么新增直播间、页面模块有哪些、常见坑等。也可用来核实口径定义。',
       parameters: {
@@ -407,6 +520,7 @@ const TOOLS = [
 const TOOL_IMPLS = {
   query_sales: toolQuerySales,
   query_hourly: toolQueryHourly,
+  query_traffic: toolQueryTraffic,
   query_anchor_performance: toolQueryAnchor,
   get_daily_reviews: toolDailyReviews,
   get_band11_progress: toolBand11Progress,
@@ -446,7 +560,13 @@ ${roomLines}
 - 当前主线：**小米手环11 首销月（2026-09-07 ~ 2026-10-07）已收官**（总目标 60000 台，实际完成以 get_band11_progress 查询为准）。首销月后进入常规运营期，用户问"进度/目标"时先说明首销月已结束，再给查询到的数据。
 - 考核四渠道（我司主力间）：小米官方手环直播间、小米数码旗舰店、我司商品卡、小米官方手表。
 - 主力商品：小米手环11（当前绝对主力）、REDMI Watch 6、小米手环10 Pro、Xiaomi Watch S5、REDMI Buds 8 系列。商品名可部分匹配（如"手环11"、"S5"、"watch 6"）。
-- 数据范围：销量自 2026-06-01 起；主播业绩自 2026-08 起。
+- 数据范围：销量自 2026-06-01 起；主播业绩自 2026-08 起；**流量分析自 2026-10-08 起**。
+
+## 流量分析模块（traffic_analysis/，与订单口径完全独立）
+- 数据内容：每个直播间的「流量趋势」表——按流量渠道（推荐feed/直播广场/同城/关注/千川广告等）的 8 个基础指标（曝光/观看/互动/涨粉/商品曝光/商品点击/成交订单/支付金额）+ 漏斗（曝光→观看→商品曝光→商品点击→成交）。
+- 派生指标：曝光→观看率、观看→互动率、商品点击率、点击→成交转化率、涨粉率、GPM（元/千次观看）、客单价、UV 价值、千川 ROI。平台参考线：曝光→观看≥3.5%、互动率≥5%、商品点击 4~25%、点击→成交 1.5~10%、涨粉率≥0.2%、GPM≥2000、千川 ROI≥10。
+- 口径要点：金额=用户支付金额（与订单口径的实付接近但独立统计，两者差异是正常的，不要混着对比）；「全店」=6 间简单相加（观看人数跨间重复，**不是去重 UV**）；互动率已自动剔除口径异常渠道（互动数≥观看数 2.5 倍的渠道数据不可信，会单独标出）；数据目前只有 6 间我司直播间。
+- 查询一律用 query_traffic 工具，不要拿订单数据推算流量。
 
 ## 项目全景（这个项目本身是什么）
 「小米手环直播间销量分析」= 直播间销售数据的日常入库 + 可视化平台（GitHub Pages 公开看板 + 数据小管家）。
