@@ -184,6 +184,73 @@ def parse_date_from_name(path):
     return None
 
 
+def date_from_sheet(path, sheet=None):
+    """表内找日期：扫描前若干行列头区域里的日期字面量（如 2026-10-11 / 10月11日 / 10.11）。"""
+    try:
+        import openpyxl
+        wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    except Exception:
+        return None
+    cands = []
+    try:
+        names = [sheet] if sheet else list(wb.sheetnames)
+        for sn in names:
+            if sn not in wb.sheetnames:
+                continue
+            ws = wb[sn]
+            for i, row in enumerate(ws.iter_rows(min_row=1, max_row=6, max_col=8, values_only=True)):
+                for cell in row:
+                    s = str(cell or '').strip()
+                    if not s:
+                        continue
+                    d = None
+                    m = re.search(r'(20\d{2})\s*[-./年]\s*(\d{1,2})\s*[-./月]\s*(\d{1,2})', s)
+                    if m:
+                        try:
+                            d = date(int(m.group(1)), int(m.group(2)), int(m.group(3))).isoformat()
+                        except ValueError:
+                            d = None
+                    if not d:
+                        m = re.search(r'(?<!\d)(\d{1,2})\s*[.\-月/]\s*(\d{1,2})\s*[日号]?(?!\d)', s)
+                        if m:
+                            try:
+                                d = date(2026, int(m.group(1)), int(m.group(2))).isoformat()
+                            except ValueError:
+                                d = None
+                    if d:
+                        cands.append(d)
+            if cands:
+                break
+    finally:
+        try:
+            wb.close()
+        except Exception:
+            pass
+    if not cands:
+        return None
+    return sorted(cands)[-1]
+
+
+def date_from_mtime(path):
+    """兜底：用文件修改时间当日期（导出的当天文件基本就是当天）。"""
+    return date.fromtimestamp(os.path.getmtime(path)).isoformat()
+
+
+def resolve_date(path, d=None, sheet=None):
+    """日期三级推定：命令行 --date > 文件名 > 表内单元格 > 文件修改时间。"""
+    if d:
+        return d, '--date'
+    got = parse_date_from_name(path)
+    if got:
+        return got, '文件名'
+    got = date_from_sheet(path, sheet=sheet)
+    if got:
+        return got, '表内日期'
+    got = date_from_mtime(path)
+    print(f'⚠️ 文件名和表内都没有日期，按文件修改时间推定 {got}；如不对请用 --date YYYY-MM-DD 指定')
+    return got, '文件修改时间'
+
+
 def parse_workbook(path, sheet=None):
     """解析工作簿 → (表头信息, 渠道明细 dict)。多 sheet 时自动挑「有渠道列且行数最多」的那个。"""
     import openpyxl
@@ -513,9 +580,7 @@ def rebuild_reports():
 def ingest(xlsx, d=None, room=None, sheet=None):
     if not os.path.exists(xlsx):
         raise SystemExit(f'❌ 找不到文件：{xlsx}')
-    d = d or parse_date_from_name(xlsx)
-    if not d:
-        raise SystemExit('❌ 无法从文件名判断日期，请用 --date YYYY-MM-DD 指定')
+    d, how = resolve_date(xlsx, d=d, sheet=sheet)
     if d[:7] < START_YM:
         raise SystemExit(f'❌ {d} 早于流量分析起始月份 {START_YM}（规则：数据不得早于 10 月）')
 

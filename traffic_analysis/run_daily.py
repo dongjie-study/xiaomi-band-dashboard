@@ -105,11 +105,23 @@ def main():
     # ---------- 3. 推送 ----------
     log('\n[3/3] 推送到 GitHub …')
     ok, text = run_git(['pull', '--rebase'], check=False)
+    stashed = False
+    if not ok and ('unstaged changes' in text or 'local changes' in text):
+        # 工作区还有别处没提交的改动（文档/脚本等），先临时收起来，pull 完再还原
+        log('    工作区有未提交改动，先 git stash 收起来 …')
+        sok, _ = run_git(['stash', 'push', '--keep-index', '-u'], check=False)
+        if sok:
+            stashed = True
+            ok, text = run_git(['pull', '--rebase'], check=False)
     if not ok:
+        if stashed:
+            run_git(['stash', 'pop'], check=False)
         log('❌ git pull --rebase 没干净完成（大概率有冲突）。')
         log('   处理：git status 看冲突文件 → 改完 git add → git rebase --continue → 再跑本脚本。')
         log('   想放弃这次 rebase：git rebase --abort')
         return 1
+    if stashed:
+        run_git(['stash', 'pop'], check=False)
     ok, text = run_git(['push'], check=False)
     if not ok:
         log('❌ push 被拒。可试：')
