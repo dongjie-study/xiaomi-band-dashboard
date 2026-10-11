@@ -27,6 +27,7 @@ import glob
 import json
 import os
 import re
+import shutil
 import sys
 import zipfile
 from datetime import date, datetime
@@ -1103,6 +1104,17 @@ def rebuild_reports(quiet=False):
         if not quiet:
             rooms = list((cur.get('rooms') or {}).keys())
             print('   日报 %s  直播间 %d 个%s' % (d, len(rooms), '' if len(rooms) != 1 else '（%s）' % rooms[0]))
+    # 清掉「没有对应日文件」的残留日报目录（例如 seed_demo --clear 删了示例天、
+    # 或早前测试留下的 reports/2026/2026-12-31）——否则它们会一直被 git 跟踪着。
+    alive = set(dates)
+    for p in glob.glob(os.path.join(REPORT_DIR, '*', '*')):
+        if not os.path.isdir(p):
+            continue
+        d = os.path.basename(p)
+        if re.match(r'^\d{4}-\d{2}-\d{2}$', d) and d not in alive:
+            shutil.rmtree(p, ignore_errors=True)
+            if not quiet:
+                print('   🧹 清理无对应数据的日报目录 %s' % os.path.relpath(p, ROOT))
     ip, idx = write_index()
     return dates, ip, idx
 

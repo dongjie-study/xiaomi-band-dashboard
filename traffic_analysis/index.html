@@ -413,8 +413,8 @@ function mdInline(s){
 function delta(cur, prev){
   if (cur == null) return { cls: '', arrow: '', txt: '—', pct: null };
   if (prev == null || prev === 0){
-    var cls0 = cur > 0 ? 'up' : 'flat';
-    return { cls: cls0, arrow: cur > 0 ? '▲' : '', txt: '首日 / 无对比', pct: null };
+    /* 没有前一日：不给涨跌色和箭头，只说明「首日 / 无对比」，免得看着像涨了 */
+    return { cls: 'flat', arrow: '', txt: '首日 / 无对比', pct: null };
   }
   var p = cur / prev - 1;
   var cls = p > 0.0005 ? 'up' : (p < -0.0005 ? 'down' : 'flat');
@@ -424,7 +424,7 @@ function delta(cur, prev){
 /* deltaPP：比率口径（百分点，更适合算比率的环比） */
 function deltaPP(cur, prev){
   if (cur == null) return { cls: '', arrow: '', txt: '—', pct: null, diff: null };
-  if (prev == null){ return { cls: 'up', arrow: '', txt: '首日 / 无对比', pct: null, diff: null }; }
+  if (prev == null){ return { cls: 'flat', arrow: '', txt: '首日 / 无对比', pct: null, diff: null }; }
   var d = cur - prev;
   var cls = d > 0.005 ? 'up' : (d < -0.005 ? 'down' : 'flat');
   var arrow = cls === 'up' ? '▲' : (cls === 'down' ? '▼' : '→');
