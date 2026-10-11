@@ -78,6 +78,13 @@ history 最新 : 2026-09-13     ← 订单入库到哪天
 | 2 | **入库** | `python traffic_analysis/daily_update.py "C:\Users\Administrator\Desktop\x.xx流量.xlsx"`（日期从文件名自动识别；识别不出或想指定就加 `--date 2026-10-11`；多 sheet 自动挑有渠道列、行数最多的那个，也可 `--sheet "10.2-10.4流量趋势"`） |
 | 3 | **校验 + 提交** | 脚本会打印当天指标摘要（曝光/观看/互动/涨粉/商品点击/成交/支付 + 各派生率），**先人眼过一遍有没有明显离谱的数**，再按「📦 提交清单」提交：`traffic_analysis/data/**` + `traffic_analysis/reports/*.json`，commit message 用 `feat: 流量数据 x.xx 更新` |
 
+> ⚡ **一条命令版本（推荐）**：把当天的表丢到桌面命名成 `流量数据.xlsx`，然后
+> **双击桌面上的「刷流量数据.bat」**（或 `python traffic_analysis/run_daily.py`）——
+> 它会依次跑「入库 → 打印指标摘要 → git commit → pull --rebase → push」，全程不用再敲命令。
+> 也支持显式指定：`python traffic_analysis/run_daily.py "D:\x\10.11流量.xlsx"`；
+> 只想提交不想推加 `--no-push`；只重建索引和日报用 `--rebuild-only`。
+> 📅 **日期推定三级**：`--date` > 文件名（`10.11流量.xlsx`）> 表内日期单元格 > 文件修改时间（会打印提示让你复核）。
+
 > ⛔ **流量链路完全独立**：不读也不写 `sales_analysis/history.json`，**不要**用 `run_all.py` 跑它。
 > 页面 `traffic_analysis/index.html` 只读 `traffic_analysis/data/` 与 `reports/`，入库完刷新即见（无需改页面）。
 >
