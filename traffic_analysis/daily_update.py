@@ -1378,11 +1378,18 @@ def main():
     paths = expand_inputs(a.xlsx)
     if not paths:
         raise SystemExit('❌ 没找到任何 xlsx')
-    folder_date = parse_date_from_name(os.path.basename(common_dir(paths)))
     groups, rest = group_by_date(paths)
-    if a.date or folder_date or len(groups) <= 1:
-        # 单天：沿用原有推定顺序（--date > 文件夹名 > 文件名 > 表内日期 > 文件修改时间）
+    # ★ 走单天还是分批，只看「分发日期」够不够用，不看文件夹名有没有日期：
+    #   踩过的坑：一次传「10.10日流量\ 文件夹 + 下载里 10.8/10.9 的表」，
+    #   旧写法用 folder_date 判断（文件夹名是 10.10 就直接走单天），结果 18 份表被并进同一天，
+    #   每个直播间都被同名的 10.8 那份覆盖 → 10-10 的日文件里躺着 10.8 的数据。
+    #   现在：有 --date 才强制单天；只有一天的表（且没有额外的无日期文件）走单天；
+    #   其余（多天混传 / 有日期的表 + 无日期的文件夹表）一律分批，各出各的日报。
+    if a.date:
         results = [ingest_one_day(paths, d=a.date, room=a.room, sheet=a.sheet, force=a.force, debug=a.debug)]
+    elif len(groups) <= 1 and not (groups and rest):
+        # 单天：沿用原有推定顺序（--date > 文件夹名 > 文件名 > 表内日期 > 文件修改时间）
+        results = [ingest_one_day(paths, d=None, room=a.room, sheet=a.sheet, force=a.force, debug=a.debug)]
     else:
         # ★ 多天混传（例如 Downloads 里同时有 10.8 与 10.9 的表）：按文件名日期分批入库，各出各的日报
         print('📅 这批文件里有 %d 个日期，按日期分批入库：%s' % (
