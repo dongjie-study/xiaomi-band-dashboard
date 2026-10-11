@@ -70,11 +70,32 @@ history 最新 : 2026-09-13     ← 订单入库到哪天
 
 ---
 
-### 🅲 两个文件同时给到
+### 🅲 收到 `x.xx流量.xlsx`（或《流量数据.xlsx》）→ 3 步（流量分析）
+
+| # | 做什么 | 命令 / 判据 |
+|---|--------|------------|
+| 1 | **认文件** | 表里有一列叫 `渠道名称`（或 流量渠道/来源渠道/流量来源/来源），**且同一行表头里还有 ≥3 个指标列**（直播间曝光次数 / 观看次数 / 互动次数 / 新增粉丝数 / 商品曝光次数 / 商品点击次数 / 成交订单数 / 用户支付金额）。**看含义不看字面**，解析器走关键词匹配；表头不一定在第 1 行（脚本在前 15 行里自己找） |
+| 2 | **入库** | `python traffic_analysis/daily_update.py "C:\Users\Administrator\Desktop\x.xx流量.xlsx"`（日期从文件名自动识别；识别不出或想指定就加 `--date 2026-10-11`；多 sheet 自动挑有渠道列、行数最多的那个，也可 `--sheet "10.2-10.4流量趋势"`） |
+| 3 | **校验 + 提交** | 脚本会打印当天指标摘要（曝光/观看/互动/涨粉/商品点击/成交/支付 + 各派生率），**先人眼过一遍有没有明显离谱的数**，再按「📦 提交清单」提交：`traffic_analysis/data/**` + `traffic_analysis/reports/*.json`，commit message 用 `feat: 流量数据 x.xx 更新` |
+
+> ⛔ **流量链路完全独立**：不读也不写 `sales_analysis/history.json`，**不要**用 `run_all.py` 跑它。
+> 页面 `traffic_analysis/index.html` 只读 `traffic_analysis/data/` 与 `reports/`，入库完刷新即见（无需改页面）。
+>
+> ⚠️ **同一天重复入库 = 直接覆盖**（脚本会打印「⚠️ 同日已有数据，已覆盖」），不会残留两份。
+> 若 10-11 已经用示例数据占过位，真实表灌进去会自动顶掉它。
+>
+> 📅 **起始月份 10 月**：早于 `2026-10` 的文件会被脚本直接拒绝（`START_YM`）。
+>
+> 🚫 **不做的事**：不改用户上传的原始表、不动销售分析模块、不生成与流量无关的销售内容。
+
+---
+
+### 🅳 两个文件同时给到
 
 两条流程**各自独立**跑：先跑 🅰️ 的 1~3 步，再跑 🅱️ 的 1~3 步，最后回到 🅰️ 的 4~7 步。
+收到流量表就**再单独**跑一遍 🅲。
 
-> ⛔ **不许互相污染**：订单流程**不许碰** `业绩demo.html`；业绩流程**不许碰** `sales_analysis/`。
+> ⛔ **不许互相污染**：订单流程**不许碰** `业绩demo.html`；业绩流程**不许碰** `sales_analysis/`；流量流程**不许碰**上面两者。
 
 ---
 
@@ -183,6 +204,18 @@ git log --oneline -1                     # 确认落地
 | G列 | 日期 |
 
 直播间纵向堆叠：第1行=小米数码旗舰店，第27行=小米官方手环直播间，依次往下。
+
+### 流量文件特征
+| 列名 | 说明 |
+|------|------|
+| 渠道名称 | 流量来源，如 直播推荐 / 粉丝关注 / 直播广场 / 个人主页&店铺&橱窗 / 活动页 / 同城 / 搜索 |
+| 直播间曝光次数 / 观看次数 / 互动次数 / 新增粉丝数 | 直播间级指标 |
+| 商品曝光次数 / 商品点击次数 / 成交订单数 / 用户支付金额 | 商品级指标 |
+
+- 表头**不一定在第 1 行**，脚本会在前 15 行里找「有渠道列且 ≥3 个指标列」的那一行。
+- 会**跳过** `同行同级优秀值` / `行业均值` / `合计` / `总计` / `汇总` 这类行。
+- 一个工作簿可能有多个 sheet（如 `10.2-10.4流量趋势`），脚本自动挑有渠道列、行数最多的那个。
+- ⚠️ `个人主页&店铺&橱窗` 与 `活动页` 这两个渠道的「互动次数」计数口径和直播间口径不一致（会出现互动 > 观看），**合算互动率时脚本会自动剔除**，渠道行上标「口径异常」——这是已知特征，不是数据错误。
 
 ---
 
@@ -547,6 +580,7 @@ git pull --rebase && git push
 | `workbench.html`（原 index.html 工作台） | `#sidebarNav` 的模块链接必须是它的**直接子元素**（JS 用 `>` 选择器）；`#overview` 内 4 张 `.stat-card` 顺序数量不可变（JS 按 `[0]~[3]` 索引）；全局函数名（内联 `onclick` 引用） |
 | `主播业绩/业绩demo.html` | 35 个唯一 id 目标（58 处 `getElementById` 调用）、`.filter-btn.active`、`#anchorMonthlyStatsPanel` 的 9 列表头 + `table-layout:fixed` |
 | `sales_analysis/index.html` | `.prow` `.rrow` `.collapsed` `.hidden` `.extra-row` `.tab-prodroom` `.roomdet-panel` |
+| `traffic_analysis/index.html` | `#monthSelect` `#daySelect`（联动靠 `location.hash`）、`#tfGridA/B/C` `#tfRuleRows` `#tfChannelBody`、4 个图表容器 `#chartFunnel` `#chartChannel` `#chartTrend` `#chartRate` |
 | 月度总结页 | id 由生成器产出，**改样式要改生成器**，只改 HTML 会被下次重跑覆盖 |
 
 > 视觉改完跑一次 `python ui_check.py <标签>` 可自动核对：各页 JS 错误数、JS 引用的选择器是否仍可解析、关键数值是否与基线一致。改之前先跑一次 `python ui_check.py before` 存基线，改完再跑一次对比。
@@ -658,4 +692,5 @@ git pull --rebase && git push
 | 2026-09-14 | 修复 `band11_history.json` 里 9/13 事故遗漏的 1 条 `date:"NaT"` 垃圾记录。「修坏数据的标准动作」第 3 步补充**兄弟文件排查**（该漏清会让主打手环模块在日期查不到时显示错数据）。 |
 | 2026-09-14 | **根目录整理**：27 个 .py → 11 个、55 个 PNG → 1 个。非日常脚本进 `tools/`（月报生成器 ×4、周报、`migrate_reclassify`、`generate_headphone_report`），已结项脚本进 `archive/`，截图产物进 `_artifacts/`。**页面目录、`sales_analysis/`、日常命令一律未动**。「四、月度切换」与「📦 提交清单」的路径已同步；`tools/` 三个脚本补上了缺失的 `sys.path.insert`。 |
 | 2026-09-19 | `主播管理/话术模块.html`（手写页）新增 **小米Watch S5 41mm** 章节 `#sec-s5-41mm`：定位摘要 + 1分钟大促话术 + 3分钟塑品话术（外观/健康/人车家/续航）+ S5 41mm vs S4 41mm 升级表 + 41mm/46mm 选购话术；导航新增按钮，FAQ 补 2 条（尺寸怎么选、适合女生吗），`modules.json` 描述同步。原有「Watch5 vs S5」对比表的 S5 列标注为 **46mm** 以示区分。 |
+| 2026-10-11 | **新增「流量分析」模块（销售分析正下方）**：新页面 `traffic_analysis/index.html`（分月下拉 + 每日下拉 + 每个指标「绝对值/前一日/环比」三件套 + 流量漏斗 + 渠道占比 + 趋势双图 + 每日总结分析报告 + 平台规则匹配表 + 渠道明细）。数据链路 `traffic_analysis/daily_update.py`（xlsx → 一日一文件主库 + 索引 + 日报），起始月份 `2026-10`；示例数据 `seed_demo.py`。同步更新 `modules.json`、`docs/01`、`docs/04`、`docs/05`、`docs/00`。**销售分析模块一行未动**（新页面独立，未触碰 `sales_analysis/`）。 |
 | 2026-09-30 | **文档纠偏（只改 md/txt，未动任何数据与代码）**：`.mimocode/command/daily-order.md`、`.mimocode/command/push.md` 里的 `git add -A` 改为精确 add，`daily-order.md` 改为薄入口指向本文顶部清单并删掉过期的服务商分类规则；`多人协作操作指南.txt` 重写为只讲协作/Git（每日流程指向本文，删掉「手工改 `stats_data.js`」旧做法）；`data_schema.md` 补正 6 个团队数组 + 小时数据独立文件，降级为速查并指向 `docs/02`；`docs/02`/`docs/04` 里写死的「105 天 / 13 个模块」改为不写死；`CLAUDE.md` 三条铁律归位到一处。 |

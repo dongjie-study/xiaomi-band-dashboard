@@ -1,0 +1,447 @@
+{
+ "date": "2026-10-07",
+ "room": "全店（全渠道汇总）",
+ "source_file": "（示例数据 · seed_demo.py）",
+ "prev_date": "2026-10-06",
+ "totals": {
+  "impressions": 9924028.1709,
+  "views": 1110256.3225,
+  "interactions": 314649.9322,
+  "new_followers": 10196.8784,
+  "product_impressions": 272851.143,
+  "product_clicks": 18722.5664,
+  "paid_orders": 1079.7066,
+  "paid_amount": 196602.1376
+ },
+ "metrics": {
+  "exposure_view_rate": 0.111876,
+  "view_interaction_rate": 0.283403,
+  "interaction_rate": 0.071904,
+  "product_ctr": 0.068618,
+  "click_cvr": 0.057669,
+  "order_per_1000_view": 0.972484,
+  "new_follower_rate": 0.009184,
+  "gpm": 177.078152,
+  "uv_value": 0.177078,
+  "aov": 182.088484,
+  "funnel": [
+   {
+    "key": "impressions",
+    "label": "直播间曝光",
+    "value": 9924028.1709
+   },
+   {
+    "key": "views",
+    "label": "直播间观看",
+    "value": 1110256.3225
+   },
+   {
+    "key": "product_impressions",
+    "label": "商品曝光",
+    "value": 272851.14300000004
+   },
+   {
+    "key": "product_clicks",
+    "label": "商品点击",
+    "value": 18722.566400000003
+   },
+   {
+    "key": "paid_orders",
+    "label": "成交订单",
+    "value": 1079.7066000000002
+   }
+  ]
+ },
+ "dod": [
+  {
+   "key": "impressions",
+   "label": "直播间曝光次数",
+   "unit": "次",
+   "cur": 9924028.1709,
+   "prev": 8722225.4564,
+   "chg": 0.13778624738691758,
+   "is_rate": false,
+   "dir": "up"
+  },
+  {
+   "key": "views",
+   "label": "直播间观看次数",
+   "unit": "次",
+   "cur": 1110256.3225,
+   "prev": 1001625.0151,
+   "chg": 0.1084550662796242,
+   "is_rate": false,
+   "dir": "up"
+  },
+  {
+   "key": "interactions",
+   "label": "直播间互动次数",
+   "unit": "次",
+   "cur": 314649.9322,
+   "prev": 317588.7161,
+   "chg": -0.009253426683694554,
+   "is_rate": false,
+   "dir": "down"
+  },
+  {
+   "key": "new_followers",
+   "label": "新增粉丝数",
+   "unit": "人",
+   "cur": 10196.8784,
+   "prev": 9494.5184,
+   "chg": 0.07397531611503316,
+   "is_rate": false,
+   "dir": "up"
+  },
+  {
+   "key": "product_impressions",
+   "label": "商品曝光次数",
+   "unit": "次",
+   "cur": 272851.143,
+   "prev": 239262.4725,
+   "chg": 0.14038419877985664,
+   "is_rate": false,
+   "dir": "up"
+  },
+  {
+   "key": "product_clicks",
+   "label": "商品点击次数",
+   "unit": "次",
+   "cur": 18722.5664,
+   "prev": 18405.6003,
+   "chg": 0.017221176969707486,
+   "is_rate": false,
+   "dir": "up"
+  },
+  {
+   "key": "paid_orders",
+   "label": "成交订单数",
+   "unit": "单",
+   "cur": 1079.7066,
+   "prev": 972.447,
+   "chg": 0.11029865895005075,
+   "is_rate": false,
+   "dir": "up"
+  },
+  {
+   "key": "paid_amount",
+   "label": "用户支付金额",
+   "unit": "元",
+   "cur": 196602.1376,
+   "prev": 170788.7302,
+   "chg": 0.1511423345660543,
+   "is_rate": false,
+   "dir": "up"
+  },
+  {
+   "key": "exposure_view_rate",
+   "label": "曝光→观看率",
+   "unit": "%",
+   "cur": 11.19,
+   "prev": 11.48,
+   "chg": -0.025261324041811844,
+   "pp_diff": -0.29,
+   "is_rate": true,
+   "dir": "down"
+  },
+  {
+   "key": "interaction_rate",
+   "label": "观看→互动率",
+   "unit": "%",
+   "cur": 7.19,
+   "prev": 6.42,
+   "chg": 0.11993769470404984,
+   "pp_diff": 0.77,
+   "is_rate": true,
+   "dir": "up"
+  },
+  {
+   "key": "product_ctr",
+   "label": "商品点击率",
+   "unit": "%",
+   "cur": 6.86,
+   "prev": 7.69,
+   "chg": -0.10793237971391416,
+   "pp_diff": -0.83,
+   "is_rate": true,
+   "dir": "down"
+  },
+  {
+   "key": "click_cvr",
+   "label": "点击→成交转化率",
+   "unit": "%",
+   "cur": 5.77,
+   "prev": 5.28,
+   "chg": 0.0928030303030303,
+   "pp_diff": 0.49,
+   "is_rate": true,
+   "dir": "up"
+  },
+  {
+   "key": "new_follower_rate",
+   "label": "涨粉率",
+   "unit": "%",
+   "cur": 0.92,
+   "prev": 0.95,
+   "chg": -0.031578947368421054,
+   "pp_diff": -0.03,
+   "is_rate": true,
+   "dir": "down"
+  },
+  {
+   "key": "gpm",
+   "label": "GPM",
+   "unit": "元",
+   "cur": 17708.0,
+   "prev": 17051.0,
+   "chg": 0.03853146443023869,
+   "pp_diff": 657.0,
+   "is_rate": true,
+   "dir": "up"
+  },
+  {
+   "key": "uv_value",
+   "label": "UV 价值",
+   "unit": "元",
+   "cur": 17.71,
+   "prev": 17.05,
+   "chg": 0.03870967741935484,
+   "pp_diff": 0.66,
+   "is_rate": true,
+   "dir": "up"
+  },
+  {
+   "key": "aov",
+   "label": "客单价",
+   "unit": "元",
+   "cur": 18208.85,
+   "prev": 17562.78,
+   "chg": 0.03678631742810649,
+   "pp_diff": 646.07,
+   "is_rate": true,
+   "dir": "up"
+  }
+ ],
+ "rules": [
+  {
+   "key": "exposure_view_rate",
+   "label": "曝光→观看率",
+   "status": "ok",
+   "unit": "%",
+   "value": 11.1876,
+   "value_disp": "11.19%",
+   "range": "8 ~ 30%",
+   "why": "直播间曝光后愿意进来的人占比。低于 8% 说明封面/标题/贴片没吸引力，平台会判定「推荐了没人看」而收量。"
+  },
+  {
+   "key": "interaction_rate",
+   "label": "观看→互动率",
+   "status": "ok",
+   "unit": "%",
+   "value": 7.1903999999999995,
+   "value_disp": "7.19%",
+   "range": "3 ~ 15%",
+   "why": "进来的人愿不愿意说话（评论/点赞/加团/停留）。低于 3% 会被判定为低质直播间，进入「推荐—无互动—减少推荐」负循环。"
+  },
+  {
+   "key": "product_ctr",
+   "label": "商品点击率",
+   "status": "ok",
+   "unit": "%",
+   "value": 6.8618,
+   "value_disp": "6.86%",
+   "range": "5 ~ 30%",
+   "why": "商品卡曝光后被点开的比例。低于 5% 通常是排品顺序/讲解节奏问题：主推品没在前 30 分钟曝光。"
+  },
+  {
+   "key": "click_cvr",
+   "label": "点击→成交转化率",
+   "status": "ok",
+   "unit": "%",
+   "value": 5.7669,
+   "value_disp": "5.77%",
+   "range": "5 ~ 40%",
+   "why": "点开商品的人最终下单的比例。低于 5% 要看价格力、库存、运费险、支付引导。"
+  },
+  {
+   "key": "new_follower_rate",
+   "label": "涨粉率",
+   "status": "ok",
+   "unit": "%",
+   "value": 0.9184,
+   "value_disp": "0.92%",
+   "range": "0.5 ~ 10%",
+   "why": "观看人数转化成粉丝的比例。涨粉是平台判断直播间「值得持续分发」的重要正反馈，低于 0.5% 说明没有引导关注动作。"
+  },
+  {
+   "key": "gpm",
+   "label": "GPM（千次观看成交额）",
+   "status": "low",
+   "unit": "元",
+   "value": 177.078152,
+   "value_disp": "177 元",
+   "range": "≥ 200 元",
+   "why": "每 1000 次观看带来的支付金额。这是平台最核心的分发指标——GPM 高就继续给量，GPM 掉就收量。"
+  }
+ ],
+ "channels": [
+  {
+   "name": "直播推荐",
+   "impressions": 3336095.9239,
+   "views": 340734.0708,
+   "interactions": 24801.9571,
+   "new_followers": 2728.2156,
+   "product_impressions": 40550.1843,
+   "product_clicks": 2480.5001,
+   "paid_orders": 168.5308,
+   "paid_amount": 60722.3625,
+   "evr": 10.21,
+   "ctr": 6.12,
+   "cvr": 6.79,
+   "gpm": 178,
+   "share": 30.69,
+   "prev_views": 339441.005,
+   "chg": 0.0038093977479238816,
+   "anomaly": false
+  },
+  {
+   "name": "粉丝关注",
+   "impressions": 1917917.5083,
+   "views": 217279.1789,
+   "interactions": 15784.3686,
+   "new_followers": 1759.7132,
+   "product_impressions": 42100.0998,
+   "product_clicks": 2838.8668,
+   "paid_orders": 159.5461,
+   "paid_amount": 42529.1747,
+   "evr": 11.33,
+   "ctr": 6.74,
+   "cvr": 5.62,
+   "gpm": 196,
+   "share": 19.57,
+   "prev_views": 163829.8588,
+   "chg": 0.3262489541985738,
+   "anomaly": false
+  },
+  {
+   "name": "直播广场",
+   "impressions": 1424117.8755,
+   "views": 166346.4887,
+   "interactions": 12898.491,
+   "new_followers": 1863.5787,
+   "product_impressions": 38119.5829,
+   "product_clicks": 2800.7249,
+   "paid_orders": 121.7816,
+   "paid_amount": 27760.4194,
+   "evr": 11.68,
+   "ctr": 7.35,
+   "cvr": 4.35,
+   "gpm": 167,
+   "share": 14.98,
+   "prev_views": 129923.177,
+   "chg": 0.2803449895625627,
+   "anomaly": false
+  },
+  {
+   "name": "个人主页&店铺&橱窗",
+   "impressions": 1127225.4059,
+   "views": 143909.5713,
+   "interactions": 152828.9173,
+   "new_followers": 1539.2295,
+   "product_impressions": 33761.3637,
+   "product_clicks": 3080.2685,
+   "paid_orders": 179.657,
+   "paid_amount": 24856.874,
+   "evr": 12.77,
+   "ctr": 9.12,
+   "cvr": 5.83,
+   "gpm": 173,
+   "share": 12.96,
+   "prev_views": 139106.1263,
+   "chg": 0.03453079406179982,
+   "anomaly": true
+  },
+  {
+   "name": "搜索",
+   "impressions": 743810.1645,
+   "views": 84099.1731,
+   "interactions": 6243.4213,
+   "new_followers": 864.3793,
+   "product_impressions": 39914.0036,
+   "product_clicks": 2037.9177,
+   "paid_orders": 132.948,
+   "paid_amount": 14363.2685,
+   "evr": 11.31,
+   "ctr": 5.11,
+   "cvr": 6.52,
+   "gpm": 171,
+   "share": 7.57,
+   "prev_views": 75198.1264,
+   "chg": 0.11836793183719552,
+   "anomaly": false
+  },
+  {
+   "name": "活动页",
+   "impressions": 724264.2898,
+   "views": 82718.2677,
+   "interactions": 98284.5415,
+   "new_followers": 712.4738,
+   "product_impressions": 36696.2394,
+   "product_clicks": 2647.5207,
+   "paid_orders": 160.7649,
+   "paid_amount": 14041.64,
+   "evr": 11.42,
+   "ctr": 7.21,
+   "cvr": 6.07,
+   "gpm": 170,
+   "share": 7.45,
+   "prev_views": 87465.9325,
+   "chg": -0.054280159878247414,
+   "anomaly": true
+  },
+  {
+   "name": "同城",
+   "impressions": 650597.003,
+   "views": 75169.572,
+   "interactions": 3808.2354,
+   "new_followers": 729.2883,
+   "product_impressions": 41709.6693,
+   "product_clicks": 2836.7677,
+   "paid_orders": 156.4782,
+   "paid_amount": 12328.3985,
+   "evr": 11.55,
+   "ctr": 6.8,
+   "cvr": 5.52,
+   "gpm": 164,
+   "share": 6.77,
+   "prev_views": 66660.7891,
+   "chg": 0.1276429969533619,
+   "anomaly": false
+  }
+ ],
+ "insights": {
+  "headline": [
+   "观看 1,110,256 次（前一日 1,001,625，+10.8%）"
+  ],
+  "data": [
+   "直播间曝光次数 9,924,028 次，前一日 8,722,225，↑ 13.8%",
+   "商品点击次数 18,723 次，前一日 18,406，↑ 1.7%",
+   "成交订单数 1,080 单，前一日 972，↑ 11.0%",
+   "用户支付金额 196,602 元，前一日 170,789，↑ 15.1%",
+   "曝光→观看率 11.19%（前一日 11.48%，-0.29pp）",
+   "观看→互动率 7.19%（前一日 6.42%，+0.77pp）",
+   "商品点击率 6.86%（前一日 7.69%，-0.83pp）",
+   "点击→成交转化率 5.77%（前一日 5.28%，+0.49pp）",
+   "渠道里 粉丝关注 涨得最猛（观看 +32.6%）；活动页 掉得最多（-5.4%）",
+   "ℹ️ 渠道「个人主页&店铺&橱窗、活动页」口径异常（互动次数 > 观看次数），已从互动率合算中剔除。"
+  ],
+  "rules": [
+   "✅ 达标：曝光→观看率 11.19%（平台参考 8 ~ 30%）、观看→互动率 7.19%（平台参考 3 ~ 15%）、商品点击率 6.86%（平台参考 5 ~ 30%）、点击→成交转化率 5.77%（平台参考 5 ~ 40%）、涨粉率 0.92%（平台参考 0.5 ~ 10%）",
+   "⚠️ GPM（千次观看成交额） 177 元，低于平台参考区间 ≥ 200 元。每 1000 次观看带来的支付金额。这是平台最核心的分发指标——GPM 高就继续给量，GPM 掉就收量。"
+  ],
+  "actions": [
+   "**转化端**：GPM/转化率是平台给量的第一指标。把主推品提到开场前 30 分钟，配合「限时直降 + 库存倒计时」逼单；检查到手价与竞对同款价差，价格力不足时优先用赠品而非降标价。"
+  ]
+ },
+ "generated_at": "2026-10-11 19:20:51"
+}

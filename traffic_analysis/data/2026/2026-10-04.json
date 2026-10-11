@@ -1,0 +1,149 @@
+{
+ "date": "2026-10-04",
+ "room": "全店（全渠道汇总）",
+ "demo": true,
+ "source_file": "（示例数据 · seed_demo.py）",
+ "source_sheet": "示例",
+ "matched_fields": [
+  "impressions",
+  "views",
+  "interactions",
+  "new_followers",
+  "product_impressions",
+  "product_clicks",
+  "paid_orders",
+  "paid_amount"
+ ],
+ "channels": {
+  "直播推荐": {
+   "impressions": 3206166.5473,
+   "views": 355883.8641,
+   "interactions": 25138.6264,
+   "new_followers": 2894.6661,
+   "product_impressions": 32064.3765,
+   "product_clicks": 2645.7001,
+   "paid_orders": 159.2799,
+   "paid_amount": 65939.6953
+  },
+  "粉丝关注": {
+   "impressions": 1872378.882,
+   "views": 196639.7895,
+   "interactions": 10907.2557,
+   "new_followers": 2293.5544,
+   "product_impressions": 32102.9282,
+   "product_clicks": 2560.3428,
+   "paid_orders": 124.0685,
+   "paid_amount": 35801.6889
+  },
+  "直播广场": {
+   "impressions": 1207576.6635,
+   "views": 145340.6168,
+   "interactions": 8191.8993,
+   "new_followers": 1294.0891,
+   "product_impressions": 37379.5659,
+   "product_clicks": 3327.7528,
+   "paid_orders": 139.8886,
+   "paid_amount": 23649.624
+  },
+  "个人主页&店铺&橱窗": {
+   "impressions": 1166108.625,
+   "views": 122732.0595,
+   "interactions": 141149.2127,
+   "new_followers": 992.8656,
+   "product_impressions": 31902.4354,
+   "product_clicks": 2899.1242,
+   "paid_orders": 174.4553,
+   "paid_amount": 23689.6238
+  },
+  "活动页": {
+   "impressions": 788656.2411,
+   "views": 99807.7619,
+   "interactions": 121363.6854,
+   "new_followers": 1245.9751,
+   "product_impressions": 38580.7543,
+   "product_clicks": 3424.5469,
+   "paid_orders": 181.6921,
+   "paid_amount": 16015.5901
+  },
+  "同城": {
+   "impressions": 860766.6873,
+   "views": 98152.8284,
+   "interactions": 6753.5717,
+   "new_followers": 1001.4093,
+   "product_impressions": 36570.611,
+   "product_clicks": 2770.511,
+   "paid_orders": 153.7897,
+   "paid_amount": 16897.5042
+  },
+  "搜索": {
+   "impressions": 605433.613,
+   "views": 76241.7263,
+   "interactions": 4380.1914,
+   "new_followers": 767.4762,
+   "product_impressions": 33809.829,
+   "product_clicks": 2521.7613,
+   "paid_orders": 116.2373,
+   "paid_amount": 13931.9916
+  }
+ },
+ "totals": {
+  "impressions": 9707087.2592,
+  "views": 1094798.6465,
+  "interactions": 317884.4426,
+  "new_followers": 10490.0358,
+  "product_impressions": 242410.5003,
+  "product_clicks": 20149.7391,
+  "paid_orders": 1049.4114,
+  "paid_amount": 195925.7179
+ },
+ "ok_totals": {
+  "impressions": 7752322.3931,
+  "views": 872258.8251,
+  "interactions": 55371.5445,
+  "new_followers": 8251.1951,
+  "product_impressions": 171927.3106,
+  "product_clicks": 13826.068,
+  "paid_orders": 693.264,
+  "paid_amount": 156220.504
+ },
+ "updated_at": "2026-10-11 19:20:51",
+ "metrics": {
+  "exposure_view_rate": 0.112783,
+  "view_interaction_rate": 0.290359,
+  "interaction_rate": 0.063481,
+  "product_ctr": 0.083122,
+  "click_cvr": 0.052081,
+  "order_per_1000_view": 0.958543,
+  "new_follower_rate": 0.009582,
+  "gpm": 178.960504,
+  "uv_value": 0.178961,
+  "aov": 186.700581,
+  "funnel": [
+   {
+    "key": "impressions",
+    "label": "直播间曝光",
+    "value": 9707087.2592
+   },
+   {
+    "key": "views",
+    "label": "直播间观看",
+    "value": 1094798.6465
+   },
+   {
+    "key": "product_impressions",
+    "label": "商品曝光",
+    "value": 242410.50029999999
+   },
+   {
+    "key": "product_clicks",
+    "label": "商品点击",
+    "value": 20149.7391
+   },
+   {
+    "key": "paid_orders",
+    "label": "成交订单",
+    "value": 1049.4114
+   }
+  ]
+ }
+}
