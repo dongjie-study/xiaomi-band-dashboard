@@ -945,9 +945,10 @@ function renderTrend(r){
       { type: 'value', name: '曝光→观看率 %', nameTextStyle: { fontSize: 10, color: '#94a3b8' }, axisLabel: { formatter: '{value}%', fontSize: 10, color: '#94a3b8' }, splitLine: { show: false } }
     ],
     series: [
-      { name: '直播间曝光次数', type: 'bar', data: imps, barMaxWidth: 22, itemStyle: { color: 'rgba(245,166,35,.55)', borderRadius: [3,3,0,0] }, tooltip: { valueFormatter: function(v){ return fmtInt(v); } } },
-      { name: '直播间观看次数', type: 'line', data: views, smooth: true, symbolSize: 6, lineStyle: { width: 2.4, color: '#ff6900' }, itemStyle: { color: '#ff6900' }, areaStyle: { color: 'rgba(255,105,0,.10)' }, tooltip: { valueFormatter: function(v){ return fmtInt(v); } } },
-      { name: '曝光→观看率', type: 'line', yAxisIndex: 1, data: evr, smooth: true, symbolSize: 5, lineStyle: { width: 1.8, type: 'dashed', color: '#4a90d9' }, itemStyle: { color: '#4a90d9' }, tooltip: { valueFormatter: function(v){ return v + '%'; } } }
+      /* emphasis.focus:'series' + blur：点指标卡高亮某条曲线时，其余曲线淡出（悬停同样生效，悬停/高亮都只是视觉，不改任何数值） */
+      { name: '直播间曝光次数', type: 'bar', data: imps, barMaxWidth: 22, itemStyle: { color: 'rgba(245,166,35,.55)', borderRadius: [3,3,0,0] }, emphasis: { focus: 'series' }, blur: { itemStyle: { opacity: .18 } }, tooltip: { valueFormatter: function(v){ return fmtInt(v); } } },
+      { name: '直播间观看次数', type: 'line', data: views, smooth: true, symbolSize: 6, lineStyle: { width: 2.4, color: '#ff6900' }, itemStyle: { color: '#ff6900' }, areaStyle: { color: 'rgba(255,105,0,.10)' }, emphasis: { focus: 'series' }, blur: { lineStyle: { opacity: .18 }, itemStyle: { opacity: .18 } }, tooltip: { valueFormatter: function(v){ return fmtInt(v); } } },
+      { name: '曝光→观看率', type: 'line', yAxisIndex: 1, data: evr, smooth: true, symbolSize: 5, lineStyle: { width: 1.8, type: 'dashed', color: '#4a90d9' }, itemStyle: { color: '#4a90d9' }, emphasis: { focus: 'series' }, blur: { lineStyle: { opacity: .18 }, itemStyle: { opacity: .18 } }, tooltip: { valueFormatter: function(v){ return v + '%'; } } }
     ]
   });
   var sub = document.getElementById('tfTrendSub');
@@ -973,6 +974,8 @@ function renderRateTrend(r){
     return { name: name, type: 'line', smooth: true, symbolSize: 5, connectNulls: true,
       data: seriesOf(r, key, true),
       lineStyle: { width: 2, color: color }, itemStyle: { color: color },
+      /* 点指标卡高亮时其余曲线淡出（纯视觉，不改数值） */
+      emphasis: { focus: 'series' }, blur: { lineStyle: { opacity: .18 }, itemStyle: { opacity: .18 } },
       tooltip: { valueFormatter: function(v){ return v + '%'; } } };
   }
   c.setOption({
