@@ -459,10 +459,13 @@ function deltaPP(cur, prev, unit){
   if (cur == null) return { cls: '', arrow: '', txt: '—', pct: null, diff: null };
   if (prev == null){ return { cls: 'flat', arrow: '', txt: '首日 / 无对比', pct: null, diff: null }; }
   var d = cur - prev;
-  var cls = d > 0.005 ? 'up' : (d < -0.005 ? 'down' : 'flat');
+  /* 差值的绝对值不到显示精度的一半时按 0 处理：否则 -0.004 会 toFixed 成「-0.00」，
+     而报告文案那边写「+0.00」，同一页出现符号相反的零（10-08 耳机直播间涨粉率踩过）。 */
+  var dv = Math.abs(d) < 0.005 ? 0 : d;
+  var cls = dv > 0 ? 'up' : (dv < 0 ? 'down' : 'flat');
   var arrow = cls === 'up' ? '▲' : (cls === 'down' ? '▼' : '→');
   var suf = unit === '%' ? 'pp' : (unit === '元' || unit === '倍' ? unit : '');
-  return { cls: cls, arrow: arrow, txt: (d >= 0 ? '+' : '') + d.toFixed(2) + suf, pct: prev ? d / Math.abs(prev) : null, diff: d };
+  return { cls: cls, arrow: arrow, txt: (dv >= 0 ? '+' : '') + dv.toFixed(2) + suf, pct: prev ? d / Math.abs(prev) : null, diff: d };
 }
 
 /* ---------------- 指标卡 ---------------- */

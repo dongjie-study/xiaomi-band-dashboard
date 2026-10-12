@@ -172,6 +172,18 @@ def r6(v):
     return round(v, 6) if isinstance(v, float) else v
 
 
+def nz0(v):
+    """把 -0.0 归一成 0.0。
+
+    Python 里 round(-0.0043, 2) == -0.0，而 -0.0 是假值：`x or 0` 会把它换成 +0.0。
+    于是同一页会出现「卡片 -0.00pp、报告 +0.00pp」这种符号相反的零（10-08 耳机直播间
+    涨粉率就踩过）。差值小到显示不出来时统一按 +0.0 走。
+    """
+    if v is None:
+        return None
+    return 0.0 if v == 0 else v
+
+
 # ============================================================ 解析 xlsx（不依赖 openpyxl）
 class ExcelizeError(Exception):
     """这个 xlsx 读不出表格结构。"""
@@ -717,7 +729,7 @@ def day_over_day(cur, prev):
     for field, label, unit, _k in COLS:
         c = ct.get(field)
         p = pt.get(field) if pt else None
-        chg = (c / p - 1) if (p not in (None, 0) and c is not None) else None
+        chg = nz0((c / p - 1) if (p not in (None, 0) and c is not None) else None)
         rows.append({'key': field, 'label': label, 'unit': unit, 'cur': c, 'prev': p, 'chg': chg, 'is_rate': False,
                      'dir': ('up' if (chg or 0) > 0 else ('down' if (chg or 0) < 0 else 'flat')) if chg is not None else 'na'})
     for key, label, unit, nd in [
@@ -742,8 +754,8 @@ def day_over_day(cur, prev):
             pd_ = round(p, nd) if p is not None else None
             diff = round(raw_diff, nd) if raw_diff is not None else None
         rows.append({'key': key, 'label': label, 'unit': unit, 'cur': cd, 'prev': pd_,
-                     'chg': (raw_diff / abs(p) if (raw_diff is not None and p) else None),
-                     'pp_diff': diff, 'is_rate': True,
+                     'chg': nz0(raw_diff / abs(p) if (raw_diff is not None and p) else None),
+                     'pp_diff': nz0(diff), 'is_rate': True,
                      'dir': ('up' if (diff or 0) > 0 else ('down' if (diff or 0) < 0 else 'flat')) if diff is not None else 'na'})
     return rows
 
