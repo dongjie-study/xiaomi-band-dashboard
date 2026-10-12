@@ -9,6 +9,7 @@
 <script>if(!window.echarts){document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></scr'+'ipt>')}</script>
 <style>
   /* ===== 页面骨架（对齐销售分析页的 content-topbar / content-body 范式） ===== */
+  html { scroll-behavior: smooth; }
   body { background: var(--bg-page, #f0f4f8); }
 
   .content-topbar {
@@ -25,16 +26,34 @@
     padding: 5px 12px; border-radius: 8px; background: rgba(255,105,0,.08);
   }
   .content-topbar .back-home:hover { background: rgba(255,105,0,.16); }
+  /* 三个下拉：胶囊 + 左侧图标（id 与 onchange 签名不变，只换外观） */
   .content-topbar select {
     font: inherit; font-size: .86em; font-weight: 600; color: var(--text-primary, #1e293b);
-    padding: 7px 30px 7px 12px; border-radius: 9px; cursor: pointer;
+    padding: 7px 28px 7px 30px; border-radius: 999px; cursor: pointer;
     border: 1px solid var(--border-light, #e2e8f0); background-color: #fff;
     appearance: none; -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%2394a3b8' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 10px center;
+    transition: border-color .15s ease, box-shadow .15s ease, transform .12s ease;
   }
-  .content-topbar select:focus { outline: none; border-color: var(--mi-orange, #ff6900); box-shadow: 0 0 0 3px rgba(255,105,0,.12); }
+  .content-topbar select:hover { border-color: #ffd2ab; box-shadow: 0 2px 10px rgba(255,105,0,.10); }
+  .content-topbar select:active { transform: translateY(1px); }
+  .content-topbar select:focus { outline: none; border-color: var(--mi-orange, #ff6900); box-shadow: 0 0 0 3px rgba(255,105,0,.14); }
   .content-topbar select:disabled { opacity: .5; cursor: not-allowed; }
+  #monthSelect {
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ff6900' stroke-width='2' stroke-linecap='round'%3E%3Crect x='3' y='4.5' width='18' height='16' rx='2.5'/%3E%3Cpath d='M8 2.5v4M16 2.5v4M3 9.5h18'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%2394a3b8' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-position: left 9px center, right 10px center;
+  }
+  #daySelect {
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ff6900' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 7.2v5l3.2 2'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%2394a3b8' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-position: left 9px center, right 10px center;
+  }
+  #scopeSelect {
+    background-image: url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23ff6900' stroke-width='2' stroke-linecap='round'%3E%3Crect x='2.5' y='5' width='19' height='13.5' rx='2.5'/%3E%3Cpath d='M8.5 21h7'/%3E%3Cpath d='M10 9.5l4.5 2.5L10 14.5z' fill='%23ff6900' stroke='none'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml;charset=utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%2394a3b8' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-position: left 9px center, right 10px center;
+  }
 
   .content-body { padding: 20px 24px 60px; max-width: 1600px; margin: 0 auto; }
 
@@ -232,6 +251,41 @@
   }
   table.tf-table tr.me td { background: #fff8f1; }
   table.tf-table tr.me .ch-name::after { content: ' ◀ 当前'; font-size: .84em; color: #e65100; font-weight: 700; }
+
+  /* ===== 交互：指标卡 ↔ 趋势图 ↔ 渠道表 ↔ 占比图 ===== */
+  /* 锚点滚动时避开吸顶 topbar */
+  #tfTrendCard, #tfRuleBlock, #tfActionBlock, #tfChannelCard, #tfCompareCard { scroll-margin-top: 84px; }
+  .tf-metric.linked { cursor: pointer; }
+  .tf-metric.linked:hover { border-color: #ffd2ab; }
+  .tf-metric.sel { border-color: var(--mi-orange, #ff6900); box-shadow: 0 0 0 3px rgba(255,105,0,.14); }
+  .tf-metric.sel::after {
+    content: '趋势已高亮'; position: absolute; right: 10px; top: 10px;
+    font-size: .68em; font-weight: 700; color: #e65100; background: #fff2e6;
+    padding: 1px 6px; border-radius: 6px;
+  }
+  .tf-tip { margin-top: 12px; font-size: .76em; color: #94a3b8; line-height: 1.8; }
+  .tf-tip b { color: #64748b; font-weight: 700; }
+  table.tf-table tbody tr[data-ch] { cursor: pointer; }
+  table.tf-table tbody tr.sel td { background: #fff3e0; }
+  table.tf-table tbody tr.anomaly.sel td, table.tf-table tbody tr.suspect.sel td { background: #ffedd5; }
+  .tf-pill.go { cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+  .tf-pill.go:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(15,23,42,.12); }
+  .tf-flash { animation: tfflash 1.5s ease; }
+  @keyframes tfflash {
+    0%, 55% { box-shadow: 0 0 0 3px rgba(255,105,0,.32); }
+    100% { box-shadow: 0 0 0 0 rgba(255,105,0,0); }
+  }
+  /* 回到顶部 */
+  #tfTop {
+    position: fixed; left: 16px; bottom: 20px; width: 38px; height: 38px;
+    border-radius: 50%; border: 1px solid var(--border-light, #e2e8f0); background: #fff;
+    color: #64748b; font-size: 15px; line-height: 1; cursor: pointer;
+    display: none; align-items: center; justify-content: center;
+    box-shadow: 0 4px 14px rgba(15,23,42,.12); z-index: 70;
+  }
+  #tfTop.show { display: inline-flex; }
+  #tfTop:hover { color: #e65100; border-color: #ffd2ab; }
+  @media (max-width: 760px) { .tf-tip { font-size: .72em; } }
 </style>
 </head>
 <body>
@@ -278,6 +332,7 @@
       <div class="tf-sec">效率指标 <span class="tip">比率类环比用百分点（pp），金额 / 倍数用原单位</span></div>
       <div class="tf-grid g4" id="tfGridC"></div>
       <div class="tf-extra" id="tfExtra"></div>
+      <div class="tf-tip">💡 <b>点指标卡</b>可在下方趋势图里高亮对应曲线（再点一次取消）· <b>点渠道行</b>可定位到占比图里对应扇区 · <b>点趋势图上的某一天</b>可跳到那天 · 键盘 <b>← / →</b> 切换日期</div>
     </div>
 
     <!-- 二、流量漏斗 -->
@@ -293,7 +348,7 @@
     </div>
 
     <!-- 三、趋势 -->
-    <div class="tf-card">
+    <div class="tf-card" id="tfTrendCard">
       <h3>本月流量趋势 <span class="tf-sub" id="tfTrendSub"></span></h3>
       <div class="tf-chart" id="chartTrend"></div>
     </div>
@@ -347,7 +402,7 @@
         <ul id="tfDataList"></ul>
       </div>
 
-      <div class="tf-block">
+      <div class="tf-block" id="tfRuleBlock">
         <div class="b-title">🎯 平台规则匹配度（抖音 / 快手 / 淘宝直播 流量分发逻辑）</div>
         <div class="tf-table-wrap">
           <table class="tf-table" style="min-width:760px;">
@@ -363,14 +418,14 @@
         <ul id="tfRuleList" style="margin-top:12px;"></ul>
       </div>
 
-      <div class="tf-block">
+      <div class="tf-block" id="tfActionBlock">
         <div class="b-title">🔧 优化建议（具体可执行）</div>
         <ul id="tfActionList"></ul>
       </div>
     </div>
 
     <!-- 五、渠道明细 -->
-    <div class="tf-card">
+    <div class="tf-card" id="tfChannelCard">
       <h3>渠道流量明细 <span class="tf-sub">按观看次数排序 · 含环比</span></h3>
       <div class="tf-table-wrap">
         <table class="tf-table">
@@ -477,7 +532,14 @@ function metricCard(o){
   } else {
     prevHtml = '<div class="m-prev">前一日 <b>—</b>（无对比数据）</div>';
   }
-  return '<div class="tf-metric ' + (d.cls || '') + '">'
+  /* link = 趋势图里对应的 series 名：点卡片即在趋势图里高亮那条曲线 */
+  var cls = 'tf-metric ' + (d.cls || '');
+  var extra = '';
+  if (o.link){
+    cls += ' linked';
+    extra = ' data-link="' + esc(o.link) + '" title="点击在下方趋势图里高亮「' + esc(o.link) + '」曲线"';
+  }
+  return '<div class="' + cls + '"' + extra + '>'
        +   '<div class="m-label">' + esc(o.label) + (o.unit ? '<span class="m-unit">（' + esc(o.unit) + '）</span>' : '') + '</div>'
        +   '<div class="m-value">' + esc(o.valueTxt) + '</div>'
        +   '<span class="m-delta ' + (d.cls || '') + '">' + (d.arrow ? d.arrow + ' ' : '') + esc(d.txt) + '</span>'
@@ -486,13 +548,13 @@ function metricCard(o){
 }
 
 /* 比率类指标：值已经是百分数 */
-function rateCard(label, unit, curV, prevV, decimals){
+function rateCard(label, unit, curV, prevV, decimals, link){
   var d = deltaPP(curV, prevV, unit);
   return metricCard({
     label: label, unit: unit,
     valueTxt: (curV == null ? '—' : Number(curV).toFixed(decimals == null ? 2 : decimals)) + (unit === '%' ? '%' : ''),
     prevTxt: (prevV == null ? '—' : Number(prevV).toFixed(decimals == null ? 2 : decimals) + (unit === '%' ? '%' : '')),
-    prev: prevV, delta: d
+    prev: prevV, delta: d, link: link
   });
 }
 
@@ -532,13 +594,15 @@ function renderMetrics(r){
     { key: 'paid_orders',         label: '成交订单数',   unit: '单' },
     { key: 'paid_amount',         label: '用户支付金额', unit: '元' }
   ];
+  /* 指标卡 → 趋势图 series 名映射（没有对应曲线的就不给 link，点了也没反应） */
+  var TREND_LINK = { impressions: '直播间曝光次数', views: '直播间观看次数' };
   function grid(host, list){
     document.getElementById(host).innerHTML = list.map(function(it){
       var c = t[it.key], pv = pt ? pt[it.key] : null;
       return metricCard({
         label: it.label, unit: it.unit,
         valueTxt: fmtInt(c), prevTxt: fmtInt(pv), prev: pv,
-        delta: delta(c, pv)
+        delta: delta(c, pv), link: TREND_LINK[it.key]
       });
     }).join('');
   }
@@ -547,15 +611,15 @@ function renderMetrics(r){
 
   document.getElementById('tfGridC').innerHTML =
       rateCard('曝光→观看率', '%', m.exposure_view_rate == null ? null : m.exposure_view_rate * 100,
-               pm && pm.exposure_view_rate != null ? pm.exposure_view_rate * 100 : null)
+               pm && pm.exposure_view_rate != null ? pm.exposure_view_rate * 100 : null, null, '曝光→观看率')
     + rateCard('商品点击率', '%', m.product_ctr == null ? null : m.product_ctr * 100,
-               pm && pm.product_ctr != null ? pm.product_ctr * 100 : null)
+               pm && pm.product_ctr != null ? pm.product_ctr * 100 : null, null, '商品点击率')
     + rateCard('点击→成交转化率', '%', m.click_cvr == null ? null : m.click_cvr * 100,
-               pm && pm.click_cvr != null ? pm.click_cvr * 100 : null)
+               pm && pm.click_cvr != null ? pm.click_cvr * 100 : null, null, '点击→成交转化率')
     + rateCard('观看→互动率', '%', m.interaction_rate == null ? null : m.interaction_rate * 100,
                pm && pm.interaction_rate != null ? pm.interaction_rate * 100 : null)
     + rateCard('涨粉率', '%', m.new_follower_rate == null ? null : m.new_follower_rate * 100,
-               pm && pm.new_follower_rate != null ? pm.new_follower_rate * 100 : null)
+               pm && pm.new_follower_rate != null ? pm.new_follower_rate * 100 : null, null, '涨粉率')
     + rateCard('GPM（千次观看成交额）', '元', m.gpm == null ? null : m.gpm,
                pm && pm.gpm != null ? pm.gpm : null, 0)
     + rateCard('UV 价值', '元', m.uv_value == null ? null : m.uv_value,
@@ -597,11 +661,12 @@ function renderReport(r){
                                  : { cls: 'bad', txt: '规则匹配：' + bad.length + ' 项不达标 ⚠' });
   if (bad.length === 0 && nojudge.length)
     verdict = { cls: 'ok', txt: '规则匹配：达标 ' + okN + ' 项，' + nojudge.length + ' 项暂不判定' };
+  /* pill 可点：直达规则表 / 渠道明细（新增 .go 类，样式见 CSS） */
   document.getElementById('tfReportPills').innerHTML =
-      '<span class="tf-pill ' + verdict.cls + '">' + esc(verdict.txt) + '</span>　'
-    + '<span class="tf-pill">达标 ' + okN + ' / ' + rules.length + '</span>'
+      '<span class="tf-pill go ' + verdict.cls + '" onclick="scrollToBlock(\'tfRuleBlock\')" title="跳到平台规则匹配度">' + esc(verdict.txt) + '</span>　'
+    + '<span class="tf-pill go" onclick="scrollToBlock(\'tfRuleBlock\')" title="跳到平台规则匹配度">达标 ' + okN + ' / ' + rules.length + '</span>'
     + (nojudge.length ? '<span class="tf-pill flat">' + nojudge.length + ' 项暂不判定</span>' : '')
-    + '<span class="tf-pill">渠道 ' + (r.channels || []).length + ' 个</span>'
+    + '<span class="tf-pill go" onclick="scrollToBlock(\'tfChannelCard\')" title="跳到渠道流量明细">渠道 ' + (r.channels || []).length + ' 个</span>'
     + (r.excluded_share ? '<span class="tf-pill warn">口径异常剔除互动 ' + fmtNum(r.excluded_share*100, 1) + '%</span>' : '');
 
   document.getElementById('tfHeadline').innerHTML = '📈 ' + esc(r.date) + '　' + (ins.headline || []).map(function(x){ return mdInline(x); }).join('　|　');
@@ -727,7 +792,7 @@ function renderChannels(r){
     /* 口径异常的渠道，其「观看→互动率」不可信，直接留空 */
     var irTxt = c.anomaly ? '—' : pctOrDash(c.interaction_ratio);
     var irCls = (c.suspect && !c.anomaly) ? 'c-up' : '';
-    return '<tr class="' + cls + '">'
+    return '<tr class="' + cls + '" data-ch="' + esc(c.name) + '" onclick="highlightChannelRow(this)">'
       + '<td class="ch-name">' + esc(c.name) + tag + '</td>'
       + '<td>' + fmtInt(c.views) + '</td>'
       + '<td>' + fmtNum(c.share, 1) + '%</td>'
@@ -770,15 +835,32 @@ function renderFunnel(r){
   var base = vals[0] || 1;
   c.setOption({
     grid: { left: 8, right: 66, top: 12, bottom: 8, containLabel: true },
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' },
-      formatter: function(ps){ var i = ps[0].dataIndex; return labels[i] + '<br/>' + fmtInt(vals[i]) + '　（占曝光 ' + (vals[i]/base*100).toFixed(2) + '%）'; } },
+    toolbox: { show: true, right: 4, top: 0, itemSize: 13, itemGap: 6, iconStyle: { borderColor: '#94a3b8' },
+      feature: { saveAsImage: { title: '保存为图片', name: '流量转化漏斗_' + SCOPE + '_' + r.date, pixelRatio: 2, backgroundColor: '#fff' } } },
+    /* trigger:'item'：axis trigger 会让 series click 的 dataIndex 恒为 0，点击交互就废了 */
+    tooltip: { trigger: 'item',
+      formatter: function(p){ var i = p.dataIndex; return labels[i] + '<br/>' + fmtInt(vals[i]) + '　（占曝光 ' + (vals[i]/base*100).toFixed(2) + '%）'; } },
     xAxis: { type: 'value', axisLabel: { formatter: function(v){ return fmtCompact(v); }, fontSize: 10, color: '#94a3b8' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
     yAxis: { type: 'category', inverse: true, data: labels, axisLabel: { fontSize: 11, color: '#475569' }, axisTick: { show: false }, axisLine: { lineStyle: { color: '#e2e8f0' } } },
     series: [{
       type: 'bar', data: vals, barWidth: '54%',
       itemStyle: { borderRadius: [0, 5, 5, 0], color: function(p){ return PALETTE[p.dataIndex % PALETTE.length]; } },
-      label: { show: true, position: 'right', fontSize: 10, color: '#64748b', formatter: function(p){ return fmtCompact(p.value); } }
+      label: { show: true, position: 'right', fontSize: 10, color: '#64748b', formatter: function(p){ return fmtCompact(p.value); } },
+      emphasis: { itemStyle: { shadowBlur: 6, shadowColor: 'rgba(0,0,0,.18)' } }
     }]
+  });
+  /* 点漏斗某一段：把上一步的转化率写到副标题里，一眼看出断点在哪 */
+  c.off('click');
+  c.on('click', function(p){
+    var sub = document.getElementById('tfFunnelSub');
+    if (!sub) return;
+    var di = (p && p.dataIndex != null) ? p.dataIndex : 0;
+    if (di === 0) { sub.textContent = SCOPE + '　曝光 → 观看 → 商品曝光 → 点击 → 成交'; return; }
+    var conv = vals[di - 1] ? vals[di] / vals[di - 1] * 100 : null;
+    /* 「观看 → 商品曝光」可能 >100%：商品曝光按次计，一个人可以翻多次商品页，不是口径错误 */
+    var note = (conv != null && conv > 100) ? '（商品曝光按次计，可 >100%）' : '（点第一段复位）';
+    sub.textContent = SCOPE + '　' + labels[di - 1] + ' → ' + labels[di]
+      + ' 转化率 ' + (conv == null ? '—' : conv.toFixed(2) + '%') + note;
   });
 }
 
@@ -789,6 +871,8 @@ function renderChannelPie(r){
   if (!c) return;
   var chs = (r.channels || []).slice(0, 8);
   c.setOption({
+    toolbox: { show: true, right: 4, top: 0, itemSize: 13, itemGap: 6, iconStyle: { borderColor: '#94a3b8' },
+      feature: { saveAsImage: { title: '保存为图片', name: '渠道观看占比_' + SCOPE + '_' + r.date, pixelRatio: 2, backgroundColor: '#fff' } } },
     tooltip: { trigger: 'item', formatter: function(p){ return p.name + '<br/>观看 ' + fmtInt(p.value) + '　' + p.percent + '%'; } },
     legend: { type: 'scroll', bottom: 0, itemWidth: 9, itemHeight: 9, textStyle: { fontSize: 11, color: '#475569' } },
     series: [{
@@ -797,8 +881,16 @@ function renderChannelPie(r){
       itemStyle: { borderColor: '#fff', borderWidth: 2 },
       label: { formatter: '{b}\n{d}%', fontSize: 10, color: '#475569', lineHeight: 14 },
       labelLine: { length: 8, length2: 8 },
+      emphasis: { scaleSize: 6 },
       data: chs.map(function(x, i){ return { name: x.name, value: Math.round(x.views || 0), itemStyle: { color: PALETTE[i % PALETTE.length] } }; })
     }]
+  });
+  /* 点占比图里的扇区 → 渠道明细表滚到那一行并高亮 */
+  c.off('click');
+  c.on('click', function(p){
+    var q = (window.CSS && CSS.escape) ? CSS.escape(p.name) : String(p.name).replace(/"/g, '\\"');
+    var row = document.querySelector('#tfChannelBody tr[data-ch="' + q + '"]');
+    if (row) scrollToChannelRow(row);
   });
 }
 
@@ -841,8 +933,12 @@ function renderTrend(r){
   var evr = seriesOf(r, 'exposure_view_rate', true);
   c.setOption({
     grid: { left: 8, right: 42, top: 40, bottom: 30, containLabel: true },
+    toolbox: { show: true, right: 4, top: 0, itemSize: 13, itemGap: 6, iconStyle: { borderColor: '#94a3b8' },
+      feature: { saveAsImage: { title: '保存为图片', name: '本月流量趋势_' + SCOPE + '_' + r.date, pixelRatio: 2, backgroundColor: '#fff' } } },
     tooltip: { trigger: 'axis' },
     legend: { top: 4, itemWidth: 14, itemHeight: 9, textStyle: { fontSize: 11, color: '#475569' } },
+    /* 只加 inside 型 dataZoom（滚轮缩放）：不占布局高度，卡片高度仍是 290px */
+    dataZoom: [{ type: 'inside', xAxisIndex: 0, zoomOnMouseWheel: true, moveOnMouseMove: true }],
     xAxis: { type: 'category', data: labels, axisLabel: { fontSize: 10, color: '#94a3b8' }, axisLine: { lineStyle: { color: '#e2e8f0' } } },
     yAxis: [
       { type: 'value', name: '次数', nameTextStyle: { fontSize: 10, color: '#94a3b8' }, axisLabel: { formatter: function(v){ return fmtCompact(v); }, fontSize: 10, color: '#94a3b8' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
@@ -858,6 +954,14 @@ function renderTrend(r){
   if (sub) sub.textContent = labels.length
     ? (SCOPE + '　' + labels[0] + ' ~ ' + labels[labels.length-1] + '　共 ' + labels.length + ' 天')
     : SCOPE;
+  /* 点趋势图上的某一天 → 跳到那天（点当前日期后面的空白处不跳） */
+  c.off('click');
+  c.on('click', function(p){
+    var i = p.dataIndex;
+    if (i == null || i < 0 || i >= days.length) return;
+    if (days[i] === CURDAY) return;
+    switchDay(days[i]);
+  });
 }
 
 function renderRateTrend(r){
@@ -873,8 +977,12 @@ function renderRateTrend(r){
   }
   c.setOption({
     grid: { left: 8, right: 16, top: 44, bottom: 30, containLabel: true },
+    toolbox: { show: true, right: 4, top: 0, itemSize: 13, itemGap: 6, iconStyle: { borderColor: '#94a3b8' },
+      feature: { saveAsImage: { title: '保存为图片', name: '转化率趋势_' + SCOPE + '_' + r.date, pixelRatio: 2, backgroundColor: '#fff' } } },
     tooltip: { trigger: 'axis', valueFormatter: function(v){ return v + '%'; } },
     legend: { top: 6, itemWidth: 14, itemHeight: 9, textStyle: { fontSize: 11, color: '#475569' } },
+    /* 只加 inside 型 dataZoom（滚轮缩放）：不占布局高度 */
+    dataZoom: [{ type: 'inside', xAxisIndex: 0, zoomOnMouseWheel: true, moveOnMouseMove: true }],
     xAxis: { type: 'category', data: labels, axisLabel: { fontSize: 10, color: '#94a3b8' }, axisLine: { lineStyle: { color: '#e2e8f0' } } },
     yAxis: { type: 'value', axisLabel: { formatter: '{value}%', fontSize: 10, color: '#94a3b8' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
     series: [
@@ -909,6 +1017,115 @@ function reloadCharts(){
 window.addEventListener('resize', function(){
   Object.keys(CHARTS).forEach(function(k){ if (CHARTS[k]) CHARTS[k].resize(); });
 });
+
+/* ================= 交互：指标卡 / 渠道行 / 锚点 / 键盘 / 回顶 ================= */
+var HL = { series: null };   // 当前在趋势图里高亮的 series 名（null = 没高亮）
+
+/* 事件委托：点 / 回车 / 空格 点 .tf-metric.linked → 高亮趋势曲线 */
+document.addEventListener('click', function(e){
+  var el = e.target && e.target.closest ? e.target.closest('.tf-metric.linked') : null;
+  if (el) toggleMetricHighlight(el);
+});
+document.addEventListener('keydown', function(e){
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  var t = e.target;
+  if (!t || !t.classList || !t.classList.contains('linked')) return;
+  e.preventDefault();
+  toggleMetricHighlight(t);
+});
+
+/* 点指标卡：在趋势图里高亮对应曲线（再点一次取消） */
+function toggleMetricHighlight(el){
+  var link = el.getAttribute('data-link');
+  if (!link) return;
+  if (HL.series === link){ clearMetricHighlight(); return; }
+  HL.series = link;
+  Array.prototype.forEach.call(document.querySelectorAll('.tf-metric.sel'), function(n){ n.classList.remove('sel'); });
+  el.classList.add('sel');
+  /* 趋势图 3 条 + 转化率趋势 4 条，series 名可能重复（曝光→观看率 两边都有） */
+  ['chartTrend', 'chartRate'].forEach(function(cid){
+    var c = CHARTS[cid];
+    if (!c) return;
+    try { c.dispatchAction({ type: 'downplay' }); } catch (e) {}
+    try { c.dispatchAction({ type: 'highlight', seriesName: link }); } catch (e) {}
+  });
+}
+function clearMetricHighlight(){
+  HL.series = null;
+  Array.prototype.forEach.call(document.querySelectorAll('.tf-metric.sel'), function(n){ n.classList.remove('sel'); });
+  ['chartTrend', 'chartRate'].forEach(function(cid){
+    var c = CHARTS[cid];
+    if (!c) return;
+    /* downplay 不带参数 = 整体复位（去掉所有高亮/淡出态） */
+    try { c.dispatchAction({ type: 'downplay' }); } catch (e) {}
+  });
+}
+
+/* 点渠道表行 → 占比图里对应扇区高亮 + 表格滚动可见 */
+function highlightChannelRow(tr){
+  var name = tr.getAttribute('data-ch');
+  if (!name) return;
+  var already = tr.classList.contains('sel');
+  var pie = CHARTS['chartChannel'];
+  /* 先整体复位，再按需高亮：避免上一次的扇区还处于放大态 */
+  if (pie){ try { pie.dispatchAction({ type: 'downplay' }); } catch (e) {} }
+  Array.prototype.forEach.call(document.querySelectorAll('#tfChannelBody tr.sel'), function(n){ n.classList.remove('sel'); });
+  if (already) return;   /* 再点一次 = 取消 */
+  tr.classList.add('sel');
+  if (pie){
+    try {
+      pie.dispatchAction({ type: 'highlight', name: name });
+      /* 扇区在只显示前 8 个渠道的图里可能不存在（第 9 名以后），此时提示一下 */
+      var has = (REPORT && REPORT.channels || []).slice(0, 8).some(function(x){ return x.name === name; });
+      if (!has){
+        var psub = document.getElementById('tfPieSub');
+        if (psub) psub.textContent = SCOPE + '　「' + name + '」观看量未进前 8，图里没有对应扇区（看表格即可）';
+      }
+    } catch (e) {}
+  }
+  scrollToChannelRow(tr);
+}
+function scrollToChannelRow(tr){
+  var card = document.getElementById('tfChannelCard');
+  if (card){
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    card.classList.remove('tf-flash');
+    void card.offsetWidth;
+    card.classList.add('tf-flash');
+  }
+}
+
+/* 点 pill / 任意 scrollToBlock 调用：平滑滚动到锚点并闪一下 */
+function scrollToBlock(id){
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  el.classList.remove('tf-flash');
+  void el.offsetWidth;
+  el.classList.add('tf-flash');
+}
+
+/* 键盘 ← / → 切换日期（输入框聚焦时不劫持） */
+document.addEventListener('keydown', function(e){
+  var t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
+  if (!INDEX || !INDEX.days || !INDEX.days.length || !CURDAY) return;
+  var all = INDEX.days.map(function(x){ return x.date; }).sort();
+  var i = all.indexOf(CURDAY);
+  if (i < 0) return;
+  if (e.key === 'ArrowLeft' && i > 0){ e.preventDefault(); switchDay(all[i-1]); }
+  else if (e.key === 'ArrowRight' && i < all.length - 1){ e.preventDefault(); switchDay(all[i+1]); }
+});
+
+/* 回到顶部按钮：滚过一屏才出现 */
+(function(){
+  var btn = document.getElementById('tfTop');
+  if (!btn) return;
+  btn.addEventListener('click', function(){ window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  window.addEventListener('scroll', function(){
+    btn.classList.toggle('show', (window.scrollY || document.documentElement.scrollTop) > 400);
+  }, { passive: true });
+})();
 
 /* ---------------- 数据加载 ---------------- */
 function bust(url){
@@ -1120,6 +1337,8 @@ window.addEventListener('hashchange', function(){
   }
 })();
 </script>
+
+<button type="button" id="tfTop" title="回到顶部">↑</button>
 
 <script src="../ux-polish.js" defer></script>
 <script src="../assistant-widget.js?v=3" defer></script>
