@@ -283,11 +283,11 @@
     <!-- 二、流量漏斗 -->
     <div class="tf-row">
       <div class="tf-card">
-        <h3>流量转化漏斗 <span class="tf-sub">曝光 → 观看 → 商品曝光 → 点击 → 成交</span></h3>
+        <h3>流量转化漏斗 <span class="tf-sub" id="tfFunnelSub">曝光 → 观看 → 商品曝光 → 点击 → 成交</span></h3>
         <div class="tf-chart short" id="chartFunnel"></div>
       </div>
       <div class="tf-card">
-        <h3>渠道观看占比 <span class="tf-sub">哪个入口在给量</span></h3>
+        <h3>渠道观看占比 <span class="tf-sub" id="tfPieSub">哪个入口在给量</span></h3>
         <div class="tf-chart short" id="chartChannel"></div>
       </div>
     </div>
@@ -759,6 +759,9 @@ function initChart(id){
 }
 
 function renderFunnel(r){
+  /* 卡片副标题带上当前口径，避免看不清这张图看的是全店还是某个直播间 */
+  var fsub = document.getElementById('tfFunnelSub');
+  if (fsub) fsub.textContent = SCOPE + '\u3000曝光 → 观看 → 商品曝光 → 点击 → 成交';
   var c = initChart('chartFunnel');
   if (!c) return;
   var f = (r.metrics && r.metrics.funnel) || [];
@@ -780,6 +783,8 @@ function renderFunnel(r){
 }
 
 function renderChannelPie(r){
+  var psub = document.getElementById('tfPieSub');
+  if (psub) psub.textContent = SCOPE + '\u3000哪个入口在给量';
   var c = initChart('chartChannel');
   if (!c) return;
   var chs = (r.channels || []).slice(0, 8);
@@ -1020,6 +1025,9 @@ function switchScope(s){
     renderCompare(r);
     renderReport(r);
     renderChannels(r);
+    /* 漏斗 / 渠道占比 只用当日该口径的日报：立即随 scope 重画（趋势图还需近 14 天数据，交给 reloadCharts） */
+    renderFunnel(r);
+    renderChannelPie(r);
     reloadCharts();
   })['catch'](function(e){
     if (statusEl) statusEl.innerHTML = '<span class="tf-badge">加载失败</span><span>' + esc(e.message) + '</span>';
