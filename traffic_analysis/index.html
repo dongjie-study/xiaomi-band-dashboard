@@ -275,7 +275,7 @@
       <div class="tf-grid g4" id="tfGridA"></div>
       <div class="tf-sec">商品与成交 <span class="tip">商品曝光 → 点击 → 成交 → 支付</span></div>
       <div class="tf-grid g4" id="tfGridB"></div>
-      <div class="tf-sec">效率指标 <span class="tip">比率类 · 环比用百分点（pp）表示</span></div>
+      <div class="tf-sec">效率指标 <span class="tip">比率类环比用百分点（pp），金额 / 倍数用原单位</span></div>
       <div class="tf-grid g4" id="tfGridC"></div>
       <div class="tf-extra" id="tfExtra"></div>
     </div>
@@ -454,14 +454,15 @@ function delta(cur, prev){
   var arrow = cls === 'up' ? '▲' : (cls === 'down' ? '▼' : '→');
   return { cls: cls, arrow: arrow, txt: (p >= 0 ? '+' : '') + (p*100).toFixed(1) + '%', pct: p };
 }
-/* deltaPP：比率口径（百分点，更适合算比率的环比） */
-function deltaPP(cur, prev){
+/* deltaPP：差值口径。比率类（%）用百分点 pp，元 / 倍类沿用自身单位 */
+function deltaPP(cur, prev, unit){
   if (cur == null) return { cls: '', arrow: '', txt: '—', pct: null, diff: null };
   if (prev == null){ return { cls: 'flat', arrow: '', txt: '首日 / 无对比', pct: null, diff: null }; }
   var d = cur - prev;
   var cls = d > 0.005 ? 'up' : (d < -0.005 ? 'down' : 'flat');
   var arrow = cls === 'up' ? '▲' : (cls === 'down' ? '▼' : '→');
-  return { cls: cls, arrow: arrow, txt: (d >= 0 ? '+' : '') + d.toFixed(2) + 'pp', pct: prev ? d / Math.abs(prev) : null, diff: d };
+  var suf = unit === '%' ? 'pp' : (unit === '元' || unit === '倍' ? unit : '');
+  return { cls: cls, arrow: arrow, txt: (d >= 0 ? '+' : '') + d.toFixed(2) + suf, pct: prev ? d / Math.abs(prev) : null, diff: d };
 }
 
 /* ---------------- 指标卡 ---------------- */
@@ -483,7 +484,7 @@ function metricCard(o){
 
 /* 比率类指标：值已经是百分数 */
 function rateCard(label, unit, curV, prevV, decimals){
-  var d = deltaPP(curV, prevV);
+  var d = deltaPP(curV, prevV, unit);
   return metricCard({
     label: label, unit: unit,
     valueTxt: (curV == null ? '—' : Number(curV).toFixed(decimals == null ? 2 : decimals)) + (unit === '%' ? '%' : ''),
@@ -618,7 +619,7 @@ function renderReport(r){
   document.getElementById('tfRuleRows').innerHTML = rules.map(function(x){
     var prevRule = p ? ruleOf(p, x.key) : null;
     var prevTxt = prevRule && prevRule.value != null ? fmtNum(prevRule.value, x.unit === '%' ? 2 : 0) : '—';
-    var dd = deltaPP(x.value, prevRule ? prevRule.value : null);
+    var dd = deltaPP(x.value, prevRule ? prevRule.value : null, x.unit);
     /* unknown 分两种：有值但口径不可比（今日不判定）/ 根本没数据 */
     var st = (x.status === 'unknown')
         ? (x.value != null ? { txt: '— 暂不判定', cls: 'flat', title: x.why } : statusMap.unknown)
