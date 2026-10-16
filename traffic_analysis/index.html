@@ -464,7 +464,11 @@ var SCOPE = ALL;           // 当前选中的直播间（'全店' = 全店汇总
 var CACHE = {};            // 日报缓存：key = 日期|scope
 var DAYCACHE = {};         // 日数据缓存（含全部直播间，趋势图跨日取数用）
 var CHARTS = {};           // echarts 实例
-var BUST = '?_=' + (function(){ var d = new Date(); return d.getFullYear() + ('0'+(d.getMonth()+1)).slice(-2) + ('0'+d.getDate()).slice(-2) + ('0'+d.getHours()).slice(-2) + ('0'+d.getMinutes()).slice(-2); })();
+// 缓存穿透参数：按天生成（与销售分析页同款策略）。
+// 配合下述 fetchJson 的默认缓存 + CF Pages 的 max-age=0/must-revalidate + ETag：
+// 同一天内重复打开/刷新 → 浏览器 304 协商缓存（不重传 body）；跨天或当日数据更新 → 自动拿新内容。
+// （2026-10-17 前：分钟级 BUST + no-store，每次刷新都全量重拉 ~1MB。）
+var BUST = '?_=' + (function(){ var d = new Date(); return d.getFullYear() + ('0'+(d.getMonth()+1)).slice(-2) + ('0'+d.getDate()).slice(-2); })();
 
 /* ---------------- 工具 ---------------- */
 function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
@@ -1135,7 +1139,8 @@ function bust(url){
   return url + (url.indexOf('?') >= 0 ? '&' : '?') + '_=' + BUST.substring(4);
 }
 function fetchJson(url, optional){
-  return fetch(bust(url), { cache: 'no-store' }).then(function(res){
+  // 默认缓存策略（去掉 no-store）：内容没变走 304，变了立刻拿新——见上方 BUST 注释
+  return fetch(bust(url)).then(function(res){
     if (!res.ok){ if (optional) return null; throw new Error('HTTP ' + res.status + ' ' + url); }
     return res.json();
   }).catch(function(e){

@@ -15,11 +15,12 @@ combined_*.xlsx
 
 
 # Generated outputs (PNG charts are large, regenerated locally)
+# 2026-10-17：入口页产品图已转 WebP（assets/*.webp 入库），原 PNG 解除跟踪并被本规则忽略；
+# sales_analysis 的 3 张图表 PNG（dashboard/room_comparison/comparison）无页面引用，同样解除跟踪。
 output/
 *.png
 !xiaomi-logo.png
 !违规情况/**/*.png
-!assets/*.png
 
 # OS
 Thumbs.db

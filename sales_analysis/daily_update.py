@@ -22,6 +22,8 @@ from utils import detect_excel_columns
 
 DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 HISTORY_FILE = os.path.join(DATA_DIR, 'history.json')
+RECENT_FILE = os.path.join(DATA_DIR, 'history_recent.json')
+RECENT_DAYS = 30
 HOURLY_DIR = os.path.join(DATA_DIR, 'hourly')
 
 
@@ -238,6 +240,18 @@ def save_history(history):
                 json.dump(hourly_data, f, ensure_ascii=False, separators=(',', ':'))
     with open(HISTORY_FILE, 'w', encoding='utf-8') as f:
         json.dump(history, f, ensure_ascii=False, separators=(',', ':'))
+    save_history_recent(history)
+
+
+def save_history_recent(history):
+    """近 N 天切片（结构 = history.json 尾部切片，字段一字不差）。
+
+    销售分析页首屏先拉这个小文件快速渲染，后台再拉全量补齐；
+    页面对它的 404/缺失做了兜底（自动退回全量），所以这个文件缺了也不影响功能。
+    每次入库随 history.json 一起重写，需随订单流程一起 git 提交。
+    """
+    with open(RECENT_FILE, 'w', encoding='utf-8') as f:
+        json.dump(history[-RECENT_DAYS:], f, ensure_ascii=False, separators=(',', ':'))
 
 
 def print_comparison(today, yesterday=None):

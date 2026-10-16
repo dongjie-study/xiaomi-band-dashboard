@@ -8,7 +8,8 @@
 <link rel="icon" type="image/png" href="../xiaomi-logo.png">
 <link rel="stylesheet" href="../common.css">
 <link rel="stylesheet" href="../theme.css">
-<script src="chart.umd.min.js"></script>
+<script src="https://registry.npmmirror.com/chart.js/4.4.0/files/dist/chart.umd.js"></script>
+<script>if(!window.Chart){document.write('<scr'+'ipt src="chart.umd.min.js"></scr'+'ipt>')}</script>
 <style>
   :root {
     --accent: var(--mi-orange);
@@ -592,6 +593,7 @@ return;
 <script>
 let DATA = null;
 let HISTORY = [];
+let FULL_HISTORY_PROMISE = null; // 两段加载：全量 history.json 的后台请求（首屏用近30天切片先行渲染）
 let currentDate = null;
 let currentRoom = '__all__';
 let dataReady = false;
@@ -673,15 +675,29 @@ async function ensureHourly(day) {
 }
 
 // Async data loading — fetches history.json for better caching and faster initial render
+// 两段加载（2026-10-17）：先拉 history_recent.json（近30天切片，小文件）快速出首屏，
+// 全量 history.json（1.9MB）在后台继续拉，到位后由 initDashboard 无缝换入（趋势图/月度表/旧日期）。
+// 切片文件不存在（旧部署）时自动退回等待全量，行为与原来完全一致。
 (async function loadData() {
   try {
     // Daily cache-busting: refreshed once per day when data changes (local date, UTC+8 safe)
     var now = new Date();
     var cacheKey = now.getFullYear() + ('0' + (now.getMonth() + 1)).slice(-2) + ('0' + now.getDate()).slice(-2);
-    const resp = await fetch('./history.json?_=' + cacheKey);
-    if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    HISTORY = await resp.json();
+    var recentLoaded = false;
+    try {
+      const rr = await fetch('./history_recent.json?_=' + cacheKey);
+      if (rr.ok) {
+        const rj = await rr.json();
+        if (rj && rj.length) { HISTORY = rj; recentLoaded = true; }
+      }
+    } catch (e2) { /* 切片拉不到 → 走全量等待，与原行为一致 */ }
+    FULL_HISTORY_PROMISE = fetch('./history.json?_=' + cacheKey).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    }).catch(function () { return null; });
+    if (!recentLoaded) HISTORY = await FULL_HISTORY_PROMISE;
     if (!HISTORY || !HISTORY.length) {
+      if (!recentLoaded) throw new Error('history load failed');
       document.getElementById('loadingOverlay').innerHTML =
         '<div style="color:#e74c3c;font-size:14px;">⚠️ 暂无历史数据，请先导入订单数据</div>';
       return;
@@ -2406,7 +2422,13 @@ function toggleB10proDetail() {
 // Init — read date from URL hash (set by root sidebar) or default to latest
 function initDashboard() {
   async function loadDate(date) {
-    const d = HISTORY.find(h => h.date === date);
+    var d = HISTORY.find(h => h.date === date);
+    if (!d && FULL_HISTORY_PROMISE) {
+      // 该日期不在近段切片里（30 天前的旧日期）——等后台全量到位再找
+      var full = await FULL_HISTORY_PROMISE;
+      if (full && full.length) { HISTORY = full; DATA = full[full.length - 1]; }
+      d = HISTORY.find(h => h.date === date);
+    }
     if (!d) return;
     await ensureHourly(d);
     currentDate = date;
@@ -2427,6 +2449,17 @@ function initDashboard() {
     const h = window.location.hash.replace('#', '');
     if (h && h !== currentDate) loadDate(h);
   });
+
+  // 全量 history.json 到位后无缝换入：重建依赖完整历史的区块（趋势图 / 月度表 / 旧日期导航）
+  if (FULL_HISTORY_PROMISE) {
+    FULL_HISTORY_PROMISE.then(function (full) {
+      if (!full || !full.length || full === HISTORY) return;
+      var keep = (window.location.hash.replace('#', '')) || currentDate || DATA.date;
+      HISTORY = full;
+      DATA = full[full.length - 1];
+      loadDate(full.some(function (h) { return h.date === keep; }) ? keep : DATA.date);
+    });
+  }
 }
 </script>
 <script src="../ux-polish.js" defer></script>

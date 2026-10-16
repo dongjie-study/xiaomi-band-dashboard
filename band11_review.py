@@ -261,7 +261,9 @@ def cmd_status():
     days = [d.isoformat() for d in data_days(load_daily())]
     missing = [d for d in days if d not in store['reviews']]
     print(f'待补总结     : {"、".join(missing) if missing else "无 ✔"}')
-    if days and hist_latest and days[-1] != hist_latest:
+    # 该对账只在首销月进行中有意义：history 还没越过 10-07 时，末条理应落在区间内、与总结对齐。
+    # 首销月结束后（2026-10-07 起）总结链路按设计停止，history 正常继续增长，不再是脏记录信号。
+    if days and hist_latest and days[-1] != hist_latest and hist_latest <= str(END):
         print(f'⚠ history 末条 {hist_latest} 不在 9.7~10.7 区间内，可能是脏记录')
 
 
