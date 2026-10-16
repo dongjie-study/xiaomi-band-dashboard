@@ -8,14 +8,23 @@
     python traffic_analysis/run_daily.py "D:\\x\\10.11流量.xlsx"
     python traffic_analysis/run_daily.py "C:\\Users\\Administrator\\Desktop\\10.10日流量"   # 文件夹：多直播间一天一次入库
     python traffic_analysis/run_daily.py "下载\\A10.8日流量.xlsx" "下载\\A10.9日流量.xlsx"     # 多份/多天一起给也行，按日期自动分批
-    python traffic_analysis/run_daily.py --no-push            # 只入库+提交，不推
+    python traffic_analysis/run_daily.py --no-push            # 只入库+复核+提交，不推
+    python traffic_analysis/run_daily.py --no-commit          # 只入库+复核（不提交不推送），先人眼核对
+    python traffic_analysis/run_daily.py --no-verify          # 跳过复核（不推荐）
+    python traffic_analysis/run_daily.py --page               # 额外跑一次页面校验（page_check.py，约 4 秒）
+    python traffic_analysis/run_daily.py --room "小米智能设备旗舰店直播间" "…\10.13日流量.xlsx"
     python traffic_analysis/run_daily.py --rebuild-only       # 只重建 index.json + 全部日报
 
-所有中文提示都走 sys.stdout（UTF-8），不依赖 cmd 的代码页 —— 见 WORKFLOW 🅲。
+四步：① 解析入库 + 生成日报 ② 自动复核（verify_day.py：源表「整体」行 ↔ 日档 ↔ 全店汇总 ↔
+日报 ↔ 索引 ↔ 环比%）③ git commit ④ pull --rebase + push。**复核没过就不提交**，避免把错数据推上线。
+
+所有中文提示都走 sys.stdout（UTF-8），不依赖 cmd 的代码页 —— 见 WORKFLOW 🅲 与
+traffic_analysis/每日流量流程.md。
 """
 import os
 import subprocess
 import sys
+import time
 
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
@@ -30,6 +39,8 @@ SEARCH_DIRS = [DESKTOP, DOWNLOADS]
 DEFAULT_XLSX = os.path.join(DESKTOP, '流量数据.xlsx')
 DEFAULT_DIR = os.path.join(DESKTOP, '流量数据')
 GIT_ADD_PATHS = ['traffic_analysis/data', 'traffic_analysis/reports']
+VERIFY_PY = os.path.join(TRAFFIC, 'verify_day.py')      # 入库后的自动复核（纯 Python，约 0.2 秒）
+PAGE_PY = os.path.join(TRAFFIC, 'page_check.py')        # 页面校验（要 playwright，--page 时才跑）
 TABLE_EXT = ('.xlsx', '.xls', '.csv')
 
 # 复用入库脚本的日期解析（文件名「A10.8日流量.xlsx」、文件夹名「10.10日流量」都能认）
@@ -152,14 +163,44 @@ def run_py(script, extra):
     return p.returncode == 0
 
 
+def dates_from_sources(sources):
+    """输入里能认出的日期（升序去重）；认不出返回空列表。"""
+    out = []
+    for s in sources or []:
+        d = date_of_label(s)
+        if d and d not in out:
+            out.append(d)
+    out.sort()
+    return out
+
+
 def main():
+    t_all = time.time()
     argv = sys.argv[1:]
-    no_push = '--no-push' in argv
-    rebuild_only = '--rebuild-only' in argv
-    argv = [a for a in argv if a not in ('--no-push', '--rebuild-only')]
+    flags = {}
+    for f in ('--no-push', '--no-commit', '--no-verify', '--page', '--rebuild-only'):
+        flags[f] = f in argv
+    room = None
+    rest = []
+    i = 0
+    while i < len(argv):
+        a = argv[i]
+        if a == '--room' and i + 1 < len(argv):
+            room = argv[i + 1]
+            i += 2
+            continue
+        if a.startswith('--room='):
+            room = a.split('=', 1)[1]
+            i += 1
+            continue
+        rest.append(a)
+        i += 1
+    argv = [a for a in rest if not a.startswith('--')]
+    if room:
+        log('    手动指定直播间：%s（--room 会覆盖所有输入文件）' % room)
 
     log('=' * 60)
-    log('  流量数据入库 → 环比 → 平台规则匹配 → 同步线上')
+    log('  流量数据：入库 → 复核 → 提交 → 同步线上（4 步）')
     log('=' * 60)
 
     update_py = os.path.join(TRAFFIC, 'daily_update.py')
@@ -169,8 +210,9 @@ def main():
 
     sources = []
     # ---------- 1. 入库 ----------
-    if rebuild_only:
-        log('\n[1/3] 只重建 index.json + 全部日报（--rebuild-only）…')
+    t1 = time.time()
+    if flags['--rebuild-only']:
+        log('\n[1/4] 只重建 index.json + 全部日报（--rebuild-only）…')
         if not run_py(update_py, ['--rebuild']):
             log('❌ 重建失败，已中止，未做任何提交。')
             return 1
@@ -195,18 +237,43 @@ def main():
             log('     C. 多天多间 → 直接把表丢进「下载」文件夹，文件名带日期（如 A直播间10.8日流量.xlsx），本脚本会按日期分批入库')
             log('   然后双击桌面「刷流量数据.bat」；或手动指定：python traffic_analysis/run_daily.py "<路径>" "<路径2>"')
             return 1
-        log('\n[1/3] 解析入库 + 生成日报 …')
+        log('\n[1/4] 解析入库 + 生成日报 …')
         for s in sources:
             if os.path.isdir(s):
                 log('    源文件夹：%s（%d 份表）' % (s, xlsx_count(s)))
             else:
                 log('    源文件：%s' % s)
-        if not run_py(update_py, sources):
+        if not run_py(update_py, sources + (['--room', room] if room else [])):
             log('\n❌ 入库失败，已中止，未做任何提交。上面有具体报错。')
             return 1
+    log('    ✅ 入库完成（%.1f 秒）' % (time.time() - t1))
 
-    # ---------- 2. 提交 ----------
-    log('\n[2/3] 提交到 git …')
+    # ---------- 2. 复核（不通过就不提交，避免把错数据推上线） ----------
+    t2 = time.time()
+    if flags['--no-verify']:
+        log('\n[2/4] 复核：已跳过（--no-verify）')
+    else:
+        log('\n[2/4] 复核：源表「整体」行 ↔ 日档 ↔ 全店汇总 ↔ 日报 ↔ 索引 ↔ 环比% …')
+        for d in (dates_from_sources(sources) or [None]):
+            if not run_py(VERIFY_PY, ([d] if d else [])):
+                log('\n❌ 复核没通过，已中止：**没有提交，线上不受影响**。')
+                log('   看上面的 ❌ 明细：是我方 bug 就改脚本，是平台口径异常就人工确认。')
+                log('   确实要强行过（不推荐）：加 --no-verify')
+                return 1
+    if flags['--page']:
+        log('\n    页面校验 page_check.py（浏览器布局 + 全口径 + 多宽度）…')
+        if not os.path.exists(PAGE_PY) or not run_py(PAGE_PY, []):
+            log('\n❌ 页面校验没过，已中止，未提交。')
+            return 1
+    log('    ✅ 复核通过（%.1f 秒）' % (time.time() - t2))
+
+    # ---------- 3. 提交 ----------
+    if flags['--no-commit']:
+        log('\n[3/4] 提交：已跳过（--no-commit）—— 数据已入库，自己看 git status / git diff')
+        log('\n⏱ 全流程 %.1f 秒（未提交、未推送）' % (time.time() - t_all))
+        return 0
+    t3 = time.time()
+    log('\n[3/4] 提交到 git …')
     run_git(['add'] + GIT_ADD_PATHS)
     ok, _ = run_git(['diff', '--cached', '--quiet'], check=False)
     if ok:
@@ -218,12 +285,16 @@ def main():
             log('❌ git commit 失败，数据已入库但未提交。')
             return 1
 
-    if no_push:
+    log('    ✅ 提交完成（%.1f 秒）' % (time.time() - t3))
+
+    if flags['--no-push']:
         log('\n（--no-push：跳过 push）')
+        log('\n⏱ 全流程 %.1f 秒' % (time.time() - t_all))
         return 0
 
-    # ---------- 3. 推送 ----------
-    log('\n[3/3] 推送到 GitHub …')
+    # ---------- 4. 推送 ----------
+    t4 = time.time()
+    log('\n[4/4] 推送到 GitHub …')
     ok, text = run_git(['pull', '--rebase'], check=False)
     stashed = False
     if not ok and ('unstaged changes' in text or 'local changes' in text):
@@ -248,7 +319,9 @@ def main():
         log('   git stash push && git pull --rebase && git stash pop')
         return 1
     run_git(['log', '--oneline', '-1'])
+    log('    ✅ 推送完成（%.1f 秒）' % (time.time() - t4))
     log('\n✅ 完成。线上页面：工作台 → 流量分析，刷新即可看到当天数据。')
+    log('⏱ 全流程 %.1f 秒' % (time.time() - t_all))
     return 0
 
 

@@ -1197,8 +1197,23 @@ def rebuild_reports(quiet=False):
 
 
 # ============================================================ 猜直播间名
+def room_core(name):
+    """直播间的「核」名：去掉尾部「直播间」三个字（小米智能设备旗舰店直播间 → 小米智能设备旗舰店）。
+
+    只剥「直播间」，不剥「旗舰店」：剥成「小米智能设备」就对不上文件名里的「小米智能设备旗舰店」了。
+    """
+    s = norm(name)
+    suf = '直播间'
+    return s[:-len(suf)] if (s.endswith(suf) and len(s) > len(suf) + 1) else s
+
+
 def guess_room(stem, known):
-    """用文件名猜直播间名：先精确/包含匹配已是 key 的名字，再抽「xx直播间/旗舰店」片段。"""
+    """用文件名猜直播间名：先精确/包含匹配已是 key 的名字，再抽「xx直播间/旗舰店」片段。
+
+    最后一步会拿「核」名回捞历史名 —— 文件名少写或多写尾部「直播间」时也能对上，例如
+    小米智能设备旗舰店10.13日流量.xlsx → 历史名「小米智能设备旗舰店直播间」，
+    否则会凭空多出一个直播间、让该间的历史记录断档。
+    """
     s = str(stem or '').strip()
     ns = norm(s)
     if not ns:
@@ -1206,14 +1221,22 @@ def guess_room(stem, known):
     for k in known:
         if norm(k) == ns:
             return k
+    # ① 先抽「文件名里的直播间片段」，按核名回捞历史名
+    #    ★ 必须排在「子串包含」前面：known 里同时有「小米智能设备旗舰店」和「小米智能设备旗舰店直播间」时，
+    #      子串匹配只会捞到短名 → 凭空多一个直播间、老记录断档
+    m = re.search(r'(小米[\u4e00-\u9fa5A-Za-z0-9&]{2,20}?(?:直播间|旗舰店直播间|旗舰店))', s)
+    if not m:
+        m = re.search(r'([\u4e00-\u9fa5A-Za-z0-9&]{2,20}?(?:直播间|旗舰店))', s)
+    frag = m.group(1) if m else None
+    if frag:
+        hit = sorted({k for k in known if len(k) >= 4 and room_core(k) == room_core(frag)})
+        if hit:
+            return max(hit, key=len)
+    # ② 再退回「子串包含」（文件名叫「小米官方手表10.16日流量」这类没后缀的）
     cands = [k for k in known if len(k) >= 4 and (norm(k) in ns or ns in norm(k))]
     if cands:
         return max(cands, key=lambda x: len(x))
-    m = re.search(r'(小米[\u4e00-\u9fa5A-Za-z0-9&]{2,20}?(?:直播间|旗舰店直播间|旗舰店))', s)
-    if m:
-        return m.group(1)
-    m = re.search(r'([\u4e00-\u9fa5A-Za-z0-9&]{2,20}?(?:直播间|旗舰店))', s)
-    return m.group(1) if m else None
+    return frag
 
 
 _KNOWN_CACHE = None
