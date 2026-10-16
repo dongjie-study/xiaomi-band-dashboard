@@ -197,6 +197,15 @@ def http_get(url, retries=3, timeout=20):
         socket.getaddrinfo = orig
 
 
+def _norm_bytes(b):
+    """比对前把换行归一成 LF。
+
+    Windows 上检出/写盘会把 LF 变 CRLF（core.autocrlf），日档字节数会凭空多出「行数」个字节，
+    和线上（仓库里存的是 LF）一比就假报「不一致」——2026-10-16 实测踩过。
+    """
+    return b.replace(b'\r\n', b'\n') if b else b
+
+
 def live_check(days):
     """推送后确认线上已经同步（比对 index.json 与当天日档/日报字节）。
 
@@ -241,8 +250,9 @@ def live_check(days):
         rb, e2 = http_get('%s/traffic_analysis/data/%s/%s.json' % (LIVE_BASE, d[:4], d))
         if rb is None:
             bad.append('%s（拉不到：%s）' % (d, e2))
-        elif rb != lb:
-            bad.append('%s（线上 %d 字节 ≠ 本地 %d 字节）' % (d, len(rb), len(lb)))
+        elif _norm_bytes(rb) != _norm_bytes(lb):
+            nb_r, nb_l = len(_norm_bytes(rb)), len(_norm_bytes(lb))
+            bad.append('%s（线上 %d 字节 ≠ 本地 %d 字节，已按 LF 归一）' % (d, nb_r, nb_l))
         else:
             ok_n += 1
     # 日报（全店）也顺手比一份，确认 reports 一起上线了
@@ -253,13 +263,13 @@ def live_check(days):
             rb, _e3 = http_get('%s/traffic_analysis/reports/%s/%s/%s'
                                % (LIVE_BASE, local_tail[:4], local_tail,
                                   urllib.parse.quote('全店.json')))
-            if rb is not None and rb != open(rp, 'rb').read():
+            if rb is not None and _norm_bytes(rb) != _norm_bytes(open(rp, 'rb').read()):
                 bad.append('日报 %s/全店.json 与本地不一致' % local_tail)
     if bad:
         log('    ⚠️ 线上校验有异常：%s' % '；'.join(bad))
         log('       若 push 显示成功，多等 10~30 秒（Cloudflare 部署）再刷新页面；仍不对就跑 --no-live 之外的复检。')
         return False
-    log('    ✅ 线上已同步：index 末条 %s（共 %s 天）、%s 天日档与本地逐字节一致（%.1f 秒）'
+    log('    ✅ 线上已同步：index 末条 %s（共 %s 天）、%s 天日档与本地逐字节一致（按 LF 归一，%.1f 秒）'
         % (tail, len(online), ok_n, time.time() - t))
     log('       页面：%s/traffic_analysis/' % LIVE_BASE)
     return True
