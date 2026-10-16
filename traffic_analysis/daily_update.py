@@ -23,6 +23,7 @@
   * 真实数据不会被示例数据覆盖（除非 --force）。
 """
 import argparse
+import difflib
 import glob
 import json
 import os
@@ -1274,12 +1275,137 @@ def known_rooms():
     return out
 
 
+# ============================================================ 直播间名矫正
+# 用户 2026-10-16 定稿：「直播间名字如果有小误差，你自己矫正就行，我们大概率就是这六个直播间，
+# 以后新加的我会跟你同步！」→ 文件名推出来的名字先往在营名单上矫正；矫正不了就 **中止、不写数据**，
+# 绝不再静默新建一个「幻影直播间」，把该间的历史记录截断。
+CANON_ROOMS = [
+    '小米官方手环直播间',
+    '小米官方手表',
+    '小米数码旗舰店',
+    '小米官旗手表直播间',
+    '小米官方耳机直播间',
+    '小米智能设备旗舰店直播间',
+]
+
+# 文件名上常见的手写误差，人工兜底（改这里比调相似度阈值可靠）
+ROOM_ALIAS = {
+    '小米官方手表直播间': '小米官方手表',
+    '小米官方手表直播': '小米官方手表',
+    '小米官方手表直播号': '小米官方手表',
+    '小米官方手表旗舰店': '小米官方手表',
+    '小米数码旗舰店直播间': '小米数码旗舰店',
+    '小米数码官方旗舰店': '小米数码旗舰店',
+    '小米智能设备旗舰店': '小米智能设备旗舰店直播间',
+    '小米智能设备直播间': '小米智能设备旗舰店直播间',
+    '小米官旗手表': '小米官旗手表直播间',
+    '小米手表官旗直播间': '小米官旗手表直播间',
+    '小米官方耳机': '小米官方耳机直播间',
+    '小米耳机直播间': '小米官方耳机直播间',
+    '小米官方手环': '小米官方手环直播间',
+    '小米手环直播间': '小米官方手环直播间',
+}
+
+_CANON_CACHE = None
+
+
+def canonical_rooms():
+    """在营直播间名单：CANON_ROOMS 打头，再补最近 14 天数据里出现过的名字（顺序=显示顺序）。"""
+    global _CANON_CACHE
+    if _CANON_CACHE is not None:
+        return _CANON_CACHE
+    out = list(CANON_ROOMS)
+    for d in reversed(all_dates()[-14:]):
+        rec = load_day(d) or {}
+        for rn in (rec.get('rooms') or {}).keys():
+            if rn not in out:
+                out.append(rn)
+    _CANON_CACHE = out
+    return out
+
+
+def clean_stem(stem):
+    """把文件名里的日期/「流量」等噪音去掉，只留直播间名（相似度兜底用）。"""
+    s = str(stem or '')
+    s = re.sub(r'[\(\)（）\[\]【】\s]', '', s)
+    s = re.sub(r'\d{4}[-/年]\d{1,2}[-/月]\d{1,2}日?', '', s)
+    s = re.sub(r'\d{1,2}\.\d{1,2}日?', '', s)
+    s = re.sub(r'\d+', '', s)
+    s = re.sub(r'(流量数据|流量表|流量|数据表|数据|明细|导出|副本)', '', s)
+    return s.strip('-_·. ')
+
+
+def correct_room(name, canonical=None):
+    """把文件名推出来的直播间名矫正到在营名单。命中返回 (规范名, 依据)，认不出返回 (None, '')。
+
+    顺序：别名表 → 归一化精确 → 核名（尾部「直播间」有无）→ 一方包含另一方 → 相似度。
+    相似度要**同时**满足「够像」（≥ 0.62）与「明显领先第二名」（≥ 0.08），
+    免得「小米官方手表」和「小米官旗手表直播间」互相抢。
+    """
+    s = str(name or '').strip()
+    if not s:
+        return None, ''
+    canon = canonical or canonical_rooms()
+    if not canon:
+        return s, ''                       # 名单空（全新仓库）→ 原样放行
+    if s in canon:
+        return s, ''
+    if ROOM_ALIAS.get(s) in canon:
+        return ROOM_ALIAS[s], '别名表'
+    ns = norm(s)
+    hit = [k for k in canon if norm(k) == ns]
+    if hit:
+        return hit[0], '去掉空格/符号后同名'
+    core = room_core(s)
+    hit = [k for k in canon if room_core(k) == core]
+    if hit:
+        return max(hit, key=len), '尾部「直播间」三字有无'
+    hit = [k for k in canon if len(norm(k)) >= 4 and (norm(k) in ns or ns in norm(k))]
+    if hit:
+        return max(hit, key=len), '名字互相包含'
+    ranked = sorted(((difflib.SequenceMatcher(None, ns, norm(k)).ratio(), i, k)
+                     for i, k in enumerate(canon)), key=lambda t: (-t[0], t[1]))
+    top = ranked[0]
+    second = ranked[1][0] if len(ranked) > 1 else 0.0
+    if top[0] >= 0.62 and top[0] - second >= 0.08:
+        return top[2], '相似度 %.0f%%' % (top[0] * 100)
+    return None, ''
+
+
+def resolve_room(stem, known=None, canon=None, room=None):
+    """文件名（已剥扩展名）→ 在营直播间名。
+
+    返回 (名字, 矫正记录, 认不出的原名)：
+      * 名字        —— 认出来就是在营名单里的规范名；认不出是 None（--room 时原样返回）
+      * 矫正记录    —— [(原名, 规范名, 依据)]，没矫正就是 []
+      * 认不出的原名 —— 既不在名单、也找不到相似项时给出原名，入库流程据此中止
+    """
+    known = known_rooms() if known is None else known
+    canon = canonical_rooms() if canon is None else canon
+    if room:
+        fixed, why = correct_room(room, canon)
+        if fixed and fixed != room:
+            return fixed, [(room, fixed, why)], None
+        return room, [], (None if (not canon or room in canon) else room)
+    rn = guess_room(stem, known) or correct_room(clean_stem(stem), canon)[0]
+    if not rn:
+        return None, [], (stem or None)
+    fixed, why = correct_room(rn, canon)
+    if fixed and fixed != rn:
+        return fixed, [(rn, fixed, why)], None
+    if not fixed:
+        return None, [], rn
+    return rn, [], None
+
+
 # ============================================================ 主流程
 def expand_inputs(paths):
     out = []
     for p in paths:
         if os.path.isdir(p):
-            out.extend(sorted(glob.glob(os.path.join(p, '*.xlsx'))))
+            # ★ 跳过 Excel 打开文件时生成的 ~$xxx.xlsx 锁文件，否则整批会因为「读不出表头」中止
+            out.extend(sorted(x for x in glob.glob(os.path.join(p, '*.xlsx'))
+                              if not os.path.basename(x).startswith('~$')))
         else:
             out.append(p)
     seen, res = set(), []
@@ -1310,14 +1436,23 @@ def ingest_one_day(paths, d=None, room=None, sheet=None, force=False, quiet=Fals
     payload['demo'] = False
 
     known = known_rooms()
-    added, replaced, guesses = [], [], []
+    canon = canonical_rooms()
+    added, replaced, guesses, corrected = [], [], [], []
     for p in paths:
         if not os.path.exists(p):
             raise SystemExit('❌ 找不到文件：%s' % p)
         stem = strip_all_ext(os.path.basename(p))   # ★ 双后缀（.xlsx.xlsx）要全剥掉，否则直播间名会带尾巴
-        rn = room or guess_room(stem, known)
-        if not rn:
-            raise SystemExit('❌ 认不出「%s」属于哪个直播间。请用 --room 指定直播间名。' % os.path.basename(p))
+        rn, fixes, unknown = resolve_room(stem, known=known, canon=canon, room=room)
+        corrected.extend(fixes)
+        if unknown and room:
+            print('   ⚠️ 你指定的直播间「%s」不在在营名单（%s）里，按你指定的名字新建。' % (unknown, '、'.join(canon)))
+        elif unknown:
+            raise SystemExit(
+                '❌ 文件名推出来的直播间「%s」不在在营名单里，也找不到相似的。\n'
+                '   在营名单：%s\n'
+                '   ① 名字写错 → 改文件名重跑，或加 --room "正确名"；\n'
+                '   ② 确实是新直播间 → 先跟用户确认归属，再把名字加进 CANON_ROOMS（%s）后重跑。'
+                % (unknown, '、'.join(canon), os.path.relpath(os.path.abspath(__file__), ROOT)))
         if not room and rn not in known:
             guesses.append(rn)
         book = parse_xlsx(p, sheet=sheet)
@@ -1353,7 +1488,8 @@ def ingest_one_day(paths, d=None, room=None, sheet=None, force=False, quiet=Fals
         for rn in list(payload['rooms'].keys()):
             r = payload['rooms'][rn]
             t, m = r['totals'], r['metrics']
-            print('   [%s] %s  源文件 %s' % ('新增' if rn in added else '更新', rn, r.get('source_file')))
+            tag = '新增' if rn in added else ('更新' if rn in replaced else '保留')
+            print('   [%s] %s  源文件 %s' % (tag, rn, r.get('source_file')))
             print('          曝光 %s  观看 %s  互动 %s  涨粉 %s' % (fmt_int(t.get('impressions')), fmt_int(t.get('views')), fmt_int(t.get('interactions')), fmt_int(t.get('new_followers'))))
             print('          商品曝光 %s  点击 %s  成交 %s 单  支付 %s 元' % (fmt_int(t.get('product_impressions')), fmt_int(t.get('product_clicks')), fmt_int(t.get('paid_orders')), fmt_num(t.get('paid_amount'))))
             print('          曝光→观看 %s  互动率 %s  商品点击率 %s  点击→成交 %s  涨粉 %s' % (
@@ -1369,6 +1505,9 @@ def ingest_one_day(paths, d=None, room=None, sheet=None, force=False, quiet=Fals
                     ANOM_WARN_RATIO, '、'.join(r['suspect_channels'])))
             if r.get('row_sum_mismatch'):
                 print('          ⚠️ 渠道加总与「整体」行不一致：%s' % r['row_sum_mismatch'])
+        kept = [rn for rn in payload['rooms'] if rn not in added and rn not in replaced]
+        if kept:
+            print('   ── 本次未重灌：%s（沿用当天已有数据）' % '、'.join(kept))
         t, m = payload['totals'], payload['metrics']
         print('   ── 全店（%d 个直播间相加）' % len(payload['rooms']))
         print('      观看 %s  支付 %s 元  订单 %s 单  GPM %s 元  客单价 %s 元  ROI %s' % (
@@ -1377,6 +1516,7 @@ def ingest_one_day(paths, d=None, room=None, sheet=None, force=False, quiet=Fals
     dates, ip, idx = rebuild_reports(quiet=True)
     return {'date': d, 'path': p, 'date_how': how, 'rooms': payload['rooms'], 'totals': payload['totals'],
             'metrics': payload['metrics'], 'added': added, 'replaced': replaced, 'guesses': guesses,
+            'corrected': corrected,
             'n_days': len(dates), 'index': ip, 'payload': payload}
 
 
@@ -1385,7 +1525,7 @@ def check():
     print('流量入库天数：%d' % len(dates))
     if dates:
         print('  最早 %s   最新 %s' % (dates[0], dates[-1]))
-    bad = []
+    bad, note = [], []
     for d in dates:
         rec = load_day(d) or {}
         t = rec.get('totals') or {}
@@ -1397,14 +1537,25 @@ def check():
             if not os.path.exists(report_path(d, rn)):
                 bad.append('%s 缺 %s 的日报' % (d, rn))
             if r.get('row_sum_mismatch'):
-                bad.append('%s %s 渠道加总与整体行不一致 %s' % (d, rn, r['row_sum_mismatch']))
+                mm = r['row_sum_mismatch'] or {}
+                # ★ 「只差几个涨粉」是平台自己的取整/口径差（渠道行按次去重），不算数据问题：
+                #   过往每天都有一两条，一律报「问题」会让 --check 永远红着、没人看。
+                tiny = (set(mm.keys()) <= {'new_followers'}
+                        and all(abs(v) <= 5 for v in mm.values() if isinstance(v, (int, float))))
+                (note if tiny else bad).append('%s %s 渠道加总与整体行不一致 %s' % (d, rn, mm))
         if not os.path.exists(report_path(d, ALL_SCOPE)):
             bad.append(d + ' 缺全店日报')
     if bad:
-        print('⚠️ 问题：')
+        print('⚠️ 问题（%d 条）：' % len(bad))
         for b in bad:
             print('  -', b)
+        if note:
+            print('ℹ️ 另有 %d 条轻微提示（涨粉 ±5 以内的平台取整差，页面也会标注）：' % len(note))
         return 1
+    if note:
+        print('ℹ️ 轻微提示 %d 条（涨粉 ±5 以内的平台取整差，不影响数据可用）：' % len(note))
+        for n in note:
+            print('  -', n)
     print('✔ 体检通过')
     return 0
 
@@ -1456,6 +1607,8 @@ def main():
                 len(rest), '、'.join(os.path.basename(x) for x in rest)))
             results.append(ingest_one_day(rest, d=None, room=a.room, sheet=a.sheet, force=a.force, debug=a.debug))
     for r in results:
+        for bad, good, why in (r.get('corrected') or []):
+            print('   ⚠️ 直播间名已矫正：%s → %s（%s）' % (bad, good, why))
         if r['guesses']:
             print('   ℹ️ 以下直播间名是从文件名推出来的，如果不对请用 --room 指定：%s' % '、'.join(r['guesses']))
     print('   累计 %d 天，索引已刷新' % results[-1]['n_days'])

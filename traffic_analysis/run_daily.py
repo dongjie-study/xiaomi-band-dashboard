@@ -12,16 +12,20 @@
     python traffic_analysis/run_daily.py --no-commit          # 只入库+复核（不提交不推送），先人眼核对
     python traffic_analysis/run_daily.py --no-verify          # 跳过复核（不推荐）
     python traffic_analysis/run_daily.py --page               # 额外跑一次页面校验（page_check.py，约 4 秒）
+    python traffic_analysis/run_daily.py --no-live            # 推送后不校验线上是否同步
     python traffic_analysis/run_daily.py --room "小米智能设备旗舰店直播间" "…\10.13日流量.xlsx"
     python traffic_analysis/run_daily.py --rebuild-only       # 只重建 index.json + 全部日报
 
 四步：① 解析入库 + 生成日报 ② 自动复核（verify_day.py：源表「整体」行 ↔ 日档 ↔ 全店汇总 ↔
-日报 ↔ 索引 ↔ 环比%）③ git commit ④ pull --rebase + push。**复核没过就不提交**，避免把错数据推上线。
+日报 ↔ 索引 ↔ 环比%）③ git commit ④ pull --rebase + push + **线上同步校验**（拉线上 index.json / 当天日档
+跟本地逐字节比对，只警告不失败，--no-live 可跳过）。**复核没过就不提交**，避免把错数据推上线。
 
 所有中文提示都走 sys.stdout（UTF-8），不依赖 cmd 的代码页 —— 见 WORKFLOW 🅲 与
 traffic_analysis/每日流量流程.md。
 """
+import json
 import os
+import socket
 import subprocess
 import sys
 import time
@@ -42,6 +46,9 @@ GIT_ADD_PATHS = ['traffic_analysis/data', 'traffic_analysis/reports']
 VERIFY_PY = os.path.join(TRAFFIC, 'verify_day.py')      # 入库后的自动复核（纯 Python，约 0.2 秒）
 PAGE_PY = os.path.join(TRAFFIC, 'page_check.py')        # 页面校验（要 playwright，--page 时才跑）
 TABLE_EXT = ('.xlsx', '.xls', '.csv')
+LIVE_BASE = 'https://xiaomi-band-dashboard.pages.dev'
+UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+      '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
 
 # 复用入库脚本的日期解析（文件名「A10.8日流量.xlsx」、文件夹名「10.10日流量」都能认）
 sys.path.insert(0, TRAFFIC)
@@ -163,6 +170,101 @@ def run_py(script, extra):
     return p.returncode == 0
 
 
+def http_get(url, retries=3, timeout=20):
+    """GET 一个 URL（带浏览器 UA，DNS 强制 IPv4），返回 (bytes, 错误)。
+
+    ★ 本机 IPv6 出网会 TLS 握手超时（urllib 报 handshake timed out、curl 不加 -4 也是 rc=28），
+      这里把 getaddrinfo 临时钉到 IPv4 —— 等价于 curl -4。
+    """
+    import urllib.request
+    orig = socket.getaddrinfo
+    socket.getaddrinfo = lambda host, port, family=0, type=0, proto=0, flags=0: orig(
+        host, port, socket.AF_INET, type, proto, flags)
+    try:
+        last = None
+        for i in range(max(1, retries)):
+            try:
+                req = urllib.request.Request(url, headers={
+                    'User-Agent': UA, 'Cache-Control': 'no-cache', 'Pragma': 'no-cache'})
+                with urllib.request.urlopen(req, timeout=timeout) as r:
+                    return r.read(), None
+            except Exception as e:                     # noqa: BLE001
+                last = e
+                if i + 1 < max(1, retries):
+                    time.sleep(1.5 * (i + 1))
+        return None, last
+    finally:
+        socket.getaddrinfo = orig
+
+
+def live_check(days):
+    """推送后确认线上已经同步（比对 index.json 与当天日档/日报字节）。
+
+    只报告、不影响退出码：网络抖动 / Cloudflare 部署延迟都不该让「数据已入库并提交」变成失败。
+    """
+    t = time.time()
+    log('\n[4/4·b] 线上同步校验：%s/traffic_analysis/' % LIVE_BASE)
+    local_idx_p = os.path.join(TRAFFIC, 'data', 'index.json')
+    try:
+        local_idx = json.load(open(local_idx_p, encoding='utf-8'))
+    except Exception as e:                             # noqa: BLE001
+        log('    ⚠️ 读不到本地 index.json（%s），跳过线上校验' % e)
+        return False
+    local_days = [d.get('date') for d in (local_idx.get('days') or []) if isinstance(d, dict)]
+    local_tail = local_days[-1] if local_days else None
+    raw, err = http_get(LIVE_BASE + '/traffic_analysis/data/index.json')
+    if raw is None:
+        log('    ⚠️ 拉不到线上 index.json：%s' % err)
+        log('       网络或 Cloudflare 波动，本次提交照样有效；稍后刷新线上页面确认即可。')
+        return False
+    try:
+        idx = json.loads(raw.decode('utf-8'))
+    except Exception as e:                             # noqa: BLE001
+        log('    ⚠️ 线上 index.json 解析失败：%s' % e)
+        return False
+    online = [d.get('date') for d in (idx.get('days') or []) if isinstance(d, dict)]
+    tail = online[-1] if online else None
+    if tail != local_tail:
+        log('    ⚠️ 线上还停在 %s，本地已到 %s（部署通常 10~30 秒，稍后刷新页面再看）' % (tail, local_tail))
+        return False
+    targets = [d for d in (days or []) if d] or ([local_tail] if local_tail else [])
+    want = sorted(set(targets + ([local_tail] if local_tail else [])))
+    ok_n, bad = 0, []
+    for d in want:
+        if d not in online:
+            bad.append('%s（线上索引里没有）' % d)
+            continue
+        lp = os.path.join(TRAFFIC, 'data', d[:4], d + '.json')
+        if not os.path.exists(lp):
+            continue
+        lb = open(lp, 'rb').read()
+        rb, e2 = http_get('%s/traffic_analysis/data/%s/%s.json' % (LIVE_BASE, d[:4], d))
+        if rb is None:
+            bad.append('%s（拉不到：%s）' % (d, e2))
+        elif rb != lb:
+            bad.append('%s（线上 %d 字节 ≠ 本地 %d 字节）' % (d, len(rb), len(lb)))
+        else:
+            ok_n += 1
+    # 日报（全店）也顺手比一份，确认 reports 一起上线了
+    if local_tail:
+        import urllib.parse
+        rp = os.path.join(TRAFFIC, 'reports', local_tail[:4], local_tail, '全店.json')
+        if os.path.exists(rp):
+            rb, _e3 = http_get('%s/traffic_analysis/reports/%s/%s/%s'
+                               % (LIVE_BASE, local_tail[:4], local_tail,
+                                  urllib.parse.quote('全店.json')))
+            if rb is not None and rb != open(rp, 'rb').read():
+                bad.append('日报 %s/全店.json 与本地不一致' % local_tail)
+    if bad:
+        log('    ⚠️ 线上校验有异常：%s' % '；'.join(bad))
+        log('       若 push 显示成功，多等 10~30 秒（Cloudflare 部署）再刷新页面；仍不对就跑 --no-live 之外的复检。')
+        return False
+    log('    ✅ 线上已同步：index 末条 %s（共 %s 天）、%s 天日档与本地逐字节一致（%.1f 秒）'
+        % (tail, len(online), ok_n, time.time() - t))
+    log('       页面：%s/traffic_analysis/' % LIVE_BASE)
+    return True
+
+
 def dates_from_sources(sources):
     """输入里能认出的日期（升序去重）；认不出返回空列表。"""
     out = []
@@ -175,10 +277,13 @@ def dates_from_sources(sources):
 
 
 def main():
+    if any(a in ('-h', '--help') for a in sys.argv[1:]):
+        log((__doc__ or '').strip())                  # ★ 以前跑 --help 会真的开始入库，现在只打用法
+        return 0
     t_all = time.time()
     argv = sys.argv[1:]
     flags = {}
-    for f in ('--no-push', '--no-commit', '--no-verify', '--page', '--rebuild-only'):
+    for f in ('--no-push', '--no-commit', '--no-verify', '--page', '--rebuild-only', '--no-live'):
         flags[f] = f in argv
     room = None
     rest = []
@@ -326,6 +431,13 @@ def main():
         return 1
     run_git(['log', '--oneline', '-1'])
     log('    ✅ 推送完成（%.1f 秒）' % (time.time() - t4))
+
+    # ---------- 4·b. 线上同步校验（只报告，不影响退出码） ----------
+    if flags['--no-live']:
+        log('\n[4/4·b] 线上同步校验：已跳过（--no-live）')
+    else:
+        live_check(dates_from_sources(sources))
+
     log('\n✅ 完成。线上页面：工作台 → 流量分析，刷新即可看到当天数据。')
     log('⏱ 全流程 %.1f 秒' % (time.time() - t_all))
     return 0
