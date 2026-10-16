@@ -254,8 +254,14 @@ def main():
         log('\n[2/4] 复核：已跳过（--no-verify）')
     else:
         log('\n[2/4] 复核：源表「整体」行 ↔ 日档 ↔ 全店汇总 ↔ 日报 ↔ 索引 ↔ 环比% …')
+        # 把输入文件所在目录一并交给复核脚本，这样源表放在桌面/下载之外也能做 A/F 两段比对
+        src_args = []
+        for d in sorted({(s if os.path.isdir(s) else os.path.dirname(s)) for s in sources}):
+            src_args += ['--src', d]
+        if src_args:
+            log('    源表目录：%s' % '、'.join(src_args[1::2]))
         for d in (dates_from_sources(sources) or [None]):
-            if not run_py(VERIFY_PY, ([d] if d else [])):
+            if not run_py(VERIFY_PY, ([d] if d else []) + src_args):
                 log('\n❌ 复核没通过，已中止：**没有提交，线上不受影响**。')
                 log('   看上面的 ❌ 明细：是我方 bug 就改脚本，是平台口径异常就人工确认。')
                 log('   确实要强行过（不推荐）：加 --no-verify')

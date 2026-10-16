@@ -241,12 +241,14 @@ def main():
         print('  ⚠️ 本次没有可比对的源表')
 
     # ---------------- F. 环比交叉校验 ----------------
-    if found and prev:
-        head('F 环比交叉校验（源表「较上周期」↔ 我方 %s 存档）' % prev)
+    prev_rooms = None
+    if prev:
         try:
             prev_rooms = (rj(os.path.join(DATA, prev[:4], '%s.json' % prev)).get('rooms') or {})
         except Exception:                                   # noqa: BLE001
             prev_rooms = {}
+    if found and prev and prev_rooms:
+        head('F 环比交叉校验（源表「较上周期」↔ 我方 %s 存档）' % prev)
         f_bad, f_n = [], 0
         for room, p in found.items():
             old = prev_rooms.get(room)
@@ -289,7 +291,7 @@ def main():
     line = '%s 全店：曝光 %s / 观看 %s / 订单 %s / 支付 %s' % (
         target, format(int(hd['impressions']), ','), format(int(hd['views']), ','),
         format(int(hd['paid_orders']), ','), format(int(hd.get('paid_amount') or 0), ','))
-    if prev and prev_rooms is not None:
+    if prev:
         try:
             pv = rj(os.path.join(DATA, prev[:4], '%s.json' % prev))['totals']
             if pv.get('views'):
