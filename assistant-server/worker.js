@@ -594,6 +594,7 @@ async function deepseekChat(env, messages) {
     body: JSON.stringify({
       model: 'deepseek-chat', messages, tools: TOOLS, tool_choice: 'auto', max_tokens: 3000, temperature: 0.3,
     }),
+    signal: AbortSignal.timeout(120_000),  // 上游挂死时最多等 2 分钟，不让请求无限卡住
   });
   if (!res.ok) {
     const errText = (await res.text()).slice(0, 300);
@@ -635,11 +636,12 @@ async function deepseekChatStream(env, messages, onDelta) {
   const res = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.DEEPSEEK_API_KEY}` },
-    body: JSON.stringify({
-      model: 'deepseek-chat', messages, tools: TOOLS, tool_choice: 'auto',
-      max_tokens: 3000, temperature: 0.3, stream: true,
-    }),
-  });
+      body: JSON.stringify({
+        model: 'deepseek-chat', messages, tools: TOOLS, tool_choice: 'auto',
+        max_tokens: 3000, temperature: 0.3, stream: true,
+      }),
+      signal: AbortSignal.timeout(120_000),  // 上游挂死时最多等 2 分钟，不让请求无限卡住
+    });
   if (!res.ok || !res.body) {
     const t = await res.text().catch(() => '');
     throw new Error(`DeepSeek HTTP ${res.status}: ${t.slice(0, 200)}`);
@@ -885,6 +887,18 @@ main{flex:1;overflow-y:auto;padding:14px 12px 8px;-webkit-overflow-scrolling:tou
 .typing i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#bbb;margin-right:3px;animation:b 1s infinite}
 .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
 @keyframes b{0%,60%,100%{transform:none;opacity:.4}30%{transform:translateY(-4px);opacity:1}}
+/* —— AI 回答 Markdown 排版 —— */
+.bubble.md{white-space:normal}
+.bubble.md p{margin:4px 0}
+.bubble.md h4{margin:10px 0 4px;font-size:14px;color:#FF6900}
+.bubble.md ul{margin:4px 0 4px 18px}
+.bubble.md li{margin:2px 0}
+.bubble.md blockquote{border-left:3px solid #FF6900;background:#fff8f3;padding:4px 10px;color:var(--sub);margin:6px 0;border-radius:0 6px 6px 0;font-size:13px}
+.bubble.md table{border-collapse:collapse;margin:8px 0;font-size:13px;width:100%;max-width:560px}
+.bubble.md th,.bubble.md td{border:1px solid var(--border);padding:5px 9px;text-align:left;white-space:nowrap}
+.bubble.md th{background:#fff3e6;font-weight:600}
+.bubble.md tr:nth-child(even) td{background:#fafbfc}
+.bubble.md code{background:#f0f1f3;border-radius:4px;padding:1px 5px;font-size:12px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;padding:4px 12px 8px}
 .chip{border:1px solid var(--border);background:#fff;border-radius:16px;padding:5px 12px;font-size:12px;color:var(--sub);cursor:pointer}
 form{display:flex;gap:8px;padding:10px 12px calc(12px + env(safe-area-inset-bottom));background:var(--bg);flex-shrink:0}
@@ -918,13 +932,43 @@ button:disabled{opacity:.5}
 <script>
 const $=s=>document.querySelector(s);
 const list=$('#list'),chips=$('#chips');
-const SUGGEST=['手环11首销月进度怎么样了？','9月24日我司整体卖了多少？','手环直播间最近7天走势','9月20日到9月24日谁是销冠主播？','良米这周手环11卖了多少台？'];
+const SUGGEST=['今天卖得怎么样？','10.16日流量怎么样？','哪个直播间GPM最高？','手环11首销月进度怎么样了？','谁是这周销冠主播？'];
 let history_=[],busy=false,myCode=localStorage.getItem('dg_code')||'';
 
 function esc(s){return s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]))}
+// —— 轻量 Markdown 渲染（表格/标题/列表/引用/加粗） ——
+function mdInline(s){return s.replace(/\\*\\*([^*]+)\\*\\*/g,'<b>$1</b>').replace(/\`([^\`]+)\`/g,'<code>$1</code>')}
+function mdRender(src){
+  const lines=src.split('\\n');let out='',p=[],i=0;
+  const flush=()=>{if(p.length){out+='<p>'+mdInline(p.join('<br>'))+'</p>';p=[]}};
+  const isSep=l=>l.includes('-')&&/^[\\s|:\\-]+$/.test(l);
+  const row=l=>l.trim().replace(/^\\||\\|$/g,'').split('|').map(c=>c.trim());
+  while(i<lines.length){
+    const l=lines[i];
+    if(/^\\s*\\|.*\\|?\\s*$/.test(l)&&l.includes('|')&&i+1<lines.length&&isSep(lines[i+1])){
+      flush();
+      let tb='<table><tr>'+row(l).map(h=>'<th>'+mdInline(h)+'</th>').join('')+'</tr>';i+=2;
+      while(i<lines.length&&/^\\s*\\|/.test(lines[i])){tb+='<tr>'+row(lines[i]).map(c=>'<td>'+mdInline(c)+'</td>').join('')+'</tr>';i++}
+      out+=tb+'</table>';continue;
+    }
+    const h=l.match(/^#{1,6}\\s+(.*)/);
+    if(h){flush();out+='<h4>'+mdInline(h[1])+'</h4>';i++;continue}
+    if(/^(&gt;|>)\\s?/.test(l)){flush();out+='<blockquote>'+mdInline(l.replace(/^(&gt;|>)\\s?/,''))+'</blockquote>';i++;continue}
+    if(/^[-*]\\s+/.test(l)){
+      flush();let ul='<ul>';
+      while(i<lines.length&&/^[-*]\\s+/.test(lines[i])){ul+='<li>'+mdInline(lines[i].replace(/^[-*]\\s+/,''))+'</li>';i++}
+      out+=ul+'</ul>';continue;
+    }
+    if(!l.trim()){flush();i++;continue}
+    p.push(l);i++;
+  }
+  flush();
+  return out;
+}
 function add(role,text,typing){
   const d=document.createElement('div');d.className='msg '+role;
-  d.innerHTML='<div class="av">'+(role==='ai'?'管家':'我')+'</div><div class="bubble">'+(typing?'<span class="typing"><i></i><i></i><i></i></span>':esc(text))+'</div>';
+  const body=typing?'<span class="typing"><i></i><i></i><i></i></span>':(role==='ai'?mdRender(esc(text)):esc(text));
+  d.innerHTML='<div class="av">'+(role==='ai'?'管家':'我')+'</div><div class="bubble'+(role==='ai'&&!typing?' md':'')+'">'+body+'</div>';
   list.appendChild(d);list.scrollTop=list.scrollHeight;return d}
 function chipsInit(){
   if(history_.length)return;
@@ -935,19 +979,61 @@ async function api(path,body){
   const r=await fetch(path,body?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,code:myCode})}:undefined);
   return {status:r.status,data:await r.json().catch(()=>({}))}}
 
+// —— 流式请求（SSE）：回答边生成边显示 ——
+function sseChat(messages,onEvent){
+  return fetch('/api/chat/stream',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:messages,code:myCode})})
+  .then(r=>{
+    let ct='';try{ct=r.headers.get('content-type')||''}catch(e){}
+    if(!r.ok||!r.body||ct.indexOf('event-stream')<0){
+      return r.json().catch(()=>({})).then(d=>onEvent({t:'http',status:r.status,data:d}));
+    }
+    const reader=r.body.getReader(),dec=new TextDecoder();let buf='';
+    const pump=()=>reader.read().then(res=>{
+      if(res.done){onEvent({t:'end'});return}
+      buf+=dec.decode(res.value,{stream:true});
+      let i;
+      while((i=buf.indexOf('\\n\\n'))>=0){
+        const frame=buf.slice(0,i).trim();buf=buf.slice(i+2);
+        if(frame.startsWith('data:')){
+          const p=frame.slice(5).trim();
+          if(p&&p!=='[DONE]'){try{onEvent(JSON.parse(p))}catch(e){}}
+        }
+      }
+      return pump();
+    });
+    return pump();
+  });
+}
+
 async function send(text){
-  if(busy)return;text=text||$('#q').value.trim();if(!text)return;
+  if(busy)return;text=(text||$('#q').value.trim());if(!text)return;
   busy=true;$('#send').disabled=true;$('#q').value='';chips.style.display='none';
   history_.push({role:'user',content:text});add('me',text);
-  const typingEl=add('ai','',true);
-  try{
-    const {status,data}=await api('/api/chat',{messages:history_});
-    typingEl.remove();
-    if(status===403){history_.pop();showGate('口令不正确，请重新输入');return}
-    if(data.error){add('ai','出错了：'+data.error)}
-    else{history_.push({role:'assistant',content:data.answer});add('ai',data.answer)}
-  }catch(e){typingEl.remove();add('ai','网络异常，稍后再试：'+e.message)}
-  busy=false;$('#send').disabled=false}
+  const el=add('ai','',true);
+  const bubble=el.querySelector('.bubble');
+  let acc='',started=false,over=false,ok=true;
+  const paint=()=>{bubble.textContent=acc;list.scrollTop=list.scrollHeight};
+  const finishReply=()=>{bubble.classList.add('md');bubble.innerHTML=acc?mdRender(esc(acc)):'（空回复，请重试）'};
+  const finalize=()=>{if(over)return;over=true;finishReply();if(ok&&acc)history_.push({role:'assistant',content:acc});busy=false;$('#send').disabled=false};
+  const handle=ev=>{
+    if(over)return;
+    if(ev.t==='delta'){if(!started){started=true;bubble.classList.add('md')}acc+=ev.s||'';paint()}
+    else if(ev.t==='tool'){if(!started)bubble.innerHTML='<span class="typing"><i></i><i></i><i></i></span> 正在查「'+esc(ev.name||'数据')+'」…'}
+    else if(ev.t==='http'){
+      const status=ev.status,data=ev.data||{};
+      if(status===403){ok=false;history_.pop();showGate('口令不正确，请重新输入');finalize();return}
+      if(data.error)acc='出错了：'+data.error;
+      else if(data.answer)acc=data.answer;
+      else acc='后端返回异常（HTTP '+status+'），请稍后再试。';
+      started=true;paint();
+    }
+    else if(ev.t==='error'){acc+=(acc?'\\n\\n':'')+'⚠️ '+(ev.message||'查询出错');paint()}
+  };
+  // 只带最近 4 轮上下文：更快，也不会把旧话题的过期数字带进新回答
+  sseChat(history_.slice(-8),handle).catch(e=>{
+    if(!started){acc='网络异常，稍后再试：'+(e&&e.message?e.message:e);started=true;paint()}
+  }).then(finalize);
+}
 
 function showGate(msg){$('#gate').hidden=false;$('#codeErr').textContent=msg||'';$('#codeInput').focus()}
 async function init(){
@@ -956,7 +1042,7 @@ async function init(){
     if(!myCode){showGate()}
     $('#gate').hidden=false;
   }
-  add('ai','你好，我是数据小管家 📊\\n我可以查这个项目的销量数据：每日销量、各直播间、主播业绩、手环11 首销月进度等。\\n直接用大白话问就行，比如"9月24日数码旗舰店卖了多少"');
+  add('ai','你好，我是数据小管家 📊\\n我可以查：每日销量、各直播间/商品/团队数据、小时出单高峰、主播业绩、手环11 首销月进度、流量分析（曝光/观看/GPM/千川ROI 等）。\\n直接用大白话问就行。');
   chipsInit();
 }
 $('#f').onsubmit=e=>{e.preventDefault();send()};
