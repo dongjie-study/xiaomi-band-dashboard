@@ -4,7 +4,7 @@
  "is_all": false,
  "date": "2026-10-18",
  "prev_date": "2026-10-17",
- "generated_at": "2026-10-21 13:29:20",
+ "generated_at": "2026-10-21 13:38:37",
  "prev_scope_exists": true,
  "totals": {
   "impressions": 641663.0,
@@ -594,7 +594,7 @@
    "name": "小米数码旗舰店",
    "views": 68606.0,
    "impressions": 1410166.0,
-   "view_share": 35.38,
+   "view_share": 33.2,
    "paid_amount": 243227.29,
    "paid_orders": 735.0,
    "evr": 4.87,
@@ -608,13 +608,13 @@
    "new_follower_rate": 0.51,
    "anomaly_channels": [],
    "suspect_channels": [],
-   "vs_peer_gpm": 0.95
+   "vs_peer_gpm": 0.91
   },
   {
    "name": "小米官方手表",
    "views": 58551.0,
    "impressions": 1011538.0,
-   "view_share": 30.2,
+   "view_share": 28.33,
    "paid_amount": 235335.67,
    "paid_orders": 511.0,
    "evr": 5.79,
@@ -630,13 +630,13 @@
     "个人主页&店铺&橱窗"
    ],
    "suspect_channels": [],
-   "vs_peer_gpm": 1.08
+   "vs_peer_gpm": 1.04
   },
   {
    "name": "小米官方手环直播间",
    "views": 45892.0,
    "impressions": 953780.0,
-   "view_share": 23.67,
+   "view_share": 22.21,
    "paid_amount": 171223.92,
    "paid_orders": 530.0,
    "evr": 4.81,
@@ -654,13 +654,13 @@
     "关注",
     "个人主页&店铺&橱窗"
    ],
-   "vs_peer_gpm": 1.0
+   "vs_peer_gpm": 0.96
   },
   {
    "name": "小米智能设备旗舰店直播间",
    "views": 15138.0,
    "impressions": 641663.0,
-   "view_share": 7.81,
+   "view_share": 7.32,
    "paid_amount": 443332.68,
    "paid_orders": 306.0,
    "evr": 2.36,
@@ -676,13 +676,37 @@
     "个人主页&店铺&橱窗"
    ],
    "suspect_channels": [],
-   "vs_peer_gpm": 7.85
+   "vs_peer_gpm": 7.56
+  },
+  {
+   "name": "小米官旗手表直播间",
+   "views": 12775.0,
+   "impressions": 198496.0,
+   "view_share": 6.18,
+   "paid_amount": 57200.46,
+   "paid_orders": 63.0,
+   "evr": 6.44,
+   "ctr": 6.53,
+   "cvr": 0.89,
+   "gpm": 4478,
+   "aov": 908,
+   "roi": 30.891115,
+   "uv_value": 4.4775,
+   "interaction_rate": 12.14,
+   "new_follower_rate": 0.41,
+   "anomaly_channels": [
+    "直播推荐-其他推荐场景"
+   ],
+   "suspect_channels": [
+    "关注"
+   ],
+   "vs_peer_gpm": 1.16
   },
   {
    "name": "小米官方耳机直播间",
    "views": 5705.0,
    "impressions": 98413.0,
-   "view_share": 2.94,
+   "view_share": 2.76,
    "paid_amount": 18784.04,
    "paid_orders": 60.0,
    "evr": 5.8,
@@ -698,7 +722,7 @@
    "suspect_channels": [
     "关注"
    ],
-   "vs_peer_gpm": 0.88
+   "vs_peer_gpm": 0.85
   }
  ],
  "peer_benchmark": [
@@ -707,7 +731,7 @@
    "label": "GPM（元/千次观看）",
    "unit": "元",
    "decimals": 0,
-   "median": 3731,
+   "median": 3875.0,
    "best": {
     "name": "小米智能设备旗舰店直播间",
     "value": 29286
@@ -722,7 +746,7 @@
    "label": "客单价（元/单）",
    "unit": "元",
    "decimals": 0,
-   "median": 331,
+   "median": 396.0,
    "best": {
     "name": "小米智能设备旗舰店直播间",
     "value": 1449
@@ -737,7 +761,7 @@
    "label": "UV 价值（元/次观看）",
    "unit": "元",
    "decimals": 2,
-   "median": 3.73,
+   "median": 3.88,
    "best": {
     "name": "小米智能设备旗舰店直播间",
     "value": 29.29
@@ -752,10 +776,10 @@
    "label": "曝光→观看率",
    "unit": "%",
    "decimals": 2,
-   "median": 4.87,
+   "median": 5.33,
    "best": {
-    "name": "小米官方耳机直播间",
-    "value": 5.8
+    "name": "小米官旗手表直播间",
+    "value": 6.44
    },
    "worst": {
     "name": "小米智能设备旗舰店直播间",
@@ -767,7 +791,7 @@
    "label": "观看→互动率",
    "unit": "%",
    "decimals": 2,
-   "median": 11.25,
+   "median": 11.7,
    "best": {
     "name": "小米官方手环直播间",
     "value": 31.75
@@ -782,7 +806,7 @@
    "label": "商品点击率",
    "unit": "%",
    "decimals": 2,
-   "median": 9.83,
+   "median": 8.52,
    "best": {
     "name": "小米官方手环直播间",
     "value": 12.41
@@ -797,14 +821,14 @@
    "label": "点击→成交转化率",
    "unit": "%",
    "decimals": 2,
-   "median": 1.56,
+   "median": 1.45,
    "best": {
     "name": "小米智能设备旗舰店直播间",
     "value": 2.33
    },
    "worst": {
-    "name": "小米官方手环直播间",
-    "value": 1.32
+    "name": "小米官旗手表直播间",
+    "value": 0.89
    }
   },
   {
@@ -812,7 +836,7 @@
    "label": "涨粉率",
    "unit": "%",
    "decimals": 2,
-   "median": 0.55,
+   "median": 0.53,
    "best": {
     "name": "小米官方手表",
     "value": 0.68
@@ -827,7 +851,7 @@
    "label": "千川投放 ROI（倍）",
    "unit": "倍",
    "decimals": 2,
-   "median": 36.74,
+   "median": 33.81,
    "best": {
     "name": "小米智能设备旗舰店直播间",
     "value": 75.62
