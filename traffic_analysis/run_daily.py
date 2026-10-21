@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""流量分析「一条命令跑完」入口：xlsx -> 入库 -> 环比/规则/日报 -> git commit -> push。
+r"""流量分析「一条命令跑完」入口：xlsx -> 入库 -> 环比/规则/日报 -> git commit -> push。
 
 给桌面上的「刷流量数据.bat」调用，也可以手动跑：
 
@@ -14,6 +14,7 @@
     python traffic_analysis/run_daily.py --page               # 额外跑一次页面校验（page_check.py，约 4 秒）
     python traffic_analysis/run_daily.py --no-live            # 推送后不校验线上是否同步
     python traffic_analysis/run_daily.py --room "小米智能设备旗舰店直播间" "…\10.13日流量.xlsx"
+    python traffic_analysis/run_daily.py --date 2026-10-20 "下载\小米数码旗舰店10.120日流量.xlsx"   # 文件名日期认不出/笔误时强制指定（会贯穿入库、复核、提交）
     python traffic_analysis/run_daily.py --rebuild-only       # 只重建 index.json + 全部日报
 
 四步：① 解析入库 + 生成日报 ② 自动复核（verify_day.py：源表「整体」行 ↔ 日档 ↔ 全店汇总 ↔
@@ -299,6 +300,7 @@ def main():
     for f in ('--no-push', '--no-commit', '--no-verify', '--page', '--rebuild-only', '--no-live'):
         flags[f] = f in argv
     room = None
+    forced_date = None
     rest = []
     i = 0
     while i < len(argv):
@@ -311,11 +313,21 @@ def main():
             room = a.split('=', 1)[1]
             i += 1
             continue
+        if a == '--date' and i + 1 < len(argv):
+            forced_date = argv[i + 1]
+            i += 2
+            continue
+        if a.startswith('--date='):
+            forced_date = a.split('=', 1)[1]
+            i += 1
+            continue
         rest.append(a)
         i += 1
     argv = [a for a in rest if not a.startswith('--')]
     if room:
         log('    手动指定直播间：%s（--room 会覆盖所有输入文件）' % room)
+    if forced_date:
+        log('    手动指定日期：%s（--date 会覆盖所有输入文件；入库/复核/提交信息都用它）' % forced_date)
 
     log('=' * 60)
     log('  流量数据：入库 → 复核 → 提交 → 同步线上（4 步）')
@@ -346,6 +358,13 @@ def main():
                         log('      - %s（%d 份表）' % (s, xlsx_count(s)))
                     else:
                         log('      - %s' % s)
+        unknown_dates = [s for s in sources if not os.path.isdir(s) and not date_of_label(s)]
+        if unknown_dates and not forced_date:
+            log('')
+            log('    ⚠️ 有 %d 份表从文件名认不出日期（笔误如 10.120 就会这样）：' % len(unknown_dates))
+            for u in unknown_dates:
+                log('      - %s' % os.path.basename(u))
+            log('       若入库报错，加 --date YYYY-MM-DD 指定当天日期即可（会贯穿入库/复核/提交）。')
         missing = [s for s in sources if not os.path.exists(s)]
         if not sources or missing:
             log('\n❌ 找不到流量表 / 流量文件夹：%s' % ('、'.join(missing) if missing else DEFAULT_XLSX))
@@ -361,7 +380,8 @@ def main():
                 log('    源文件夹：%s（%d 份表）' % (s, xlsx_count(s)))
             else:
                 log('    源文件：%s' % s)
-        if not run_py(update_py, sources + (['--room', room] if room else [])):
+        extra_args = (['--room', room] if room else []) + (['--date', forced_date] if forced_date else [])
+        if not run_py(update_py, sources + extra_args):
             log('\n❌ 入库失败，已中止，未做任何提交。上面有具体报错。')
             return 1
     log('    ✅ 入库完成（%.1f 秒）' % (time.time() - t1))
@@ -378,7 +398,8 @@ def main():
             src_args += ['--src', d]
         if src_args:
             log('    源表目录：%s' % '、'.join(src_args[1::2]))
-        for d in (dates_from_sources(sources) or [None]):
+        verify_dates = [forced_date] if forced_date else (dates_from_sources(sources) or [None])
+        for d in verify_dates:
             if not run_py(VERIFY_PY, ([d] if d else []) + src_args):
                 log('\n❌ 复核没通过，已中止：**没有提交，线上不受影响**。')
                 log('   看上面的 ❌ 明细：是我方 bug 就改脚本，是平台口径异常就人工确认。')
@@ -403,7 +424,8 @@ def main():
     if ok:
         log('    本次数据无变化，跳过提交。')
     else:
-        msg = 'feat: 流量数据 %s日更新' % label_from_sources(sources)
+        label = ('%d.%d' % (int(forced_date[5:7]), int(forced_date[8:10]))) if forced_date else label_from_sources(sources)
+        msg = 'feat: 流量数据 %s日更新' % label
         ok, _ = run_git(['commit', '-m', msg])
         if not ok:
             log('❌ git commit 失败，数据已入库但未提交。')

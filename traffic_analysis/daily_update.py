@@ -1484,7 +1484,7 @@ def ingest_one_day(paths, d=None, room=None, sheet=None, force=False, quiet=Fals
     existed_day = os.path.exists(day_path(d))
     p = write_day(d, payload)
     if not quiet:
-        print('%s%s  （日期来源：%s）  %s' % ('⚠️ 同日已有数据，已覆盖：' if existed_day else '✔ 入库：', d, how, os.path.relpath(p, ROOT)))
+        print('%s%s  （日期来源：%s）  %s' % ('⚠️ 同日已有数据，按表覆盖对应直播间（其余沿用）：' if existed_day else '✔ 入库：', d, how, os.path.relpath(p, ROOT)))
         for rn in list(payload['rooms'].keys()):
             r = payload['rooms'][rn]
             t, m = r['totals'], r['metrics']
