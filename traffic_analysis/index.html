@@ -157,6 +157,30 @@
   .tf-pill.bad  { background: #fdecec; color: #b91c1c; }
  .tf-pill.flat { background: #f1f3f5; color: #64748b; }
 
+  /* ===== 渠道走势卡：渠道 / 指标 chips ===== */
+  .tf-ch-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 2px 0 10px; }
+  .tf-ch-bar .lb { font-size: .78em; font-weight: 700; color: var(--text-secondary, #64748b); margin-right: 2px; }
+  .tf-chip {
+    font-family: inherit; font-size: .78em; font-weight: 600; line-height: 1.5;
+    padding: 4px 10px; border-radius: 999px; border: 1px solid transparent;
+    background: #f4f6f8; color: #475569; cursor: pointer; white-space: nowrap;
+    transition: background .15s ease, color .15s ease, border-color .15s ease, transform .12s ease;
+  }
+  .tf-chip:hover { background: #eef2f7; border-color: #dbe3ec; transform: translateY(-1px); }
+  .tf-chip:focus-visible { outline: 2px solid #ffb066; outline-offset: 1px; }
+  .tf-chip.on { background: #fff3e0; color: #b45309; border-color: #ffd2ab; }
+  .tf-ch-meta { font-size: .78em; color: #64748b; margin: -2px 0 6px; line-height: 1.7; }
+  .tf-ch-meta b { color: #1e293b; font-weight: 700; }
+  .tf-ch-meta .up { color: #e65100; font-weight: 700; }
+  .tf-ch-meta .down { color: #047857; font-weight: 700; }
+  .tf-ch-meta .flat { color: #64748b; }
+.tf-ch-foot { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap; margin: -2px 0 6px; }
+.tf-ch-foot .tf-ch-meta { margin: 0; flex: 1 1 auto; min-width: 0; }
+.tf-ch-cmp { display: inline-flex; align-items: center; gap: 5px; font-size: .78em; color: #64748b; cursor: pointer; white-space: nowrap; user-select: none; }
+.tf-ch-cmp:hover { color: #b45309; }
+.tf-ch-cmp input { width: 13px; height: 13px; margin: 0; accent-color: #ff6900; cursor: pointer; }
+  #tfChannelTrendCard { scroll-margin-top: 84px; }
+
   .tf-summary-box {
     border-radius: 12px; padding: 15px 18px; margin: 14px 0 0;
     background: linear-gradient(135deg, #fffdf0 0%, #fff 100%);
@@ -332,7 +356,7 @@
       <div class="tf-sec">效率指标 <span class="tip">比率类环比用百分点（pp），金额 / 倍数用原单位</span></div>
       <div class="tf-grid g4" id="tfGridC"></div>
       <div class="tf-extra" id="tfExtra"></div>
-      <div class="tf-tip">💡 <b>点指标卡</b>可在下方趋势图里高亮对应曲线（再点一次取消）· <b>点渠道行</b>可定位到占比图里对应扇区 · <b>点趋势图上的某一天</b>可跳到那天 · 键盘 <b>← / →</b> 切换日期</div>
+      <div class="tf-tip">💡 <b>点指标卡</b>可在下方趋势图里高亮对应曲线（再点一次取消）· <b>点渠道行 / 占比图扇区 / 渠道走势卡的渠道胶囊</b>三处联动 · <b>渠道走势卡</b>可点指标胶囊换指标、勾「叠加该口径整体」加对照虚线 · <b>点趋势图上的某一天</b>可跳到那天 · 键盘 <b>← / →</b> 切换日期</div>
     </div>
 
     <!-- 二、流量漏斗 -->
@@ -440,6 +464,18 @@
           <tbody id="tfChannelBody"></tbody>
         </table>
       </div>
+    </div>
+
+    <!-- 六、渠道走势：选一个渠道，看它这个月每个指标每天的变化 -->
+    <div class="tf-card" id="tfChannelTrendCard">
+      <h3>渠道走势 <span class="tf-sub" id="tfChTrendSub">选一个渠道，看它每天的变化</span></h3>
+      <div class="tf-ch-bar" id="tfChSwitch"></div>
+      <div class="tf-ch-bar" id="tfChMetrics"></div>
+      <div class="tf-ch-foot">
+        <div class="tf-ch-meta" id="tfChTrendMeta"></div>
+        <label class="tf-ch-cmp" title="把该口径整体同日值叠成灰色虚线，方便看占比走势"><input type="checkbox" id="tfChCompare" />叠加「该口径整体」</label>
+      </div>
+      <div id="chartChTrend" class="tf-chart"></div>
     </div>
   </div>
 
@@ -814,6 +850,8 @@ function renderChannels(r){
       + '<td>' + (c.gpm == null ? '—' : fmtInt(c.gpm)) + '</td>'
       + '</tr>';
   }).join('');
+  /* 渠道走势卡的渠道 chips 跟着表格走（同一份 r.channels，顺序也一致） */
+  renderChTrendChips(r);
 }
 
 /* ---------------- 图表 ---------------- */
@@ -1001,12 +1039,215 @@ function renderRateTrend(r){
   });
 }
 
+/* ================= 渠道走势：某个渠道 × 某个指标 × 逐日 ================= */
+/* ch(row) = 该渠道当日值（直接取日报 channels[]，与表格同源，数值不会对不上）；
+   all(rep) = 该口径整体同日值，做灰色虚线对照；pct = 百分比轴；money = 金额 */
+var CH_METRICS = [
+  { key: 'views',             label: '观看次数',    unit: '次', ch: function(c){ return c.views; },
+    all: function(r){ return r.totals.views; } },
+  { key: 'share',             label: '观看占比',    unit: '%', pct: true, ch: function(c){ return c.share; }, all: null },
+  { key: 'impressions',       label: '曝光次数',    unit: '次', ch: function(c){ return c.impressions; },
+    all: function(r){ return r.totals.impressions; } },
+  { key: 'evr',               label: '曝光→观看率', unit: '%', pct: true, ch: function(c){ return c.evr; },
+    all: function(r){ return r.metrics && r.metrics.exposure_view_rate != null ? +(r.metrics.exposure_view_rate * 100).toFixed(2) : null; } },
+  { key: 'interactions',      label: '互动次数',    unit: '次', ch: function(c){ return c.interactions; },
+    all: function(r){ return r.totals.interactions; } },
+  { key: 'interaction_ratio', label: '观看→互动率', unit: '%', pct: true,
+    /* 口径异常的渠道，观看→互动率不可信（表格里也是 —），走势同样断开 */
+    ch: function(c){ return c.anomaly ? null : c.interaction_ratio; },
+    all: function(r){ return r.metrics && r.metrics.view_interaction_rate != null ? +(r.metrics.view_interaction_rate * 100).toFixed(2) : null; } },
+  { key: 'new_followers',     label: '新增粉丝',    unit: '人', ch: function(c){ return c.new_followers; },
+    all: function(r){ return r.totals.new_followers; } },
+  { key: 'product_clicks',    label: '商品点击',    unit: '次', ch: function(c){ return c.product_clicks; },
+    all: function(r){ return r.totals.product_clicks; } },
+  { key: 'ctr',               label: '商品点击率',  unit: '%', pct: true, ch: function(c){ return c.ctr; },
+    all: function(r){ return r.metrics && r.metrics.product_ctr != null ? +(r.metrics.product_ctr * 100).toFixed(2) : null; } },
+  { key: 'paid_orders',       label: '成交订单',    unit: '单', ch: function(c){ return c.paid_orders; },
+    all: function(r){ return r.totals.paid_orders; } },
+  { key: 'cvr',               label: '点击→成交率', unit: '%', pct: true, ch: function(c){ return c.cvr; },
+    all: function(r){ return r.metrics && r.metrics.click_cvr != null ? +(r.metrics.click_cvr * 100).toFixed(2) : null; } },
+  { key: 'paid_amount',       label: '支付金额',    unit: '元', money: true, ch: function(c){ return c.paid_amount; },
+    all: function(r){ return r.totals.paid_amount; } },
+  { key: 'gpm',               label: 'GPM',         unit: '元', ch: function(c){ return c.gpm; },
+    all: function(r){ return r.metrics ? r.metrics.gpm : null; } }
+];
+/* 当前选中：渠道名（null = 跟随表格第一名）+ 指标 key。切日期/口径时保留选择，渠道不存在才回落第一名 */
+var CH_TREND = { channel: null, metric: 'views', compare: false };
+
+function metricOf(key){
+  for (var i = 0; i < CH_METRICS.length; i++){ if (CH_METRICS[i].key === key) return CH_METRICS[i]; }
+  return CH_METRICS[0];
+}
+function chFmt(m, v, compact){
+  if (v == null || isNaN(v)) return '—';
+  if (m.pct) return fmtNum(v, 2) + '%';
+  if (m.money) return compact ? fmtCompact(v) : fmtNum(v, 2) + ' 元';
+  return compact ? fmtCompact(v) : (fmtInt(v) + (m.unit ? ' ' + m.unit : ''));
+}
+
+/* 渠道 chips + 指标 chips（只在列表变化时重建 DOM，避免每次重绘都抖动） */
+function renderChTrendChips(r){
+  var list = (r && r.channels) || [];
+  if (!list.length) return;
+  var names = list.map(function(c){ return c.name; });
+  if (!CH_TREND.channel || names.indexOf(CH_TREND.channel) < 0) CH_TREND.channel = names[0];
+  var box = document.getElementById('tfChSwitch');
+  var sig = names.join('|');
+  if (box && box.getAttribute('data-sig') !== sig){
+    box.innerHTML = '<span class="lb">渠道</span>' + names.map(function(n){
+      return '<button type="button" class="tf-chip" data-ch="' + esc(n) + '" title="切到该渠道的逐日走势">' + esc(n) + '</button>';
+    }).join('');
+    box.setAttribute('data-sig', sig);
+  }
+  if (box){
+    Array.prototype.forEach.call(box.querySelectorAll('.tf-chip'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-ch') === CH_TREND.channel);
+    });
+  }
+  var mbox = document.getElementById('tfChMetrics');
+  if (mbox && !mbox.getAttribute('data-sig')){
+    mbox.innerHTML = '<span class="lb">指标</span>' + CH_METRICS.map(function(m){
+      return '<button type="button" class="tf-chip" data-m="' + m.key + '">' + m.label + '</button>';
+    }).join('');
+    mbox.setAttribute('data-sig', '1');
+  }
+  if (mbox){
+    Array.prototype.forEach.call(mbox.querySelectorAll('.tf-chip'), function(b){
+      b.classList.toggle('on', b.getAttribute('data-m') === CH_TREND.metric);
+    });
+  }
+}
+
+/* 渠道走势图：该渠道逐日曲线 + 该口径整体同日虚线（缺天/口径异常 → 断开，绝不插值） */
+function renderChannelTrend(r){
+  var c = initChart('chartChTrend');
+  if (!c) return;
+  var days = trendWindow(r);
+  var name = CH_TREND.channel;
+  var m = metricOf(CH_TREND.metric);
+  var sub = document.getElementById('tfChTrendSub');
+  if (!days.length || !name){
+    if (sub) sub.textContent = SCOPE + '\u3000这天没有渠道明细';
+    c.clear();
+    return;
+  }
+  var labels = days.map(function(d){ return d.substring(5); });
+  var chVals = [], allVals = [], missing = 0;
+  for (var i = 0; i < days.length; i++){
+    var rep = rpt(days[i], SCOPE);
+    var row = rep ? chOf(rep, name) : null;
+    if (row == null) missing++;
+    var v = row ? m.ch(row) : null;
+    chVals.push(v == null ? null : v);
+    var av = (rep && m.all) ? m.all(rep) : null;
+    allVals.push(av == null ? null : av);
+  }
+  var hasAll = !!m.all && allVals.some(function(v){ return v != null; });
+  var showAll = hasAll && !!CH_TREND.compare;   /* 默认不叠加整体线：量级差太多会把渠道曲线压扁，看不出发化 */
+  var valid = chVals.filter(function(v){ return v != null; });
+  var peak = null, peakIdx = -1;
+  for (var k = 0; k < chVals.length; k++){
+    if (chVals[k] != null && (peak === null || chVals[k] > peak)){ peak = chVals[k]; peakIdx = k; }
+  }
+  var sum = valid.reduce(function(a, b){ return a + b; }, 0);
+  var avg = valid.length ? sum / valid.length : null;
+  var first = null, last = null;
+  for (var f = 0; f < chVals.length; f++){ if (chVals[f] != null){ first = chVals[f]; break; } }
+  for (var g = chVals.length - 1; g >= 0; g--){ if (chVals[g] != null){ last = chVals[g]; break; } }
+  function vt(v){ return chFmt(m, v, false); }
+
+  c.setOption({
+    grid: { left: 8, right: 26, top: showAll ? 42 : 26, bottom: 30, containLabel: true },
+    toolbox: { show: true, right: 4, top: 0, itemSize: 13, itemGap: 6, iconStyle: { borderColor: '#94a3b8' },
+      feature: { saveAsImage: { title: '保存为图片', name: '渠道走势_' + SCOPE + '_' + name + '_' + r.date, pixelRatio: 2, backgroundColor: '#fff' } } },
+    tooltip: { trigger: 'axis' },
+    legend: { show: showAll, top: 4, itemWidth: 14, itemHeight: 9, textStyle: { fontSize: 11, color: '#475569' } },
+    dataZoom: [{ type: 'inside', xAxisIndex: 0, zoomOnMouseWheel: true, moveOnMouseMove: true }],
+    xAxis: { type: 'category', data: labels, boundaryGap: false, axisLabel: { fontSize: 10, color: '#94a3b8' }, axisLine: { lineStyle: { color: '#e2e8f0' } } },
+    yAxis: { type: 'value', scale: true, name: m.unit || '', nameTextStyle: { fontSize: 10, color: '#94a3b8' },
+      axisLabel: { formatter: function(v){ return m.pct ? (v + '%') : fmtCompact(v); }, fontSize: 10, color: '#94a3b8' },
+      splitLine: { lineStyle: { color: '#f1f5f9' } } },
+    series: [{
+      name: name, type: 'line', data: chVals, smooth: true, symbolSize: 6, connectNulls: false,
+      lineStyle: { width: 2.6, color: '#ff6900' }, itemStyle: { color: '#ff6900' },
+      areaStyle: { color: 'rgba(255,105,0,.10)' },
+      markPoint: { symbol: 'pin', symbolSize: 38, data: peak == null ? [] : [{ type: 'max', name: '峰值' }],
+        label: { fontSize: 9, color: '#fff', formatter: function(p){ return chFmt(m, p.value, true); } },
+        itemStyle: { color: '#ff6900' } },
+      emphasis: { focus: 'series' }, blur: { lineStyle: { opacity: .18 }, itemStyle: { opacity: .18 } },
+      tooltip: { valueFormatter: vt }
+    }].concat(!showAll ? [] : [{
+      name: SCOPE + '（该口径整体）', type: 'line', data: allVals, smooth: true, symbolSize: 4, connectNulls: false,
+      lineStyle: { width: 1.6, type: 'dashed', color: '#94a3b8' }, itemStyle: { color: '#94a3b8' },
+      emphasis: { focus: 'series' }, blur: { lineStyle: { opacity: .18 }, itemStyle: { opacity: .18 } },
+      tooltip: { valueFormatter: vt }
+    }])
+  });
+
+  if (sub) sub.textContent = SCOPE + '\u3000' + name + '\u3000' + m.label + '\u3000' + labels[0] + ' ~ ' + labels[labels.length - 1] + '\u3000共 ' + labels.length + ' 天';
+  var cbox = document.getElementById('tfChCompare');
+  if (cbox){
+    cbox.checked = !!CH_TREND.compare;
+    cbox.disabled = !hasAll;            /* 观看占比没有「整体」可比，禁用 */
+    cbox.parentNode.style.opacity = hasAll ? '' : '.45';
+    cbox.parentNode.title = hasAll ? '把该口径整体同日值叠成灰色虚线，方便看占比走势' : '这个指标没有「该口径整体」可比';
+  }
+  var meta = document.getElementById('tfChTrendMeta');
+  if (meta){
+    var parts = [];
+    parts.push('峰值 <b>' + chFmt(m, peak, true) + '</b>' + (peakIdx >= 0 ? '（' + labels[peakIdx] + '）' : ''));
+    parts.push('均值 <b>' + chFmt(m, avg, true) + '</b>');
+    if (first != null && last != null && first !== 0){
+      var pct = (last - first) / Math.abs(first) * 100;
+      var dir = pct > 0.05 ? 'up' : (pct < -0.05 ? 'down' : 'flat');
+      var txt = dir === 'flat' ? '持平' : (dir === 'up' ? '+' : '') + pct.toFixed(1) + '%';
+      parts.push('首日 ' + chFmt(m, first, true) + ' → 末日 <b>' + chFmt(m, last, true) + '</b> <span class="' + dir + '">' + txt + '</span>');
+    }
+    if (missing) parts.push('有 ' + missing + ' 天该渠道无数据（已断开，不插值）');
+    meta.innerHTML = parts.join(' \u00b7 ');
+  }
+  c.off('click');
+  c.on('click', function(p){
+    var i = p.dataIndex;
+    if (i == null || i < 0 || i >= days.length) return;
+    if (days[i] === CURDAY) return;
+    switchDay(days[i]);
+  });
+}
+
+/* chips 点击：切渠道（同步表格行 + 占比图扇区）/ 切指标 */
+(function bindChTrendChips(){
+  var box = document.getElementById('tfChSwitch');
+  var mbox = document.getElementById('tfChMetrics');
+  if (box) box.addEventListener('click', function(e){
+    var b = e.target && e.target.closest ? e.target.closest('.tf-chip') : null;
+    if (!b) return;
+    var n = b.getAttribute('data-ch');
+    if (n) focusChannel(n, false);
+  });
+  if (mbox) mbox.addEventListener('click', function(e){
+    var b = e.target && e.target.closest ? e.target.closest('.tf-chip') : null;
+    if (!b) return;
+    var k = b.getAttribute('data-m');
+    if (!k || k === CH_TREND.metric) return;
+    CH_TREND.metric = k;
+    if (REPORT){ renderChTrendChips(REPORT); renderChannelTrend(REPORT); }
+  });
+  var cmp = document.getElementById('tfChCompare');
+  if (cmp) cmp.addEventListener('change', function(){
+    CH_TREND.compare = !!this.checked;
+    if (REPORT) renderChannelTrend(REPORT);
+  });
+})();
+
 function renderAllCharts(){
   if (!REPORT) return;
   renderFunnel(REPORT);
   renderChannelPie(REPORT);
   renderTrend(REPORT);
   renderRateTrend(REPORT);
+  renderChTrendChips(REPORT);
+  renderChannelTrend(REPORT);
 }
 /* scope 切换后重画趋势（需要先把该 scope 近 14 天的日报读进来） */
 function reloadCharts(){
@@ -1017,6 +1258,7 @@ function reloadCharts(){
       return i > 0 ? INDEX.days[i-1].date : null;
     }).filter(Boolean), SCOPE).then(function(){
       renderTrend(REPORT); renderRateTrend(REPORT);
+      renderChTrendChips(REPORT); renderChannelTrend(REPORT);
     });
   });
 }
@@ -1068,17 +1310,18 @@ function clearMetricHighlight(){
   });
 }
 
-/* 点渠道表行 → 占比图里对应扇区高亮 + 表格滚动可见 */
-function highlightChannelRow(tr){
-  var name = tr.getAttribute('data-ch');
+/* 统一「聚焦某个渠道」：表格行高亮 + 占比图扇区高亮 + 渠道走势切到该渠道。
+   表格行点击、渠道走势的渠道 chips 都走这里，三处永远同步 */
+function focusChannel(name, scroll){
   if (!name) return;
-  var already = tr.classList.contains('sel');
+  var rows = document.querySelectorAll('#tfChannelBody tr');
+  var tr = null;
+  for (var i = 0; i < rows.length; i++){ if (rows[i].getAttribute('data-ch') === name){ tr = rows[i]; break; } }
   var pie = CHARTS['chartChannel'];
   /* 先整体复位，再按需高亮：避免上一次的扇区还处于放大态 */
   if (pie){ try { pie.dispatchAction({ type: 'downplay' }); } catch (e) {} }
   Array.prototype.forEach.call(document.querySelectorAll('#tfChannelBody tr.sel'), function(n){ n.classList.remove('sel'); });
-  if (already) return;   /* 再点一次 = 取消 */
-  tr.classList.add('sel');
+  if (tr) tr.classList.add('sel');
   if (pie){
     try {
       pie.dispatchAction({ type: 'highlight', name: name });
@@ -1090,7 +1333,22 @@ function highlightChannelRow(tr){
       }
     } catch (e) {}
   }
-  scrollToChannelRow(tr);
+  CH_TREND.channel = name;
+  if (REPORT){ renderChTrendChips(REPORT); renderChannelTrend(REPORT); }
+  if (scroll && tr) scrollToChannelRow(tr);
+}
+
+/* 点渠道表行 → 占比图扇区 + 渠道走势同步；再点同一行 = 取消高亮（走势图保持当前渠道） */
+function highlightChannelRow(tr){
+  var name = tr.getAttribute('data-ch');
+  if (!name) return;
+  if (tr.classList.contains('sel')){
+    tr.classList.remove('sel');
+    var pie = CHARTS['chartChannel'];
+    if (pie){ try { pie.dispatchAction({ type: 'downplay' }); } catch (e) {} }
+    return;
+  }
+  focusChannel(name, true);
 }
 function scrollToChannelRow(tr){
   var card = document.getElementById('tfChannelCard');

@@ -51,7 +51,10 @@ HOOKS = ['tfStatus', 'tfHeadline', 'tfGridA', 'tfGridB', 'tfGridC', 'tfExtra', '
          'tfDataList', 'tfRuleList', 'tfActionList', 'chartFunnel', 'chartChannel', 'chartTrend',
          'chartRate', 'monthSelect', 'daySelect', 'scopeSelect',
          'toggleMetricHighlight', 'scrollToBlock', 'highlightChannelRow', 'tf-flash', 'tfTop',
-         'dataZoom', "focus: 'series'"]
+         'dataZoom', "focus: 'series'",
+         # 2026-10-26 渠道走势卡（渠道 × 指标 × 逐日）
+         'chartChTrend', 'tfChTrendSub', 'tfChSwitch', 'tfChMetrics', 'tfChTrendMeta', 'tfChCompare',
+         'renderChannelTrend', 'focusChannel', 'CH_METRICS']
 
 OK_N = 0
 BAD = []

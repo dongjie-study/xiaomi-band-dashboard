@@ -121,6 +121,10 @@ LAYOUT = r"""
     meRow: n('#tfCompareBody tr.me'),
     canvasN: n('#tfContent canvas'),
     chartHeights: Array.prototype.map.call(document.querySelectorAll('.tf-chart'), function(e){ return Math.round(e.getBoundingClientRect().height); }),
+    chChips: n('#tfChSwitch .tf-chip'),
+    mChips: n('#tfChMetrics .tf-chip'),
+    chCanvas: n('#chartChTrend canvas'),
+    chSub: (document.getElementById('tfChTrendSub')||{}).textContent || '',
     scrollX: document.documentElement.scrollWidth > window.innerWidth + 2,
     statusText: (document.getElementById('tfStatus')||{}).innerText || '',
     headline: (document.getElementById('tfHeadline')||{}).innerText || '',
@@ -135,6 +139,7 @@ SNAP = r"""
 () => {
   const o = id => { const c = CHARTS[id]; return c ? c.getOption() : null; };
   const f = o('chartFunnel'), p = o('chartChannel'), t = o('chartTrend'), rt = o('chartRate');
+  const ct5 = o('chartChTrend');
   const last = s => (s && s.data && s.data.length) ? s.data[s.data.length - 1] : null;
   return {
     scope: document.getElementById('scopeSelect').value,
@@ -144,6 +149,9 @@ SNAP = r"""
     trendAll: t ? (t.series || []).map(s => s.data) : null,
     trendXLast: t ? (t.xAxis[0].data || []).slice(-1)[0] : null,
     rateLast: rt ? (rt.series || []).map(last) : null,
+    chName: ct5 && ct5.series && ct5.series[0] ? ct5.series[0].name : null,
+    chData: ct5 && ct5.series && ct5.series[0] ? ct5.series[0].data : [],
+    chMetric: (typeof CH_TREND !== 'undefined') ? CH_TREND.metric : null,
     sub: (document.getElementById('tfTrendSub') || {}).textContent || '',
     fsub: (document.getElementById('tfFunnelSub') || {}).textContent || '',
     psub: (document.getElementById('tfPieSub') || {}).textContent || ''
@@ -203,7 +211,7 @@ def main():
     def ready(pg, timeout=30000):
         pg.goto(URL, wait_until='domcontentloaded', timeout=60000)
         pg.wait_for_function("() => window.INDEX && document.querySelectorAll('#tfCompareBody tr').length > 0", timeout=timeout)
-        pg.wait_for_function("() => document.querySelectorAll('#tfContent canvas').length >= 4", timeout=timeout)
+        pg.wait_for_function("() => document.querySelectorAll('#tfContent canvas').length >= 5", timeout=timeout)
         pg.evaluate(HIDE_WIDGET)
 
     try:
@@ -226,8 +234,8 @@ def main():
                 bad('渠道明细 %d 行 ≠ 日报 %d 行' % (mini['channelRows'], exp_rows))
             if mini['ruleRows'] < 1 or mini['compareRows'] < 1 or mini['peerRows'] < 1:
                 bad('规则/对比/同业表有空：rule=%s cmp=%s peer=%s' % (mini['ruleRows'], mini['compareRows'], mini['peerRows']))
-            if mini['canvasN'] != 4:
-                bad('图 %d 张（期望 4）' % mini['canvasN'])
+            if mini['canvasN'] != 5:
+                bad('图 %d 张（期望 5）' % mini['canvasN'])
             if any(h < 200 or h > 420 for h in mini['chartHeights']):
                 bad('图高异常：%s' % mini['chartHeights'])
             if mini['scrollX']:
@@ -241,10 +249,86 @@ def main():
             if mini['errors']:
                 bad('window.onerror: %s' % mini['errors'][:3])
             if not BAD:
-                ok('指标卡 4/4/8（效率 4 列）、渠道 %d 行、规则 %d 行、对比 %d 行、图 4 张 %s、无横向滚动、无 JS 报错'
+                ok('指标卡 4/4/8（效率 4 列）、渠道 %d 行、规则 %d 行、对比 %d 行、图 5 张 %s、无横向滚动、无 JS 报错'
                    % (mini['channelRows'], mini['ruleRows'], mini['compareRows'], mini['chartHeights']))
             if shots:
                 pg.screenshot(path=os.path.join(ROOT, '_artifacts', '_pc_%s_top.png' % last_day.replace('-', '')))
+
+            # ---------- 1b. 渠道走势卡（chips 与表格同源 / 指标切换必须引自日报） ----------
+            rep_all = rj(os.path.join(HERE, 'reports', last_day[:4], last_day, '全店.json'))
+            chn = [c['name'] for c in (rep_all.get('channels') or [])]
+            win1 = [d for d in days if d <= last_day][-14:]
+
+            def ch_series(metric_key):
+                """按日报逐日拼出「某渠道某指标」的期望序列（缺天 = None）"""
+                out = []
+                for d in win1:
+                    p = os.path.join(HERE, 'reports', d[:4], d, '全店.json')
+                    rows = (rj(p).get('channels') or []) if os.path.exists(p) else []
+                    hit = [c for c in rows if c['name'] == chn[0]]
+                    if not hit:
+                        out.append(None); continue
+                    v = hit[0].get(metric_key)
+                    out.append(None if v is None else float(v))
+                return out
+
+            ct = pg.evaluate("""() => { const o = CHARTS.chartChTrend.getOption();
+                return { chips: document.querySelectorAll('#tfChSwitch .tf-chip').length,
+                         names: Array.prototype.map.call(document.querySelectorAll('#tfChSwitch .tf-chip'), b => b.getAttribute('data-ch')),
+                         mchips: document.querySelectorAll('#tfChMetrics .tf-chip').length,
+                         sub: (document.getElementById('tfChTrendSub')||{}).textContent || '',
+                         meta: (document.getElementById('tfChTrendMeta')||{}).textContent || '',
+                         yname: o.yAxis[0].name,
+                         series: o.series.map(s => ({ name: s.name, data: s.data })) }; }""")
+            if ct['chips'] != len(chn) or ct['names'] != chn:
+                bad('渠道走势渠道 chips %d 个 ≠ 表格 %d 个（或顺序不一致）' % (ct['chips'], len(chn)))
+            if ct['mchips'] != 13:
+                bad('渠道走势指标 chips %d 个（期望 13）' % ct['mchips'])
+            if not ct['sub'].startswith('全店') or chn[0] not in ct['sub']:
+                bad('渠道走势副标题不对：%s' % ct['sub'])
+            if not ct['meta'] or '峰值' not in ct['meta']:
+                bad('渠道走势概览行没渲染：%s' % ct['meta'])
+            if ct['series'][0]['name'] != chn[0]:
+                bad('渠道走势默认渠道不是表格第一名：%s' % ct['series'][0]['name'])
+            # 默认只画渠道自己的曲线（叠加整体线会把渠道曲线压扁），勾选后才有第二条
+            if len(ct['series']) != 1:
+                bad('渠道走势默认应只有 1 条曲线，实际 %d 条：%s' % (len(ct['series']), [s['name'] for s in ct['series']]))
+            cmp_n = pg.evaluate("() => document.querySelectorAll('#tfChCompare').length")
+            if cmp_n != 1:
+                bad('渠道走势缺少「叠加该口径整体」勾选框')
+            else:
+                pg.check('#tfChCompare')
+                pg.wait_for_function("() => CHARTS.chartChTrend.getOption().series.length === 2", timeout=8000)
+                two = pg.evaluate("() => CHARTS.chartChTrend.getOption().series.map(s => s.name)")
+                if not two[1].startswith('全店'):
+                    bad('勾选后第二条曲线不是「该口径整体」：%s' % two)
+                pg.uncheck('#tfChCompare')
+                pg.wait_for_function("() => CHARTS.chartChTrend.getOption().series.length === 1", timeout=8000)
+            exp_v = ch_series('views')
+            got_v = [None if v is None else float(v) for v in ct['series'][0]['data']]
+            if got_v != exp_v:
+                bad('渠道走势「观看次数」序列与日报不符：%s' % got_v[:4])
+            # 指标 chips 切换：支付金额（保留 2 位小数）
+            pg.click('#tfChMetrics .tf-chip[data-m="paid_amount"]')
+            pg.wait_for_function("() => CHARTS.chartChTrend.getOption().yAxis[0].name === '元'", timeout=10000)
+            exp_p = ch_series('paid_amount')
+            got_p = pg.evaluate("() => CHARTS.chartChTrend.getOption().series[0].data")
+            if [None if v is None else round(float(v), 2) for v in got_p] != [None if v is None else round(v, 2) for v in exp_p]:
+                bad('渠道走势「支付金额」序列与日报不符')
+            pg.click('#tfChMetrics .tf-chip[data-m="views"]')
+            pg.wait_for_function("() => CHARTS.chartChTrend.getOption().yAxis[0].name === '次'", timeout=10000)
+            # 渠道 chips 切换：点第 3 个渠道 → 表格该行高亮、副标题跟着变
+            if len(chn) >= 3:
+                pg.click('#tfChSwitch .tf-chip[data-ch="%s"]' % chn[2].replace('"', '\\"'))
+                pg.wait_for_function("(n) => (document.getElementById('tfChTrendSub')||{}).textContent.indexOf(n) >= 0",
+                                     arg=chn[2], timeout=10000)
+                sel_n = pg.evaluate("() => document.querySelectorAll('#tfChannelBody tr.sel').length")
+                if sel_n != 1:
+                    bad('点渠道 chip 后表格高亮行 %d ≠ 1' % sel_n)
+                pg.click('#tfChSwitch .tf-chip[data-ch="%s"]' % chn[0].replace('"', '\\"'))
+                pg.wait_for_function("(n) => (document.getElementById('tfChTrendSub')||{}).textContent.indexOf(n) >= 0",
+                                     arg=chn[0], timeout=10000)
+            ok('渠道走势卡：%d 个渠道 chips（与表格同序）、13 个指标 chips、观看次数/支付金额序列与日报逐点一致、chip 切换联动表格' % len(chn))
 
             # ---------- 2. 全部口径冒烟（最新一天） ----------
             head('2 全口径冒烟（%s：全店 + %d 间）' % (last_day, len(rooms_by_day[last_day])))
@@ -265,7 +349,7 @@ def main():
                     scope_bad.append('%s 没切过去（漏斗首段应为 %d）' % (scope, first))
                     continue
                 m = pg.evaluate(LAYOUT)
-                if m['canvasN'] != 4:
+                if m['canvasN'] != 5:
                     scope_bad.append('%s 图 %d 张' % (scope, m['canvasN']))
                 if m['channelRows'] != nrow:
                     scope_bad.append('%s 渠道 %d ≠ %d' % (scope, m['channelRows'], nrow))
@@ -284,7 +368,7 @@ def main():
             if scope_bad:
                 bad('；'.join(scope_bad[:6]))
             else:
-                ok('%d 个口径全部渲染正常（图 4 张、渠道行数与日报一致、无 JS 报错）' % (1 + len(rooms_by_day[last_day])))
+                ok('%d 个口径全部渲染正常（图 5 张、渠道行数与日报一致、无 JS 报错）' % (1 + len(rooms_by_day[last_day])))
 
             # ---------- 3. 多宽度 ----------
             head('3 多宽度（1100 / 760 / 420）')
@@ -295,7 +379,7 @@ def main():
                 m2 = pg2.evaluate(LAYOUT)
                 if m2['scrollX']:
                     w_bad.append('%d 宽横向滚动' % w)
-                if m2['canvasN'] != 4:
+                if m2['canvasN'] != 5:
                     w_bad.append('%d 宽图 %d 张' % (w, m2['canvasN']))
                 if shots:
                     pg2.screenshot(path=os.path.join(ROOT, '_artifacts', '_pc_%d.png' % w), full_page=(w == 420))
@@ -358,6 +442,18 @@ def main():
                             e_evr.append(float(jsq(rr['metrics']['exposure_view_rate'] * 100, 2)))
                         if got['trendAll'] != [e_imp, e_views, e_evr]:
                             errs.append('%s %s 趋势序列与日报不符' % (day, scope))
+                        # 渠道走势：默认渠道的「观看次数」逐日序列也要与日报一致
+                        if got['chMetric'] != 'views':
+                            errs.append('%s %s 渠道走势指标不是默认 views' % (day, scope))
+                        e_ch = []
+                        for d in win:
+                            p2 = os.path.join(HERE, 'reports', d[:4], d, '%s.json' % scope)
+                            rows2 = (rj(p2).get('channels') or []) if os.path.exists(p2) else []
+                            hit2 = [c for c in rows2 if c['name'] == got['chName']]
+                            e_ch.append(None if not hit2 else (None if hit2[0].get('views') is None else float(hit2[0]['views'])))
+                        g_ch = [None if v is None else float(v) for v in got['chData']]
+                        if g_ch != e_ch:
+                            errs.append('%s %s 渠道走势 %s 序列与日报不符' % (day, scope, got['chName']))
                 if errs:
                     bad('深度档 %d 组合中 %d 处不一致：%s' % (combos, len(errs), errs[:5]))
                 else:
