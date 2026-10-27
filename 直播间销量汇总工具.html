@@ -48,6 +48,7 @@
   .drop{display:block;border:1.5px dashed #cbd2de;border-radius:12px;background:var(--paper);
     padding:34px 26px;cursor:pointer;transition:.15s;}
   .drop:hover{border-color:var(--accent);background:var(--accent-soft);}
+  .drop.dragging{border-color:var(--accent);background:var(--accent-soft);}
   .drop .ic{width:38px;height:38px;border-radius:9px;background:var(--accent-soft);
     color:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
   .drop .ic svg{width:20px;height:20px;}
@@ -64,14 +65,16 @@
   .res-head h2{margin:0;font-size:19px;font-weight:700;}
   .res-head .meta{color:var(--faint);font-size:12.5px;margin-top:5px;}
 
-  /* KPI：一行三个，竖线分隔 */
+  /* KPI */
   .stats{display:flex;align-items:stretch;gap:0;margin-bottom:22px;
     background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
-  .stat{flex:1;padding:18px 22px;border-right:1px solid var(--line2);}
+  .stat{flex:1;padding:16px 20px;border-right:1px solid var(--line2);}
   .stat:last-child{border-right:0;}
   .stat .lab{color:var(--faint);font-size:12.5px;}
-  .stat .val{font-size:28px;font-weight:700;margin-top:4px;}
+  .stat .val{font-size:25px;font-weight:700;margin-top:4px;white-space:nowrap;}
   .stat .unit{font-size:13px;color:var(--soft);font-weight:500;margin-left:4px;}
+  .stat .sub{font-size:12px;color:var(--faint);margin-top:2px;white-space:nowrap;}
+  .stat .sub b{color:var(--accent);font-weight:600;}
 
   /* 表格 */
   .panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
@@ -91,9 +94,15 @@
   .bar i{display:block;height:100%;background:var(--accent);border-radius:3px;}
 
   .warn{margin:0 0 18px;background:#fffbeb;border:1px solid #f5d98b;color:#92400e;
-    border-radius:10px;padding:13px 16px;font-size:13px;}
-  .warn b{display:block;margin-bottom:4px;}
+    border-radius:12px;padding:13px 16px;font-size:13px;}
+  .warn b{display:block;margin-bottom:4px;font-weight:600;}
   .warn ul{margin:6px 0 0;padding-left:18px;}
+  .warn li{margin:2px 0;}
+  .warn .tip{margin-top:8px;padding-top:8px;border-top:1px dashed #e7cf9a;color:#a16207;font-size:12.5px;}
+  .warn .muted{color:#b07a3a;}
+  .warn.idle{display:none;}
+  .note{color:var(--faint);font-size:12px;margin:10px 2px 0;line-height:1.7;}
+  .note b{color:var(--soft);font-weight:600;}
   .hide{display:none;}
 
   /* Tab 切换 */
@@ -159,6 +168,41 @@
   .warn{border-radius:12px;}
   footer{letter-spacing:.02em;}
 </style>
+<style id="svc-style">
+  /* 服务商汇总：双层表头 + 首列吸附 */
+  table.svc{border-collapse:separate;border-spacing:0;min-width:100%;}
+  table.svc th,table.svc td{padding:7px 7px;font-size:12.5px;}
+  table.svc .c-n{width:38px;}
+  table.svc .c-m{width:74px;}
+  table.svc .c-p{width:72px;}
+  table.svc thead th{background:#111827;color:#e9edf3;text-align:center;font-weight:500;
+    letter-spacing:.02em;border-bottom:1px solid #2b3444;}
+  table.svc thead th.cname{position:sticky;left:0;z-index:6;background:#111827;color:#fff;
+    text-align:left;min-width:138px;border-right:1px solid #2b3444;}
+  table.svc thead th.g-all{background:#0f766e;color:#fff;}
+  table.svc thead th.g-mod{background:#1f2937;}
+  table.svc thead tr:last-child th{background:#e9edf3;color:#111827;font-weight:600;
+    border-bottom:1px solid #cfd6e0;font-size:11.5px;letter-spacing:0;}
+  table.svc thead th.g-sub{background:#334155;color:#cbd5e1;font-weight:500;}
+  table.svc thead th .sub-mark{color:#94a3b8;margin-right:1px;}
+  table.svc thead tr:last-child th.h2{background:#f5f7fa;color:#5b6472;font-weight:500;font-size:12px;}
+  table.svc thead th.blk{border-left:1px solid #aab4c4;}
+  table.svc tbody td{text-align:right;border-bottom:1px solid #eef0f4;}
+  table.svc tbody td.blk{border-left:1px solid #d5dbe4;}
+  table.svc tbody td.cname{position:sticky;left:0;z-index:2;text-align:left;background:#fff;
+    border-right:1px solid #eef0f4;}
+  table.svc tr.agent td.cname{background:#f4f5f7;}
+  table.svc tr.total td.cname{background:#fef3c7;}
+  table.svc tr.room:hover td.cname{background:#fafbfc;}
+  table.svc tr.agent:hover td.cname{background:#eef1f5;}
+  table.svc tr.total:hover td.cname{background:#fde9a9;}
+  table.svc td.cname.sub{padding-left:20px;color:#4b5563;font-size:12px;}
+  table.svc td.zero{color:#c2c9d4;}
+  table.svc .dash{color:#c2c9d4;}
+  table.svc td.shareCell{min-width:0;}
+  table.svc .sh{display:flex;align-items:center;gap:4px;justify-content:flex-end;}
+  table.svc .pct{margin-left:0;font-size:12px;}
+</style>
 </head>
 <body>
 
@@ -174,7 +218,7 @@
   <!-- 空态 -->
   <section id="empty">
     <h1>上传订单，<em>自动出服务商战报</em></h1>
-    <p>按「服务商 → 直播间」汇总订单数、销售额与占比，口径与《直播间服务商汇总》一致。所有计算在本机浏览器完成，文件不上传。</p>
+    <p>按「服务商 → 直播间」汇总订单数、销售额与占比，并自动拆分手表 / 手环各型号。口径与《直播间服务商汇总》一致。所有计算在本机浏览器完成，文件不上传。</p>
     <label class="drop" id="drop">
       <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg></span>
       <b>选择订单 Excel</b>
@@ -182,7 +226,7 @@
       <input type="file" id="file" accept=".xlsx,.xls">
     </label>
     <div class="empty-feats">
-      <span><i></i>无需安装</span><span><i></i>不联网上传数据</span><span><i></i>一键导出美化 Excel</span>
+      <span><i></i>无需安装</span><span><i></i>不联网上传数据</span><span><i></i>手表 / 手环自动拆分</span><span><i></i>一键导出美化 Excel</span>
     </div>
   </section>
 
@@ -195,7 +239,7 @@
       <button class="btn btn-accent" id="export">导出 Excel</button>
     </div>
 
-    <div id="warnBox" class="warn hide"></div>
+    <div id="warnBox" class="warn idle"></div>
 
     <div class="stats" id="kpis"></div>
 
@@ -206,24 +250,12 @@
 
     <div id="tab-service">
       <div class="panel scroll-x">
-        <table>
-          <thead><tr>
-            <th rowspan="2">服务商 / 直播间</th>
-            <th colspan="3">整体</th>
-            <th colspan="3">小米手环11全部版本</th>
-            <th colspan="3">小米手环11标准版</th>
-            <th colspan="3">Xiaomi Watch S5 41mm</th>
-            <th colspan="3">手表总销量</th>
-          </tr><tr>
-            <th>订单数</th><th>销售额(元)</th><th>占比</th>
-            <th>订单数</th><th>销售额(元)</th><th>占比</th>
-            <th>订单数</th><th>销售额(元)</th><th>占比</th>
-            <th>订单数</th><th>销售额(元)</th><th>占比</th>
-            <th>订单数</th><th>销售额(元)</th><th>占比</th>
-          </tr></thead>
+        <table class="svc">
+          <thead id="theadSvc"></thead>
           <tbody id="tbody"></tbody>
         </table>
       </div>
+      <div class="note" id="svcNote"></div>
     </div>
 
     <div id="tab-hour" class="hide">
@@ -236,10 +268,15 @@
     </div>
   </section>
 
-  <footer>服务商映射依据《直播间服务商汇总》（2026-09-24）。新增直播间请联系维护者更新。</footer>
+  <footer>服务商映射已对齐 team_config.py（2026-10-25）；新增直播间请先在映射表补录，再重新导入。</footer>
 </main>
 
 <script>
+/* ============================================================
+   1. 配置区（日常维护只需改这一段）
+   ============================================================ */
+
+// 1.1 直播间 → 服务商
 const ROOM_TO_AGENT = {
   "小米官方手表":"我司阳光","小米官方手环直播间":"我司阳光","小米数码旗舰店":"我司阳光",
   "小米官方耳机直播间":"我司阳光","小米手环10Pro直播间":"我司阳光","小米官旗手表直播间":"我司阳光",
@@ -257,197 +294,567 @@ const ROOM_TO_AGENT = {
   "watch智能手环直播间":"良米","watch数码手环直播间":"良米","小米智能手表旗舰店":"良米",
   "小米手表官方直播间":"良米","小米手表":"良米","小米官方手表直播":"良米",
   "小米耳机官方直播间":"良米","小米官方Ai智能眼镜":"良米","小米手环11直播间":"良米",
-  "小米耳机":"良米",
-  "良米商品卡":"良米","小米官方平板直播间":"良米"
+  "小米耳机":"良米","小米耳机官旗直播间":"良米","小米耳机官旗直播问":"良米",   // 「直播问」为易错写法，一并兼容
+  "良米商品卡":"良米"
 };
-const IGNORED_ROOMS = new Set(["小米手环手表直播间"]);
-// 品类拆分：按商家编码归属（编码可能带\t、多值以 ;/； 分隔，逐一匹配）
-const CATEGORIES = [
-  {name:"小米手环11全部版本", codes:new Set(["81235","81236","81244","81249","81251","81253","81254","81255","81256","81259"])},
-  {name:"小米手环11标准版",   codes:new Set(["81244","81249","81254"])},
-  {name:"Xiaomi Watch S5 41mm", codes:new Set(["77889","77890","77895","77906"])},
-  {name:"手表总销量", codes:new Set(["68698","68703","68712","77889","77890","77895","77906","70275","70279","70281","70282","70284","65337","65341","65344","75162"])}
+
+// 1.2 忽略不入库（对齐 team_config.py 的 IGNORED_ROOMS / IGNORED_ROOM_KEYWORDS）
+const IGNORED_ROOMS    = new Set(["小米手环手表直播间","小米官旗平板直播间"]);
+const IGNORED_KEYWORDS = ["平板"];      // 名称命中任一关键字整间剔除
+const FALLBACK_AGENT   = "良米";        // 未在映射表的直播间兜底归属（与 Python 版一致）
+
+// 1.3 型号编码表（商家编码）
+const MODELS = {
+  "Redmi watch 6":              ["68698","68703","68712"],
+  "Xiaomi Watch S5 41mm":       ["77889","77890","77895","77906"],
+  "Xiaomi Watch S5":            ["70281","70284","70279","70275","70282"],
+  "Xiaomi Watch 5":             ["65337","65341","75162","65344"],
+  "小米手环11":                  ["81235","81236","81244","81249","81251","81253","81254","81255","81256","81259"],
+  "小米手环10Pro":               ["73677","73685","73675","73680","73679"],
+  "红米耳夹":                    ["82612","82614","92090"]
+};
+
+// 1.4 报表模块：整体 → 模块（总） → 子项（拆分）
+//     模块编码 = 其子项编码的并集（自动去重）；无子项的模块直接用 models 声明
+const MODULES = [
+  { key:"watch", name:"手表总销量", short:"手表", subs:[
+      { key:"watch:r6", name:"Redmi watch 6", models:["Redmi watch 6"] },
+      { key:"watch:s5", name:"Watch 系列高端表", models:["Xiaomi Watch S5 41mm","Xiaomi Watch S5","Xiaomi Watch 5"],
+        detail:"Xiaomi Watch S5 41mm + Xiaomi Watch S5 + Xiaomi Watch 5" }
+  ]},
+  { key:"band", name:"手环总销量", short:"手环", subs:[
+      { key:"band:11",  name:"小米手环11", models:["小米手环11"] },
+      { key:"band:10p", name:"小米手环10Pro", models:["小米手环10Pro"] }
+  ]},
+  // 耳夹属于耳机品类，独立成块（不计入手环/手表总量）
+  { key:"earclip", name:"红米耳夹", short:"耳夹", models:["红米耳夹"], subs:[] }
 ];
 
-const $ = s => document.querySelector(s);
-const drop = $("#drop"), fileInput = $("#file");
-drop.addEventListener("dragover", e=>{e.preventDefault();drop.style.borderColor="#0f766e";});
-drop.addEventListener("dragleave", ()=>drop.style.borderColor="");
-drop.addEventListener("drop", e=>{e.preventDefault();drop.style.borderColor="";
-  if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);});
-fileInput.addEventListener("change", e=>{if(e.target.files[0]) handleFile(e.target.files[0]);});
+// 1.5 退费口径：状态命中即视为退费（另：金额为负的行不二次扣减）
+const REFUND_STATUS = new Set(["已关闭","交易关闭","退款成功","已退款","退款完成","退货退款成功"]);
+const isRefundStatus = s => REFUND_STATUS.has(s) || /关闭/.test(s);
+const REFUND_HINT    = /退款|退货|售后/;
 
-const fmt = n => Number(n).toLocaleString("zh-CN",{maximumFractionDigits:0});
-const fmtMoney = n => n.toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2});
+/* ============================================================
+   2. 由配置派生：区块列表 / 编码索引
+   ============================================================ */
+const BLOCKS  = [{ key:"all", name:"整体", level:0 }];
+const CODE_IX = new Map();       // 编码 -> [blockKey...]
+
+function codesOf(models){
+  const set = new Set();
+  models.forEach(m => (MODELS[m]||[]).forEach(c => set.add(String(c).trim())));
+  return set;
+}
+function indexCodes(set, key){
+  set.forEach(c=>{
+    if(!CODE_IX.has(c)) CODE_IX.set(c, []);
+    const arr = CODE_IX.get(c);
+    if(!arr.includes(key)) arr.push(key);
+  });
+}
+MODULES.forEach(m=>{
+  m.subs = m.subs || [];
+  const set = m.subs.length ? codesOf(m.subs.flatMap(s=>s.models)) : codesOf(m.models||[]);
+  BLOCKS.push({ key:m.key, name:m.name, short:m.short, level:1, codes:set });
+  indexCodes(set, m.key);
+  m.subs.forEach(s=>{
+    const sset = codesOf(s.models);
+    BLOCKS.push({ key:s.key, name:s.name, level:2, moduleKey:m.key, moduleShort:m.short,
+                  codes:sset, detail:s.detail, subset:s.subset });
+    indexCodes(sset, s.key);
+  });
+});
+const COL_TYPES  = [null].concat(BLOCKS.flatMap(()=>["n","m","p"]));  // n=订单数 m=金额 p=占比
+const TOTAL_COLS = 1 + BLOCKS.length*3;
+
+/* ============================================================
+   3. 基础工具
+   ============================================================ */
+const $  = s => document.querySelector(s);
+const fmt = n => Number(n||0).toLocaleString("zh-CN",{maximumFractionDigits:0});
+const fmtMoney = n => Number(n||0).toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2});
 const pct = n => (n*100).toFixed(1)+"%";
+const esc = s => String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad2 = h => String(h).padStart(2,"0");
+const ZERO = {orders:0, amount:0};
+
+const agentOf   = nick => ROOM_TO_AGENT[nick] || FALLBACK_AGENT;
+const isIgnored = nick => IGNORED_ROOMS.has(nick) || IGNORED_KEYWORDS.some(k=>nick.includes(k));
+
+function toNum(v){
+  if(v==null) return 0;
+  if(typeof v === "number") return isFinite(v) ? v : 0;
+  const n = parseFloat(String(v).replace(/[,，\s¥￥元]/g,""));
+  return isNaN(n) ? 0 : n;
+}
+
+// 时间 → 两位数小时（兼容 字符串 / 日期对象 / Excel 序列号）
+function hourOf(v){
+  if(v==null || v==="") return null;
+  if(v instanceof Date) return pad2(v.getUTCHours());
+  if(typeof v === "number"){
+    if(v > 1 && v < 80000){
+      try{
+        if(window.XLSX && XLSX.SSF && XLSX.SSF.parse_date_code){
+          const d = XLSX.SSF.parse_date_code(v);
+          if(d && d.H != null) return pad2(d.H);
+        }
+      }catch(e){}
+      const totalSec = Math.round((v - 25569) * 86400);      // 先取整到秒，避免浮点误差串点
+      const secs = ((totalSec % 86400) + 86400) % 86400;
+      return pad2(Math.floor(secs / 3600));
+    }
+    return null;
+  }
+  const s = String(v).trim();
+  const re = /(\d{1,2})\s*[:：]\s*(\d{2})/g;
+  let m, last = null;
+  while((m = re.exec(s)) !== null) last = m;
+  if(last){
+    const h = parseInt(last[1],10);
+    if(h >= 0 && h <= 23) return pad2(h);
+  }
+  const m2 = s.match(/(\d{1,2})\s*[时点]/);
+  if(m2){ const h = parseInt(m2[1],10); if(h >= 0 && h <= 23) return pad2(h); }
+  return null;
+}
+
+// 列名定位：精确 → 优先包含 → 泛化包含（并排除干扰词）
+function pickCol(keys, spec){
+  const norm = s => String(s).replace(/\s/g,"").toLowerCase();
+  const pool = keys.map(k=>({raw:k, n:norm(k)}));
+  for(const e of (spec.exact||[])){
+    const hit = pool.find(o=>o.n === norm(e));  if(hit) return hit.raw;
+  }
+  for(const p of (spec.prefer||[])){
+    const hit = pool.find(o=>o.n.includes(norm(p)));  if(hit) return hit.raw;
+  }
+  for(const a of (spec.any||[])){
+    const hit = pool.find(o=>o.n.includes(norm(a)) && !(spec.avoid||[]).some(v=>o.n.includes(norm(v))));
+    if(hit) return hit.raw;
+  }
+  return undefined;
+}
+
+/* ============================================================
+   4. 读取文件
+   ============================================================ */
+const drop = $("#drop"), fileInput = $("#file");
+function setDragging(on){ if(drop) drop.classList.toggle("dragging", !!on); }
+
+// 全局拖拽：导入后空态被隐藏，仍可直接再次拖入
+["dragenter","dragover"].forEach(ev=>{
+  window.addEventListener(ev, e=>{
+    if(e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types||[], "Files") >= 0){
+      e.preventDefault(); setDragging(true);
+    }
+  });
+});
+window.addEventListener("dragleave", e=>{ if(!e.relatedTarget) setDragging(false); });
+window.addEventListener("drop", e=>{
+  if(!e.dataTransfer || !e.dataTransfer.files || !e.dataTransfer.files[0]) return;
+  e.preventDefault(); setDragging(false);
+  handleFile(e.dataTransfer.files[0]);
+});
+if(drop){
+  drop.addEventListener("dragover", e=>{ e.preventDefault(); setDragging(true); });
+  drop.addEventListener("dragleave", ()=>setDragging(false));
+}
+fileInput.addEventListener("change", e=>{
+  const f = e.target.files && e.target.files[0];
+  fileInput.value = "";                    // 允许连续选择同一个文件
+  if(f) handleFile(f);
+});
+
+// 选工作簿中「含目标列且数据最多」的工作表
+function pickSheet(wb){
+  let best = null;
+  wb.SheetNames.forEach(name=>{
+    const ws = wb.Sheets[name];
+    if(!ws || !ws["!ref"]) return;
+    let aoa = [];
+    try{ aoa = XLSX.utils.sheet_to_json(ws, {header:1, blankrows:false}); }catch(e){ return; }
+    if(!aoa.length) return;
+    const headHit = aoa.slice(0,6).some(r=>(r||[]).some(c=>{
+      const s = String(c==null?"":c);
+      return s.includes("达人昵称") || s.includes("应付金额");
+    }));
+    const score = (headHit ? 1e6 : 0) + aoa.length;
+    if(!best || score > best.score) best = {name, score};
+  });
+  return best ? best.name : wb.SheetNames[0];
+}
+
+// 表头自适应：跳过标题行，返回对象数组
+function sheetToRows(ws){
+  const aoa = XLSX.utils.sheet_to_json(ws, {header:1, defval:null, blankrows:false});
+  if(!aoa.length) return {rows:[], header:[]};
+  const isHeaderRow = r => (r||[]).some(c=>{
+    const s = String(c==null?"":c);
+    return s.includes("达人昵称") || s.includes("应付金额") || s.includes("订单状态");
+  });
+  let hi = aoa.findIndex(isHeaderRow);
+  if(hi < 0) hi = 0;
+  const seen = {};
+  const header = (aoa[hi]||[]).map((v,i)=>{
+    let name = (v==null || String(v).trim()==="") ? ("__col"+i) : String(v).trim();
+    if(seen[name] != null){ seen[name]++; name = name+"_"+seen[name]; } else seen[name] = 0;
+    return name;
+  });
+  const rows = [];
+  for(let i=hi+1;i<aoa.length;i++){
+    const arr = aoa[i];
+    if(!arr || !arr.some(v=>v!=null && v!=="")) continue;
+    const o = {};
+    header.forEach((h,j)=>{ o[h] = arr[j]===undefined ? null : arr[j]; });
+    rows.push(o);
+  }
+  return {rows, header};
+}
 
 function handleFile(file){
   const reader = new FileReader();
   reader.onload = e=>{
     try{
-      const wb = XLSX.read(new Uint8Array(e.target.result), {type:"array"});
-      const ws = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(ws, {defval:null});
-      process(rows, file.name);
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:"array", cellDates:false});
+      const sheetName = pickSheet(wb);
+      const parsed = sheetToRows(wb.Sheets[sheetName]);
+      if(!parsed.rows.length){ alert("文件没有数据"); return; }
+      process(parsed.rows, file.name, sheetName);
     }catch(err){ alert("解析失败：" + err.message); }
   };
+  reader.onerror = ()=>alert("文件读取失败，请重试");
   reader.readAsArrayBuffer(file);
 }
 
-function process(rows, srcName){
-  if(!rows.length){alert("文件没有数据");return;}
-  const keys = Object.keys(rows[0]);
-  const amtKey = keys.find(k=>String(k).includes("应付金额")||String(k).includes("金额"));
-  const nickKey = keys.find(k=>String(k).includes("达人昵称")||String(k).includes("昵称")||String(k).includes("直播间"));
-  const timeKey = keys.find(k=>String(k).includes("提交时间")||String(k).includes("时间"));
-  const statusKey = keys.find(k=>String(k).includes("订单状态")||String(k).includes("状态"));
-  if(!amtKey||!nickKey){alert("未找到「订单应付金额」或「达人昵称」列");return;}
-  const codeKey = keys.find(k=>String(k).includes("商家编码")||String(k).includes("编码"));
+/* ============================================================
+   5. 聚合
+   ============================================================ */
+let totalAmount = 0, totalOrders = 0;
 
+function process(rows, srcName, sheetName){
+  const keys = Object.keys(rows[0] || {});
+  const colAmt    = pickCol(keys, {exact:["订单应付金额"], prefer:["应付金额"],
+                      any:["实付金额","订单金额","支付金额","成交金额","金额"],
+                      avoid:["退款","退还","退回","运费","单价","优惠","积分"]});
+  const colNick   = pickCol(keys, {exact:["达人昵称"], prefer:["达人昵称","达人名称"],
+                      any:["直播间名称","直播间","主播昵称","账号昵称","昵称"]});
+  const colTime   = pickCol(keys, {exact:["提交时间"], prefer:["提交时间","下单时间","支付时间","创建时间"],
+                      any:["时间"], avoid:["发货","签收","完成","退款","售后","核销"]});
+  const colStatus = pickCol(keys, {exact:["订单状态"], prefer:["订单状态"],
+                      any:["状态"], avoid:["退款状态","售后状态"]});
+  const colCode   = pickCol(keys, {exact:["商家编码"], prefer:["商家编码","商品编码"],
+                      any:["编码","货号"]});
 
-  const tree = {}, unmatched = {}, ignored = {};
-  const roomHour = {};           // nick -> hour -> {gmv, refund}
-  const hourSet = new Set();
-  const catTotalAll = {}; CATEGORIES.forEach(c=>catTotalAll[c.name]={orders:0,amount:0});
-  let totalOrders=0, totalAmount=0;
+  if(!colAmt || !colNick){
+    alert("未找到「订单应付金额」或「达人昵称」列，请确认导出的是订单明细表");
+    return;
+  }
+
+  const tree = {}, unmatched = {}, ignored = {}, roomHour = {};
+  const hourSet   = new Set();
+  const blkTotal  = {};
+  BLOCKS.forEach(b => blkTotal[b.key] = {orders:0, amount:0});
+  const statusUnknown = {};        // 疑似退款但未计入的状态
+  let hourMissing = 0, negRows = 0;
+
+  totalOrders = 0; totalAmount = 0;
+
   rows.forEach(r=>{
-    let nick = r[nickKey]; if(nick==null) return;
+    let nick = r[colNick];
+    if(nick == null) return;
     nick = String(nick).trim();
-    let amt = parseFloat(r[amtKey]); if(isNaN(amt)) amt=0;
-    const status = r[statusKey]!=null ? String(r[statusKey]).trim() : "";
-    let codeList=[];
-    if(codeKey && r[codeKey]!=null){
-      codeList = String(r[codeKey]).replace(/\t/g,"").split(/[;,；]/).map(s=>s.trim()).filter(Boolean);
-    }
-    const hour = (r[timeKey]!=null && String(r[timeKey]).trim().length>=13)
-                 ? String(r[timeKey]).trim().slice(11,13) : null;
-    if(hour) hourSet.add(hour);
-    // 小时透视：gmv=全部订单(含退货)；已关闭=退货，另记退费；gsv=gmv-退费
+    if(!nick) return;
+
+    const amt = toNum(r[colAmt]);
+    const status = (colStatus && r[colStatus]!=null) ? String(r[colStatus]).trim() : "";
+    if(amt < 0) negRows++;
+
+    // ① 整间剔除（放在小时累计之前，保证两张表口径一致）
+    if(isIgnored(nick)){ ignored[nick] = (ignored[nick]||0)+1; return; }
+
+    // ② 小时透视（口径不变：gmv 含退货，按状态计退费）
+    const hour = colTime ? hourOf(r[colTime]) : null;
+    if(colTime && hour == null) hourMissing++;
     if(hour){
-      roomHour[nick] = roomHour[nick]||{};
-      roomHour[nick][hour] = roomHour[nick][hour]||{gmv:0,refund:0};
+      hourSet.add(hour);
+      roomHour[nick] = roomHour[nick] || {};
+      roomHour[nick][hour] = roomHour[nick][hour] || {gmv:0, refund:0};
       roomHour[nick][hour].gmv += amt;
-      if(status==="已关闭") roomHour[nick][hour].refund += amt;
+      if(isRefundStatus(status) && amt > 0) roomHour[nick][hour].refund += amt;
     }
-    if(IGNORED_ROOMS.has(nick)){ ignored[nick]=(ignored[nick]||0)+1; return; }
-    const agent = ROOM_TO_AGENT[nick];
-    if(!agent){ unmatched[nick]=(unmatched[nick]||0)+1; return; }
-    tree[agent] = tree[agent]||{};
-    tree[agent][nick] = tree[agent][nick]||{orders:0,amount:0,cat:{}};
-    tree[agent][nick].orders++;
-    tree[agent][nick].amount += amt;
-    totalOrders++; totalAmount += amt;
-    CATEGORIES.forEach(c=>{
-      if(codeList.some(cd=>c.codes.has(cd))){
-        tree[agent][nick].cat[c.name]=tree[agent][nick].cat[c.name]||{orders:0,amount:0};
-        tree[agent][nick].cat[c.name].orders++;
-        tree[agent][nick].cat[c.name].amount += amt;
-        catTotalAll[c.name].orders++;
-        catTotalAll[c.name].amount += amt;
+    if(status && REFUND_HINT.test(status) && !isRefundStatus(status)){
+      statusUnknown[status] = (statusUnknown[status]||0)+1;
+    }
+
+    // ③ 服务商归属（未映射者兜底，但会提示）
+    const mapped = ROOM_TO_AGENT[nick];
+    if(!mapped) unmatched[nick] = (unmatched[nick]||0)+1;
+    const agent = mapped || FALLBACK_AGENT;
+
+    tree[agent] = tree[agent] || {};
+    tree[agent][nick] = tree[agent][nick] || {orders:0, amount:0, blk:{}};
+    const room = tree[agent][nick];
+    room.orders++;  room.amount += amt;
+    totalOrders++;  totalAmount += amt;
+
+    // ④ 型号拆分
+    if(colCode && r[colCode]!=null){
+      const codeList = String(r[colCode]).replace(/\t/g,"").split(/[;,；，]/).map(s=>s.trim()).filter(Boolean);
+      if(codeList.length){
+        const hit = new Set();
+        codeList.forEach(c=>{ const arr = CODE_IX.get(c); if(arr) arr.forEach(k=>hit.add(k)); });
+        hit.forEach(k=>{
+          const rb = room.blk[k] || (room.blk[k] = {orders:0, amount:0});
+          rb.orders++; rb.amount += amt;
+          blkTotal[k].orders++; blkTotal[k].amount += amt;
+        });
       }
-    });
+    }
   });
 
-  $("#srcTitle").textContent = "销售汇总";
-  $("#srcMeta").textContent = srcName + " · 共 " + rows.length + " 条订单记录";
+  $("#srcTitle").textContent = "服务商销售汇总";
+  $("#srcMeta").textContent = srcName
+    + (sheetName ? " · 工作表「"+sheetName+"」" : "")
+    + " · 共 " + rows.length + " 条订单记录"
+    + " · 纳入 " + totalOrders + " 单";
 
-  $("#warnBox").classList.add("hide");
-
-  const agents = Object.keys(tree).length;
-  $("#kpis").innerHTML = `
-    <div class="stat"><div class="lab">订单总数</div><div class="val num">${fmt(totalOrders)}</div></div>
-    <div class="stat"><div class="lab">总销售额</div><div class="val num">¥${fmt(totalAmount)}</div></div>
-    <div class="stat"><div class="lab">服务商</div><div class="val num">${agents}<span class="unit">个</span></div></div>`;
-
-  const tbody = $("#tbody"); tbody.innerHTML="";
-  const agentArr = Object.entries(tree).sort((a,b)=>
-    Object.values(b[1]).reduce((s,v)=>s+v.amount,0)-Object.values(a[1]).reduce((s,v)=>s+v.amount,0));
-
-  window.__exportData = [{kind:"header"}];
-  const shareOf = amt => totalAmount? amt/totalAmount : 0;
-  // 品类三列：订单数 | 销售额 | 占比(withShare=false 时占比留空，与整体明细行一致)
-  const catData = (d, withShare)=>{
-    d = d||{orders:0,amount:0};
-    return `<td class="num">${fmt(d.orders)}</td><td class="num">¥${fmtMoney(d.amount)}</td>` +
-      (withShare ? `<td>${shareCell(shareOf(d.amount))}</td>` : `<td></td>`);
-  };
-  agentArr.forEach(([agent, rooms])=>{
-    const aOrders=Object.values(rooms).reduce((s,v)=>s+v.orders,0);
-    const aAmount=Object.values(rooms).reduce((s,v)=>s+v.amount,0);
-    const aShare = totalAmount? aAmount/totalAmount : 0;
-    const aCat={};
-    CATEGORIES.forEach(c=>{
-      aCat[c.name]={orders:0,amount:0};
-      Object.values(rooms).forEach(v=>{
-        const d=v.cat&&v.cat[c.name];
-        if(d){aCat[c.name].orders+=d.orders;aCat[c.name].amount+=d.amount;}
-      });
-    });
-    let html=`<td>${agent}</td><td class="num">${fmt(aOrders)}</td><td class="num">¥${fmtMoney(aAmount)}</td><td>${shareCell(aShare)}</td>`;
-    const cells=[agent,aOrders,+aAmount.toFixed(2),aShare];
-    CATEGORIES.forEach(c=>{
-      html+=catData(aCat[c.name],true);
-      cells.push(aCat[c.name].orders,+aCat[c.name].amount.toFixed(2),shareOf(aCat[c.name].amount));
-    });
-    const atr=document.createElement("tr");atr.className="agent";atr.innerHTML=html;tbody.appendChild(atr);
-    window.__exportData.push({kind:"agent",cells});
-    Object.entries(rooms).sort((a,b)=>b[1].amount-a[1].amount).forEach(([room,v])=>{
-      let rh=`<td>${room}</td><td class="num">${fmt(v.orders)}</td><td class="num">¥${fmtMoney(v.amount)}</td><td></td>`;
-      const rc=["　　"+room,v.orders,+v.amount.toFixed(2),null];
-      CATEGORIES.forEach(c=>{
-        const d=(v.cat&&v.cat[c.name])||{orders:0,amount:0};
-        rh+=catData(d,false);
-        rc.push(d.orders,+d.amount.toFixed(2),null);
-      });
-      const rtr=document.createElement("tr");rtr.className="room";rtr.innerHTML=rh;tbody.appendChild(rtr);
-      window.__exportData.push({kind:"room",cells:rc});
-    });
-  });
-  const tr=document.createElement("tr");tr.className="total";
-  let th=`<td>全平台合计</td><td class="num">${fmt(totalOrders)}</td><td class="num">¥${fmtMoney(totalAmount)}</td><td style="text-align:center">100%</td>`;
-  const tc=["全平台合计",totalOrders,+totalAmount.toFixed(2),1];
-  CATEGORIES.forEach(c=>{
-    th+=`<td class="num">${fmt(catTotalAll[c.name].orders)}</td><td class="num">¥${fmtMoney(catTotalAll[c.name].amount)}</td><td style="text-align:center">${pct(shareOf(catTotalAll[c.name].amount))}</td>`;
-    tc.push(catTotalAll[c.name].orders,+catTotalAll[c.name].amount.toFixed(2),shareOf(catTotalAll[c.name].amount));
-  });
-  tr.innerHTML=th;tbody.appendChild(tr);
-  window.__exportData.push({kind:"total",cells:tc});
-
+  renderWarn({unmatched, ignored, hourMissing, statusUnknown, negRows, hasCode:!!colCode, hasTime:!!colTime});
+  renderKpi(blkTotal);
+  renderSvc(tree, blkTotal);
   renderHourTable(roomHour, hourSet);
 
   $("#empty").classList.add("hide");
   $("#result").classList.remove("hide");
 }
 
+/* ============================================================
+   6. 渲染：KPI / 服务商汇总 / 提示
+   ============================================================ */
+function blkOf(blkTotal, key){ return blkTotal[key] || ZERO; }
+
+function renderKpi(blkTotal){
+  const watch = blkOf(blkTotal,"watch"), band = blkOf(blkTotal,"band");
+  const share = amt => totalAmount ? pct(amt/totalAmount) : "—";
+  $("#kpis").innerHTML =
+    '<div class="stat"><div class="lab">订单总数</div><div class="val num">' + fmt(totalOrders) + '</div></div>' +
+    '<div class="stat"><div class="lab">总销售额</div><div class="val num">¥' + fmt(totalAmount) + '</div></div>' +
+    '<div class="stat"><div class="lab">手表总销量</div><div class="val num">' + fmt(watch.orders) + '<span class="unit">单</span></div>' +
+      '<div class="sub">¥' + fmt(watch.amount) + ' · 占整体销售 <b>' + share(watch.amount) + '</b></div></div>' +
+    '<div class="stat"><div class="lab">手环总销量</div><div class="val num">' + fmt(band.orders) + '<span class="unit">单</span></div>' +
+      '<div class="sub">¥' + fmt(band.amount) + ' · 占整体销售 <b>' + share(band.amount) + '</b></div></div>' +
+    '<div class="stat"><div class="lab">服务商</div><div class="val num">' +
+      '<span id="kpiAgents">0</span><span class="unit">个</span></div></div>';
+}
+
+function barHtml(s){ return '<div class="bar"><i style="width:' + Math.max(s*100,2) + '%"></i></div>'; }
+
+function shareInner(s, withBar){
+  if(s == null) return '<span class="dash">—</span>';
+  return '<div class="sh">' + (withBar ? barHtml(s) : '') + '<span class="pct">' + pct(s) + '</span></div>';
+}
+
+function statOf(row, key){
+  if(!row) return ZERO;
+  if(key === "all") return {orders:row.orders||0, amount:row.amount||0};
+  return (row.blk && row.blk[key]) || ZERO;
+}
+
+// 一行 = HTML 与导出值同源生成，避免两套逻辑漂移
+// 占比统一口径：该行该品类销售额 ÷ 全平台该品类销售额（服务商之间横向比较）
+let PLAT_BLOCKS = {};
+
+function platformAmtOf(key){
+  if(key === "all") return totalAmount;
+  const d = PLAT_BLOCKS ? PLAT_BLOCKS[key] : null;   // blkTotal 是扁平结构，不套 blk
+  return d ? d.amount : 0;
+}
+
+function cellsOf(row, opt){
+  opt = opt || {};
+  const html = [], cells = [];
+  BLOCKS.forEach((b, i)=>{
+    const d = statOf(row, b.key);
+    const whole = platformAmtOf(b.key);
+    let sh = (whole > 0 && d.amount > 0) ? (d.amount / whole) : null;
+    if(opt.noShare) sh = null;              // 直播间行不显示占比，只到服务商层级
+
+    const blkCls = i > 0 ? " blk" : "";
+    html.push('<td class="num c-n' + (d.orders ? "" : " zero") + blkCls + '">' + fmt(d.orders) + '</td>');
+    html.push('<td class="num c-m' + (d.amount ? "" : " zero") + '">' + fmtMoney(d.amount) + '</td>');
+    html.push('<td class="c-p shareCell' + blkCls + '">' + shareInner(sh, false) + '</td>');
+
+    // 导出存原始精度：Excel 用 "0.0%" 自行显示，若先四舍五入到 4 位小数，
+    // 临界值（如 6.045%）会被推到 6.1%，与页面 6.0% 差 0.1 个百分点。
+    cells.push(d.orders, +d.amount.toFixed(2), (sh == null ? null : Math.round(sh * 1e10) / 1e10));
+  });
+  return {html: html.join(""), cells: [opt.label].concat(cells)};
+}
+
+function renderSvcHead(){
+  // 第一行：每个品类一组（整体 / 手表总销量 / 子项 / 手环总销量 / 子项）
+  let r1 = '<tr><th class="cname" rowspan="2">服务商 / 直播间</th>';
+  BLOCKS.forEach((b, i)=>{
+    const cls = i === 0 ? "g-all" : (b.level === 2 ? "g-sub" : "g-mod");
+    const blk = i > 0 ? " blk" : "";
+    const label = (b.level === 2 ? '<span class="sub-mark">└</span> ' : '') + esc(b.name);
+    const codes = b.codes ? Array.from(b.codes).join("/") : "";
+    const tip = b.detail ? esc(b.name + "：" + b.detail) : (codes ? "商家编码：" + esc(codes) : "全部订单");
+    r1 += '<th colspan="3" class="' + cls + blk + '" title="' + tip + '">' + label + '</th>';
+  });
+  r1 += '</tr>';
+
+  // 第二行：销量 / 销售额 / 占比（占比=该服务商该品类 ÷ 全平台该品类）
+  let r2 = '<tr>';
+  BLOCKS.forEach((b, i)=>{
+    const cls = b.level === 2 ? "h2" : "";
+    const blk = i > 0 ? " blk" : "";
+    const tip = "该服务商「" + b.name + "」销售额 ÷ 全平台「" + b.name + "」销售额";
+    r2 += '<th class="' + cls + ' c-n' + blk + '" title="销量＝订单数，1 行＝1 单">销量</th>'
+       +  '<th class="' + cls + ' c-m">销售额(元)</th>'
+       +  '<th class="' + cls + ' c-p' + blk + '" title="' + esc(tip) + '">服务商占比</th>';
+  });
+  r2 += '</tr>';
+  $("#theadSvc").innerHTML = r1 + r2;
+
+  $("#svcNote").innerHTML = [
+    '<b>占比口径：</b>「服务商占比」= 该服务商本品类销售额 ÷ 全平台本品类销售额，是<b>服务商之间的横向对比</b>。例：Redmi watch 6 服务商占比 40% = 我司 Redmi watch 6 ÷ 全平台 Redmi watch 6。',
+    '<b>层级：</b>占比只算到服务商，直播间行不显示；手表总销量、手环总销量 已包含各自下面的子项；红米耳夹属耳机品类，独立成块，<b>不</b>计入手环/手表总量。',
+    '<b>操作：</b>表格较宽，可按住 Shift + 滚轮或直接左右拖动查看（首列固定）。'
+  ].join("<br>");
+}
+
+function renderSvc(tree, blkTotal){
+  renderSvcHead();
+  PLAT_BLOCKS = blkTotal;                 // 占比分母：全平台各品类销售额
+  const tbody = $("#tbody");
+  tbody.innerHTML = "";
+  const out = [{kind:"header"}];
+
+  const sumOf = rooms => {
+    const blk = {};
+    let orders = 0, amount = 0;
+    Object.keys(rooms).forEach(n=>{
+      const v = rooms[n];
+      orders += v.orders; amount += v.amount;
+      Object.keys(v.blk).forEach(k=>{
+        const d = blk[k] || (blk[k] = {orders:0, amount:0});
+        d.orders += v.blk[k].orders; d.amount += v.blk[k].amount;
+      });
+    });
+    return {orders, amount, blk};
+  };
+
+  const agentArr = Object.keys(tree).map(a=>{
+    const agg = sumOf(tree[a]);
+    return {agent:a, rooms:tree[a], agg};
+  }).sort((x,y)=> y.agg.amount - x.agg.amount);
+
+  const kpi = $("#kpiAgents");
+  if(kpi) kpi.textContent = agentArr.length;
+
+  agentArr.forEach(({agent, rooms, agg})=>{
+    const atr = document.createElement("tr");
+    atr.className = "agent";
+    const aCells = cellsOf(agg, {label:agent});
+    atr.innerHTML = '<td class="cname">' + esc(agent) + '</td>' + aCells.html;
+    tbody.appendChild(atr);
+    out.push({kind:"agent", cells:aCells.cells});
+
+    Object.keys(rooms).map(n=>({room:n, v:rooms[n]}))
+      .sort((x,y)=> y.v.amount - x.v.amount)
+      .forEach(({room, v})=>{
+        const rtr = document.createElement("tr");
+        rtr.className = "room";
+        const rCells = cellsOf(v, {label:"　　"+room, noShare:true});
+        rtr.innerHTML = '<td class="cname sub">' + esc(room) + '</td>' + rCells.html;
+        tbody.appendChild(rtr);
+        out.push({kind:"room", cells:rCells.cells});
+      });
+  });
+
+  const trow = document.createElement("tr");
+  trow.className = "total";
+  const tCells = cellsOf({orders:totalOrders, amount:totalAmount, blk:blkTotal}, {label:"全平台合计"});
+  trow.innerHTML = '<td class="cname">全平台合计</td>' + tCells.html;
+  tbody.appendChild(trow);
+  out.push({kind:"total", cells:tCells.cells});
+
+  window.__exportData = out;
+}
+
+function renderWarn(info){
+  const box = $("#warnBox");
+  const blocks = [];
+  const list = obj => Object.keys(obj).sort((a,b)=>obj[b]-obj[a])
+      .map(k=>'<li>' + esc(k) + ' <span class="muted">×' + obj[k] + '</span></li>').join("");
+
+  if(Object.keys(info.unmatched).length){
+    blocks.push('<b>有 ' + Object.keys(info.unmatched).length + ' 个直播间不在映射表内，已按兜底归入「' + FALLBACK_AGENT + '」</b>'
+      + '<ul>' + list(info.unmatched) + '</ul>'
+      + '<div class="tip">若这些直播间实际属于其他服务商，请在脚本 ROOM_TO_AGENT 中补录（或同步 team_config.py）后重新导入。</div>');
+  }
+  if(Object.keys(info.ignored).length){
+    blocks.push('<b>已按规则整间剔除（不计入任何统计）</b><ul>' + list(info.ignored) + '</ul>');
+  }
+  if(!info.hasCode){
+    blocks.push('<b>未找到「商家编码」列，手表 / 手环拆分全部为 0</b>'
+      + '<div class="tip">请在订单导出中包含商家编码列，或调整脚本里的列名匹配规则。</div>');
+  }
+  if(info.hasTime && info.hourMissing > 0){
+    blocks.push('<b>' + info.hourMissing + ' 行的提交时间无法解析，未进入小时透视</b>'
+      + '<div class="tip">小时透视会因此偏低，建议检查该列是否为标准日期时间格式。</div>');
+  }
+  if(Object.keys(info.statusUnknown).length){
+    blocks.push('<b>以下订单状态含“退款/退货”但未计入退费</b><ul>' + list(info.statusUnknown) + '</ul>'
+      + '<div class="tip">当前退费口径：' + Array.from(REFUND_STATUS).join("、") + '。如需把上述状态也算退费，请加入 REFUND_STATUS。</div>');
+  }
+  if(info.negRows > 0){
+    blocks.push('<b>检测到 ' + info.negRows + ' 行负数金额</b>'
+      + '<div class="tip">负数行已直接冲减 GMV，不再按「已关闭」二次扣减，避免重复计算。</div>');
+  }
+
+  if(!blocks.length){ box.classList.add("idle"); box.innerHTML = ""; return; }
+  box.innerHTML = blocks.join('<div style="height:10px"></div>');
+  box.classList.remove("idle");
+}
+
+/* ============================================================
+   7. 小时透视（口径与视觉保持原样）
+   ============================================================ */
 const METRICS = ["gmv","gsv","投放","roi","净roi","退费","退费率"];
 const METRIC_CLS = ["metric-gmv","metric-gsv","metric-spend","metric-spend","metric-spend","metric-refund","metric-rate"];
 const agentMetrics = agent => agent==="我司阳光"
   ? METRICS : METRICS.filter(m=>!["投放","roi","净roi"].includes(m));
+
 function renderHourTable(roomHour, hourSet){
-  const hours = [...hourSet].sort();
+  const hours = Array.from(hourSet).sort();
   let thead = "<tr><th class='lab'>直播间</th><th class='lab'>指标</th>";
-  hours.forEach(h=> thead += `<th>${parseInt(h)}点</th>`);
+  hours.forEach(h=> thead += '<th>' + parseInt(h,10) + '点</th>');
   thead += "<th class='sum-col'>汇总</th></tr>";
   $("#theadHour").innerHTML = thead;
 
   // 我司在上、良米在下；各自直播间按gmv降序，并算服务商小计
   const HOUR_AGENTS = ["我司阳光","良米"];
-  const IS_CARD = nick => nick.includes("商品卡");
+  const IS_CARD = nick => nick.indexOf("商品卡") >= 0;
   const groups = HOUR_AGENTS.map(agent=>{
-    const rs = Object.entries(roomHour)
-      .filter(([nick])=>ROOM_TO_AGENT[nick]===agent && !IS_CARD(nick))
-      .map(([nick, hm])=>({nick, hm, totalGmv:Object.values(hm).reduce((s,v)=>s+v.gmv,0)}))
-      .sort((a,b)=>b.totalGmv-a.totalGmv);
+    const rs = Object.keys(roomHour)
+      .filter(nick => agentOf(nick) === agent && !IS_CARD(nick))
+      .map(nick => ({nick, hm:roomHour[nick],
+        totalGmv:Object.keys(roomHour[nick]).reduce((s,h)=>s+roomHour[nick][h].gmv,0)}))
+      .sort((a,b)=> b.totalGmv - a.totalGmv);
     const sub = {};
     hours.forEach(h=>{
-      sub[h]={gmv:0,refund:0};
-      rs.forEach(({hm})=>{ if(hm[h]){ sub[h].gmv+=hm[h].gmv; sub[h].refund+=hm[h].refund; } });
+      sub[h] = {gmv:0, refund:0};
+      rs.forEach(({hm})=>{ if(hm[h]){ sub[h].gmv += hm[h].gmv; sub[h].refund += hm[h].refund; } });
     });
     return {agent, rooms:rs, sub};
   });
 
   const fmt0 = n => Math.round(n).toLocaleString("zh-CN");
-  const sumOf = (hm, key) => hours.reduce((s,h)=> s + (hm[h]||{gmv:0,refund:0})[key], 0);
+  const sumOf = (hm, key) => hours.reduce((s,h)=> s + (hm[h] || {gmv:0,refund:0})[key], 0);
+
   const renderBlock = (label, hm, agent, kind) => {
     let rowsHtml = "";
     const sumGmv = sumOf(hm,"gmv"), sumRefund = sumOf(hm,"refund");
@@ -457,42 +864,43 @@ function renderHourTable(roomHour, hourSet){
       const cls = METRIC_CLS[METRICS.indexOf(m)];
       let cells = "";
       hours.forEach(h=>{
-        const d = hm[h]||{gmv:0,refund:0};
+        const d = hm[h] || {gmv:0, refund:0};
         let v = "";
         if(m==="gmv") v = d.gmv;
         else if(m==="gsv") v = d.gmv - d.refund;
         else if(m==="退费") v = d.refund;
-        else if(m==="退费率"){ v = d.gmv? (d.refund/d.gmv*100).toFixed(1)+"%" : "—"; cells += `<td>${v}</td>`; return; }
-        else v = 0; // 投放/roi/净roi 填0待手填
-        if(m==="gmv"||m==="gsv"||m==="退费"){
-          cells += `<td>${v?fmt0(v):""}</td>`;
-        } else {
-          cells += `<td class="zero">0</td>`;
+        else if(m==="退费率"){ v = d.gmv ? (d.refund/d.gmv*100).toFixed(1)+"%" : "—"; cells += '<td>' + v + '</td>'; return; }
+        else v = 0; // 投放 / roi / 净roi 填 0 待手填
+        if(m==="gmv" || m==="gsv" || m==="退费"){
+          cells += '<td>' + (v ? fmt0(v) : "") + '</td>';
+        }else{
+          cells += '<td class="zero">0</td>';
         }
       });
       let sumVal;
-      if(m==="gmv") sumVal = sumGmv? fmt0(sumGmv) : "";
-      else if(m==="gsv") sumVal = (sumGmv-sumRefund)? fmt0(sumGmv-sumRefund) : "";
-      else if(m==="退费") sumVal = sumRefund? fmt0(sumRefund) : "";
-      else if(m==="退费率") sumVal = sumGmv? (sumRefund/sumGmv*100).toFixed(1)+"%" : "—";
+      if(m==="gmv") sumVal = sumGmv ? fmt0(sumGmv) : "";
+      else if(m==="gsv") sumVal = (sumGmv-sumRefund) ? fmt0(sumGmv-sumRefund) : "";
+      else if(m==="退费") sumVal = sumRefund ? fmt0(sumRefund) : "";
+      else if(m==="退费率") sumVal = sumGmv ? (sumRefund/sumGmv*100).toFixed(1)+"%" : "—";
       else sumVal = "0";
       const nameCls = kind==="sub" ? "room-name sub" : kind==="grand" ? "room-name grand" : "room-name";
-      const labelCell = (m===metrics[0])
-        ? `<td class="${nameCls}" rowspan="${metrics.length}">${label}</td>` : "";
-      rowsHtml += `<tr class="${cls} ${trCls}">${labelCell}<td class="row-label">${m}</td>${cells}<td class="sum">${sumVal}</td></tr>`;
+      const labelCell = (m === metrics[0])
+        ? '<td class="' + nameCls + '" rowspan="' + metrics.length + '">' + esc(label) + '</td>' : "";
+      rowsHtml += '<tr class="' + cls + ' ' + trCls + '">' + labelCell
+        + '<td class="row-label">' + m + '</td>' + cells + '<td class="sum">' + sumVal + '</td></tr>';
     });
     return rowsHtml;
   };
 
   let tbody = "";
   groups.forEach(({agent, rooms, sub})=>{
-    rooms.forEach(({nick,hm})=>{ tbody += renderBlock(nick, hm, agent, "room"); });
-    tbody += renderBlock(agent==="我司阳光"?"我司合计":"良米合计", sub, agent, "sub");
+    rooms.forEach(({nick, hm})=>{ tbody += renderBlock(nick, hm, agent, "room"); });
+    tbody += renderBlock(agent==="我司阳光" ? "我司合计" : "良米合计", sub, agent, "sub");
   });
   const totalHm = {};
   hours.forEach(h=>{
-    totalHm[h]={gmv:0,refund:0};
-    groups.forEach(({sub})=>{ totalHm[h].gmv+=sub[h].gmv; totalHm[h].refund+=sub[h].refund; });
+    totalHm[h] = {gmv:0, refund:0};
+    groups.forEach(({sub})=>{ totalHm[h].gmv += sub[h].gmv; totalHm[h].refund += sub[h].refund; });
   });
   tbody += renderBlock("全平台合计", totalHm, "良米", "grand");
   $("#tbodyHour").innerHTML = tbody;
@@ -500,12 +908,9 @@ function renderHourTable(roomHour, hourSet){
   window.__hourGroups = groups;
 }
 
-function barHtml(share){return `<div class="bar"><i style="width:${Math.max(share*100,1)}%"></i></div>`;}
-function shareCell(share){
-  return `<div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">${barHtml(share)}<span class="pct">${pct(share)}</span></div>`;
-}
-
-// Tab 切换
+/* ============================================================
+   8. Tab 切换
+   ============================================================ */
 document.querySelectorAll(".tab-btn").forEach(btn=>{
   btn.addEventListener("click", ()=>{
     document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
@@ -516,11 +921,25 @@ document.querySelectorAll(".tab-btn").forEach(btn=>{
   });
 });
 
+/* ============================================================
+   9. 下载与导出
+   ============================================================ */
+function download(buf, filename){
+  const blob = new Blob([buf], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 4000);
+}
+
+// 9.1 小时透视（逻辑与样式保持原样）
 async function exportHour(){
   const hours = window.__hourHours, groups = window.__hourGroups;
+  if(!hours || !groups) return;
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet("小时透视");
-  ws.columns = [{width:20},{width:10}, ...hours.map(()=>({width:11})), {width:12}];
+  ws.columns = [{width:20},{width:10}].concat(hours.map(()=>({width:11}))).concat([{width:12}]);
   const thin = {style:"thin", color:{argb:"FFD9DEE8"}};
   const border = {top:thin,left:thin,bottom:thin,right:thin};
   const HEAD="FF111827", BLUE="FFeef4ff", GREEN="FFecfdf3",
@@ -528,16 +947,19 @@ async function exportHour(){
         SUB="FFcbd5e1", GRAND="FF111827";
   const rowFill = {gmv:BLUE,gsv:BLUE,投放:GREEN,roi:GREEN,净roi:GREEN,退费:RED,退费率:RED};
 
-  let r = ws.addRow(["直播间","指标",...hours.map(h=>parseInt(h)+"点"),"汇总"]);
-  r.height=22;
-  r.eachCell(c=>{c.fill={type:"pattern",pattern:"solid",fgColor:{argb:HEAD}};
-    c.font={bold:true,color:{argb:"FFFFFFFF"}};c.border=border;
-    c.alignment={horizontal:"center",vertical:"middle"};});
+  const r = ws.addRow(["直播间","指标"].concat(hours.map(h=>parseInt(h,10)+"点")).concat(["汇总"]));
+  r.height = 22;
+  r.eachCell(c=>{
+    c.fill = {type:"pattern",pattern:"solid",fgColor:{argb:HEAD}};
+    c.font = {bold:true, color:{argb:"FFFFFFFF"}};
+    c.border = border;
+    c.alignment = {horizontal:"center",vertical:"middle"};
+  });
 
   const block = (label, hm, agent, kind)=>{
-    const start = ws.rowCount+1;
-    const sumGmv = hours.reduce((s,h)=>s+(hm[h]||{gmv:0,refund:0}).gmv,0);
-    const sumRefund = hours.reduce((s,h)=>s+(hm[h]||{gmv:0,refund:0}).refund,0);
+    const start = ws.rowCount + 1;
+    const sumGmv = hours.reduce((s,h)=>s + (hm[h]||{gmv:0,refund:0}).gmv, 0);
+    const sumRefund = hours.reduce((s,h)=>s + (hm[h]||{gmv:0,refund:0}).refund, 0);
     const metrics = agentMetrics(agent);
     let first = true;
     metrics.forEach(m=>{
@@ -545,100 +967,156 @@ async function exportHour(){
       if(m==="gmv") sumVal = Math.round(sumGmv);
       else if(m==="gsv") sumVal = Math.round(sumGmv-sumRefund);
       else if(m==="退费") sumVal = Math.round(sumRefund);
-      else if(m==="退费率") sumVal = sumGmv? +(sumRefund/sumGmv).toFixed(4):0;
+      else if(m==="退费率") sumVal = sumGmv ? +(sumRefund/sumGmv).toFixed(4) : 0;
       else sumVal = 0;
-      const row = ws.addRow([ first?label:"", m, ...hours.map(h=>{
-        const d=hm[h]||{gmv:0,refund:0};
+      const row = ws.addRow([first ? label : "", m].concat(hours.map(h=>{
+        const d = hm[h] || {gmv:0, refund:0};
         if(m==="gmv") return Math.round(d.gmv);
-        if(m==="gsv") return Math.round(d.gmv-d.refund);
+        if(m==="gsv") return Math.round(d.gmv - d.refund);
         if(m==="退费") return Math.round(d.refund);
-        if(m==="退费率") return d.gmv?+(d.refund/d.gmv).toFixed(4):0;
+        if(m==="退费率") return d.gmv ? +(d.refund/d.gmv).toFixed(4) : 0;
         return 0;
-      }), sumVal]);
+      })).concat([sumVal]));
       first = false;
-      row.eachCell((cell,col)=>{
-        cell.border=border;
-        cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:rowFill[m]}};
-        if(col===1){
-          const nameFill = kind==="sub"?SUB:kind==="grand"?GRAND:ROOM;
-          cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:nameFill}};
-          cell.font={bold:true, color:{argb: kind==="grand"?"FFFFFFFF":"FF111827"}};
+      row.eachCell((cell, col)=>{
+        cell.border = border;
+        cell.fill = {type:"pattern",pattern:"solid",fgColor:{argb:rowFill[m]}};
+        if(col === 1){
+          const nameFill = kind==="sub" ? SUB : kind==="grand" ? GRAND : ROOM;
+          cell.fill = {type:"pattern",pattern:"solid",fgColor:{argb:nameFill}};
+          cell.font = {bold:true, color:{argb: kind==="grand" ? "FFFFFFFF" : "FF111827"}};
         }
-        if(col===2) cell.alignment={horizontal:"left",vertical:"middle"};
-        else cell.alignment={horizontal:"right",vertical:"middle"};
-        if(col===hours.length+3){
-          cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:SUM}};
-          cell.font={bold:true};
+        if(col === 2) cell.alignment = {horizontal:"left",vertical:"middle"};
+        else cell.alignment = {horizontal:"right",vertical:"middle"};
+        if(col === hours.length + 3){
+          cell.fill = {type:"pattern",pattern:"solid",fgColor:{argb:SUM}};
+          cell.font = {bold:true};
         }
-        if(col>=3 && m==="退费率") cell.numFmt="0.0%";
-        else if(col>=3 && m!=="退费率") cell.numFmt="#,##0";
+        if(col >= 3 && m === "退费率") cell.numFmt = "0.0%";
+        else if(col >= 3) cell.numFmt = "#,##0";
       });
     });
-    ws.mergeCells(start,1,start+metrics.length-1,1);
+    ws.mergeCells(start, 1, start + metrics.length - 1, 1);
   };
 
   groups.forEach(({agent, rooms, sub})=>{
-    rooms.forEach(({nick,hm})=>block(nick,hm,agent,"room"));
-    block(agent==="我司阳光"?"我司合计":"良米合计", sub, agent, "sub");
+    rooms.forEach(({nick, hm})=>block(nick, hm, agent, "room"));
+    block(agent==="我司阳光" ? "我司合计" : "良米合计", sub, agent, "sub");
   });
-  const totalHm={}; hours.forEach(h=>{totalHm[h]={gmv:0,refund:0};
-    groups.forEach(({sub})=>{totalHm[h].gmv+=sub[h].gmv;totalHm[h].refund+=sub[h].refund;});});
+  const totalHm = {};
+  hours.forEach(h=>{
+    totalHm[h] = {gmv:0, refund:0};
+    groups.forEach(({sub})=>{ totalHm[h].gmv += sub[h].gmv; totalHm[h].refund += sub[h].refund; });
+  });
   block("全平台合计", totalHm, "良米", "grand");
-  ws.views=[{state:"frozen",ySplit:1,xSplit:2}];
+  ws.views = [{state:"frozen", ySplit:1, xSplit:2}];
 
-  const buf=await wb.xlsx.writeBuffer();
-  const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");a.href=url;a.download="直播间小时透视.xlsx";a.click();
-  URL.revokeObjectURL(url);
+  const buf = await wb.xlsx.writeBuffer();
+  download(buf, "直播间小时透视.xlsx");
+}
+
+// 9.2 服务商汇总（表头 / 列宽 / 格式 / 合并 全部按模块结构动态生成）
+async function exportSvc(){
+  const data = window.__exportData;
+  if(!data) return;
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("直播间销售汇总");
+
+  ws.columns = [{width:34}].concat(BLOCKS.flatMap(()=>[{width:9},{width:14},{width:10}]));
+
+  const thin = {style:"thin", color:{argb:"FFD9DEE8"}};
+  const border = {top:thin,left:thin,bottom:thin,right:thin};
+  const HEAD="FF111827", ACCENT="FF0F766E", MOD="FF1F2937", SUB="FF334155", AGENT="FFF4F5F7", TOTAL="FFFFE9B8";
+
+  // 每个品类一组 3 列（整体 / 手表总销量 / 子项 / 手环总销量 / 子项）
+  const groups = BLOCKS.map((b, i)=>({
+    start: 2 + i*3,
+    label: (b.level === 2 ? "└ " : "") + b.name,
+    color: b.key === "all" ? ACCENT : (b.level === 2 ? SUB : MOD)
+  }));
+
+  const h1 = new Array(TOTAL_COLS).fill(null);
+  h1[0] = "服务商 / 直播间";
+  groups.forEach(g=>{ h1[g.start-1] = g.label; });
+
+  const h2 = new Array(TOTAL_COLS).fill(null);
+  BLOCKS.forEach((b,i)=>{
+    const c = 2 + i*3;
+    h2[c-1] = "销量";
+    h2[c]   = "销售额(元)";
+    h2[c+1] = "服务商占比";
+  });
+
+  const r1 = ws.addRow(h1), r2 = ws.addRow(h2);
+  r1.height = 22; r2.height = 22;
+
+  r1.eachCell(c=>{
+    c.fill = {type:"pattern",pattern:"solid",fgColor:{argb:HEAD}};
+    c.font = {bold:true, color:{argb:"FFFFFFFF"}};
+    c.border = border;
+    c.alignment = {horizontal:"center",vertical:"middle"};
+  });
+  groups.forEach(g=>{
+    const cell = r1.getCell(g.start);
+    cell.fill = {type:"pattern",pattern:"solid",fgColor:{argb:g.color}};
+  });
+  r2.eachCell(c=>{
+    c.fill = {type:"pattern",pattern:"solid",fgColor:{argb:HEAD}};
+    c.font = {bold:true, color:{argb:"FFFFFFFF"}};
+    c.border = border;
+    c.alignment = {horizontal:"center",vertical:"middle"};
+  });
+
+  ws.mergeCells(1,1,2,1);
+  groups.forEach(g=>{ ws.mergeCells(1, g.start, 1, g.start + 2); });
+
+  data.filter(row=>row.kind !== "header").forEach(row=>{
+    const r = ws.addRow(row.cells);
+    r.eachCell((cell, c)=>{
+      cell.border = border;
+      cell.alignment = {horizontal: c===1 ? "left" : "right", vertical:"middle"};
+      const t = COL_TYPES[c-1];
+      if(t === "n" && typeof cell.value === "number") cell.numFmt = "#,##0";
+      else if(t === "m" && typeof cell.value === "number") cell.numFmt = "#,##0.00";
+      else if(t === "p" && typeof cell.value === "number") cell.numFmt = "0.0%";
+    });
+    if(row.kind === "agent"){
+      r.eachCell(c=>{
+        c.fill = {type:"pattern",pattern:"solid",fgColor:{argb:AGENT}};
+        c.font = {bold:true};
+      });
+    }else if(row.kind === "total"){
+      r.height = 22;
+      r.eachCell(c=>{
+        c.fill = {type:"pattern",pattern:"solid",fgColor:{argb:TOTAL}};
+        c.font = {bold:true};
+      });
+    }
+  });
+
+  const noteRow = ws.addRow([]);
+  ws.mergeCells(noteRow.number, 1, noteRow.number, TOTAL_COLS);
+  const noteCell = ws.getCell(noteRow.number, 1);
+  noteCell.value = "占比口径：「服务商占比」= 该服务商本品类销售额 ÷ 全平台本品类销售额（服务商之间横向对比，直播间行不显示占比）。"
+    + "手表总销量、手环总销量 已包含各自下面的子项；红米耳夹属耳机品类，独立成块，不计入手环/手表总量。"
+    + "销量＝订单数（1 行＝1 单）。本表由本机浏览器离线计算，生成时间 " + new Date().toLocaleString("zh-CN") + "。";
+  noteCell.font = {size:10, color:{argb:"FF6B7280"}};
+  noteCell.alignment = {wrapText:true, vertical:"top", horizontal:"left"};
+  noteRow.height = 46;
+
+  ws.views = [{state:"frozen", ySplit:2, xSplit:1}];
+
+  const buf = await wb.xlsx.writeBuffer();
+  download(buf, "直播间销售汇总.xlsx");
 }
 
 $("#export").addEventListener("click", async ()=>{
-  const active = document.querySelector(".tab-btn.active").dataset.tab;
-  if(active==="hour"){ await exportHour(); return; }
-  const wb = new ExcelJS.Workbook();
-  const ws = wb.addWorksheet("直播间销售汇总");
-  ws.columns = [{width:30},{width:9},{width:15},{width:11},
-    ...CATEGORIES.flatMap(()=>([{width:9},{width:15},{width:11}]))];
-  const thin = {style:"thin", color:{argb:"FFD9DEE8"}};
-  const border = {top:thin,left:thin,bottom:thin,right:thin};
-  const HEAD="FF111827", AGENT="FFF4F5F7", TOTAL="FFFFE9B8";
-  // 两行分组表头
-  const h1=["服务商 / 直播间","整体",null,null, ...CATEGORIES.flatMap(c=>[c.name,null,null])];
-  const h2=[null,"订单数","销售额(元)","占比", ...CATEGORIES.flatMap(()=>["订单数","销售额(元)","占比"])];
-  const r1=ws.addRow(h1), r2=ws.addRow(h2);
-  r1.height=22; r2.height=22;
-  r1.eachCell(c=>{c.fill={type:"pattern",pattern:"solid",fgColor:{argb:HEAD}};
-    c.font={bold:true,color:{argb:"FFFFFFFF"}};c.border=border;
-    c.alignment={horizontal:"center",vertical:"middle"};});
-  r2.eachCell(c=>{c.fill={type:"pattern",pattern:"solid",fgColor:{argb:HEAD}};
-    c.font={bold:true,color:{argb:"FFFFFFFF"}};c.border=border;
-    c.alignment={horizontal:"center",vertical:"middle"};});
-  ws.mergeCells(1,1,2,1);
-  ws.mergeCells(1,2,1,4);
-  CATEGORIES.forEach((c,i)=>ws.mergeCells(1,5+3*i,1,7+3*i));
-  // 数据行
-  window.__exportData.filter(row=>row.kind!=="header").forEach(row=>{
-    const r = ws.addRow(row.cells);
-    r.eachCell((cell,col)=>{
-      cell.border=border;
-      cell.alignment={horizontal:col===1?"left":"right",vertical:"middle"};
-      if(col>=2){
-        if(col%3===2) cell.numFmt="#,##0";
-        else if(col%3===0) cell.numFmt="#,##0.00";
-        else if(typeof cell.value==="number") cell.numFmt="0.0%";
-      }
-    });
-    if(row.kind==="agent") r.eachCell(c=>{c.fill={type:"pattern",pattern:"solid",fgColor:{argb:AGENT}};c.font={bold:true};});
-    else if(row.kind==="total"){r.height=22;r.eachCell(c=>{c.fill={type:"pattern",pattern:"solid",fgColor:{argb:TOTAL}};c.font={bold:true};});}
-  });
-  ws.views=[{state:"frozen",ySplit:2,xSplit:1}];
-  const buf = await wb.xlsx.writeBuffer();
-  const blob = new Blob([buf], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href=url; a.download="直播间销售汇总.xlsx"; a.click();
-  URL.revokeObjectURL(url);
+  try{
+    if(!window.ExcelJS) throw new Error("导出组件（ExcelJS）未加载完成，请检查网络后重试");
+    const active = document.querySelector(".tab-btn.active").dataset.tab;
+    if(active === "hour"){ await exportHour(); return; }
+    await exportSvc();
+  }catch(err){ alert("导出失败：" + err.message); }
 });
 </script>
 <script src="ux-polish.js" defer></script>

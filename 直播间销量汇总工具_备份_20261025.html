@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>直播间销量战报</title>
+<script defer src="https://registry.npmmirror.com/xlsx/0.18.5/files/dist/xlsx.full.min.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';document.head.appendChild(s);"></script>
+<script src="https://registry.npmmirror.com/exceljs/4.4.0/files/dist/exceljs.min.js"></script>
+<script>if(!window.ExcelJS){document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></scr'+'ipt>')}</script>
+<link rel="stylesheet" href="https://miaoda.feishu.cn/fonts/css2?family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+  :root{
+    --bg:#f5f6f8; --paper:#ffffff; --ink:#111827; --soft:#5b6472; --faint:#9aa3b2;
+    --line:#e6e8ee; --line2:#eef0f4;
+    --accent:#0f766e; --accent-ink:#115e59; --accent-soft:#ecfdf8;
+    --dark:#111827; --agent:#f4f5f7; --total:#fef3c7;
+    --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{background:var(--bg);color:var(--ink);
+    font-family:"Microsoft YaHei","PingFang SC",system-ui,-apple-system,sans-serif;
+    font-size:14px;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .num{font-family:var(--mono);font-feature-settings:"tnum";letter-spacing:-.01em;}
+
+  /* 顶栏 */
+  .topbar{background:var(--dark);color:#fff;height:54px;display:flex;align-items:center;
+    justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:10;}
+  .brand{display:flex;align-items:center;gap:11px;font-size:15px;font-weight:600;letter-spacing:.3px;}
+  .brand .mark{width:24px;height:24px;border-radius:6px;background:var(--accent);
+    display:flex;align-items:center;justify-content:center;}
+  .brand .mark svg{width:14px;height:14px;color:#fff;}
+  .brand small{color:#9aa3b2;font-weight:400;margin-left:4px;}
+  .btn{appearance:none;border:0;cursor:pointer;font-family:inherit;font-size:13.5px;
+    border-radius:7px;padding:9px 16px;font-weight:500;transition:.15s;}
+  .btn-solid{background:#fff;color:var(--dark);}
+  .btn-solid:hover{background:#e5e7eb;}
+  .btn-accent{background:var(--accent);color:#fff;}
+  .btn-accent:hover{background:var(--accent-ink);}
+
+  main{max-width:1080px;margin:0 auto;padding:30px 24px 70px;}
+
+  /* 空态 */
+  #empty{max-width:560px;margin:60px auto;text-align:left;}
+  #empty h1{font-size:26px;line-height:1.3;margin:0 0 10px;font-weight:700;letter-spacing:.2px;}
+  #empty h1 em{font-style:normal;color:var(--accent);}
+  #empty p{color:var(--soft);margin:0 0 26px;}
+  .drop{display:block;border:1.5px dashed #cbd2de;border-radius:12px;background:var(--paper);
+    padding:34px 26px;cursor:pointer;transition:.15s;}
+  .drop:hover{border-color:var(--accent);background:var(--accent-soft);}
+  .drop .ic{width:38px;height:38px;border-radius:9px;background:var(--accent-soft);
+    color:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:14px;}
+  .drop .ic svg{width:20px;height:20px;}
+  .drop b{font-size:15px;}
+  .drop span{display:block;color:var(--faint);font-size:12.5px;margin-top:6px;}
+  .drop input{display:none;}
+  .empty-feats{margin-top:22px;display:flex;gap:18px;color:var(--faint);font-size:12.5px;flex-wrap:wrap;}
+  .empty-feats span{display:flex;align-items:center;gap:6px;}
+  .empty-feats i{width:5px;height:5px;border-radius:50%;background:var(--accent);display:inline-block;}
+
+  /* 结果头 */
+  .res-head{display:flex;justify-content:space-between;align-items:flex-end;
+    padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:18px;}
+  .res-head h2{margin:0;font-size:19px;font-weight:700;}
+  .res-head .meta{color:var(--faint);font-size:12.5px;margin-top:5px;}
+
+  /* KPI：一行三个，竖线分隔 */
+  .stats{display:flex;align-items:stretch;gap:0;margin-bottom:22px;
+    background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  .stat{flex:1;padding:18px 22px;border-right:1px solid var(--line2);}
+  .stat:last-child{border-right:0;}
+  .stat .lab{color:var(--faint);font-size:12.5px;}
+  .stat .val{font-size:28px;font-weight:700;margin-top:4px;}
+  .stat .unit{font-size:13px;color:var(--soft);font-weight:500;margin-left:4px;}
+
+  /* 表格 */
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;overflow:hidden;}
+  table{width:100%;border-collapse:collapse;}
+  th,td{padding:10px 16px;text-align:right;white-space:nowrap;}
+  th{background:var(--dark);color:#e5e7eb;font-weight:500;font-size:12.5px;text-align:center;
+    letter-spacing:.3px;}
+  th:first-child,td:first-child{text-align:left;}
+  tbody tr{border-bottom:1px solid var(--line2);}
+  tbody tr:last-child{border-bottom:0;}
+  tbody tr.room:hover{background:#fafbfc;}
+  tr.agent td{background:var(--agent);font-weight:700;border-top:1px solid #e2e5ea;}
+  tr.total td{background:var(--total);font-weight:700;}
+  tr.room td:first-child{padding-left:38px;color:#374151;}
+  .pct{color:var(--faint);font-size:12px;margin-left:8px;}
+  .bar{height:5px;background:#edf0f4;border-radius:3px;overflow:hidden;min-width:80px;}
+  .bar i{display:block;height:100%;background:var(--accent);border-radius:3px;}
+
+  .warn{margin:0 0 18px;background:#fffbeb;border:1px solid #f5d98b;color:#92400e;
+    border-radius:10px;padding:13px 16px;font-size:13px;}
+  .warn b{display:block;margin-bottom:4px;}
+  .warn ul{margin:6px 0 0;padding-left:18px;}
+  .hide{display:none;}
+
+  /* Tab 切换 */
+  .tabs{display:flex;gap:6px;margin:22px 0 14px;border-bottom:1px solid var(--line);}
+  .tab-btn{appearance:none;border:0;background:transparent;font-family:inherit;
+    font-size:14px;padding:9px 14px;cursor:pointer;color:var(--soft);
+    border-bottom:2px solid transparent;margin-bottom:-1px;font-weight:500;}
+  .tab-btn.active{color:var(--ink);border-bottom-color:var(--accent);font-weight:600;}
+  .scroll-x{overflow-x:auto;}
+
+  /* 小时透视表 */
+  table.hour{min-width:100%;}
+  table.hour th,table.hour td{padding:8px 12px;text-align:right;white-space:nowrap;font-size:13px;}
+  table.hour th.lab,table.hour td.lab{text-align:left;}
+  table.hour .row-label{text-align:left;font-weight:500;color:#374151;width:80px;}
+  td.room-name{font-weight:700;background:#e8ecf3;color:var(--ink);text-align:left;
+    vertical-align:middle;min-width:130px;}
+  td.room-name.sub{background:#cbd5e1;}
+  td.room-name.grand{background:#111827;color:#f9fafb;}
+  tr.subtotal td,tr.grandtotal td{font-weight:700;}
+  tr.metric-gmv td.row-label,tr.metric-gsv td.row-label{color:#1d4ed8;}
+  tr.metric-spend td.row-label{color:#15803d;}
+  tr.metric-refund td.row-label,tr.metric-rate td.row-label{color:#be123c;}
+  tr.metric-gmv td,tr.metric-gsv td{background:#eef4ff;}
+  tr.metric-spend td{background:#ecfdf3;}
+  tr.metric-refund td,tr.metric-rate td{background:#fff1f2;}
+  th.sum-col{background:#e0e7ff;color:#3730a3;border-left:1px solid #c7d2fe;}
+  td.sum{border-left:1px solid #d8dee9;font-weight:700;background:#fafbff;}
+  td.zero{color:#b6becb;}
+  footer{margin-top:30px;color:var(--faint);font-size:12px;text-align:center;}
+  @media(max-width:720px){
+    .stats{flex-direction:column;} .stat{border-right:0;border-bottom:1px solid var(--line2);} .stat:last-child{border-bottom:0;}
+    main{padding:20px 14px 50px;} th,td{padding:9px 10px;}
+  }
+</style>
+<link rel="stylesheet" href="ux-polish.css">
+<style id="ux-tail">
+  /* 页面专属表现层：浅色官方数据台 */
+  .topbar{box-shadow:0 1px 0 rgba(255,105,0,.18),0 8px 24px -16px rgba(15,23,42,.35);}
+  .brand .mark{box-shadow:0 2px 8px rgba(15,118,110,.35);}
+  main{font-variant-numeric:tabular-nums;}
+  .panel,.stats{border-color:#e9ebef;box-shadow:0 1px 2px rgba(15,23,42,.04),0 10px 28px -18px rgba(15,23,42,.12);}
+  .panel{transition:box-shadow .22s ease,border-color .22s ease;}
+  .panel:hover{border-color:#dfe3ea;}
+  .stat .val{letter-spacing:-.02em;}
+  .stat:hover{background:linear-gradient(180deg,rgba(255,105,0,.04),transparent 70%);}
+  th{letter-spacing:.02em;}
+  tbody tr:hover td{background:rgba(255,105,0,.05);}
+  tr.agent:hover td{background:#eef1f5;}
+  tr.total:hover td{background:#fde9a9;}
+  .tab-btn{border-radius:8px 8px 0 0;}
+  .tab-btn:hover:not(.active){color:var(--ink);background:rgba(255,105,0,.07);}
+  .btn{box-shadow:0 1px 2px rgba(15,23,42,.08);}
+  .btn:hover{transform:translateY(-1px);box-shadow:0 6px 16px -6px rgba(15,23,42,.22);}
+  .btn:active{transform:translateY(0) scale(.98);}
+  .btn-accent{box-shadow:0 2px 10px -2px rgba(15,118,110,.4);}
+  .drop{border-radius:14px;box-shadow:0 1px 2px rgba(15,23,42,.04);}
+  .drop:hover{transform:translateY(-2px);box-shadow:0 12px 28px -12px rgba(15,23,42,.16);}
+  .drop .ic{box-shadow:0 4px 12px -4px rgba(15,118,110,.28);}
+  .res-head h2{letter-spacing:-.015em;}
+  .bar{background:#e9ebef;}
+  .bar i{background:linear-gradient(90deg,#0f766e,#14b8a6);box-shadow:0 0 8px rgba(15,118,110,.25);}
+  .warn{border-radius:12px;}
+  footer{letter-spacing:.02em;}
+</style>
+</head>
+<body>
+
+<nav class="topbar">
+  <div class="brand">
+    <span class="mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 3v18h18"/><path d="M7 14l4-4 3 3 5-6"/></svg></span>
+    直播间销量战报 <small>Live Commerce</small>
+  </div>
+  <button class="btn btn-solid" onclick="document.getElementById('file').click()">导入订单</button>
+</nav>
+
+<main>
+  <!-- 空态 -->
+  <section id="empty">
+    <h1>上传订单，<em>自动出服务商战报</em></h1>
+    <p>按「服务商 → 直播间」汇总订单数、销售额与占比，口径与《直播间服务商汇总》一致。所有计算在本机浏览器完成，文件不上传。</p>
+    <label class="drop" id="drop">
+      <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 15v3a2 2 0 002 2h12a2 2 0 002-2v-3"/></svg></span>
+      <b>选择订单 Excel</b>
+      <span>支持 .xlsx / .xls，需含「达人昵称」「订单应付金额」列，可直接拖拽到这里</span>
+      <input type="file" id="file" accept=".xlsx,.xls">
+    </label>
+    <div class="empty-feats">
+      <span><i></i>无需安装</span><span><i></i>不联网上传数据</span><span><i></i>一键导出美化 Excel</span>
+    </div>
+  </section>
+
+  <section id="result" class="hide">
+    <div class="res-head">
+      <div>
+        <h2 id="srcTitle">销售汇总</h2>
+        <div class="meta" id="srcMeta"></div>
+      </div>
+      <button class="btn btn-accent" id="export">导出 Excel</button>
+    </div>
+
+    <div id="warnBox" class="warn hide"></div>
+
+    <div class="stats" id="kpis"></div>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="service">服务商汇总</button>
+      <button class="tab-btn" data-tab="hour">小时透视</button>
+    </div>
+
+    <div id="tab-service">
+      <div class="panel scroll-x">
+        <table>
+          <thead><tr>
+            <th rowspan="2">服务商 / 直播间</th>
+            <th colspan="3">整体</th>
+            <th colspan="3">小米手环11全部版本</th>
+            <th colspan="3">小米手环11标准版</th>
+            <th colspan="3">Xiaomi Watch S5 41mm</th>
+            <th colspan="3">手表总销量</th>
+          </tr><tr>
+            <th>订单数</th><th>销售额(元)</th><th>占比</th>
+            <th>订单数</th><th>销售额(元)</th><th>占比</th>
+            <th>订单数</th><th>销售额(元)</th><th>占比</th>
+            <th>订单数</th><th>销售额(元)</th><th>占比</th>
+            <th>订单数</th><th>销售额(元)</th><th>占比</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="tab-hour" class="hide">
+      <div class="panel scroll-x">
+        <table class="hour" id="tblHour">
+          <thead id="theadHour"></thead>
+          <tbody id="tbodyHour"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <footer>服务商映射依据《直播间服务商汇总》（2026-09-24）。新增直播间请联系维护者更新。</footer>
+</main>
+
+<script>
+const ROOM_TO_AGENT = {
+  "小米官方手表":"我司阳光","小米官方手环直播间":"我司阳光","小米数码旗舰店":"我司阳光",
+  "小米官方耳机直播间":"我司阳光","小米手环10Pro直播间":"我司阳光","小米官旗手表直播间":"我司阳光",
+  "小米智能设备旗舰店直播间":"我司阳光","小米手环官旗直播间":"我司阳光","小米AI眼镜直播间":"我司阳光",
+  "我司商品卡":"我司阳光",
+  "小米智能穿戴国补号":"机器空间","小米智能穿戴授权号":"机器空间",
+  "小米官方手表直播号":"纵横/综讯","小米手环官方直播间":"纵横/综讯",
+  "小米手环直播间":"凝云",
+  "小米手环官方账号":"逐梦",
+  "小米智能穿戴官方直播间":"斐纳","小米官方手环账号":"斐纳",
+  "小米智能手表官方直播间":"乐畔",
+  "小米耳机数码官方直播间":"炽木电商","小米手环智能穿戴官方直播间":"炽木电商",
+  "小米手环官方":"米乐",
+  "小米官方手环号":"良米","小米手环":"良米","小米数码智能旗舰店":"良米",
+  "watch智能手环直播间":"良米","watch数码手环直播间":"良米","小米智能手表旗舰店":"良米",
+  "小米手表官方直播间":"良米","小米手表":"良米","小米官方手表直播":"良米",
+  "小米耳机官方直播间":"良米","小米官方Ai智能眼镜":"良米","小米手环11直播间":"良米",
+  "小米耳机":"良米",
+  "良米商品卡":"良米","小米官方平板直播间":"良米"
+};
+const IGNORED_ROOMS = new Set(["小米手环手表直播间"]);
+// 品类拆分：按商家编码归属（编码可能带\t、多值以 ;/； 分隔，逐一匹配）
+const CATEGORIES = [
+  {name:"小米手环11全部版本", codes:new Set(["81235","81236","81244","81249","81251","81253","81254","81255","81256","81259"])},
+  {name:"小米手环11标准版",   codes:new Set(["81244","81249","81254"])},
+  {name:"Xiaomi Watch S5 41mm", codes:new Set(["77889","77890","77895","77906"])},
+  {name:"手表总销量", codes:new Set(["68698","68703","68712","77889","77890","77895","77906","70275","70279","70281","70282","70284","65337","65341","65344","75162"])}
+];
+
+const $ = s => document.querySelector(s);
+const drop = $("#drop"), fileInput = $("#file");
+drop.addEventListener("dragover", e=>{e.preventDefault();drop.style.borderColor="#0f766e";});
+drop.addEventListener("dragleave", ()=>drop.style.borderColor="");
+drop.addEventListener("drop", e=>{e.preventDefault();drop.style.borderColor="";
+  if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);});
+fileInput.addEventListener("change", e=>{if(e.target.files[0]) handleFile(e.target.files[0]);});
+
+const fmt = n => Number(n).toLocaleString("zh-CN",{maximumFractionDigits:0});
+const fmtMoney = n => n.toLocaleString("zh-CN",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct = n => (n*100).toFixed(1)+"%";
+
+function handleFile(file){
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const wb = XLSX.read(new Uint8Array(e.target.result), {type:"array"});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {defval:null});
+      process(rows, file.name);
+    }catch(err){ alert("解析失败：" + err.message); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function process(rows, srcName){
+  if(!rows.length){alert("文件没有数据");return;}
+  const keys = Object.keys(rows[0]);
+  const amtKey = keys.find(k=>String(k).includes("应付金额")||String(k).includes("金额"));
+  const nickKey = keys.find(k=>String(k).includes("达人昵称")||String(k).includes("昵称")||String(k).includes("直播间"));
+  const timeKey = keys.find(k=>String(k).includes("提交时间")||String(k).includes("时间"));
+  const statusKey = keys.find(k=>String(k).includes("订单状态")||String(k).includes("状态"));
+  if(!amtKey||!nickKey){alert("未找到「订单应付金额」或「达人昵称」列");return;}
+  const codeKey = keys.find(k=>String(k).includes("商家编码")||String(k).includes("编码"));
+
+
+  const tree = {}, unmatched = {}, ignored = {};
+  const roomHour = {};           // nick -> hour -> {gmv, refund}
+  const hourSet = new Set();
+  const catTotalAll = {}; CATEGORIES.forEach(c=>catTotalAll[c.name]={orders:0,amount:0});
+  let totalOrders=0, totalAmount=0;
+  rows.forEach(r=>{
+    let nick = r[nickKey]; if(nick==null) return;
+    nick = String(nick).trim();
+    let amt = parseFloat(r[amtKey]); if(isNaN(amt)) amt=0;
+    const status = r[statusKey]!=null ? String(r[statusKey]).trim() : "";
+    let codeList=[];
+    if(codeKey && r[codeKey]!=null){
+      codeList = String(r[codeKey]).replace(/\t/g,"").split(/[;,；]/).map(s=>s.trim()).filter(Boolean);
+    }
+    const hour = (r[timeKey]!=null && String(r[timeKey]).trim().length>=13)
+                 ? String(r[timeKey]).trim().slice(11,13) : null;
+    if(hour) hourSet.add(hour);
+    // 小时透视：gmv=全部订单(含退货)；已关闭=退货，另记退费；gsv=gmv-退费
+    if(hour){
+      roomHour[nick] = roomHour[nick]||{};
+      roomHour[nick][hour] = roomHour[nick][hour]||{gmv:0,refund:0};
+      roomHour[nick][hour].gmv += amt;
+      if(status==="已关闭") roomHour[nick][hour].refund += amt;
+    }
+    if(IGNORED_ROOMS.has(nick)){ ignored[nick]=(ignored[nick]||0)+1; return; }
+    const agent = ROOM_TO_AGENT[nick];
+    if(!agent){ unmatched[nick]=(unmatched[nick]||0)+1; return; }
+    tree[agent] = tree[agent]||{};
+    tree[agent][nick] = tree[agent][nick]||{orders:0,amount:0,cat:{}};
+    tree[agent][nick].orders++;
+    tree[agent][nick].amount += amt;
+    totalOrders++; totalAmount += amt;
+    CATEGORIES.forEach(c=>{
+      if(codeList.some(cd=>c.codes.has(cd))){
+        tree[agent][nick].cat[c.name]=tree[agent][nick].cat[c.name]||{orders:0,amount:0};
+        tree[agent][nick].cat[c.name].orders++;
+        tree[agent][nick].cat[c.name].amount += amt;
+        catTotalAll[c.name].orders++;
+        catTotalAll[c.name].amount += amt;
+      }
+    });
+  });
+
+  $("#srcTitle").textContent = "销售汇总";
+  $("#srcMeta").textContent = srcName + " · 共 " + rows.length + " 条订单记录";
+
+  $("#warnBox").classList.add("hide");
+
+  const agents = Object.keys(tree).length;
+  $("#kpis").innerHTML = `
+    <div class="stat"><div class="lab">订单总数</div><div class="val num">${fmt(totalOrders)}</div></div>
+    <div class="stat"><div class="lab">总销售额</div><div class="val num">¥${fmt(totalAmount)}</div></div>
+    <div class="stat"><div class="lab">服务商</div><div class="val num">${agents}<span class="unit">个</span></div></div>`;
+
+  const tbody = $("#tbody"); tbody.innerHTML="";
+  const agentArr = Object.entries(tree).sort((a,b)=>
+    Object.values(b[1]).reduce((s,v)=>s+v.amount,0)-Object.values(a[1]).reduce((s,v)=>s+v.amount,0));
+
+  window.__exportData = [{kind:"header"}];
+  const shareOf = amt => totalAmount? amt/totalAmount : 0;
+  // 品类三列：订单数 | 销售额 | 占比(withShare=false 时占比留空，与整体明细行一致)
+  const catData = (d, withShare)=>{
+    d = d||{orders:0,amount:0};
+    return `<td class="num">${fmt(d.orders)}</td><td class="num">¥${fmtMoney(d.amount)}</td>` +
+      (withShare ? `<td>${shareCell(shareOf(d.amount))}</td>` : `<td></td>`);
+  };
+  agentArr.forEach(([agent, rooms])=>{
+    const aOrders=Object.values(rooms).reduce((s,v)=>s+v.orders,0);
+    const aAmount=Object.values(rooms).reduce((s,v)=>s+v.amount,0);
+    const aShare = totalAmount? aAmount/totalAmount : 0;
+    const aCat={};
+    CATEGORIES.forEach(c=>{
+      aCat[c.name]={orders:0,amount:0};
+      Object.values(rooms).forEach(v=>{
+        const d=v.cat&&v.cat[c.name];
+        if(d){aCat[c.name].orders+=d.orders;aCat[c.name].amount+=d.amount;}
+      });
+    });
+    let html=`<td>${agent}</td><td class="num">${fmt(aOrders)}</td><td class="num">¥${fmtMoney(aAmount)}</td><td>${shareCell(aShare)}</td>`;
+    const cells=[agent,aOrders,+aAmount.toFixed(2),aShare];
+    CATEGORIES.forEach(c=>{
+      html+=catData(aCat[c.name],true);
+      cells.push(aCat[c.name].orders,+aCat[c.name].amount.toFixed(2),shareOf(aCat[c.name].amount));
+    });
+    const atr=document.createElement("tr");atr.className="agent";atr.innerHTML=html;tbody.appendChild(atr);
+    window.__exportData.push({kind:"agent",cells});
+    Object.entries(rooms).sort((a,b)=>b[1].amount-a[1].amount).forEach(([room,v])=>{
+      let rh=`<td>${room}</td><td class="num">${fmt(v.orders)}</td><td class="num">¥${fmtMoney(v.amount)}</td><td></td>`;
+      const rc=["　　"+room,v.orders,+v.amount.toFixed(2),null];
+      CATEGORIES.forEach(c=>{
+        const d=(v.cat&&v.cat[c.name])||{orders:0,amount:0};
+        rh+=catData(d,false);
+        rc.push(d.orders,+d.amount.toFixed(2),null);
+      });
+      const rtr=document.createElement("tr");rtr.className="room";rtr.innerHTML=rh;tbody.appendChild(rtr);
+      window.__exportData.push({kind:"room",cells:rc});
+    });
+  });
+  const tr=document.createElement("tr");tr.className="total";
+  let th=`<td>全平台合计</td><td class="num">${fmt(totalOrders)}</td><td class="num">¥${fmtMoney(totalAmount)}</td><td style="text-align:center">100%</td>`;
+  const tc=["全平台合计",totalOrders,+totalAmount.toFixed(2),1];
+  CATEGORIES.forEach(c=>{
+    th+=`<td class="num">${fmt(catTotalAll[c.name].orders)}</td><td class="num">¥${fmtMoney(catTotalAll[c.name].amount)}</td><td style="text-align:center">${pct(shareOf(catTotalAll[c.name].amount))}</td>`;
+    tc.push(catTotalAll[c.name].orders,+catTotalAll[c.name].amount.toFixed(2),shareOf(catTotalAll[c.name].amount));
+  });
+  tr.innerHTML=th;tbody.appendChild(tr);
+  window.__exportData.push({kind:"total",cells:tc});
+
+  renderHourTable(roomHour, hourSet);
+
+  $("#empty").classList.add("hide");
+  $("#result").classList.remove("hide");
+}
+
+const METRICS = ["gmv","gsv","投放","roi","净roi","退费","退费率"];
+const METRIC_CLS = ["metric-gmv","metric-gsv","metric-spend","metric-spend","metric-spend","metric-refund","metric-rate"];
+const agentMetrics = agent => agent==="我司阳光"
+  ? METRICS : METRICS.filter(m=>!["投放","roi","净roi"].includes(m));
+function renderHourTable(roomHour, hourSet){
+  const hours = [...hourSet].sort();
+  let thead = "<tr><th class='lab'>直播间</th><th class='lab'>指标</th>";
+  hours.forEach(h=> thead += `<th>${parseInt(h)}点</th>`);
+  thead += "<th class='sum-col'>汇总</th></tr>";
+  $("#theadHour").innerHTML = thead;
+
+  // 我司在上、良米在下；各自直播间按gmv降序，并算服务商小计
+  const HOUR_AGENTS = ["我司阳光","良米"];
+  const IS_CARD = nick => nick.includes("商品卡");
+  const groups = HOUR_AGENTS.map(agent=>{
+    const rs = Object.entries(roomHour)
+      .filter(([nick])=>ROOM_TO_AGENT[nick]===agent && !IS_CARD(nick))
+      .map(([nick, hm])=>({nick, hm, totalGmv:Object.values(hm).reduce((s,v)=>s+v.gmv,0)}))
+      .sort((a,b)=>b.totalGmv-a.totalGmv);
+    const sub = {};
+    hours.forEach(h=>{
+      sub[h]={gmv:0,refund:0};
+      rs.forEach(({hm})=>{ if(hm[h]){ sub[h].gmv+=hm[h].gmv; sub[h].refund+=hm[h].refund; } });
+    });
+    return {agent, rooms:rs, sub};
+  });
+
+  const fmt0 = n => Math.round(n).toLocaleString("zh-CN");
+  const sumOf = (hm, key) => hours.reduce((s,h)=> s + (hm[h]||{gmv:0,refund:0})[key], 0);
+  const renderBlock = (label, hm, agent, kind) => {
+    let rowsHtml = "";
+    const sumGmv = sumOf(hm,"gmv"), sumRefund = sumOf(hm,"refund");
+    const metrics = agentMetrics(agent);
+    const trCls = kind==="sub" ? "subtotal" : kind==="grand" ? "grandtotal" : "";
+    metrics.forEach(m=>{
+      const cls = METRIC_CLS[METRICS.indexOf(m)];
+      let cells = "";
+      hours.forEach(h=>{
+        const d = hm[h]||{gmv:0,refund:0};
+        let v = "";
+        if(m==="gmv") v = d.gmv;
+        else if(m==="gsv") v = d.gmv - d.refund;
+        else if(m==="退费") v = d.refund;
+        else if(m==="退费率"){ v = d.gmv? (d.refund/d.gmv*100).toFixed(1)+"%" : "—"; cells += `<td>${v}</td>`; return; }
+        else v = 0; // 投放/roi/净roi 填0待手填
+        if(m==="gmv"||m==="gsv"||m==="退费"){
+          cells += `<td>${v?fmt0(v):""}</td>`;
+        } else {
+          cells += `<td class="zero">0</td>`;
+        }
+      });
+      let sumVal;
+      if(m==="gmv") sumVal = sumGmv? fmt0(sumGmv) : "";
+      else if(m==="gsv") sumVal = (sumGmv-sumRefund)? fmt0(sumGmv-sumRefund) : "";
+      else if(m==="退费") sumVal = sumRefund? fmt0(sumRefund) : "";
+      else if(m==="退费率") sumVal = sumGmv? (sumRefund/sumGmv*100).toFixed(1)+"%" : "—";
+      else sumVal = "0";
+      const nameCls = kind==="sub" ? "room-name sub" : kind==="grand" ? "room-name grand" : "room-name";
+      const labelCell = (m===metrics[0])
+        ? `<td class="${nameCls}" rowspan="${metrics.length}">${label}</td>` : "";
+      rowsHtml += `<tr class="${cls} ${trCls}">${labelCell}<td class="row-label">${m}</td>${cells}<td class="sum">${sumVal}</td></tr>`;
+    });
+    return rowsHtml;
+  };
+
+  let tbody = "";
+  groups.forEach(({agent, rooms, sub})=>{
+    rooms.forEach(({nick,hm})=>{ tbody += renderBlock(nick, hm, agent, "room"); });
+    tbody += renderBlock(agent==="我司阳光"?"我司合计":"良米合计", sub, agent, "sub");
+  });
+  const totalHm = {};
+  hours.forEach(h=>{
+    totalHm[h]={gmv:0,refund:0};
+    groups.forEach(({sub})=>{ totalHm[h].gmv+=sub[h].gmv; totalHm[h].refund+=sub[h].refund; });
+  });
+  tbody += renderBlock("全平台合计", totalHm, "良米", "grand");
+  $("#tbodyHour").innerHTML = tbody;
+  window.__hourHours = hours;
+  window.__hourGroups = groups;
+}
+
+function barHtml(share){return `<div class="bar"><i style="width:${Math.max(share*100,1)}%"></i></div>`;}
+function shareCell(share){
+  return `<div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">${barHtml(share)}<span class="pct">${pct(share)}</span></div>`;
+}
+
+// Tab 切换
+document.querySelectorAll(".tab-btn").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active");
+    const tab = btn.dataset.tab;
+    $("#tab-service").classList.toggle("hide", tab!=="service");
+    $("#tab-hour").classList.toggle("hide", tab!=="hour");
+  });
+});
+
+async function exportHour(){
+  const hours = window.__hourHours, groups = window.__hourGroups;
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("小时透视");
+  ws.columns = [{width:20},{width:10}, ...hours.map(()=>({width:11})), {width:12}];
+  const thin = {style:"thin", color:{argb:"FFD9DEE8"}};
+  const border = {top:thin,left:thin,bottom:thin,right:thin};
+  const HEAD="FF111827", BLUE="FFeef4ff", GREEN="FFecfdf3",
+        RED="FFfff1f2", ROOM="FFe8ecf3", SUM="FFfafbff",
+        SUB="FFcbd5e1", GRAND="FF111827";
+  const rowFill = {gmv:BLUE,gsv:BLUE,投放:GREEN,roi:GREEN,净roi:GREEN,退费:RED,退费率:RED};
+
+  let r = ws.addRow(["直播间","指标",...hours.map(h=>parseInt(h)+"点"),"汇总"]);
+  r.height=22;
+  r.eachCell(c=>{c.fill={type:"pattern",pattern:"solid",fgColor:{argb:HEAD}};
+    c.font={bold:true,color:{argb:"FFFFFFFF"}};c.border=border;
+    c.alignment={horizontal:"center",vertical:"middle"};});
+
+  const block = (label, hm, agent, kind)=>{
+    const start = ws.rowCount+1;
+    const sumGmv = hours.reduce((s,h)=>s+(hm[h]||{gmv:0,refund:0}).gmv,0);
+    const sumRefund = hours.reduce((s,h)=>s+(hm[h]||{gmv:0,refund:0}).refund,0);
+    const metrics = agentMetrics(agent);
+    let first = true;
+    metrics.forEach(m=>{
+      let sumVal;
+      if(m==="gmv") sumVal = Math.round(sumGmv);
+      else if(m==="gsv") sumVal = Math.round(sumGmv-sumRefund);
+      else if(m==="退费") sumVal = Math.round(sumRefund);
+      else if(m==="退费率") sumVal = sumGmv? +(sumRefund/sumGmv).toFixed(4):0;
+      else sumVal = 0;
+      const row = ws.addRow([ first?label:"", m, ...hours.map(h=>{
+        const d=hm[h]||{gmv:0,refund:0};
+        if(m==="gmv") return Math.round(d.gmv);
+        if(m==="gsv") return Math.round(d.gmv-d.refund);
+        if(m==="退费") return Math.round(d.refund);
+        if(m==="退费率") return d.gmv?+(d.refund/d.gmv).toFixed(4):0;
+        return 0;
+      }), sumVal]);
+      first = false;
+      row.eachCell((cell,col)=>{
+        cell.border=border;
+        cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:rowFill[m]}};
+        if(col===1){
+          const nameFill = kind==="sub"?SUB:kind==="grand"?GRAND:ROOM;
+          cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:nameFill}};
+          cell.font={bold:true, color:{argb: kind==="grand"?"FFFFFFFF":"FF111827"}};
+        }
+        if(col===2) cell.alignment={horizontal:"left",vertical:"middle"};
+        else cell.alignment={horizontal:"right",vertical:"middle"};
+        if(col===hours.length+3){
+          cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:SUM}};
+          cell.font={bold:true};
+        }
+        if(col>=3 && m==="退费率") cell.numFmt="0.0%";
+        else if(col>=3 && m!=="退费率") cell.numFmt="#,##0";
+      });
+    });
+    ws.mergeCells(start,1,start+metrics.length-1,1);
+  };
+
+  groups.forEach(({agent, rooms, sub})=>{
+    rooms.forEach(({nick,hm})=>block(nick,hm,agent,"room"));
+    block(agent==="我司阳光"?"我司合计":"良米合计", sub, agent, "sub");
+  });
+  const totalHm={}; hours.forEach(h=>{totalHm[h]={gmv:0,refund:0};
+    groups.forEach(({sub})=>{totalHm[h].gmv+=sub[h].gmv;totalHm[h].refund+=sub[h].refund;});});
+  block("全平台合计", totalHm, "良米", "grand");
+  ws.views=[{state:"frozen",ySplit:1,xSplit:2}];
+
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");a.href=url;a.download="直播间小时透视.xlsx";a.click();
+  URL.revokeObjectURL(url);
+}
+
+$("#export").addEventListener("click", async ()=>{
+  const active = document.querySelector(".tab-btn.active").dataset.tab;
+  if(active==="hour"){ await exportHour(); return; }
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("直播间销售汇总");
+  ws.columns = [{width:30},{width:9},{width:15},{width:11},
+    ...CATEGORIES.flatMap(()=>([{width:9},{width:15},{width:11}]))];
+  const thin = {style:"thin", color:{argb:"FFD9DEE8"}};
+  const border = {top:thin,left:thin,bottom:thin,right:thin};
+  const HEAD="FF111827", AGENT="FFF4F5F7", TOTAL="FFFFE9B8";
+  // 两行分组表头
+  const h1=["服务商 / 直播间","整体",null,null, ...CATEGORIES.flatMap(c=>[c.name,null,null])];
+  const h2=[null,"订单数","销售额(元)","占比", ...CATEGORIES.flatMap(()=>["订单数","销售额(元)","占比"])];
+  const r1=ws.addRow(h1), r2=ws.addRow(h2);
+  r1.height=22; r2.height=22;
+  r1.eachCell(c=>{c.fill={type:"pattern",pattern:"solid",fgColor:{argb:HEAD}};
+    c.font={bold:true,color:{argb:"FFFFFFFF"}};c.border=border;
+    c.alignment={horizontal:"center",vertical:"middle"};});
+  r2.eachCell(c=>{c.fill={type:"pattern",pattern:"solid",fgColor:{argb:HEAD}};
+    c.font={bold:true,color:{argb:"FFFFFFFF"}};c.border=border;
+    c.alignment={horizontal:"center",vertical:"middle"};});
+  ws.mergeCells(1,1,2,1);
+  ws.mergeCells(1,2,1,4);
+  CATEGORIES.forEach((c,i)=>ws.mergeCells(1,5+3*i,1,7+3*i));
+  // 数据行
+  window.__exportData.filter(row=>row.kind!=="header").forEach(row=>{
+    const r = ws.addRow(row.cells);
+    r.eachCell((cell,col)=>{
+      cell.border=border;
+      cell.alignment={horizontal:col===1?"left":"right",vertical:"middle"};
+      if(col>=2){
+        if(col%3===2) cell.numFmt="#,##0";
+        else if(col%3===0) cell.numFmt="#,##0.00";
+        else if(typeof cell.value==="number") cell.numFmt="0.0%";
+      }
+    });
+    if(row.kind==="agent") r.eachCell(c=>{c.fill={type:"pattern",pattern:"solid",fgColor:{argb:AGENT}};c.font={bold:true};});
+    else if(row.kind==="total"){r.height=22;r.eachCell(c=>{c.fill={type:"pattern",pattern:"solid",fgColor:{argb:TOTAL}};c.font={bold:true};});}
+  });
+  ws.views=[{state:"frozen",ySplit:2,xSplit:1}];
+  const buf = await wb.xlsx.writeBuffer();
+  const blob = new Blob([buf], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url; a.download="直播间销售汇总.xlsx"; a.click();
+  URL.revokeObjectURL(url);
+});
+</script>
+<script src="ux-polish.js" defer></script>
+<script src="assistant-widget.js?v=3" defer></script>
+</body>
+</html>

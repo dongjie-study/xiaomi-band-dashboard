@@ -1,0 +1,15 @@
+{
+  "name": "wb-verify",
+  "private": true,
+  "version": "1.0.0",
+  "description": "直播间销量汇总工具 本地回归校验脚本（Node，离线跑页面真实逻辑）",
+  "scripts": {
+    "check": "node v5.js",
+    "share": "node v6.js",
+    "export": "node v4.js"
+  },
+  "dependencies": {
+    "xlsx": "0.18.5",
+    "exceljs": "4.4.0"
+  }
+}
