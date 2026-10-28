@@ -1194,7 +1194,72 @@ def rebuild_reports(quiet=False):
             if not quiet:
                 print('   🧹 清理无对应数据的日报目录 %s' % os.path.relpath(p, ROOT))
     ip, idx = write_index()
+    build_series(quiet=True)
     return dates, ip, idx
+
+
+# ============================================================ 走势数据（按月一份）
+SERIES_DIR = os.path.join(DATA_DIR, 'series')
+# 页面趋势图 / 渠道走势卡真正用到的字段（其余不进 series，减小体积）
+SERIES_CH_KEYS = ('name', 'views', 'share', 'impressions', 'evr', 'interactions',
+                  'interaction_ratio', 'new_followers', 'product_clicks', 'ctr',
+                  'paid_orders', 'cvr', 'paid_amount', 'gpm', 'anomaly')
+
+
+def series_path(ym):
+    return os.path.join(SERIES_DIR, ym + '.json')
+
+
+def build_series(quiet=False):
+    """把全部日报压成「按月一份」的走势数据：data/series/YYYY-MM.json。
+
+    为什么要有它：页面的三张趋势类图表原本要逐日拉 14 份日档（每份约 47KB）
+    加 14 份日报（约 23KB），线上（Cloudflare Pages，单请求往返 0.2~0.6 秒）
+    光这一屏就是 28 个请求 ≈ 4 秒，切直播间又要再来一遍。
+    这份文件只保留画图用得到的数值，一次请求读一整月；数值全部原样取自日报
+    （totals / metrics / channels 三个字段），不做任何二次计算，和表格永远同源。
+    """
+    months = {}
+    for d in all_dates():
+        rdir = report_dir_for(d)
+        if not os.path.isdir(rdir):
+            continue
+        day = {}
+        for p in sorted(glob.glob(os.path.join(rdir, '*.json'))):
+            scope = os.path.splitext(os.path.basename(p))[0]
+            try:
+                with open(p, encoding='utf-8') as f:
+                    s = json.load(f)
+            except (OSError, ValueError):
+                continue
+            day[scope] = {
+                't': s.get('totals') or {},
+                'm': s.get('metrics') or {},
+                'ch': [{k: c.get(k) for k in SERIES_CH_KEYS} for c in (s.get('channels') or [])],
+            }
+        if day:
+            months.setdefault(d[:7], {})[d] = day
+    os.makedirs(SERIES_DIR, exist_ok=True)
+    written = []
+    for ym in sorted(months):
+        days = months[ym]
+        out = {'ym': ym, 'dates': sorted(days), 'days': days}
+        text = json.dumps(out, ensure_ascii=False, separators=(',', ':')) + '\n'
+        p = series_path(ym)
+        old = None
+        if os.path.exists(p):
+            with open(p, encoding='utf-8') as f:
+                old = f.read()
+        if old != text:
+            with open(p, 'w', encoding='utf-8') as f:
+                f.write(text)
+            written.append(ym)
+        if not quiet:
+            print('   走势数据 %s  %d 天  %d 字节' % (ym, len(days), len(text.encode('utf-8'))))
+    for p in glob.glob(os.path.join(SERIES_DIR, '*.json')):
+        if os.path.splitext(os.path.basename(p))[0] not in months:
+            os.remove(p)
+    return written
 
 
 # ============================================================ 猜直播间名

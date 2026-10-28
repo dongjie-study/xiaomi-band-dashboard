@@ -309,6 +309,14 @@
   }
   #tfTop.show { display: inline-flex; }
   #tfTop:hover { color: #e65100; border-color: #ffd2ab; }
+  /* 数据在飞时的顶部细条：只是「点到了」的反馈，固定定位、不占布局、不挡内容 */
+  body.tf-busy::after {
+    content: ''; position: fixed; left: 0; top: 0; width: 100%; height: 2px; z-index: 9999;
+    pointer-events: none;
+    background: linear-gradient(90deg, rgba(255,105,0,0), #ff6900, rgba(255,105,0,0));
+    animation: tfBusyPulse 1.1s ease-in-out infinite;
+  }
+  @keyframes tfBusyPulse { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
   @media (max-width: 760px) { .tf-tip { font-size: .72em; } }
 </style>
 </head>
@@ -498,7 +506,11 @@ var CURDAY = null;         // 当前选中日期 YYYY-MM-DD
 var PREVDAY = null;        // 前一日 YYYY-MM-DD
 var SCOPE = ALL;           // 当前选中的直播间（'全店' = 全店汇总）
 var CACHE = {};            // 日报缓存：key = 日期|scope
-var DAYCACHE = {};         // 日数据缓存（含全部直播间，趋势图跨日取数用）
+var DAYCACHE = {};         // 日数据缓存（含全部直播间；只有「没有按月走势文件」的旧月份才用到）
+var SERIES = {};           // 按月走势数据（data/series/YYYY-MM.json）：一次请求读整月，趋势图 + 渠道走势都用它
+var SERIES_PENDING = {};   // 同一个月并发去重
+var PENDING = {};          // 日报并发去重（同日同口径只发一次请求）
+var GEN = 0;               // 渲染代次：切日期/口径时自增，晚到的旧响应不许覆盖新画面
 var CHARTS = {};           // echarts 实例
 // 缓存穿透参数：按天生成（与销售分析页同款策略）。
 // 配合下述 fetchJson 的默认缓存 + CF Pages 的 max-age=0/must-revalidate + ETag：
@@ -948,7 +960,7 @@ function seriesOf(r, key, isRate){
   var out = [];
   var days = trendWindow(r);
   for (var i=0;i<days.length;i++){
-    var sd = scopeData(days[i], SCOPE);
+    var sd = daySeries(days[i], SCOPE);
     var v = sd && sd.metrics ? sd.metrics[key] : null;
     if (v == null){ out.push(null); continue; }
     out.push(isRate ? +(v * 100).toFixed(2) : Math.round(v));
@@ -959,7 +971,7 @@ function seriesTotals(r, key){
   var out = [];
   var days = trendWindow(r);
   for (var i=0;i<days.length;i++){
-    var sd = scopeData(days[i], SCOPE);
+    var sd = daySeries(days[i], SCOPE);
     out.push((sd && sd.totals && sd.totals[key] != null) ? Math.round(sd.totals[key]) : null);
   }
   return out;
@@ -1134,12 +1146,17 @@ function renderChannelTrend(r){
   var labels = days.map(function(d){ return d.substring(5); });
   var chVals = [], allVals = [], missing = 0;
   for (var i = 0; i < days.length; i++){
-    var rep = rpt(days[i], SCOPE);
-    var row = rep ? chOf(rep, name) : null;
+    var ctx = daySeries(days[i], SCOPE);
+    var row = null;
+    if (ctx && ctx.channels){
+      for (var q = 0; q < ctx.channels.length; q++){
+        if (ctx.channels[q].name === name){ row = ctx.channels[q]; break; }
+      }
+    }
     if (row == null) missing++;
     var v = row ? m.ch(row) : null;
     chVals.push(v == null ? null : v);
-    var av = (rep && m.all) ? m.all(rep) : null;
+    var av = (ctx && m.all) ? m.all(ctx) : null;
     allVals.push(av == null ? null : av);
   }
   var hasAll = !!m.all && allVals.some(function(v){ return v != null; });
@@ -1249,19 +1266,37 @@ function renderAllCharts(){
   renderChTrendChips(REPORT);
   renderChannelTrend(REPORT);
 }
-/* scope 切换后重画趋势（需要先把该 scope 近 14 天的日报读进来） */
-function reloadCharts(){
-  var days = trendWindow(REPORT || { date: CURDAY });
-  ensureRange(days, SCOPE).then(function(){
-    ensureRange(days.map(function(d){
-      var i = INDEX.days.map(function(x){ return x.date; }).indexOf(d);
+/* 三张趋势类图表（本月趋势 / 转化率趋势 / 渠道走势）：数据都在按月走势文件里，一次到位 */
+function renderTrendCharts(gen){
+  if (gen !== GEN) return;
+  renderTrend(REPORT);
+  renderRateTrend(REPORT);
+  renderChTrendChips(REPORT);
+  renderChannelTrend(REPORT);
+}
+/* 趋势数据准备：有走势文件 → 直接画；旧月份没有走势文件 → 回落逐日取数后再画 */
+function prepareTrend(d, scope, gen){
+  var days = trendWindow({ date: d });
+  var sc = scope || SCOPE;
+  return loadSeriesFor(days).then(function(all){
+    if (gen !== GEN) return;
+    if (all && seriesCovers(days, sc)){ renderTrendCharts(gen); return; }
+    var prevs = days.map(function(x){
+      var i = INDEX.days.map(function(z){ return z.date; }).indexOf(x);
       return i > 0 ? INDEX.days[i-1].date : null;
-    }).filter(Boolean), SCOPE).then(function(){
-      renderTrend(REPORT); renderRateTrend(REPORT);
-      renderChTrendChips(REPORT); renderChannelTrend(REPORT);
-    });
+    }).filter(Boolean);
+    var need = days.concat(prevs);
+    return Promise.all(need.map(loadDay)).then(function(){
+      return ensureRange(need, sc);
+    }).then(function(){ renderTrendCharts(gen); });
   });
 }
+/* 兼容旧调用点：只重画趋势（漏斗/占比仍走 renderFunnel/renderChannelPie） */
+function reloadCharts(){
+  return prepareTrend(CURDAY, SCOPE, GEN);
+}
+/* 顶部 2px 细条：数据在飞时给个「确实点到了」的反馈（纯视觉，不挡内容） */
+function busy(on){ document.body.classList.toggle('tf-busy', !!on); }
 
 window.addEventListener('resize', function(){
   Object.keys(CHARTS).forEach(function(k){ if (CHARTS[k]) CHARTS[k].resize(); });
@@ -1420,17 +1455,70 @@ function loadReport(d, s){
   s = s || SCOPE;
   var k = ckey(d, s);
   if (CACHE[k]) return Promise.resolve(CACHE[k]);
-  return loadDay(d).then(function(dd){
-    /* 该日没有这个直播间就别去猜文件（避免 404 污染控制台） */
-    if (dd && dd.rooms && s !== ALL && !dd.rooms[s]) return null;
-    return fetchJson('./reports/' + d.substring(0,4) + '/' + d + '/' + encodeURIComponent(s) + '.json', true)
-      .then(function(j){ if (j) CACHE[k] = j; return j; });
-  });
+  if (PENDING[k]) return PENDING[k];
+  /* 走势数据里已经有这天：查不到这个口径就是真没有，别再去猜文件（省一个 404 往返）。
+     （2026-10-27 前：每次都先拉 47KB 日档只为判断直播间在不在，一屏多花 14 个请求。） */
+  if (!seriesRow(d, s) && SERIES[getMonth(d)]) return Promise.resolve(null);
+  PENDING[k] = fetchJson('./reports/' + d.substring(0,4) + '/' + d + '/' + encodeURIComponent(s) + '.json', true)
+    .then(function(j){ PENDING[k] = null; if (j) CACHE[k] = j; return j; },
+          function(e){ PENDING[k] = null; throw e; });
+  return PENDING[k];
 }
 function ensureRange(days, s){
   var need = (days || []).filter(function(d){ return !CACHE[ckey(d, s)]; });
   if (!need.length) return Promise.resolve();
   return Promise.all(need.map(function(d){ return loadReport(d, s); }));
+}
+
+/* ---------------- 按月走势数据 ---------------- */
+/* 趋势图 + 渠道走势图原本要逐日拉 14 份日档（各约 47KB）+ 14 份日报（各约 23KB），
+   线上单请求往返 0.2~0.6 秒，一屏 28 个请求 ≈ 4 秒，切直播间还得再来一遍。
+   现在这些数值由 daily_update.py 压成「按月一份」的 data/series/YYYY-MM.json
+   （原样取自日报 totals / metrics / channels，不做二次计算），一次请求读整月。 */
+function loadSeries(ym){
+  if (!ym) return Promise.resolve(null);
+  if (SERIES[ym]) return Promise.resolve(SERIES[ym]);
+  if (SERIES_PENDING[ym]) return SERIES_PENDING[ym];
+  SERIES_PENDING[ym] = fetchJson('./data/series/' + ym + '.json', true).then(function(j){
+    SERIES[ym] = j || false;      /* false = 这个月没有走势文件（旧月份/还没生成）→ 回落逐日取数 */
+    SERIES_PENDING[ym] = null;
+    return j;
+  }, function(){
+    SERIES[ym] = false; SERIES_PENDING[ym] = null; return null;
+  });
+  return SERIES_PENDING[ym];
+}
+function loadSeriesFor(days){
+  var yms = [];
+  for (var i = 0; i < (days || []).length; i++){
+    var ym = getMonth(days[i]);
+    if (yms.indexOf(ym) < 0) yms.push(ym);
+  }
+  return Promise.all(yms.map(loadSeries)).then(function(){
+    return !yms.some(function(m){ return !SERIES[m]; });
+  });
+}
+function seriesRow(d, s){
+  var m = SERIES[getMonth(d)];
+  if (!m || !m.days) return null;
+  var day = m.days[d];
+  return (day && day[s || SCOPE]) || null;
+}
+function seriesCovers(days, s){
+  for (var i = 0; i < (days || []).length; i++){
+    if (!SERIES[getMonth(days[i])]) return false;
+  }
+  return true;
+}
+/* 画图用的「某日某口径」最小数据集：优先走势文件，其次日报，最后日档（只有旧月份会走到后面两条） */
+function daySeries(d, s){
+  var row = seriesRow(d, s);
+  if (row) return { totals: row.t || {}, metrics: row.m || {}, channels: row.ch || [] };
+  var rep = rpt(d, s);
+  if (rep) return { totals: rep.totals || {}, metrics: rep.metrics || {}, channels: rep.channels || [] };
+  var sd = scopeData(d, s);
+  if (sd) return { totals: sd.totals || {}, metrics: sd.metrics || {}, channels: [] };
+  return null;
 }
 
 /* ---------------- 联动：日期下拉 / 月份下拉 / hash ---------------- */
@@ -1496,9 +1584,14 @@ function switchScope(s){
     if (statusEl) statusEl.innerHTML = '<span class="tf-badge">无数据</span><span>这天没有「' + esc(s) + '」的流量数据（该直播间当天未开播或未导出）。</span>';
     return;
   }
+  var gen = ++GEN;
+  busy(true);
+  /* 第一段：只要当天 + 前一天的日报（2 个请求）→ 卡片/表格马上跟着口径变 */
   ensureRange([CURDAY, PREVDAY].filter(Boolean), SCOPE).then(function(){
+    if (gen !== GEN) return;
     var r = rpt(CURDAY, SCOPE);
     if (!r){
+      busy(false);
       if (statusEl) statusEl.innerHTML = '<span class="tf-badge">无数据</span><span>这天没有「' + esc(s) + '」的流量数据。</span>';
       return;
     }
@@ -1508,11 +1601,14 @@ function switchScope(s){
     renderCompare(r);
     renderReport(r);
     renderChannels(r);
-    /* 漏斗 / 渠道占比 只用当日该口径的日报：立即随 scope 重画（趋势图还需近 14 天数据，交给 reloadCharts） */
+    /* 漏斗 / 渠道占比 只用当日该口径的日报：立即随 scope 重画 */
     renderFunnel(r);
     renderChannelPie(r);
-    reloadCharts();
+    /* 第二段：三张趋势图（整月走势文件已在内存里，通常无需再发请求） */
+    return prepareTrend(CURDAY, SCOPE, gen).then(function(){ if (gen === GEN) busy(false); },
+                                                   function(){ if (gen === GEN) busy(false); });
   })['catch'](function(e){
+    if (gen === GEN) busy(false);
     if (statusEl) statusEl.innerHTML = '<span class="tf-badge">加载失败</span><span>' + esc(e.message) + '</span>';
   });
 }
@@ -1540,13 +1636,15 @@ function showDay(d){
     fillScopeSelect(ROSTER, SCOPE);
   }
 
-  var window14 = INDEX.days.map(function(x){ return x.date; }).filter(function(x){ return x <= d; }).slice(-14);
-  var need = [d].concat(PREVDAY ? [PREVDAY] : []).concat(window14);
-  Promise.all([loadDay(d), loadDay(PREVDAY)].concat(need.map(loadDay))).then(function(){
-    return ensureRange(need, SCOPE);
-  }).then(function(){
+  var gen = ++GEN;
+  busy(true);
+  /* 第一段：只要当天 + 前一天的日报（2 个请求）→ 状态条/指标卡/表格先出来，
+     不再等「14 天日档 + 14 份日报」全到齐才动（那要 28 个请求）。 */
+  ensureRange([d].concat(PREVDAY ? [PREVDAY] : []), SCOPE).then(function(){
+    if (gen !== GEN) return;
     var r = rpt(d, SCOPE);
     if (!r){
+      busy(false);
       document.getElementById('tfEmpty').style.display = 'block';
       document.getElementById('tfEmpty').innerHTML = '<span class="ico">🧩</span>已入库 ' + esc(d) + '，但缺少日报文件。<br>跑一下 <code>python traffic_analysis/daily_update.py --rebuild</code> 即可补上。';
       document.getElementById('tfContent').style.display = 'none';
@@ -1562,9 +1660,16 @@ function showDay(d){
     document.getElementById('tfLoading').style.display = 'none';
     document.getElementById('tfEmpty').style.display = 'none';
     document.getElementById('tfContent').style.display = 'block';
-    /* 等容器可见后再初始化图表，否则宽高为 0 */
-    setTimeout(renderAllCharts, 30);
+    /* 第二段：等容器可见后再初始化图表（否则宽高为 0）。
+       漏斗/占比只用当天日报，立刻画；三张趋势图数据在按月走势文件里，通常同一时刻就绪。 */
+    return new Promise(function(res){ setTimeout(res, 30); }).then(function(){
+      if (gen !== GEN) return;
+      renderFunnel(r);
+      renderChannelPie(r);
+      return prepareTrend(d, SCOPE, gen);
+    }).then(function(){ if (gen === GEN) busy(false); }, function(){ if (gen === GEN) busy(false); });
   })['catch'](function(e){
+    if (gen === GEN) busy(false);
     document.getElementById('tfLoading').innerHTML = '<span style="color:#b91c1c;">加载失败：' + esc(e.message) + '</span>';
   });
 }
