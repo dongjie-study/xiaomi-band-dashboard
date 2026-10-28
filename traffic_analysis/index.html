@@ -5,6 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>流量分析 · 小米手环直播间</title>
 <link rel="stylesheet" href="../theme.css">
+<script>
+/* 提前探路（2026-10-28）：把「索引 + 整月走势」和首屏 CSS/echarts 并行拉起来。
+   主脚本里的 fetchJson 会优先复用这里发出的同一个请求，不会重复下载；
+   未通过口令（下面 body 里的守卫会跳转）就不探。 */
+(function(){
+  try { if (!localStorage.getItem('mi_band_auth_v1')) return; } catch(e){ return; }
+  var B = '?_=' + (function(){ var d = new Date(); return d.getFullYear() + ('0'+(d.getMonth()+1)).slice(-2) + ('0'+d.getDate()).slice(-2); })();
+  var q = '?_=' + B.substring(4);
+  var map = window.__PREQ = {};
+  function grab(u){
+    var p;
+    try { p = fetch(u).then(function(r){ return r.ok ? r.json() : null; })['catch'](function(){ return null; }); }
+    catch(e){ p = Promise.resolve(null); }
+    map[u] = p;
+    return p;
+  }
+  var idx = grab('./data/index.json' + q);
+  idx.then(function(ix){
+    if (!ix || !ix.days || !ix.days.length) return;
+    var d = ix.days[ix.days.length - 1].date;
+    grab('./data/series/' + d.substring(0, 7) + '.json' + q);
+  })['catch'](function(){});
+})();
+</script>
 <script src="https://registry.npmmirror.com/echarts/5.5.0/files/dist/echarts.min.js"></script>
 <script>if(!window.echarts){document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></scr'+'ipt>')}</script>
 <style>
@@ -1433,7 +1457,17 @@ function bust(url){
 }
 function fetchJson(url, optional){
   // 默认缓存策略（去掉 no-store）：内容没变走 304，变了立刻拿新——见上方 BUST 注释
-  return fetch(bust(url)).then(function(res){
+  var u = bust(url);
+  /* 页面 head 里的「提前探路」已经发过同一个 URL（含同样的 _= 版本号）→ 直接复用，不再下一次 */
+  if (window.__PREQ && window.__PREQ[u]){
+    var pre = window.__PREQ[u];
+    delete window.__PREQ[u];
+    return pre.then(function(j){
+      if (j == null && !optional) throw new Error('预取失败 ' + url);
+      return j;
+    });
+  }
+  return fetch(u).then(function(res){
     if (!res.ok){ if (optional) return null; throw new Error('HTTP ' + res.status + ' ' + url); }
     return res.json();
   }).catch(function(e){
