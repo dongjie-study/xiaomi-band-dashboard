@@ -6,7 +6,6 @@
 <title>流量分析 · 小米手环直播间</title>
 <link rel="preconnect" href="https://registry.npmmirror.com" crossorigin>
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-<link rel="stylesheet" href="../theme.css">
 <script>
 /* 提前探路（2026-10-28）：把「索引 + 整月走势」和首屏 CSS/echarts 并行拉起来。
    主脚本里的 fetchJson 会优先复用这里发出的同一个请求，不会重复下载；
@@ -31,6 +30,7 @@
   })['catch'](function(){});
 })();
 </script>
+<link rel="stylesheet" href="../theme.css">
 <script src="https://registry.npmmirror.com/echarts/5.5.0/files/dist/echarts.min.js"></script>
 <script>if(!window.echarts){document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></scr'+'ipt>')}</script>
 <style>
