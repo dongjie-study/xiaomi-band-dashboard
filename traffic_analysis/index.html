@@ -1586,6 +1586,7 @@ function switchScope(s){
   }
   var gen = ++GEN;
   busy(true);
+  loadSeriesFor(trendWindow({ date: CURDAY }))['catch'](function(){});
   /* 第一段：只要当天 + 前一天的日报（2 个请求）→ 卡片/表格马上跟着口径变 */
   ensureRange([CURDAY, PREVDAY].filter(Boolean), SCOPE).then(function(){
     if (gen !== GEN) return;
@@ -1638,6 +1639,8 @@ function showDay(d){
 
   var gen = ++GEN;
   busy(true);
+  /* 走势文件（一份整月 JSON）和日报**并行**发起：串行的话要多等一个来回 */
+  loadSeriesFor(trendWindow({ date: d }))['catch'](function(){});
   /* 第一段：只要当天 + 前一天的日报（2 个请求）→ 状态条/指标卡/表格先出来，
      不再等「14 天日档 + 14 份日报」全到齐才动（那要 28 个请求）。 */
   ensureRange([d].concat(PREVDAY ? [PREVDAY] : []), SCOPE).then(function(){
