@@ -6,6 +6,19 @@
 <title>销售分析 · 小米手环直播间竞对仪表盘</title>
 <meta name="description" content="小米手环直播间每日销量追踪、竞对对比、小时分布分析">
 <link rel="icon" type="image/png" href="../xiaomi-logo.png">
+<link rel="preconnect" href="https://registry.npmmirror.com">
+<script>
+// 首屏数据探路：与样式、图表库并行下载；只改变请求时机，不改变数据与渲染逻辑。
+(function () {
+  var now = new Date();
+  var cacheKey = now.getFullYear() + ('0' + (now.getMonth() + 1)).slice(-2) + ('0' + now.getDate()).slice(-2);
+  function getJSON(url) {
+    return fetch(url).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; });
+  }
+  window.__SALES_RECENT_PROMISE__ = getJSON('./history_recent.json?_=' + cacheKey);
+  window.__SALES_BAND11_PROMISE__ = getJSON('./band11_history.json?_=' + cacheKey);
+})();
+</script>
 <link rel="stylesheet" href="../common.css">
 <link rel="stylesheet" href="../theme.css">
 <script src="https://registry.npmmirror.com/chart.js/4.4.0/files/dist/chart.umd.js"></script>
@@ -684,17 +697,15 @@ async function ensureHourly(day) {
     var now = new Date();
     var cacheKey = now.getFullYear() + ('0' + (now.getMonth() + 1)).slice(-2) + ('0' + now.getDate()).slice(-2);
     var recentLoaded = false;
-    try {
-      const rr = await fetch('./history_recent.json?_=' + cacheKey);
-      if (rr.ok) {
-        const rj = await rr.json();
-        if (rj && rj.length) { HISTORY = rj; recentLoaded = true; }
-      }
-    } catch (e2) { /* 切片拉不到 → 走全量等待，与原行为一致 */ }
+    // 全量请求与首屏切片并行，不再等切片完成后才排队发起。
     FULL_HISTORY_PROMISE = fetch('./history.json?_=' + cacheKey).then(function (r) {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
     }).catch(function () { return null; });
+    try {
+      const rj = await window.__SALES_RECENT_PROMISE__;
+      if (rj && rj.length) { HISTORY = rj; recentLoaded = true; }
+    } catch (e2) { /* 切片拉不到 → 走全量等待，与原行为一致 */ }
     if (!recentLoaded) HISTORY = await FULL_HISTORY_PROMISE;
     if (!HISTORY || !HISTORY.length) {
       if (!recentLoaded) throw new Error('history load failed');
@@ -2072,12 +2083,9 @@ let b10proTotalHuanbiChart = null;
 
 async function loadB10proData() {
   try {
-    var now = new Date();
-    var cacheKey = now.getFullYear() + ('0' + (now.getMonth() + 1)).slice(-2) + ('0' + now.getDate()).slice(-2);
     // 手环11 单独累计（9.7 起），不再读取 10Pro 的 b10pro_history.json
-    var resp = await fetch('./band11_history.json?_=' + cacheKey);
-    if (!resp.ok) return;
-    B10PRO_DATA = await resp.json();
+    // 复用页面头部已发起的请求，避免首屏完成后才排队下载。
+    B10PRO_DATA = await window.__SALES_BAND11_PROMISE__;
   } catch(e) { B10PRO_DATA = null; }
 }
 
