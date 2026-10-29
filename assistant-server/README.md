@@ -39,16 +39,11 @@ npx wrangler deploy           # 同时会创建/更新 data.xiaomi-exam.top 自�
 > 为什么模块页也要有后端：API key 绝不能写进 GitHub 公开页面（源码人人可见），
 > 所以聊天页必须调用部署好的 Worker，key 只存在 Worker 的 Secret 里。
 
-## 口令管理（随时开/关，不用重新部署）
+## 口令管理（当前已关闭，免口令使用）
 
-配置在 Cloudflare 控制台：**Workers → xiaomi-data-assistant → Settings → Variables and Secrets**
+当前 `ACCESS_ENABLED = "false"`，同事直接打开即可使用，无需输入口令。
 
-| 变量 | 作用 | 改法 |
-|---|---|---|
-| `ACCESS_ENABLED` | `"true"`=要口令 / `"false"`=关掉口令 | 控制台改完点保存**立即生效** |
-| `ACCESS_CODE` | 口令本体（secret，不在文档记录真实值） | 同上，随时换 |
-
-也可用 `npx wrangler secret put ACCESS_CODE` 更新。**不要把真实口令写进 `wrangler.toml`**；本仓库公开，明文变量会泄漏。
+如需重新启用口令：在 Cloudflare 控制台 Workers → xiaomi-data-assistant → Settings → Variables and Secrets 中把 `ACCESS_ENABLED` 改为 `"true"`，并用 `npx wrangler secret put ACCESS_CODE` 写入口令。
 
 ## 数据更新链路
 

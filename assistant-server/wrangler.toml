@@ -9,13 +9,10 @@ routes = [
   { pattern = "data.xiaomi-exam.top", custom_domain = true }
 ]
 
-# 口令配置：ACCESS_ENABLED 只控制开关；ACCESS_CODE 是敏感信息，
-# 【不要写在这里】（本仓库公开，写在这里=泄漏）。用 secret 管理：
-#   echo "你的口令" | npx wrangler secret put ACCESS_CODE
-# 或 Cloudflare 控制台 Workers → xiaomi-data-assistant → Settings → Variables。
-# ACCESS_ENABLED = "false" 即可随时关闭口令（任何人可直接访问）。
+# 口令配置：当前 ACCESS_ENABLED = "false"，小管家免口令直接使用。
+# 如需重新启用口令，改为 "true"，并用 Cloudflare secret 写入 ACCESS_CODE。
 [vars]
-ACCESS_ENABLED = "true"
+ACCESS_ENABLED = "false"
 
 # DEEPSEEK_API_KEY 不要写在这里！用：
 #   npx wrangler secret put DEEPSEEK_API_KEY
