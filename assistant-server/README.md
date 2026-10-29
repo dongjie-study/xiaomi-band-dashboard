@@ -26,6 +26,7 @@ cd assistant-server
 npm install -g wrangler        # 或用 npx 代替
 npx wrangler login            # 浏览器登录 Cloudflare 账号（须与 xiaomi-exam.top 同一账号）
 npx wrangler secret put DEEPSEEK_API_KEY   # 粘贴 DeepSeek 的 sk-... key（不进代码不进 git）
+npx wrangler secret put ACCESS_CODE        # 粘贴访问口令（不进代码不进 git）
 npx wrangler deploy           # 同时会创建/更新 data.xiaomi-exam.top 自定义域名
 ```
 
@@ -45,9 +46,9 @@ npx wrangler deploy           # 同时会创建/更新 data.xiaomi-exam.top 自�
 | 变量 | 作用 | 改法 |
 |---|---|---|
 | `ACCESS_ENABLED` | `"true"`=要口令 / `"false"`=关掉口令 | 控制台改完点保存**立即生效** |
-| `ACCESS_CODE` | 口令本体（当前 `xiaomi`） | 同上，随时换 |
+| `ACCESS_CODE` | 口令本体（secret，不在文档记录真实值） | 同上，随时换 |
 
-也可改 `wrangler.toml` 的 `[vars]` 后重新 `deploy`，效果一样。
+也可用 `npx wrangler secret put ACCESS_CODE` 更新。**不要把真实口令写进 `wrangler.toml`**；本仓库公开，明文变量会泄漏。
 
 ## 数据更新链路
 

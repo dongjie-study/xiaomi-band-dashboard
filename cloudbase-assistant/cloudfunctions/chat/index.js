@@ -7,7 +7,7 @@
 //
 // 环境变量（在 CloudBase 控制台配置，可随时改、随时开关，不写死在代码里）：
 //   ACCESS_ENABLED  "true"/"false"  是否开启访问口令
-//   ACCESS_CODE     口令内容（如 xiaomi）
+//   ACCESS_CODE     口令内容（在控制台配置，不要写入仓库）
 //   DEEPSEEK_API_KEY DeepSeek 密钥（绝不进 git）
 
 const fs = require('fs');

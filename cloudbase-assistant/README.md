@@ -63,7 +63,7 @@ python tools/build_cloudbase_assets.py
 
 # 4. 部署（设置 3 个环境变量后执行，密钥来自进程环境，不写进任何文件）
 cd cloudbase-assistant
-$env:TCB_ENV_ID="你的环境ID"; $env:ACCESS_ENABLED="true"; $env:ACCESS_CODE="xiaomi"; $env:DEEPSEEK_API_KEY="sk-xxxx"
+$env:TCB_ENV_ID="你的环境ID"; $env:ACCESS_ENABLED="true"; $env:ACCESS_CODE="你的口令"; $env:DEEPSEEK_API_KEY="sk-xxxx"
 npx --yes -p @cloudbase/cli tcb fn deploy chat
 
 # 5. 建 HTTP 路由（把 /api 路径指到云函数；domain 填控制台里的默认域名）
@@ -78,7 +78,7 @@ npx --yes -p @cloudbase/cli tcb routes add -e "你的环境ID" -d '{\"domain\":\
    | 变量名 | 值 |
    |---|---|
    | `ACCESS_ENABLED` | `true`（想关掉口令就改成 `false`） |
-   | `ACCESS_CODE` | `xiaomi` |
+   | `ACCESS_CODE` | 自行设置的访问口令（不要写入仓库） |
    | `DEEPSEEK_API_KEY` | 你的 `sk-...` |
 4. **HTTP 网关 → 路由管理 → 新建**：关联资源选「云函数 / chat」，触发路径填 `/api`，域名选默认域名
 5. 得到访问地址：`https://<环境ID>.<地域>.app.tcloudbase.com/api`
@@ -93,7 +93,7 @@ curl "https://<环境ID>.<地域>.app.tcloudbase.com/api/config"
 
 curl -X POST "https://<环境ID>.<地域>.app.tcloudbase.com/api/chat" \
   -H "Content-Type: application/json" \
-  -d '{"code":"xiaomi","messages":[{"role":"user","content":"9月24日小米官方手环直播间卖了多少台小米手环11？"}]}'
+  -d '{"code":"你的口令","messages":[{"role":"user","content":"9月24日小米官方手环直播间卖了多少台小米手环11？"}]}'
 # → {"answer":"...1487 台..."}
 ```
 

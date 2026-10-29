@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 const BASE = 'https://data.xiaomi-exam.top';
-const CODE = 'xiaomi';
+const CODE = process.env.DG_CODE || '';  // 真实口令用环境变量传入：DG_CODE=xxx node test-accuracy.cjs（口令不进 git）
 
 // ---------- 本地独立计算期望值 ----------
 const root = path.join(__dirname, '..');

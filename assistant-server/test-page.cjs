@@ -54,10 +54,10 @@ vm.createContext(sandbox);
   ok('口令按钮 onclick 已绑定', typeof ids['#codeBtn']._onclick === 'function');
 
   // 模拟输入口令并点「进入」→ 应触发真实 /api/chat
-  ids['#codeInput'].value = 'xiaomi';
+  ids['#codeInput'].value = 'test-code';  // 本地模拟口令，与线上真实口令无关
   await ids['#codeBtn']._onclick();
   ok('正确口令后口令框隐藏', ids['#gate'].hidden === true);
-  ok('口令已持久化', store['dg_code'] === 'xiaomi');
+  ok('口令已持久化', store['dg_code'] === 'test-code');
 
   // 模拟输入问题并提交 → 真实问答
   q('#q').value = '9月24日小米官方手环直播间卖了多少台手环11？';

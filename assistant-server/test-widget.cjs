@@ -195,7 +195,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 
   // ══ 4. 真实问答（走线上后端） ══
   console.log('\n[4] 真实问答端到端（DeepSeek + 工具查询，约 10-30s）');
-  $('codeInput').value = 'xiaomi';
+  $('codeInput').value = 'test-code';  // 本地模拟口令，与线上真实口令无关
   $('codeBtn').onclick();
   let g = 0;
   while (g < 35000) {                       // 口令校验走的是真实 /api/chat，等它跑完
@@ -204,7 +204,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
   }
   if ($('gate').hidden !== true) console.log('  [调试] 口令门错误提示: ' + JSON.stringify($('codeErr').textContent || $('codeErr').innerHTML));
   ok('口令校验通过后隐藏口令门', $('gate').hidden === true);
-  ok('口令已持久化到 localStorage', ctx.store['dg_code'] === 'xiaomi');
+  ok('口令已持久化到 localStorage', ctx.store['dg_code'] === 'test-code');
 
   $('ta').value = '9月24日小米官方手环直播间卖了多少台手环11？';
   $('go').onclick();

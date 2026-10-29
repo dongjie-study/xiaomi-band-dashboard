@@ -11,8 +11,9 @@ if (fs.existsSync(varsPath)) {
     if (m) process.env[m[1]] = m[2].trim();
   });
 }
-if (!process.env.ACCESS_CODE) process.env.ACCESS_CODE = 'xiaomi';
+if (!process.env.ACCESS_CODE) process.env.ACCESS_CODE = 'test-code';
 if (!process.env.ACCESS_ENABLED) process.env.ACCESS_ENABLED = 'true';
+const CODE = process.env.ACCESS_CODE;
 
 const fn = require('./cloudfunctions/chat/index.js');
 
@@ -40,7 +41,7 @@ const ev = o => Object.assign({ path: '/api/chat', httpMethod: 'POST' }, o);
   const badBody = await fn.main(ev({ body: 'not json' }), {});
   check('非法请求体 → 400', badBody.statusCode === 400, badBody.body);
 
-  const shortMsgs = await fn.main(ev({ body: JSON.stringify({ code: 'xiaomi', messages: [] }) }), {});
+  const shortMsgs = await fn.main(ev({ body: JSON.stringify({ code: CODE, messages: [] }) }), {});
   check('空消息 → 400', shortMsgs.statusCode === 400, shortMsgs.body);
 
   console.log('\n=== 2. 数据工具（不调 AI，直连本地数据） ===');
@@ -62,7 +63,7 @@ const ev = o => Object.assign({ path: '/api/chat', httpMethod: 'POST' }, o);
     ];
     for (const q of questions) {
       const t0 = Date.now();
-      const r = await fn.main(ev({ body: JSON.stringify({ code: 'xiaomi', messages: [{ role: 'user', content: q }] }) }), {});
+      const r = await fn.main(ev({ body: JSON.stringify({ code: CODE, messages: [{ role: 'user', content: q }] }) }), {});
       const d = JSON.parse(r.body);
       const ok = r.statusCode === 200 && d.answer && d.answer.length > 10;
       check(`Q: ${q}`, ok, d.error || JSON.stringify(d).slice(0, 200));
