@@ -547,6 +547,24 @@ var BUST = '?_=' + (function(){ var d = new Date(); return d.getFullYear() + ('0
 /* ---------------- 工具 ---------------- */
 function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtInt(v){ if (v == null || isNaN(v)) return '—'; return Math.round(v).toLocaleString('en-US'); }
+/* 定点四舍五入：先把数值转成「最短往返十进制串」再按十进制移位进位（半进位），
+   与校验脚本的 Decimal(repr(v)).quantize(..., ROUND_HALF_UP) 口径一致。
+   不这样做的话 0.00485（=0.485%）在浮点里是 0.48499999999999999…，toFixed(2) 会截成 0.48。 */
+function fixedNum(x, n){
+  var v = Number(x);
+  if (v == null || isNaN(v) || !isFinite(v)) return v;
+  n = (n == null) ? 2 : n;
+  var p = Math.pow(10, n);
+  var neg = v < 0;
+  var s = String(Math.abs(v));
+  var at = s.indexOf('e');
+  var mant = at >= 0 ? s.slice(0, at) : s;
+  var exp = (at >= 0 ? Number(s.slice(at + 1)) : 0) + n;
+  var shifted = Number(mant + 'e' + exp);
+  var r = Math.floor(shifted + 0.5);
+  var out = r / p;
+  return neg ? -out : out;
+}
 function fmtNum(v, nd){ if (v == null || isNaN(v)) return '—'; return Number(v).toLocaleString('en-US', {minimumFractionDigits: nd, maximumFractionDigits: nd}); }
 function fmtCompact(v){
   if (v == null || isNaN(v)) return '—';
@@ -630,8 +648,8 @@ function rateCard(label, unit, curV, prevV, decimals, link){
   var d = deltaPP(curV, prevV, unit);
   return metricCard({
     label: label, unit: unit,
-    valueTxt: (curV == null ? '—' : Number(curV).toFixed(decimals == null ? 2 : decimals)) + (unit === '%' ? '%' : ''),
-    prevTxt: (prevV == null ? '—' : Number(prevV).toFixed(decimals == null ? 2 : decimals) + (unit === '%' ? '%' : '')),
+    valueTxt: (curV == null ? '—' : fixedNum(curV, decimals == null ? 2 : decimals).toFixed(decimals == null ? 2 : decimals)) + (unit === '%' ? '%' : ''),
+    prevTxt: (prevV == null ? '—' : fixedNum(prevV, decimals == null ? 2 : decimals).toFixed(decimals == null ? 2 : decimals) + (unit === '%' ? '%' : '')),
     prev: prevV, delta: d, link: link
   });
 }
@@ -989,7 +1007,7 @@ function seriesOf(r, key, isRate){
     var sd = daySeries(days[i], SCOPE);
     var v = sd && sd.metrics ? sd.metrics[key] : null;
     if (v == null){ out.push(null); continue; }
-    out.push(isRate ? +(v * 100).toFixed(2) : Math.round(v));
+    out.push(isRate ? fixedNum(v * 100, 2) : Math.round(v));
   }
   return out;
 }
@@ -1087,23 +1105,23 @@ var CH_METRICS = [
   { key: 'impressions',       label: '曝光次数',    unit: '次', ch: function(c){ return c.impressions; },
     all: function(r){ return r.totals.impressions; } },
   { key: 'evr',               label: '曝光→观看率', unit: '%', pct: true, ch: function(c){ return c.evr; },
-    all: function(r){ return r.metrics && r.metrics.exposure_view_rate != null ? +(r.metrics.exposure_view_rate * 100).toFixed(2) : null; } },
+    all: function(r){ return r.metrics && r.metrics.exposure_view_rate != null ? fixedNum(r.metrics.exposure_view_rate * 100, 2) : null; } },
   { key: 'interactions',      label: '互动次数',    unit: '次', ch: function(c){ return c.interactions; },
     all: function(r){ return r.totals.interactions; } },
   { key: 'interaction_ratio', label: '观看→互动率', unit: '%', pct: true,
     /* 口径异常的渠道，观看→互动率不可信（表格里也是 —），走势同样断开 */
     ch: function(c){ return c.anomaly ? null : c.interaction_ratio; },
-    all: function(r){ return r.metrics && r.metrics.view_interaction_rate != null ? +(r.metrics.view_interaction_rate * 100).toFixed(2) : null; } },
+    all: function(r){ return r.metrics && r.metrics.view_interaction_rate != null ? fixedNum(r.metrics.view_interaction_rate * 100, 2) : null; } },
   { key: 'new_followers',     label: '新增粉丝',    unit: '人', ch: function(c){ return c.new_followers; },
     all: function(r){ return r.totals.new_followers; } },
   { key: 'product_clicks',    label: '商品点击',    unit: '次', ch: function(c){ return c.product_clicks; },
     all: function(r){ return r.totals.product_clicks; } },
   { key: 'ctr',               label: '商品点击率',  unit: '%', pct: true, ch: function(c){ return c.ctr; },
-    all: function(r){ return r.metrics && r.metrics.product_ctr != null ? +(r.metrics.product_ctr * 100).toFixed(2) : null; } },
+    all: function(r){ return r.metrics && r.metrics.product_ctr != null ? fixedNum(r.metrics.product_ctr * 100, 2) : null; } },
   { key: 'paid_orders',       label: '成交订单',    unit: '单', ch: function(c){ return c.paid_orders; },
     all: function(r){ return r.totals.paid_orders; } },
   { key: 'cvr',               label: '点击→成交率', unit: '%', pct: true, ch: function(c){ return c.cvr; },
-    all: function(r){ return r.metrics && r.metrics.click_cvr != null ? +(r.metrics.click_cvr * 100).toFixed(2) : null; } },
+    all: function(r){ return r.metrics && r.metrics.click_cvr != null ? fixedNum(r.metrics.click_cvr * 100, 2) : null; } },
   { key: 'paid_amount',       label: '支付金额',    unit: '元', money: true, ch: function(c){ return c.paid_amount; },
     all: function(r){ return r.totals.paid_amount; } },
   { key: 'gpm',               label: 'GPM',         unit: '元', ch: function(c){ return c.gpm; },
