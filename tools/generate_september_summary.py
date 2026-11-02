@@ -315,6 +315,7 @@ tr:hover .rank-num {{ transform: scale(1.06); }}
   <a href="八月销量分析.html" class="nav-btn">8月销量分析</a>
   <a href="#" class="nav-btn active">9月销量分析</a>
   <a href="十月销量分析.html" class="nav-btn">10月销量分析</a>
+  <a href="十一月销量分析.html" class="nav-btn">11月销量分析</a>
   <a href="../节点总结/618复盘总结.html" class="nav-btn">618复盘</a>
   <a href="../节点总结/四月份复盘总结.html" class="nav-btn">4月复盘</a>
 </div>
@@ -782,6 +783,7 @@ tr:hover .rank-num {{ transform: scale(1.06); }}
   <a href="八月销量分析.html" class="nav-btn">8月销量分析</a>
   <a href="#" class="nav-btn active">9月销量分析</a>
   <a href="十月销量分析.html" class="nav-btn">10月销量分析</a>
+  <a href="十一月销量分析.html" class="nav-btn">11月销量分析</a>
   <a href="../节点总结/618复盘总结.html" class="nav-btn">618复盘</a>
   <a href="../节点总结/四月份复盘总结.html" class="nav-btn">4月复盘</a>
 </div>

@@ -150,7 +150,7 @@ def generate_html(summary, july_data):
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>7月销量分析 · 小米手环直播间</title>
 <script src="https://registry.npmmirror.com/echarts/5.5.0/files/dist/echarts.min.js"></script>
-<script>if(!window.echarts){document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></scr'+'ipt>')}</script>
+<script>if(!window.echarts){{document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></scr'+'ipt>')}}</script>
 <link rel="stylesheet" href="../theme.css">
 <style>
 :root {{
@@ -312,6 +312,8 @@ tr:hover .rank-num {{ transform: scale(1.06); }}
   <a href="#" class="nav-btn active">7月销量分析</a>
   <a href="八月销量分析.html" class="nav-btn">8月销量分析</a>
   <a href="九月销量分析.html" class="nav-btn">9月销量分析</a>
+  <a href="十月销量分析.html" class="nav-btn">10月销量分析</a>
+  <a href="十一月销量分析.html" class="nav-btn">11月销量分析</a>
   <a href="../节点总结/618复盘总结.html" class="nav-btn">618复盘</a>
   <a href="../节点总结/四月份复盘总结.html" class="nav-btn">4月复盘</a>
 </div>
