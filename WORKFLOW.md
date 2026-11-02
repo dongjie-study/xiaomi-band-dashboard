@@ -1,12 +1,14 @@
 # 每日数据处理工作流
 
-> **最后更新**: 2026-10-02
+> **最后更新**: 2026-11-02
 > **规则**: 每次执行前先读此文档。有新要求时及时更新此文档。
 > **怎么看**: 日常**只读顶部「⚡ 每日执行清单」**就够了；出问题或命中例外时才往下翻对应章节。
 > 📚 **知识库**: 非日常问题（字段含义 / 页面结构 / 脚本谁死谁活 / 踩过的坑）看 `docs/`，从 `docs/00-索引.md` 进。
 
 > 📌 **直播间归属**：遇到直播间属于哪个团队（我司/良米/逐梦/凝云/斐纳/机械空间）的问题，以 `直播间分类.md` 为准，先查再执行。
 > 🆕 **新直播间**：遇到 `TEAM_MAP` / `直播间分类.md` 里没出现过的新直播间名，**先找用户确认归属**再入库，不要静默兜底归「良米」。
+> 🗓️ **跨月（新月份）**：月份标签是**自动**的（工作台侧边栏按数据源运行时重建，流量页月份下拉按 `index.json` 生成）。
+> **不要手改 `modules.json` 的月份条目，也不用问用户**——入库收尾时只要确认「新月份能在侧边栏/下拉里看到、点进去是当月第一天」即可。详见 `traffic_analysis/每日流量流程.md` §10。
 
 ---
 
@@ -519,67 +521,67 @@ git pull --rebase && git push
 
 ## 四、月度切换（新月份自动准备页面）
 
-> 换月时（收到新月份第一个订单/业绩文件，或用户提及换月），**无需用户提醒**，按下面流程自动准备下个月页面。
+> 换月时（收到新月份第一个订单/业绩文件，或 history 最后一天与新文件不在同月），**无需用户提醒**，一条命令准备好下个月页面。
 
 ### 触发时机
-- 文件名日期前缀跨月（如 `8.31日订单` → `9.1日订单`），或历史最后一天与新文件日期不在同月。
-- **先**准备新月份页面，**再**按「二、订单文件」/「三、业绩文件」处理当日数据。
+- 文件名日期前缀跨月（如 `10.31日订单` → `11.1日订单`），或 `sales_analysis/history.json` 最后一天与新文件日期不在同月。
+- **先**跑换月脚本，**再**按「🅰️ 订单」/「🅱️ 业绩」处理当日数据。
 
-### 步骤
+### 一条命令（2026-11-02 起，默认这么做）
 
-1. **复制上月生成脚本，全局替换出新月份脚本**
-   - 模板：`tools/generate_<上月英文>_summary.py`（内含占位页逻辑，无数据时生成占位页）。
-   - 复制为 `tools/generate_<下月英文>_summary.py`（如 10月 → `tools/generate_october_summary.py`），做全局替换：
+```bash
+python tools/new_month_setup.py 2026-12            # 真跑；加 --dry-run 只看计划不写文件
+```
 
-   | 模板（9月为例） | 换成（10月为例） |
+它依次做 8 件事（任何一步失败立即中止）：
+
+| # | 做什么 | 细节 |
+|---|--------|------|
+| 1 | 造新月份生成器 | 取文件名里英文月份最大的 `tools/generate_<月>_summary.py` 当模板，复制成新月份，替换 `2026-MM` 日期、`MM月` / `中文月` / `October` 文案，**周标签 W1..W5 按当月实际天数重算**，最后断言不残留上一月日期前缀 |
+| 2 | 统一月份导航 | 给**所有** `tools/generate_*_summary.py` 的 `.nav-bar` 月份块改写成「全部月份 + 当前月 active」（幂等；模板里有两处月份块，一次都改） |
+| 3 | `modules.json` | `sales` 与 `monthlySummary` 各追加新月份条目，`NEW` 徽标挪到最新月；改完 `json.loads` 校验 |
+| 4 | 破缓存 | `workbench.html` 的 `fetch('modules.json?v=…')` bump 成当天日期，否则浏览器还读旧配置 |
+| 5 | 生成页面 | 跑新生成器 → `月度总结/<X>月销量分析.html` |
+| 6 | 补小管家 | `python tools/inject_widget.py`（生成器整份重写会冲掉那行，必须补） |
+| 7 | 自检 | modules.json 合法 / 所有月页 nav 都含新月份链接 / 每页都有 `assistant-widget.js` / 新页非空 |
+| 8 | 打印人工待办 | 列出生成器里含「双11 / 大促 / KPI / 目标 / 战略 / 重点方向 / 核心洞察」的行，提醒核对时令文案；并打印精确提交命令 |
+
+```bash
+# 收尾提交（脚本会打印带文件名的版本）
+git add modules.json workbench.html tools/generate_*_summary.py "月度总结/<X>月销量分析.html"
+git commit -m "feat: 新增<X>月月度总结页，月份导航统一补 <X> 月标签"
+git pull --rebase && git push
+```
+
+> ⚠️ 时令叙述（双11 节点、核心 KPI 目标、战略方向）脚本**只提示不硬编**：人工确认后改生成器再重跑一次。
+
+### 手工兜底（脚本坏了才用）
+
+1. 复制 `tools/generate_<上月英文>_summary.py` → `tools/generate_<下月英文>_summary.py`，全局替换：
+
+   | 模板（10月为例） | 换成（11月为例） |
    |---|---|
-   | `2026-09` | `2026-10`（⚠️ 月末天数：`2026-09-30`→`2026-10-31`） |
-   | `9月` / `九月` | `10月` / `十月` |
-   | `September` / `september` | `October` / `october` |
-   | 周标签 `9/1-9/7` … `9/29-9/30` | `10/1-10/7` …（按当月实际天数） |
-   | 改进建议文案 | 季节/节点 + 对比基准月 +1（如「与9月同期」「延续9月势头」「根据9月基准」） |
-   | 占位页「返回」链接 | 指向上一个月（如 `九月销量分析.html`） |
-   | `.nav-bar` 导航 | 插入上一个月链接（非 active）+ 当前月 active（⚠️ 模板里有**两处** nav） |
+   | `2026-10` | `2026-11`（⚠️ 月末天数：`2026-10-31`→`2026-11-30`） |
+   | `10月` / `十月` | `11月` / `十一月` |
+   | `October` / `october` | `November` / `november` |
+   | 周标签 `10/1-10/7` … `10/29-10/31` | `11/1-11/7` …（按当月实际天数；新模板已改成动态计算，无需手改） |
+   | 叙述文案 | 季节/节点 + 对比基准月 +1（如「与10月同期」「延续10月势头」） |
 
-   - ⚠️ **替换顺序**：先替换周标签 → 再变量名/前缀 → 最后通用月份文案；nav 的「当前月 active」行要先把上月链接恢复成非 active 再插入新行，否则会被月份文案替换污染。
-   - 参考实现：`_artifacts/make_october_gen.py`（10月换月的转换脚本，含全部替换规则和断言）。
+2. 用 `_artifacts/patch_month_nav.py` 的同款正则，把六个月的 nav 月份块统一成「6月…11月 + 当前月 active」（幂等）。
+3. 跑 `python tools/generate_<新>_summary.py`，再 `python tools/inject_widget.py`。
+4. `modules.json` 补 `sales<X月>` / `summary<X月>` 两条、`NEW` 徽标挪到最新月；`workbench.html` 的 `modules.json?v=` bump。
+5. 提交（别带 `git add -A`）。
 
-2. **重跑上月生成器，把上月页补全到全月**（2026-10-02 实战发现，别跳过）
-   - 上月页面往往只生成到当时的数据天数（九月页曾停在 9.10 只有 10 天）。
-   - `python tools/generate_<上月英文>_summary.py` 重跑一次，上月页即补全为全月数据。
-   - ⚠️ 重跑前先给**上月脚本的 nav 模板**也加上新月份链接（否则重跑会把上月页 nav 里的新月份链接冲掉）。
+### ⚠️ 换月的三个坑（都真踩过）
 
-3. **运行新月份脚本**
-   - `python tools/generate_<下月>_summary.py` → 生成 `月度总结/<X>月销量分析.html`。
-   - 输出应报 `Status: N days of data`（已有当月数据）或 placeholder（无数据时生成占位页）。
-
-4. **更新 `modules.json`**
-   - `sales.subModules` 追加：`{ "id": "sales<Month>", "title": "<X月>", "monthKey": "2026-XX", "badge": "NEW" }`，并移除上月的 `badge`。
-   - `monthlySummary.subModules` 追加：`{ "id": "summary<Month>", "title": "<X月>", "url": "月度总结/<X>月销量分析.html", "badge": "NEW" }`。
-   - 改完跑 `python -c "import json;json.load(open('modules.json',encoding='utf-8'))"` 校验 JSON 合法。
-
-5. **验证新页面渲染**（headless Chrome，30 秒）
-   ```bash
-   chrome --headless=new --disable-gpu --no-sandbox --window-size=1440,900 \
-     --virtual-time-budget=7000 --dump-dom "file:///<绝对路径>/月度总结/<X>月销量分析.html"
-   ```
-   - 检查：排名表 `<tr>` 行数 = 当月出过单的直播间数、`<canvas>` 有 4 张（echarts 正常挂载）、nav 列出全部月份、title/badge/footer 月份正确。
-
-6. **提交并推送**
-   ```bash
-   git add tools/generate_<新>_<月>_summary.py tools/generate_<上月>_summary.py \
-           "月度总结/<X>月销量分析.html" "月度总结/<上月>月销量分析.html" modules.json \
-     && git commit -m "feat: 新增<X>月月度总结页，<上月>月页数据补全至全月" && git push
-   ```
-
-### ⚠️ 换月最大的坑：f-string 模板里 JS 花括号必须双写
-- 生成脚本的 HTML 是 f-string：CSS/JS 里的 `{` `}` 必须写成 `{{` `}}`。
-- 九月脚本模板里 echarts 的 `{document.write(...)}` 漏了转义 → 一重跑直接 `NameError: name 'document' is not defined`（页面一直没重跑所以从未暴露，2026-10-02 才发现并修复）。
-- 复制模板后若插入任何新 JS，花括号一律双写；单花括号在 `py_compile` 时不报错，**只有运行时才炸**。
+1. **f-string 模板里 JS/CSS 花括号必须双写** `{{` `}}`：九月脚本里 echarts 的 `{document.write(...)}` 漏转义 → 一重跑就 `NameError: name 'document' is not defined`（页面一直没重跑所以没暴露）。单花括号 `py_compile` 不报错，**只有运行时才炸**。
+2. **生成器会冲掉右下角小管家**那行 `<script ... assistant-widget.js>`：跑完生成器必须 `python tools/inject_widget.py`，再 `--check` 确认全站 same。
+3. **浏览器缓存**：`modules.json` 更新后若 `workbench.html` 里的 `?v=` 没变，侧边栏看不到新月份（表现为"改了没变化"）。
 
 ### 说明
-- 新月份总结页初期只有零星几天数据（或占位页），**每天订单入库后重跑 `python tools/generate_<当月>_summary.py`** 即自动刷新到最新（这一步属于每日订单流程的顺手动作，别等到月末）。
-- `sales_analysis/index.html` 的日期/月份由 `history.json` 动态生成，无需手动加 tab；`modules.json` 的 `monthKey` 是首页侧边栏的月份入口。
+
+- 新月份页初期只有零星几天数据（或占位页），**每天订单入库后顺手重跑当月生成器**即自动刷新（这一步属于每日订单流程的顺手动作，别等到月末）。
+- `sales_analysis/index.html` 的日期/月份由 `history.json` 动态生成，无需手动加 tab；工作台侧边栏的「月份→日期」已按数据源运行时重建（见 `CLAUDE.md`「🗓️ 跨月」），**只有月度总结页的 nav 需要脚本统一**。
 - 推送后 Cloudflare Pages 约 1 分钟自动部署，线上才可见。
 
 ---

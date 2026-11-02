@@ -1008,6 +1008,7 @@ fetch('modules.json?v=20261102b')
     renderModuleCards(config);
     buildModuleRegistry(config);
     hydrateDynamicMonths(config);
+    hydrateSalesMonths();
   })
   .catch(function(e) {
     console.error('加载 modules.json 失败:', e);
@@ -1115,6 +1116,22 @@ function renderDynamicMonthItems(modId, months) {
     html += '<div class="sub-menu month-dates" id="' + datesId + '" style="display:none;"></div>';
   });
   box.innerHTML = html;
+}
+
+/* 销售分析：月份来自 window.__STATS__.dates（stats_data.js 已在首页加载），
+   新增月份同样不用手改 modules.json —— 2026-11-02 起。 */
+function hydrateSalesMonths() {
+  var s = window.__STATS__;
+  if (!s || !s.dates || !s.dates.length) return;   /* 没数据就保留 modules.json 静态兜底 */
+  var counts = {}, order = [];
+  s.dates.forEach(function(d) {
+    var ym = String(d).substring(0, 7);
+    if (!counts[ym]) { counts[ym] = 0; order.push(ym); }
+    counts[ym]++;
+  });
+  order.sort();
+  var months = order.map(function(ym) { return { ym: ym, count: counts[ym] }; });
+  if (months.length) renderDynamicMonthItems('sales', months);
 }
 
 function hydrateDynamicMonths(config) {

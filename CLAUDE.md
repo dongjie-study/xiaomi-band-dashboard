@@ -76,6 +76,19 @@ python tools/gen_room_docs.py --check   # 只检查，退出码 1 = 过期（CI 
 > `直播间服务商汇总.md` 是 `直播间销量汇总.py` 的**运行时输入**，有硬格式契约。
 > 生成器会调真正的解析器回读断言，解析不过就不落盘。
 
+## 🗓️ 跨月（新月份）不用改任何配置 —— 别再手改月份条目
+
+**从 2026-11-02 起，月份标签全自动**：工作台左侧「月份→日期」二级菜单会按数据源**运行时重建**，
+新月份自动出现（最新月带 NEW、带「（N天）」）。
+
+- 流量分析 → 读 `traffic_analysis/data/index.json` 的 `months[]`（`workbench.html` 的 `hydrateDynamicMonths()`）
+- 销售分析 → 读 `window.__STATS__.dates`（`stats_data.js`，函数 `hydrateSalesMonths()`）
+- 流量页顶栏的「月份」下拉本来就是按 `index.json` 生成的，跨月自动有
+
+所以：**跨月入库后不需要动 `modules.json`，也不需要问用户**。收尾只做一条自检：
+新月份能在侧边栏和页面月份下拉里看到、点进去能开出当月第一天。（详见
+`traffic_analysis/每日流量流程.md` §10、`docs/04-页面与模块.md` §一）
+
 ## 🆕 遇到新直播间
 
 **订单链路**：**先问用户确认归属**，不要静默兜底归「良米」（`classify_room()` 的兜底是静默的）。
