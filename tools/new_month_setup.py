@@ -47,14 +47,12 @@ def month_days(year, m):
 
 
 def week_labels(year, m):
-    """当月 W1..W5 日期区间标签：与生成器里的 week_labels 保持同一口径。"""
+    """当月 W1..W5 日期区间标签（仅用于替换"老式硬编码周标签"的模板）。
+
+    新版生成器（2026-11 起）在建页时按实际数据动态算标签，模板里没有 `week_labels = {...}`，
+    这时本函数不会被用到。
+    """
     n = month_days(year, m)
-    out = []
-    for idx, (start, end) in enumerate([(1, 7), (8, 14), (15, 21), (22, 28), (29, n)], start=1):
-        if start > n:
-            break
-        end = min(end, n)
-        out.append(f"'{year}-{m:02d}-{start:02d}'")  # 占位，实际标签在下面拼
     labels = {}
     for idx, (start, end) in enumerate([(1, 7), (8, 14), (15, 21), (22, 28), (29, n)], start=1):
         if start > n:
