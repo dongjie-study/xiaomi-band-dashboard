@@ -1000,13 +1000,14 @@
 var modules = {};   // 全局模块注册表 { id: {url, title} }
 var __MODULE_CONFIG__ = null;
 
-fetch('modules.json?v=20261011b')
+fetch('modules.json?v=20261102')
   .then(function(r) { return r.json(); })
   .then(function(config) {
     __MODULE_CONFIG__ = config;
     renderSidebar(config);
     renderModuleCards(config);
     buildModuleRegistry(config);
+    hydrateDynamicMonths(config);
   })
   .catch(function(e) {
     console.error('加载 modules.json 失败:', e);
@@ -1082,6 +1083,54 @@ function renderSidebar(config) {
     });
   });
   nav.innerHTML = html;
+}
+
+// ============================================================
+// 月份子菜单自动跟随数据源（新增月份无需手改 modules.json）
+// modules.json 里的 monthKey 列表只作首屏兜底，加载后按各模块的
+// index.json 里 months 数组重建，新月份自动出现。
+// ============================================================
+var MONTH_CN = ['一','二','三','四','五','六','七','八','九','十','十一','十二'];
+var MODULE_MONTH_SOURCE = {
+  traffic: 'traffic_analysis/data/index.json'
+};
+
+function cnMonthLabel(ym) {
+  var m = parseInt(String(ym).substring(5, 7), 10) - 1;
+  return (MONTH_CN[m] || String(ym)) + '月';
+}
+
+function renderDynamicMonthItems(modId, months) {
+  var box = document.getElementById('subMenu_' + modId);
+  if (!box || !months || !months.length) return;
+  var last = months[months.length - 1].ym;
+  var html = '';
+  months.forEach(function(m) {
+    var datesId = 'monthDates_' + modId + '_' + m.ym;
+    html += '<a class="month-item" data-month-module="' + modId + '" data-month-key="' + m.ym + '" onclick="toggleMonthDates(this, \'' + m.ym + '\', \'' + datesId + '\', \'' + modId + '\')">';
+    html += '📅 ' + cnMonthLabel(m.ym);
+    if (m.count) html += '（' + m.count + '天）';
+    if (m.ym === last) html += ' <span class="badge-nav">NEW</span>';
+    html += '<span class="sub-arrow" style="font-size:.65em;opacity:.5">&#x25B8;</span></a>';
+    html += '<div class="sub-menu month-dates" id="' + datesId + '" style="display:none;"></div>';
+  });
+  box.innerHTML = html;
+}
+
+function hydrateDynamicMonths(config) {
+  (config.sections || []).forEach(function(section) {
+    (section.modules || []).forEach(function(mod) {
+      var src = MODULE_MONTH_SOURCE[mod.id];
+      if (!src) return;
+      fetch(src, { cache: 'no-store' })
+        .then(function(r) { return r.json(); })
+        .then(function(idx) {
+          var months = (idx.months || []).slice().sort(function(a, b) { return a.ym < b.ym ? -1 : (a.ym > b.ym ? 1 : 0); });
+          if (months.length) renderDynamicMonthItems(mod.id, months);
+        })
+        .catch(function() { /* 保持 modules.json 里的静态兜底 */ });
+    });
+  });
 }
 
 // ----- 渲染首页模块卡片 -----
