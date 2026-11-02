@@ -79,7 +79,11 @@ def build_summary(november):
         elif dt.day <= 28: w = 'W4'
         else: w = 'W5'
         if w not in weeks:
-            weeks[w] = {'total_orders': 0, 'total_revenue': 0, 'our_orders': 0, 'our_revenue': 0, 'days': 0, 'label': ''}
+            weeks[w] = {'total_orders': 0, 'total_revenue': 0, 'our_orders': 0, 'our_revenue': 0, 'days': 0, 'label': '',
+                        '_d0': dt, '_d1': dt}
+        # 周标签按“当月实际出现的日期”动态生成，换月不用改这里
+        weeks[w]['_d0'] = min(weeks[w]['_d0'], dt)
+        weeks[w]['_d1'] = max(weeks[w]['_d1'], dt)
         weeks[w]['total_orders'] += d['total_orders']
         weeks[w]['total_revenue'] += d['total_revenue']
         our_orders_today = sum(rinfo['orders'] for rname, rinfo in d.get('rooms', {}).items() if get_team(rname) == '我司')
@@ -88,12 +92,9 @@ def build_summary(november):
         weeks[w]['our_revenue'] += our_rev_today
         weeks[w]['days'] += 1
 
-    week_labels = {
-        'W1': 'W1 (10/1-10/7)', 'W2': 'W2 (10/8-10/14)',
-        'W3': 'W3 (10/15-10/21)', 'W4': 'W4 (10/22-10/28)', 'W5': 'W5 (10/29-10/31)'
-    }
     for wk, wdata in weeks.items():
-        wdata['label'] = week_labels.get(wk, wk)
+        d0, d1 = wdata.pop('_d0'), wdata.pop('_d1')
+        wdata['label'] = f'{wk} ({d0.month}/{d0.day}-{d1.month}/{d1.day})'
 
     daily_data = []
     for d in november:
