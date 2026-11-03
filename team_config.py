@@ -10,11 +10,13 @@ DATA_DIR = os.path.dirname(os.path.abspath(__file__))
 # === Primary Team Mapping (from daily_update.py) ===
 # Room name → Team name. Anything not listed defaults to '良米'.
 TEAM_MAP = {
-    # 我司 (Our Company) — 9 rooms
+    # 我司 (Our Company) — 10 rooms
     '小米官方手表': '我司',
     '小米官方手环直播间': '我司',
     '小米数码旗舰店': '我司',
     '小米官方耳机直播间': '我司',
+    # 注意：'小米耳机直播间'(我司) 与 '小米耳机官方直播间'(良米)、'小米耳机官旗直播间'(忽略) 是三个不同间
+    '小米耳机直播间': '我司',
     '小米手环10Pro直播间': '我司',
     '小米官旗手表直播间': '我司',
     '小米智能设备旗舰店直播间': '我司',
