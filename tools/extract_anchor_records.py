@@ -80,7 +80,9 @@ def _parse_with_node(block):
         t.write(code)
         tmp = t.name
     try:
-        out = subprocess.run(['node', tmp], capture_output=True, text=True, timeout=30)
+        # 显式指定 utf-8：Windows 默认按 GBK 解码子进程输出，主播名含中文时会 UnicodeDecodeError
+        out = subprocess.run(['node', tmp], capture_output=True, text=True,
+                             encoding='utf-8', errors='replace', timeout=30)
         if out.returncode != 0:
             raise SystemExit(f'✗ node 解析失败：{out.stderr[:500]}')
         return json.loads(out.stdout)
