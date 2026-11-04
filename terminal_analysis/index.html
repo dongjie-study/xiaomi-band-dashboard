@@ -87,12 +87,21 @@ body.tm-busy::after { content: ''; position: fixed; left: 0; right: 0; top: 0; h
 try { if (!localStorage.getItem('mi_band_auth_v1')) { window.location.href = '../index.html'; } } catch (e) {}
 </script>
 <div class="content-topbar">
-  <a class="back-home" href="../workbench.html">← 返回工作台</a>
+  <a class="back-home" id="backHome" href="../workbench.html" target="_top" style="display:none;">← 返回工作台</a>
   <h1>终端流量分析</h1>
   <span class="spacer"></span>
   <select id="monthSelect" onchange="switchMonth(this.value)"></select>
   <select id="daySelect" onchange="switchDay(this.value)"></select>
 </div>
+<script>
+/* 「返回工作台」只在【顶层窗口】显示：
+   页面在被工作台以 iframe 嵌入时，顶栏已经有工作台的导航，再点这个链接会把整个工作台塞进 iframe → 导航栏重复。
+   target="_top" 是第二道保险，即使将来又显示出来也只会跳顶层窗口。 */
+if (window.top === window.self) {
+  var _back = document.getElementById('backHome');
+  if (_back) _back.style.display = 'inline-flex';
+}
+</script>
 <main class="content-body">
   <div id="tmLoading" class="tm-loading">数据加载中…</div>
   <div id="tmEmpty" class="tm-empty" hidden>
