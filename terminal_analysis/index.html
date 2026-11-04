@@ -195,7 +195,7 @@ function fmtRaw(key, v) {
   if (k === 'rate') return fmtPct(v);
   if (k === 'int') return fmtInt(v);
   if (k === 'perunit') return fmtNum(v);
-  return v.toFixed(2);
+  return v.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 function fmtAxis(key, v) {
   var k = kindOf(key);
