@@ -14,8 +14,11 @@
 
 shots/<日期>.json 结构（每行 6 个数，顺序固定）：
     { "date": "2026-11-01",
-      "sell": "自营",
+      "sell": "自营",                      # 默认售卖类型（可被单间覆盖）
       "rooms": { "<直播间>": { "<终端>": [曝光, 点击, 曝光→点击率%, 点击→成交率%, 曝光→成交率%, 千次曝光支付元] } } }
+
+    单间售卖类型与默认不同时（平台下拉框是「售卖类型 / 直播间」，如「合作 / 小米官旗手表…」）：
+      "rooms": { "小米官旗手表直播间": { "sell": "合作", "terminals": { "<终端>": [...] } } }
 
 铁律：
     1. 数值一律来自截图，本脚本只做「整体 ↔ Σ终端」的一致性校验 + 两个明示为推算的派生指标；
@@ -77,7 +80,15 @@ def build_day(payload):
     rooms = payload['rooms']
     scopes = {}
     trunc_report = []
-    for room, terms in rooms.items():
+    sells = []
+    for room, spec in rooms.items():
+        if isinstance(spec, dict) and 'terminals' in spec:
+            sell = spec.get('sell') or payload.get('sell') or '自营'
+            terms = spec['terminals']
+        else:
+            sell = payload.get('sell') or '自营'
+            terms = spec
+        sells.append(sell)
         if '整体' not in terms:
             raise SystemExit('❌ %s 缺少「整体」行' % room)
         known = {t: v for t, v in terms.items() if t != '整体'}
@@ -113,13 +124,14 @@ def build_day(payload):
         if TRUNC in out_terms:
             order.append(TRUNC)
         out_terms['整体'] = out_terms.pop('整体')
-        scopes[room] = {'terminals': dict([('整体', out_terms['整体'])] + [(t, out_terms[t]) for t in order])}
+        scopes[room] = {'sell_types': [sell],
+                       'terminals': dict([('整体', out_terms['整体'])] + [(t, out_terms[t]) for t in order])}
 
     day = {
         'date': date,
         'created_at': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
         'scope_mode': 'rooms',
-        'sell_types': [sell],
+        'sell_types': [s for i, s in enumerate(sells) if s not in sells[:i]],
         'source': payload.get('source') or '截图转写',
         'source_n': len(rooms),
         'note': payload.get('note') or '',
@@ -163,13 +175,15 @@ def rebuild_index():
         if d.get('scope_mode') != 'rooms':
             continue
         date = d['date']
-        ov = d['scopes'][list(d['scopes'].keys())[0]]['terminals']['整体'][d['sell_types'][0]]
+        first = d['scopes'][list(d['scopes'].keys())[0]]
+        first_sell = (first.get('sell_types') or d['sell_types'])[0]
+        ov = first['terminals']['整体'][first_sell]
         days.append({
             'date': date,
             'pretty': date,
             'scopes': list(d['scopes'].keys()),
             'scope_n': len(d['scopes']),
-            'sell': d['sell_types'][0],
+            'sell': '/'.join(d.get('sell_types') or [first_sell]),
             'paid_amount': ov.get('paid_amount'),
             'product_impressions': ov.get('product_impressions'),
             'paid_orders': ov.get('paid_orders'),
@@ -217,11 +231,10 @@ def main(argv):
         print('%s %s → %s（%d 间 / %d 指标）' % ('✅' if changed else '·', day['date'], os.path.relpath(out, BASE), len(day['scopes']), len(METRIC_KEYS)))
         for room, imp, clk in trunc:
             print('   ⚠️  %s 截图截断：差额行 %s 曝光 %s / 点击 %s（该行比率留空，请补发完整截图）' % (room, TRUNC, imp, clk))
-        ov = day['scopes'][list(day['scopes'].keys())[0]]['terminals']['整体'][day['sell_types'][0]]
         for room, sc in day['scopes'].items():
-            o = sc['terminals']['整体'][day['sell_types'][0]]
-            print('   %-16s 曝光 %10s  点击 %8s  曝光→点击 %6.2f%%  点击→成交 %6.2f%%  千次支付 ¥%.2f  推算支付 ¥%.2f' % (
-                room, '{:,.0f}'.format(o['product_impressions']), '{:,.0f}'.format(o['product_clicks']),
+            o = sc['terminals']['整体'][sc['sell_types'][0]]
+            print('   %-16s [%s] 曝光 %10s  点击 %8s  曝光→点击 %6.2f%%  点击→成交 %6.2f%%  千次支付 ¥%.2f  推算支付 ¥%.2f' % (
+                room, sc['sell_types'][0], '{:,.0f}'.format(o['product_impressions']), '{:,.0f}'.format(o['product_clicks']),
                 o['evr_click'] * 100, o['click_cvr'] * 100, o['gpm_1k'], o['paid_amount']))
     idx = rebuild_index()
     print('✅ 索引：%d 天 / 口径 %s' % (len(idx['days']), idx['scopes']))

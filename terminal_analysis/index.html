@@ -176,7 +176,13 @@ function chipKeys() {
   return out;
 }
 function kpiKeys() { return chipKeys().slice(0, 8); }
-function sellTypes(day) { return (day && day.sell_types && day.sell_types.length) ? day.sell_types : ['全部']; }
+/* 售卖类型按「当前口径」取（每间可能不同：2026-11-02 小米官旗手表直播间是「合作」，其余「自营」） */
+function sellTypes(day) {
+  var s = scopeOf(day);
+  if (s && s.sell_types && s.sell_types.length) return s.sell_types;
+  if (day && day.sell_types && day.sell_types.length) return day.sell_types;
+  return ['全部'];
+}
 function curSell() { return sellTypes(DAY)[0]; }
 
 /* ---------- 基础工具 ---------- */
@@ -252,7 +258,12 @@ function busy(on) { document.body.classList.toggle('tm-busy', !!on); }
 /* ---------- 数据访问 ---------- */
 function scopeOf(day) {
   if (!day || !day.scopes) return null;
-  return day.scopes[CURSCOPE] || day.scopes['店铺整体'] || day.scopes[Object.keys(day.scopes)[0]] || null;
+  if (day.scopes[CURSCOPE]) return day.scopes[CURSCOPE];
+  /* 兜底只在「单口径 / 账号级」时生效；多间模式下没这个直播间就返回 null（跨日对比时按「无同口径」处理，绝不串间） */
+  if (Object.keys(day.scopes).length === 1 || day.scope_mode !== 'rooms') {
+    return day.scopes['店铺整体'] || day.scopes[Object.keys(day.scopes)[0]] || null;
+  }
+  return null;
 }
 function terms(day) {
   var s = scopeOf(day);
@@ -280,7 +291,12 @@ function renderStatus() {
   html += '<span>数据日期 <b>' + esc(CURDAY) + '</b></span>';
   html += prev ? ('<span>对比基准 <b>' + esc(PREVDAY) + '</b></span>') : '<span>无对比基准（首日）</span>';
   var mode = (DAY && DAY.scope_mode === 'rooms') ? '逐直播间' : '账号级（全店）';
-  html += '<span>口径 <b>' + esc(CURSCOPE) + '（' + mode + '）</b></span>';
+  var st = sellTypes(DAY).join('/');
+  html += '<span>口径 <b>' + esc(CURSCOPE) + '（' + esc(st) + ' · ' + mode + '）</b></span>';
+  if (prev && sellTypes(prev).indexOf(curSell()) < 0) {
+    html += '<span class="warn" title="前一日该间是「' + esc(sellTypes(prev).join('/')) + '」口径，与本日不同，故不做环比">⚠ 前一日为「' +
+      esc(sellTypes(prev).join('/')) + '」口径 · 不做环比</span>';
+  }
   var n = DAY && DAY.source_n ? DAY.source_n : 0;
   var lvl = (DAY && DAY.scope_mode === 'rooms')
     ? ('来源 ' + n + ' 张截图（每间一张，按直播间筛选）')
@@ -319,9 +335,12 @@ function renderKpis() {
   var html = '';
   kpiKeys().forEach(function (key) {
     var v = total(DAY, key), d = deltaOf(key);
-    var dHtml = d ? ('<div class="d">前一日 ' + fmtVal(key, total(PREVDAY ? dayObj(PREVDAY) : null, key)) +
+    var _pv = PREVDAY ? dayObj(PREVDAY) : null;
+    var _why = (_pv && sellTypes(_pv).indexOf(curSell()) < 0)
+      ? '前一日「' + esc(sellTypes(_pv).join('/')) + '」口径 · 无同口径对比' : '首日 / 无对比';
+    var dHtml = d ? ('<div class="d">前一日 ' + fmtVal(key, total(_pv, key)) +
       ' · <span class="' + (d.up ? 'up' : 'down') + '">' + esc(d.text) + '</span></div>')
-      : '<div class="d">首日 / 无对比</div>';
+      : '<div class="d">' + _why + '</div>';
     html += '<div class="tm-kpi"><div class="k">' + esc(labelOf(key)) + '</div>' +
       '<div class="v">' + fmtVal(key, v) + '</div>' + dHtml + '</div>';
   });
@@ -373,7 +392,13 @@ function renderScopeChips() {
     return '<span class="tm-chip' + (n === CURSCOPE ? ' on' : '') + '" onclick="setScope(\'' + esc(n) + '\')">' + esc(n) + '</span>';
   }).join('');
 }
-function setScope(n) { if (!n || n === CURSCOPE) return; CURSCOPE = n; HL = null; renderAll(); }
+function setScope(n) {
+  if (!n || n === CURSCOPE) return;
+  CURSCOPE = n; HL = null;
+  /* 每间售卖类型可能不同（自营 / 合作），切换口径后要保证 CH.lineSell 落在本间有的类型上 */
+  if (sellTypes(DAY).indexOf(CH.lineSell) < 0) CH.lineSell = sellTypes(DAY)[0];
+  renderAll();
+}
 
 /* ---------- 图表 1：终端构成饼图 ---------- */
 function renderPie() {
@@ -711,7 +736,8 @@ function showDay(d) {
   fillDaySelect(ym, d);
   var days = (INDEX.days || []).map(function (x) { return x.date; });
   var i = days.indexOf(d);
-  PREVDAY = i > 0 ? days[i - 1] : null;
+  /* INDEX.days 是倒序（最新在前），所以「前一日」是 i+1 */
+  PREVDAY = (i >= 0 && i + 1 < days.length) ? days[i + 1] : null;
   busy(true);
   var need = [d];
   if (PREVDAY) need.push(PREVDAY);
