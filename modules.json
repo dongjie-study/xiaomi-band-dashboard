@@ -44,7 +44,9 @@
           "tag": "Device Traffic",
           "badge": "NEW",
           "hasSubMenu": true,
-          "subModules": []
+          "subModules": [
+            { "id": "terminalLatest", "title": "最新一天", "url": "terminal_analysis/index.html" }
+          ]
         },
         {
           "id": "monthlySummary",

@@ -410,15 +410,22 @@ window.addEventListener('resize', function(){
 });
 
 /* ---------- 启动 ---------- */
+function noData(){
+  document.getElementById('tmLoading').style.display = 'none';
+  document.getElementById('tmEmpty').style.display = 'block';
+  ['monthSelect', 'daySelect'].forEach(function(id){
+    var sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '<option>暂无数据</option>';
+    sel.disabled = true;
+  });
+}
+
 function init(){
   document.getElementById('backHome').style.display = 'inline-block';
   fetchJson('./data/index.json', true).then(function(idx){
     INDEX = idx;
-    if (!idx || !idx.days || !idx.days.length) {
-      document.getElementById('tmLoading').style.display = 'none';
-      document.getElementById('tmEmpty').style.display = 'block';
-      return;
-    }
+    if (!idx || !idx.days || !idx.days.length) { noData(); return; }
     var hash = (location.hash || '').replace('#', '');
     var daysAll = idx.days.map(function(x){ return x.date; }).sort();
     CURDAY = daysAll.indexOf(hash) >= 0 ? hash : daysAll[daysAll.length - 1];
@@ -427,8 +434,7 @@ function init(){
     showDay(CURDAY);
   }).catch(function(e){
     console.error(e);
-    document.getElementById('tmLoading').style.display = 'none';
-    document.getElementById('tmEmpty').style.display = 'block';
+    noData();
   });
 }
 init();
