@@ -155,7 +155,7 @@ def block_key_lists():
 def block_ignored():
     lines = [GEN_HEADER, "## 忽略不入库", "",
              "| 直播间 | 处理 | 说明 |", "|--------|------|------|"]
-    for room in tc.IGNORED_ROOMS:
+    for room in sorted(tc.IGNORED_ROOMS):
         lines.append(f"| {room} | 忽略，不入库 | 见 `team_config.IGNORED_ROOMS` |")
     return "\n".join(lines)
 
@@ -218,7 +218,7 @@ def render_service_md():
 
     lines += ["", "---", "", "## 三、忽略不入库", "",
               "| 直播间 | 说明 |", "|--------|------|"]
-    for r in tc.IGNORED_ROOMS:
+    for r in sorted(tc.IGNORED_ROOMS):
         lines.append(f"| {r} | 归属未定，`IGNORED_ROOMS` 整间剔除，不参与统计 |")
 
     lines += ["", "---", "", "## 四、⚠️ 极易混淆的直播间（务必对照准确）", "",
@@ -341,7 +341,7 @@ def render_docs03():
               "`team_config.IGNORED_ROOMS`，`daily_update.py` 在 `load_and_clean` 中整间剔除，"
               "不参与任何统计。**源文件行数对不上时先减掉这几间再比对。**", "",
               "| 直播间 | 说明 |", "|--------|------|"]
-    for r in tc.IGNORED_ROOMS:
+    for r in sorted(tc.IGNORED_ROOMS):
         lines.append(f"| {r} | 归属未定，整间剔除 |")
 
     lines += ["", "## 五、待确认归属", "",
