@@ -1,6 +1,6 @@
 # 每日数据处理工作流
 
-> **最后更新**: 2026-11-02
+> **最后更新**: 2026-11-05
 > **规则**: 每次执行前先读此文档。有新要求时及时更新此文档。
 > **怎么看**: 日常**只读顶部「⚡ 每日执行清单」**就够了；出问题或命中例外时才往下翻对应章节。
 > 📚 **知识库**: 非日常问题（字段含义 / 页面结构 / 脚本谁死谁活 / 踩过的坑）看 `docs/`，从 `docs/00-索引.md` 进。
@@ -136,13 +136,21 @@ history 最新 : 2026-09-13     ← 订单入库到哪天
 |---|--------|------|
 | 0 | **认文件** | 文件名含 **`流量-终端构成`** 或 **`终端构成`** → 走这条线，**不要**塞给 🅲 的流量入库（两个独立页面、两个独立数据目录） |
 | 1 | **入口** | 工作台侧边栏「**终端流量分析**」（紧跟在「流量分析」下方）→ `terminal_analysis/index.html` |
-| 2 | **现在** | **页面已就绪、入库脚本待接入**：首个文件到达时补 `terminal_analysis/daily_update.py`（解析 → `terminal_analysis/data/YYYY/YYYY-MM-DD.json` + `data/index.json`），复核/提交/推送沿用 🅲 的同一套做法 |
+| 2 | **入库（一条命令）** | `python -X utf8 terminal_analysis/daily_update.py "<文件1>" "<文件2>" …`（不带参数时自动找桌面/下载里文件名含「终端构成」的 xlsx）→ 写 `terminal_analysis/data/YYYY/YYYY-MM-DD.json` + `data/index.json`，末尾自动跑 `verify_day` 的 A/B/D 三项 |
+| 3 | **复核** | `python -X utf8 terminal_analysis/verify_day.py`（A 源表「整体/全部」26 项 ↔ 日档、B 源表恒等式、C 比率重算、D 索引、E 页面钩子；全 ✅ 才提交） |
+| 4 | **提交推送** | `git add terminal_analysis/data terminal_analysis/index.html terminal_analysis/daily_update.py terminal_analysis/verify_day.py` → `git commit -m "feat: 终端流量 11.x日数据更新"` → `git pull --rebase --autostash` → `git push` |
+| 5 | **线上复检** | `curl -sSL -A "<UA>" https://xiaomi-band-dashboard.pages.dev/terminal_analysis/data/index.json` 看末条日期；页面 URL：`/terminal_analysis/index.html#YYYY-MM-DD` |
 
-> 📐 **数据契约（页面已按此实现，入库脚本照此写）**
-> - `terminal_analysis/data/index.json`：`{"months":[{"ym":"2026-11","label":"11月","count":N}], "days":[{"date","pretty","n_terminals","views","paid_amount"}]}`
-> - `terminal_analysis/data/YYYY/YYYY-MM-DD.json`：`{"date","source_files":[],"terminals":[{"name","impressions","views","interactions","new_followers","product_clicks","paid_orders","paid_amount"}],"totals":{同名字段合计}}`
-> - 页面 **只读不重算**：曝光/观看/点击/订单/支付直接显示产物数值；占比与「曝光→观看率」由页面用同两个数相除
-> - `terminals` 支持数组或 `{终端名: {...}}` 两种写法；缺天不插值（趋势图断线）
+> ⚠️ **口径铁律（2026-11-05 实测，最关键）**：平台导出的「流量-终端构成」是**账号级（全店）**口径，
+> 6 份按直播间命名的文件**内容完全相同**（只有文件元数据不同）。脚本按**内容指纹去重**后归为单一「店铺整体」口径，
+> **绝不能 6 份相加**（会把支付放大 6 倍）。若哪天导出真能按直播间过滤，脚本会自动切到 `scope_mode='rooms'`。
+
+> 📐 **数据契约**
+> - `terminal_analysis/data/index.json`：`{"months":[{"ym","label","count","dates"}], "days":[{"date","pretty","scopes","scope_mode","source_n","paid_amount","product_impressions","paid_orders"}], "scopes","metrics":[{"key","label","kind"}]}`
+> - `terminal_analysis/data/YYYY/YYYY-MM-DD.json`：`{"date","scope_mode","source_files","source_n","terminal_order","sell_order","metric_keys","scopes":{"店铺整体":{"terminals":{"终端":{"全部|自营|合作":{26 个指标}}}}}}`
+> - 26 个指标 = 源表 26 列原值（金额/次数/比率/单价）；比率与单价类**跨口径合计时按公式重算**，页面只读不重算
+> - **退款率 / 1小时退款率不可用「退款订单数 ÷ 成交订单数」重算**（平台算法不同：实测 0.55 vs 0.27），单口径用源表值、合计时置空
+> - 缺天不插值：趋势图缺该天就断线
 
 ---
 

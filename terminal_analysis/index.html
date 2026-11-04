@@ -10,7 +10,7 @@
 <script>if(!window.echarts){document.write('<scr'+'ipt src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></scr'+'ipt>')}</script>
 <link rel="stylesheet" href="../theme.css">
 <style>
-/* ===== 终端流量分析（独立于「流量分析」，2026-11-05 新建） ===== */
+/* ===== 终端流量分析（独立模块，数据源 terminal_analysis/data/） ===== */
 .content-topbar { display: flex; align-items: center; gap: 10px; padding: 14px 22px; background: #fff;
   border-bottom: 1px solid #e8eef5; position: sticky; top: 0; z-index: 50; }
 .content-topbar h1 { font-size: 1.15em; font-weight: 700; margin: 0; color: var(--text-primary, #1e293b); }
@@ -38,405 +38,650 @@
 .tm-status b { color: #1e293b; font-weight: 700; }
 .tm-headline { font-size: 1.02em; font-weight: 600; color: #334155; margin: 0 0 14px; padding-left: 12px;
   border-left: 4px solid var(--mi-orange, #ff6900); line-height: 1.6; }
-.tm-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
-@media (max-width: 1100px) { .tm-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 620px) { .tm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-.tm-metric { border: 1px solid #eef2f7; border-radius: 12px; padding: 12px 14px; background: #fcfdff; }
-.tm-metric .lab { font-size: .78em; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tm-metric .val { font-size: 1.42em; font-weight: 800; color: #0f172a; margin: 4px 0 2px;
-  font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
-.tm-metric .sub { font-size: .76em; color: #94a3b8; }
-.tm-chart { height: 290px; width: 100%; }
-.tm-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-.tm-chip { font-size: .79em; font-weight: 600; color: #475569; background: #f1f5f9; border: 1px solid #e2e8f0;
-  border-radius: 999px; padding: 4px 12px; cursor: pointer; transition: all .15s; }
-.tm-chip:hover { border-color: #ffd2ab; color: #c2410c; }
-.tm-chip.on { background: #fff3e8; border-color: #ffc9a3; color: #c2410c; }
-.tm-table-wrap { overflow-x: auto; }
-table.tm-table { width: 100%; border-collapse: collapse; font-size: .84em; min-width: 760px; }
-table.tm-table th { text-align: right; font-weight: 700; color: #64748b; padding: 9px 10px; border-bottom: 1px solid #e8eef5;
-  white-space: nowrap; background: #fbfcfe; }
-table.tm-table th:first-child, table.tm-table td:first-child { text-align: left; }
-table.tm-table td { text-align: right; padding: 9px 10px; border-bottom: 1px solid #f1f5f9; font-variant-numeric: tabular-nums; color: #334155; }
-table.tm-table tbody tr:hover td { background: #fff8f1; }
-table.tm-table td.term { font-weight: 700; color: #1e293b; }
-table.tm-table .mini-bar { display: inline-block; height: 6px; border-radius: 3px; background: linear-gradient(90deg, #ffb37a, #ff6900);
-  vertical-align: middle; margin-right: 7px; min-width: 2px; }
-.tm-empty, #tmLoading { text-align: center; color: #94a3b8; font-size: .9em; padding: 70px 20px; line-height: 2; }
-.tm-empty .ico { font-size: 2.6em; display: block; margin-bottom: 8px; }
-.tm-empty code { background: #f1f5f9; padding: 2px 8px; border-radius: 6px; font-size: .92em; color: #c2410c; }
-#tmContent { display: none; }
+.tm-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 1100px) { .tm-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .tm-kpis { grid-template-columns: minmax(0, 1fr); } }
+.tm-kpi { border: 1px solid #eef2f7; border-left: 3px solid var(--mi-orange, #ff6900); border-radius: 10px;
+  padding: 11px 13px; background: linear-gradient(180deg, #fff, #fcfdff); }
+.tm-kpi .k { font-size: .78em; color: #64748b; font-weight: 600; }
+.tm-kpi .v { font-size: 1.32em; font-weight: 800; color: #0f172a; margin: 4px 0 2px; letter-spacing: -.01em; }
+.tm-kpi .d { font-size: .78em; color: #94a3b8; }
+.tm-kpi .d .up { color: #e11d48; font-weight: 700; }
+.tm-kpi .d .down { color: #059669; font-weight: 700; }
+.tm-chips { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
+.tm-chip { font-size: .78em; font-weight: 600; color: #475569; background: #f1f5f9; border: 1px solid transparent;
+  border-radius: 999px; padding: 5px 12px; cursor: pointer; transition: .15s; user-select: none; }
+.tm-chip:hover { background: #e2e8f0; }
+.tm-chip.on { background: rgba(255,105,0,.12); border-color: rgba(255,105,0,.45); color: #c2410c; }
+.tm-chart { width: 100%; height: 300px; }
+.tm-chart-lg { height: 340px; }
+.tm-table-wrap { overflow-x: auto; max-height: 460px; overflow-y: auto; border: 1px solid #eef2f7; border-radius: 10px; }
+table.tm-table { width: 100%; border-collapse: collapse; font-size: .82em; min-width: 1180px; }
+table.tm-table th, table.tm-table td { padding: 8px 10px; text-align: right; white-space: nowrap; border-bottom: 1px solid #f1f5f9; }
+table.tm-table th { position: sticky; top: 0; background: #f8fafc; color: #475569; font-weight: 700; z-index: 2; }
+table.tm-table th:first-child, table.tm-table td:first-child { text-align: left; position: sticky; left: 0; background: #fff; z-index: 1; }
+table.tm-table th:first-child { background: #f8fafc; z-index: 3; }
+table.tm-table tbody tr:hover td { background: #fff7ed; }
+table.tm-table tbody tr.sel td { background: rgba(255,105,0,.10); font-weight: 700; }
+table.tm-table tr.total td { background: #f8fafc; font-weight: 700; }
+.tm-loading, .tm-empty { text-align: center; color: #94a3b8; padding: 60px 10px; font-size: .92em; }
+.tm-loading::before { content: ''; display: block; width: 26px; height: 26px; margin: 0 auto 12px;
+  border: 3px solid #e2e8f0; border-top-color: var(--mi-orange, #ff6900); border-radius: 50%; animation: tmSpin .8s linear infinite; }
+@keyframes tmSpin { to { transform: rotate(360deg); } }
+.tm-note { font-size: .76em; color: #94a3b8; margin-top: 8px; line-height: 1.6; }
+body.tm-busy::after { content: ''; position: fixed; left: 0; right: 0; top: 0; height: 2px; z-index: 9999;
+  background: linear-gradient(90deg, transparent, var(--mi-orange, #ff6900), transparent); animation: tmBusy 1.1s ease-in-out infinite; }
+@keyframes tmBusy { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
 </style>
 </head>
 <body>
 <script>
-(function(){
-  var K = 'mi_band_auth_v1';
-  if (!localStorage.getItem(K)) { window.location.href = '../index.html'; return; }
-})();
+/* 口令守卫（与其它页面一致） */
+try { if (!localStorage.getItem('mi_band_auth_v1')) { window.location.href = '../index.html'; } } catch (e) {}
 </script>
-
 <div class="content-topbar">
-  <a href="../index.html" class="back-home" id="backHome" style="display:none;">← 返回工作台</a>
+  <a class="back-home" href="../workbench.html">← 返回工作台</a>
   <h1>终端流量分析</h1>
   <span class="spacer"></span>
-  <select id="monthSelect" onchange="switchMonth(this.value)" title="选择月份"></select>
-  <select id="daySelect" onchange="switchDay(this.value)" title="选择日期"></select>
+  <select id="monthSelect" onchange="switchMonth(this.value)"></select>
+  <select id="daySelect" onchange="switchDay(this.value)"></select>
 </div>
-
-<div class="content-body">
-  <div id="tmLoading">正在加载终端流量数据…</div>
-
-  <div class="tm-empty" id="tmEmpty" style="display:none;">
-    <span class="ico">🖥️</span>
-    还没有终端流量数据。<br>
-    把带「<b>终端构成</b>」的流量表（文件名含 <b>流量-终端构成</b>）发过来即可入库；<br>
-    页面会自动按月归档，无需其他操作。
+<main class="content-body">
+  <div id="tmLoading" class="tm-loading">数据加载中…</div>
+  <div id="tmEmpty" class="tm-empty" hidden>
+    <div style="font-size:2em">🖥️</div>
+    <p>还没有终端流量数据。</p>
+    <p style="color:#cbd5e1">把带「终端构成」的流量表（文件名含 流量-终端构成）发过来即可入库；页面会自动按月归档，无需其他操作。</p>
   </div>
-
-  <div id="tmContent">
+  <div id="tmContent" hidden>
     <div class="tm-status" id="tmStatus"></div>
     <h2 class="tm-headline" id="tmHeadline"></h2>
-
-    <div class="tm-card">
-      <h3>核心指标 <span class="tm-sub" id="tmKpiSub">当日全部终端合计</span></h3>
-      <div class="tm-grid" id="tmKpi"></div>
-    </div>
-
+    <section class="tm-card">
+      <h3>核心指标 <span class="tm-sub" id="tmKpiSub">当日终端合计 · 含环比</span></h3>
+      <div class="tm-kpis" id="tmKpi"></div>
+      <div class="tm-note" id="tmNote"></div>
+    </section>
     <div class="tm-row">
-      <div class="tm-card">
+      <section class="tm-card">
         <h3>终端构成占比 <span class="tm-sub" id="tmPieSub"></span></h3>
-        <div id="chartTmPie" class="tm-chart"></div>
-      </div>
-      <div class="tm-card">
-        <h3>终端 × 指标对比 <span class="tm-sub" id="tmBarSub"></span></h3>
-        <div class="tm-chips" id="tmMetricChips"></div>
-        <div id="chartTmBar" class="tm-chart"></div>
-      </div>
+        <div class="tm-chips" id="tmPieChips"></div>
+        <div class="tm-chart" id="chartTmPie"></div>
+      </section>
+      <section class="tm-card">
+        <h3>售卖类型构成 <span class="tm-sub" id="tmSellSub">自营 / 合作</span></h3>
+        <div class="tm-chips" id="tmSellChips"></div>
+        <div class="tm-chart" id="chartTmSell"></div>
+      </section>
     </div>
-
-    <div class="tm-card">
-      <h3>终端占比逐日趋势 <span class="tm-sub" id="tmTrendSub"></span></h3>
-      <div id="chartTmTrend" class="tm-chart"></div>
-    </div>
-
-    <div class="tm-card">
+    <section class="tm-card">
+      <h3>终端 × 指标对比 <span class="tm-sub" id="tmBarSub"></span></h3>
+      <div class="tm-chips" id="tmBarChips"></div>
+      <div class="tm-chart tm-chart-lg" id="chartTmBar"></div>
+    </section>
+    <section class="tm-card">
+      <h3>各终端指标逐日趋势 <span class="tm-sub" id="tmLineSub"></span></h3>
+      <div class="tm-chips" id="tmLineChips"></div>
+      <div class="tm-chips" id="tmLineSell"></div>
+      <div class="tm-chart" id="chartTmLine"></div>
+    </section>
+    <section class="tm-card">
+      <h3>终端占比逐日趋势 <span class="tm-sub" id="tmShareSub"></span></h3>
+      <div class="tm-chips" id="tmShareChips"></div>
+      <div class="tm-chart" id="chartTmShare"></div>
+    </section>
+    <section class="tm-card">
       <h3>终端明细 <span class="tm-sub" id="tmTableSub"></span></h3>
-      <div class="tm-table-wrap">
-        <table class="tm-table">
-          <thead>
-            <tr>
-              <th>终端</th><th>曝光次数</th><th>观看次数</th><th>曝光→观看率</th>
-              <th>商品点击</th><th>成交订单</th><th>支付金额</th><th>观看占比</th>
-            </tr>
-          </thead>
-          <tbody id="tmTbody"></tbody>
-        </table>
-      </div>
-    </div>
+      <div class="tm-table-wrap"><table class="tm-table"><thead id="tmTbody" ></thead><tbody id="tmTableBody"></tbody></table></div>
+      <div class="tm-note">数值取自入库产物，页面不二次换算；比率与单价按公式用合计值重算。</div>
+    </section>
   </div>
-</div>
-
+</main>
 <script>
-/* ================= 终端流量分析 · 数据契约 =================
-   ./data/index.json
-     { "months": [{"ym":"2026-11","label":"11月","count":3}],
-       "days":   [{"date":"2026-11-05","pretty":"11月5日","n_terminals":9,"views":12345,"paid_amount":123456.78}] }
-   ./data/YYYY/YYYY-MM-DD.json
-     { "date":"2026-11-05", "source_files":["..."],
-       "terminals":[{"name":"iOS","impressions":..,"views":..,"interactions":..,"new_followers":..,
-                     "product_clicks":..,"paid_orders":..,"paid_amount":..}],
-       "totals":{"impressions":..,"views":..,"product_clicks":..,"paid_orders":..,"paid_amount":..,"new_followers":..} }
-   数值一律来自入库脚本产物，页面**只读、不重算**。
-   ============================================================ */
-var INDEX = null, CURDAY = '', DAY = null, CACHE = {}, CHARTS = {};
-var METRICS = [
-  { key: 'views',            label: '观看次数',  fmt: function(v){ return fmtInt(v); } },
-  { key: 'impressions',      label: '曝光次数',  fmt: function(v){ return fmtInt(v); } },
-  { key: 'product_clicks',   label: '商品点击',  fmt: function(v){ return fmtInt(v); } },
-  { key: 'paid_orders',      label: '成交订单',  fmt: function(v){ return fmtInt(v); } },
-  { key: 'paid_amount',      label: '支付金额',  fmt: function(v){ return fmtMoney(v); } },
-  { key: 'new_followers',    label: '新增粉丝',  fmt: function(v){ return fmtInt(v); } }
-];
-var BARMETRIC = 'views';
-var PALETTE = ['#ff6900','#f5a623','#4a90d9','#10b981','#8b5cf6','#ef4444','#14b8a6','#64748b','#0ea5e9','#a855f7'];
+/* ============ 终端流量分析 · 前端 ============ */
+var INDEX = null, CURDAY = null, PREVDAY = null, DAY = null;
+var CACHE = {}, CHARTS = {}, TREND_DAYS = [];
+var HL = null;                                   /* 当前高亮的终端 */
+var CH = { pie: 'paid_amount', sell: 'paid_amount', bar: 'paid_amount', line: 'paid_amount', lineSell: '全部', share: 'paid_amount' };
+var SHORT = { paid_amount: '支付金额', gmv: '成交金额', product_impressions: '商品曝光', product_clicks: '商品点击',
+  paid_orders: '成交订单', paid_items: '成交件数', evr_click: '曝光→点击率', click_cvr: '点击→成交率',
+  evr_order: '曝光→成交率', gpm_1k: '千次曝光支付', unit_price: '件单价', refund_rate: '退款率',
+  hour_refund_rate: '1小时退款率', settle: '结算金额', settle_7d: '7日结算', settle_14d: '14日结算',
+  presale: '预售定金', coupon: '优惠券金额', platform_subsidy: '平台补贴', talent_subsidy: '达人补贴',
+  refund_amount: '退款金额', refund_orders: '退款订单', hour_refund_amount: '1小时退款金额',
+  hour_refund_orders: '1小时退款订单', ship_paid: '发货支付', net_paid: '退款后支付' };
+var TERM_COLOR = { '抖音': '#ff6900', '抖音极速版': '#f5a623', '抖音商城APP': '#4a90d9',
+  '红果短剧': '#10b981', '豆包': '#8b5cf6', '其他': '#64748b' };
+var FALLBACK = ['#ff6900','#f5a623','#4a90d9','#10b981','#8b5cf6','#ef4444','#14b8a6','#64748b'];
+var CHIP_KEYS = ['paid_amount','gmv','product_impressions','product_clicks','paid_orders','paid_items',
+  'evr_click','click_cvr','evr_order','gpm_1k','unit_price','refund_rate'];
+var KPI_KEYS = ['paid_amount','gmv','product_impressions','product_clicks','paid_orders','paid_items','evr_click','click_cvr'];
 
-/* ---------- 工具 ---------- */
-function esc(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
-function fmtInt(v){ if (v == null || isNaN(v)) return '—'; return Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 0 }); }
-function fmtMoney(v){ if (v == null || isNaN(v)) return '—'; return Number(v).toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-function fmtPct(v, d){ if (v == null || isNaN(v)) return '—'; return (v * 100).toFixed(d == null ? 2 : d) + '%'; }
-function getMonth(d){ return String(d).substring(0, 7); }
-function bust(url){ return url + '?_=' + '20261105'; }
+/* ---------- 基础工具 ---------- */
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+  return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function fmtInt(v) { if (v == null) return '—'; return Math.round(v).toLocaleString('zh-CN'); }
+function fmtMoney(v) {
+  if (v == null) return '—';
+  if (Math.abs(v) >= 100000000) return (v / 100000000).toFixed(2) + '亿';
+  if (Math.abs(v) >= 10000) return (v / 10000).toFixed(1) + '万';
+  if (Math.abs(v) >= 100) return Math.round(v).toLocaleString('zh-CN');
+  return v.toFixed(2);
+}
+function fmtPct(v) { if (v == null) return '—'; return (v * 100).toFixed(2) + '%'; }
+function fmtNum(v) { if (v == null) return '—'; return v.toFixed(2); }
+function kindOf(key) {
+  var m = (INDEX && INDEX.metrics || []).filter(function (x) { return x.key === key; })[0];
+  return m ? m.kind : 'money';
+}
+function labelOf(key) {
+  if (SHORT[key]) return SHORT[key];
+  var m = (INDEX && INDEX.metrics || []).filter(function (x) { return x.key === key; })[0];
+  return m ? m.label : key;
+}
+function fullLabelOf(key) {
+  var m = (INDEX && INDEX.metrics || []).filter(function (x) { return x.key === key; })[0];
+  return m ? m.label : key;
+}
+function fmtVal(key, v) {
+  var k = kindOf(key);
+  if (k === 'rate') return fmtPct(v);
+  if (k === 'int') return fmtInt(v);
+  if (k === 'perunit') return fmtNum(v);
+  return fmtMoney(v);
+}
+function fmtRaw(key, v) {
+  var k = kindOf(key);
+  if (v == null) return '—';
+  if (k === 'rate') return fmtPct(v);
+  if (k === 'int') return fmtInt(v);
+  if (k === 'perunit') return fmtNum(v);
+  return v.toFixed(2);
+}
+function fmtAxis(key, v) {
+  var k = kindOf(key);
+  if (k === 'rate') return (v * 100).toFixed(1) + '%';
+  if (k === 'int') return (Math.abs(v) >= 10000 ? (v / 10000).toFixed(0) + '万' : v);
+  if (k === 'money') return (Math.abs(v) >= 10000 ? (v / 10000).toFixed(1) + '万' : v);
+  return v;
+}
+function unitOf(key) {
+  var k = kindOf(key);
+  return k === 'rate' ? '%' : (k === 'int' ? '' : '元');
+}
+function getMonth(d) { return d ? String(d).substring(0, 7) : ''; }
+function bust(url) { return url + '?_=' + String(Date.now()).substring(6); }
 
-function fetchJson(url, optional){
-  return fetch(bust(url), { cache: 'no-store' }).then(function(r){
-    if (!r.ok) { if (optional) return null; throw new Error('HTTP ' + r.status + ' ' + url); }
+function fetchJson(url) {
+  return fetch(bust(url), { cache: 'no-store' }).then(function (r) {
+    if (!r.ok) throw new Error(url + ' ' + r.status);
     return r.json();
   });
 }
-function initChart(id){
-  var dom = document.getElementById(id);
-  if (!dom || !window.echarts) return null;
+function initChart(id) {
+  var el = document.getElementById(id);
+  if (!el) return null;
   if (CHARTS[id]) { CHARTS[id].dispose(); }
-  CHARTS[id] = echarts.init(dom);
+  CHARTS[id] = echarts.init(el);
   return CHARTS[id];
 }
+function busy(on) { document.body.classList.toggle('tm-busy', !!on); }
 
-/* ---------- 数据 ---------- */
-function terminalsOf(day){
-  var t = (day && day.terminals) || [];
-  if (!t.length) return [];
-  if (Object.prototype.toString.call(t) === '[object Array]') return t.slice();
-  return Object.keys(t).map(function(k){ var o = t[k] || {}; o.name = o.name || k; return o; });
+/* ---------- 数据访问 ---------- */
+function scopeOf(day) {
+  if (!day || !day.scopes) return null;
+  return day.scopes['店铺整体'] || day.scopes[Object.keys(day.scopes)[0]] || null;
 }
-function totalOf(day, key){
-  if (day && day.totals && day.totals[key] != null) return day.totals[key];
-  return terminalsOf(day).reduce(function(s, t){ return s + (Number(t[key]) || 0); }, 0);
+function terms(day) {
+  var s = scopeOf(day);
+  if (!s || !s.terminals) return [];
+  var order = (day.terminal_order || []).filter(function (t) { return t !== '整体'; });
+  var have = Object.keys(s.terminals);
+  return order.filter(function (t) { return have.indexOf(t) >= 0; });
 }
-function shareOf(day, t, key){
-  var tot = totalOf(day, key) || 0;
-  if (!tot) return 0;
-  return (Number(t[key]) || 0) / tot;
+function rec(day, term, sell) {
+  var s = scopeOf(day);
+  if (!s || !s.terminals || !s.terminals[term]) return null;
+  return s.terminals[term][sell || '全部'] || null;
+}
+function val(day, term, sell, key) {
+  var r = rec(day, term, sell);
+  return r ? r[key] : null;
+}
+function total(day, key) { return val(day, '整体', '全部', key); }
+
+/* ---------- 状态区 ---------- */
+function renderStatus() {
+  var el = document.getElementById('tmStatus');
+  var prev = PREVDAY ? dayObj(PREVDAY) : null;
+  var html = '<span class="ok">● 已同步</span>';
+  html += '<span>数据日期 <b>' + esc(CURDAY) + '</b></span>';
+  html += prev ? ('<span>对比基准 <b>' + esc(PREVDAY) + '</b></span>') : '<span>无对比基准（首日）</span>';
+  html += '<span>口径 <b>店铺整体（账号级）</b></span>';
+  var n = DAY && DAY.source_n ? DAY.source_n : 0;
+  html += '<span>' + (n > 1 ? ('来源 ' + n + ' 份文件，内容一致已去重') : ('来源 ' + n + ' 份文件')) + '</span>';
+  el.innerHTML = html;
 }
 
-function loadDay(day){
-  if (CACHE[day]) return Promise.resolve(CACHE[day]);
-  var ym = getMonth(day);
-  return fetchJson('./data/' + ym.slice(0, 4) + '/' + day + '.json').then(function(j){
-    CACHE[day] = j;
+function renderHeadline() {
+  var pay = total(DAY, 'paid_amount'), orders = total(DAY, 'paid_orders'), imp = total(DAY, 'product_impressions');
+  var pv = PREVDAY ? (dayObj(PREVDAY) || {}) : null;
+  var ppay = pv ? total(pv, 'paid_amount') : null;
+  var dod = (ppay && ppay !== 0) ? ((pay / ppay - 1) * 100) : null;
+  var t = '📱 ' + CURDAY + '　支付 ' + fmtMoney(pay) + ' 元';
+  if (dod != null) t += '（前一日 ' + fmtMoney(ppay) + '，' + (dod >= 0 ? '+' : '') + dod.toFixed(1) + '%）';
+  t += '　·　订单 ' + fmtInt(orders) + ' 单　·　商品曝光 ' + fmtInt(imp) + ' 次';
+  document.getElementById('tmHeadline').textContent = t;
+}
+
+function deltaOf(key) {
+  var prev = PREVDAY ? dayObj(PREVDAY) : null;
+  var cur = total(DAY, key), p = prev ? total(prev, key) : null;
+  if (cur == null || p == null || p === 0) return null;
+  var k = kindOf(key);
+  if (k === 'rate') return { text: (cur - p >= 0 ? '+' : '') + ((cur - p) * 100).toFixed(2) + 'pp', up: cur >= p };
+  var d = (cur / p - 1) * 100;
+  return { text: (d >= 0 ? '+' : '') + d.toFixed(1) + '%', up: d >= 0 };
+}
+
+function renderKpis() {
+  var el = document.getElementById('tmKpi');
+  var html = '';
+  KPI_KEYS.forEach(function (key) {
+    var v = total(DAY, key), d = deltaOf(key);
+    var dHtml = d ? ('<div class="d">前一日 ' + fmtVal(key, total(PREVDAY ? dayObj(PREVDAY) : null, key)) +
+      ' · <span class="' + (d.up ? 'up' : 'down') + '">' + esc(d.text) + '</span></div>')
+      : '<div class="d">首日 / 无对比</div>';
+    html += '<div class="tm-kpi"><div class="k">' + esc(labelOf(key)) + '</div>' +
+      '<div class="v">' + fmtVal(key, v) + '</div>' + dHtml + '</div>';
+  });
+  el.innerHTML = html;
+  document.getElementById('tmNote').textContent =
+    '口径：平台「流量-终端构成」为账号级（全店）数据，含直播、短视频、商品卡等全部成交渠道，与「流量分析」的直播间口径不可直接相加或对比。';
+}
+
+/* ---------- 指标 chips ---------- */
+function chipHtml(keys, cur, cbName) {
+  return keys.map(function (k) {
+    return '<span class="tm-chip' + (k === cur ? ' on' : '') + '" data-k="' + esc(k) + '" title="' + esc(fullLabelOf(k)) + '" onclick="' + cbName + '(\'' + esc(k) + '\')">' + esc(labelOf(k)) + '</span>';
+  }).join('');
+}
+function renderChips() {
+  document.getElementById('tmPieChips').innerHTML = chipHtml(CHIP_KEYS, CH.pie, 'setPie');
+  document.getElementById('tmBarChips').innerHTML = chipHtml(CHIP_KEYS, CH.bar, 'setBar');
+  document.getElementById('tmLineChips').innerHTML = chipHtml(CHIP_KEYS, CH.line, 'setLine');
+  document.getElementById('tmShareChips').innerHTML = chipHtml(CHIP_KEYS, CH.share, 'setShare');
+  document.getElementById('tmSellChips').innerHTML = chipHtml(['paid_amount','gmv','paid_orders'], CH.sell, 'setSell');
+}
+
+/* ---------- 图表 1：终端构成饼图 ---------- */
+function renderPie() {
+  var c = initChart('chartTmPie');
+  if (!c) return;
+  var key = CH.pie;
+  var data = terms(DAY).map(function (t) {
+    return { name: t, value: val(DAY, t, '全部', key) || 0,
+      itemStyle: { color: TERM_COLOR[t] || FALLBACK[0] } };
+  }).filter(function (d) { return d.value > 0; });
+  document.getElementById('tmPieSub').textContent = labelOf(key) + ' · 共 ' + data.length + ' 类';
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: function (p) {
+      return esc(p.name) + '<br/>' + esc(labelOf(key)) + '：' + fmtVal(key, p.value) + '（' + p.percent + '%）';
+    } },
+    legend: { bottom: 0, itemWidth: 10, itemHeight: 10, textStyle: { color: '#475569', fontSize: 11 } },
+    series: [{
+      type: 'pie', radius: ['46%', '68%'], center: ['50%', '46%'], avoidLabelOverlap: true,
+      itemStyle: { borderColor: '#fff', borderWidth: 2 },
+      minAngle: 3,
+      label: { fontSize: 11, color: '#475569', formatter: function (p) {
+        return p.percent >= 3.5 ? (p.name + '\n' + p.percent + '%') : '';
+      } },
+      labelLine: { length: 8, length2: 8 },
+      emphasis: { scale: true, scaleSize: 6, label: { fontSize: 12, fontWeight: 'bold' } },
+      data: data
+    }]
+  }, true);
+  c.off('click');
+  c.on('click', function (p) { setHighlight(p.name === HL ? null : p.name); });
+  c.resize();
+}
+
+/* ---------- 图表 2：售卖类型饼图 ---------- */
+function renderSellPie() {
+  var c = initChart('chartTmSell');
+  if (!c) return;
+  var key = CH.sell;
+  var colors = { '自营': '#ff6900', '合作': '#4a90d9' };
+  var data = ['自营', '合作'].map(function (s) {
+    return { name: s, value: val(DAY, '整体', s, key) || 0, itemStyle: { color: colors[s] } };
+  }).filter(function (d) { return d.value > 0; });
+  var sum = data.reduce(function (a, b) { return a + b.value; }, 0);
+  document.getElementById('tmSellSub').textContent = labelOf(key) + ' · 合计 ' + fmtVal(key, sum);
+  c.setOption({
+    tooltip: { trigger: 'item', formatter: function (p) {
+      return esc(p.name) + '<br/>' + esc(labelOf(key)) + '：' + fmtVal(key, p.value) + '（' + p.percent + '%）';
+    } },
+    legend: { bottom: 0, itemWidth: 10, itemHeight: 10, textStyle: { color: '#475569', fontSize: 11 } },
+    series: [{
+      type: 'pie', radius: ['46%', '68%'], center: ['50%', '46%'],
+      itemStyle: { borderColor: '#fff', borderWidth: 2 },
+      label: { fontSize: 11, color: '#475569', formatter: function (p) {
+        return p.name + '\n' + p.percent + '%';
+      } },
+      data: data
+    }]
+  }, true);
+  c.off('click');
+  c.on('click', function (p) { CH.lineSell = p.name; renderChips(); renderLine(); });
+  c.resize();
+}
+
+/* ---------- 图表 3：终端 × 指标横向条形 ---------- */
+function renderBar() {
+  var c = initChart('chartTmBar');
+  if (!c) return;
+  var key = CH.bar;
+  var list = terms(DAY).map(function (t) { return { t: t, v: val(DAY, t, '全部', key) || 0 }; })
+    .sort(function (a, b) { return a.v - b.v; });
+  document.getElementById('tmBarSub').textContent = labelOf(key) + ' · 当日 · 横向越长越大';
+  c.setOption({
+    grid: { left: 8, right: 70, top: 12, bottom: 8, containLabel: true },
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function (ps) {
+      var p = ps[0];
+      return esc(p.name) + '<br/>' + esc(labelOf(key)) + '：' + fmtVal(key, p.value);
+    } },
+    xAxis: { type: 'value', splitLine: { lineStyle: { color: '#f1f5f9' } },
+      axisLabel: { color: '#94a3b8', fontSize: 10, formatter: function (v) { return fmtAxis(key, v); } } },
+    yAxis: { type: 'category', data: list.map(function (x) { return x.t; }),
+      axisLine: { lineStyle: { color: '#e2e8f0' } }, axisTick: { show: false },
+      axisLabel: { color: '#475569', fontSize: 11, fontWeight: HL ? 600 : 400 } },
+    series: [{
+      type: 'bar', barMaxWidth: 22,
+      data: list.map(function (x) {
+        return { value: x.v, itemStyle: {
+          color: (TERM_COLOR[x.t] || FALLBACK[0]),
+          opacity: (HL && HL !== x.t) ? 0.25 : 1, borderRadius: [0, 4, 4, 0] } };
+      }),
+      label: { show: true, position: 'right', fontSize: 10, color: '#64748b',
+        formatter: function (p) { return fmtVal(key, p.value); } }
+    }]
+  }, true);
+  c.off('click');
+  c.on('click', function (p) { setHighlight(p.name === HL ? null : p.name); });
+  c.resize();
+}
+
+/* ---------- 图表 4：各终端指标逐日趋势（折线） ---------- */
+function renderLine() {
+  var c = initChart('chartTmLine');
+  if (!c) return;
+  var key = CH.line, sell = CH.lineSell;
+  var dates = TREND_DAYS;
+  var series = terms(DAY).map(function (t, i) {
+    var color = TERM_COLOR[t] || FALLBACK[i % FALLBACK.length];
+    return {
+      name: t, type: 'line', smooth: 0.25, symbol: 'circle', symbolSize: 5,
+      connectNulls: false, lineStyle: { width: (HL === t ? 3.4 : 2), color: color },
+      itemStyle: { color: color }, opacity: (HL && HL !== t) ? 0.25 : 1,
+      emphasis: { focus: 'series' },
+      data: dates.map(function (d) {
+        var day = dayObj(d);
+        return day ? val(day, t, sell, key) : null;
+      })
+    };
+  });
+  document.getElementById('tmLineSub').textContent = labelOf(key) + ' · 售卖类型「' + sell + '」· ' + dates.length + ' 天';
+  c.setOption({
+    grid: { left: 8, right: 20, top: 44, bottom: 8, containLabel: true },
+    legend: { top: 6, itemWidth: 12, itemHeight: 8, textStyle: { color: '#475569', fontSize: 11 } },
+    tooltip: { trigger: 'axis', formatter: function (ps) {
+      var s = esc(ps[0].axisValue) + '<br/>';
+      ps.forEach(function (p) {
+        if (p.value == null) return;
+        s += p.marker + esc(p.seriesName) + '：' + fmtVal(key, p.value) + '<br/>';
+      });
+      return s;
+    } },
+    xAxis: { type: 'category', boundaryGap: false, data: dates.map(function (d) { return d.substring(5); }),
+      axisLine: { lineStyle: { color: '#e2e8f0' } }, axisLabel: { color: '#94a3b8', fontSize: 10 } },
+    yAxis: { type: 'value', scale: true, splitLine: { lineStyle: { color: '#f1f5f9' } },
+      axisLabel: { color: '#94a3b8', fontSize: 10, formatter: function (v) { return fmtAxis(key, v); } } },
+    series: series,
+    toolbox: { right: 6, top: 0, iconStyle: { borderColor: '#94a3b8' }, feature: {
+      saveAsImage: { title: '保存图片', name: '终端趋势_' + key + '_' + CURDAY, pixelRatio: 2 } } }
+  }, true);
+  c.off('click');
+  c.on('click', function (p) {
+    var d = dates[p.dataIndex];
+    if (d && d !== CURDAY) switchDay(d);
+  });
+  c.resize();
+}
+
+/* ---------- 图表 5：终端占比逐日趋势（100% 堆叠） ---------- */
+function renderShare() {
+  var c = initChart('chartTmShare');
+  if (!c) return;
+  var key = CH.share, dates = TREND_DAYS, list = terms(DAY);
+  var totals = dates.map(function (d) {
+    var day = dayObj(d);
+    return day ? (total(day, key) || 0) : 0;
+  });
+  var series = list.map(function (t, i) {
+    var color = TERM_COLOR[t] || FALLBACK[i % FALLBACK.length];
+    return {
+      name: t, type: 'line', stack: 's', smooth: 0.2, symbol: 'none',
+      itemStyle: { color: color },
+      areaStyle: { color: color, opacity: 0.55 }, lineStyle: { width: 0, color: color },
+      emphasis: { focus: 'series' },
+      data: dates.map(function (d, j) {
+        var day = dayObj(d);
+        if (!day) return null;
+        var v = val(day, t, '全部', key);
+        if (v == null || !totals[j]) return null;
+        return +(v / totals[j] * 100).toFixed(2);
+      })
+    };
+  });
+  document.getElementById('tmShareSub').textContent = labelOf(key) + ' 占比 · ' + dates.length + ' 天';
+  c.setOption({
+    grid: { left: 8, right: 20, top: 40, bottom: 8, containLabel: true },
+    legend: { top: 6, itemWidth: 12, itemHeight: 8, textStyle: { color: '#475569', fontSize: 11 } },
+    tooltip: { trigger: 'axis', formatter: function (ps) {
+      var s = esc(ps[0].axisValue) + '<br/>';
+      ps.forEach(function (p) { if (p.value != null) s += p.marker + esc(p.seriesName) + '：' + p.value + '%<br/>'; });
+      return s;
+    } },
+    xAxis: { type: 'category', boundaryGap: false, data: dates.map(function (d) { return d.substring(5); }),
+      axisLine: { lineStyle: { color: '#e2e8f0' } }, axisLabel: { color: '#94a3b8', fontSize: 10 } },
+    yAxis: { type: 'value', max: 100, min: 0, axisLabel: { formatter: '{value}%', color: '#94a3b8', fontSize: 10 },
+      splitLine: { lineStyle: { color: '#f1f5f9' } } },
+    series: series
+  }, true);
+  c.resize();
+}
+
+/* ---------- 明细表 ---------- */
+function renderTable() {
+  var head = document.getElementById('tmTbody');
+  var body = document.getElementById('tmTableBody');
+  var keys = (INDEX.metrics || []).map(function (m) { return m.key; });
+  var html = '<tr><th>终端</th><th>售卖类型</th>';
+  keys.forEach(function (k) { html += '<th title="' + esc(fullLabelOf(k)) + '">' + esc(labelOf(k)) + '</th>'; });
+  html += '</tr>';
+  head.innerHTML = html;
+
+  var rows = terms(DAY).concat(['整体']);
+  var out = '';
+  rows.forEach(function (t) {
+    ['全部', '自营', '合作'].forEach(function (s, si) {
+      var r = rec(DAY, t, s);
+      if (!r) return;
+      var cls = (t === '整体' ? 'total' : '') + (HL === t ? ' sel' : '');
+      out += '<tr class="' + cls + '" data-t="' + esc(t) + '">';
+      if (si === 0) {
+        out += '<td rowspan="3" style="font-weight:700">' + esc(t) + '</td>';
+      }
+      out += '<td>' + esc(s) + '</td>';
+      keys.forEach(function (k) { out += '<td>' + esc(fmtRaw(k, r[k])) + '</td>'; });
+      out += '</tr>';
+    });
+  });
+  body.innerHTML = out;
+  document.getElementById('tmTableSub').textContent = (INDEX.metrics || []).length + ' 个口径 × ' + terms(DAY).length + ' 个终端';
+  Array.prototype.forEach.call(body.querySelectorAll('tr'), function (tr) {
+    tr.addEventListener('click', function () {
+      var t = tr.getAttribute('data-t');
+      if (t === '整体') return;
+      setHighlight(t === HL ? null : t);
+    });
+  });
+}
+
+/* ---------- 高亮联动 ---------- */
+function setHighlight(name) {
+  HL = name;
+  renderBar(); renderLine(); renderTable(); renderShare();
+  var pie = CHARTS['chartTmPie'], sell = CHARTS['chartTmSell'];
+  if (pie) {
+    pie.dispatchAction({ type: 'downplay', seriesIndex: 0 });
+    if (name) pie.dispatchAction({ type: 'highlight', seriesIndex: 0, name: name });
+  }
+}
+
+/* ---------- chips 回调 ---------- */
+function setPie(k) { CH.pie = k; renderChips(); renderPie(); }
+function setBar(k) { CH.bar = k; renderChips(); renderBar(); }
+function setLine(k) { CH.line = k; renderChips(); renderLine(); }
+function setShare(k) { CH.share = k; renderChips(); renderShare(); }
+function setSell(k) { CH.sell = k; renderChips(); renderSellPie(); }
+
+/* ---------- 多日数据 ---------- */
+function dayObj(d) { return CACHE[d] || null; }
+function loadDay(d) {
+  if (CACHE[d]) return Promise.resolve(CACHE[d]);
+  return fetchJson('./data/' + d.substring(0, 4) + '/' + d + '.json').then(function (j) {
+    CACHE[d] = j;
     return j;
   });
 }
-
-/* ---------- 渲染 ---------- */
-function renderStatus(day, d){
-  var terms = terminalsOf(d);
-  var files = (d.source_files || []).length || 0;
-  var el = document.getElementById('tmStatus');
-  el.innerHTML = '<span class="ok">● 已同步</span>' +
-    '<span>数据日期 <b>' + esc(day) + '</b></span>' +
-    '<span>终端 <b>' + terms.length + '</b> 类</span>' +
-    (files ? '<span>源文件 <b>' + files + '</b> 份</span>' : '');
+function trendWindow() {
+  var days = (INDEX.days || []).map(function (x) { return x.date; });
+  var upto = days.filter(function (d) { return d <= CURDAY; });
+  return upto.slice(-14);
 }
-function renderKpis(day, d){
-  var terms = terminalsOf(d);
-  var items = [
-    ['终端类型', terms.length, '种'],
-    ['曝光次数', fmtInt(totalOf(d, 'impressions')), '次'],
-    ['观看次数', fmtInt(totalOf(d, 'views')), '次'],
-    ['商品点击', fmtInt(totalOf(d, 'product_clicks')), '次'],
-    ['成交订单', fmtInt(totalOf(d, 'paid_orders')), '单'],
-    ['支付金额', fmtMoney(totalOf(d, 'paid_amount')), '元']
-  ];
-  document.getElementById('tmKpi').innerHTML = items.map(function(it){
-    return '<div class="tm-metric"><div class="lab">' + it[0] + '</div><div class="val">' + it[1] + '</div><div class="sub">' + it[2] + '</div></div>';
-  }).join('');
-  var top = terms.slice().sort(function(a, b){ return (b.views || 0) - (a.views || 0); })[0];
-  document.getElementById('tmHeadline').textContent = day + '　终端 ' + terms.length + ' 类' +
-    (top ? '　观看最多：' + top.name + '（' + fmtInt(top.views) + ' 次，占 ' + fmtPct(shareOf(d, top, 'views'), 1) + '）' : '');
-  document.getElementById('tmKpiSub').textContent = '当日全部终端合计（数据取自入库产物，不重算）';
+function loadTrend() {
+  var days = trendWindow();
+  return Promise.all(days.map(function (d) { return loadDay(d).catch(function () { return null; }); }))
+    .then(function () { TREND_DAYS = days; });
 }
 
-function renderPie(day, d){
-  var terms = terminalsOf(d).filter(function(t){ return (t.views || 0) > 0; });
-  var chart = initChart('chartTmPie');
-  document.getElementById('tmPieSub').textContent = '按观看次数占比 · 共 ' + terms.length + ' 类';
-  if (!chart) return;
-  chart.setOption({
-    tooltip: { trigger: 'item', formatter: function(p){ return p.name + '<br/>观看 ' + fmtInt(p.value) + ' 次（' + p.percent + '%）'; } },
-    legend: { type: 'scroll', bottom: 0, itemWidth: 10, itemHeight: 10, textStyle: { fontSize: 11, color: '#64748b' } },
-    series: [{
-      type: 'pie', radius: ['46%', '70%'], center: ['50%', '44%'], avoidLabelOverlap: true,
-      itemStyle: { borderColor: '#fff', borderWidth: 2, borderRadius: 4 },
-      label: { formatter: '{b}\n{d}%', fontSize: 11, color: '#475569' },
-      labelLine: { length: 10, length2: 8 },
-      data: terms.map(function(t, i){ return { name: t.name, value: t.views, itemStyle: { color: PALETTE[i % PALETTE.length] } }; })
-    }]
-  }, true);
+/* ---------- 渲染总控 ---------- */
+function renderAll() {
+  renderStatus(); renderHeadline(); renderKpis(); renderChips();
+  renderPie(); renderSellPie(); renderBar(); renderLine(); renderShare(); renderTable();
 }
-
-function renderBar(day, d){
-  var terms = terminalsOf(d).slice().sort(function(a, b){ return (a[BARMETRIC] || 0) - (b[BARMETRIC] || 0); });
-  var m = METRICS.filter(function(x){ return x.key === BARMETRIC; })[0] || METRICS[0];
-  document.getElementById('tmBarSub').textContent = '指标：' + m.label + '　（横向条越长越大）';
-  document.getElementById('tmMetricChips').innerHTML = METRICS.map(function(x){
-    return '<span class="tm-chip' + (x.key === BARMETRIC ? ' on' : '') + '" data-k="' + x.key + '">' + x.label + '</span>';
-  }).join('');
-  var chart = initChart('chartTmBar');
-  if (!chart) return;
-  chart.setOption({
-    grid: { left: 10, right: 60, top: 10, bottom: 10, containLabel: true },
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: function(ps){ return ps[0].name + '<br/>' + m.label + ' ' + m.fmt(ps[0].value); } },
-    xAxis: { type: 'value', axisLabel: { fontSize: 10, color: '#94a3b8' }, splitLine: { lineStyle: { color: '#f1f5f9' } } },
-    yAxis: { type: 'category', data: terms.map(function(t){ return t.name; }), axisLabel: { fontSize: 11, color: '#475569' },
-      axisLine: { lineStyle: { color: '#e2e8f0' } }, axisTick: { show: false } },
-    series: [{
-      type: 'bar', data: terms.map(function(t){ return t[BARMETRIC] || 0; }), barMaxWidth: 20,
-      itemStyle: { borderRadius: [0, 4, 4, 0], color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-        { offset: 0, color: '#ffb37a' }, { offset: 1, color: '#ff6900' }]) },
-      label: { show: true, position: 'right', fontSize: 10, color: '#64748b', formatter: function(p){ return m.fmt(p.value); } }
-    }]
-  }, true);
-}
-
-function renderTrend(){
-  var days = ((INDEX && INDEX.days) || []).map(function(x){ return x.date; }).sort().slice(-14);
-  if (!days.length) return;
-  document.getElementById('tmTrendSub').textContent = days[0] + ' ~ ' + days[days.length - 1] + '　共 ' + days.length + ' 天';
-  var chart = initChart('chartTmTrend');
-  if (!chart) return;
-  chart.showLoading({ text: '加载中…', textColor: '#94a3b8', maskColor: 'rgba(255,255,255,.7)' });
-  Promise.all(days.map(function(x){ return loadDay(x).catch(function(){ return null; }); })).then(function(list){
-    var names = [];
-    list.forEach(function(d){
-      if (!d) return;
-      terminalsOf(d).forEach(function(t){ if (names.indexOf(t.name) < 0) names.push(t.name); });
-    });
-    var series = names.map(function(nm, i){
-      return {
-        name: nm, type: 'line', stack: 'share', smooth: true, connectNulls: false,
-        symbol: 'circle', symbolSize: 3.5, lineStyle: { width: 1.4 },
-        areaStyle: { opacity: .26 },
-        itemStyle: { color: PALETTE[i % PALETTE.length] },
-        data: list.map(function(d){
-          if (!d) return null;
-          var t = terminalsOf(d).filter(function(x){ return x.name === nm; })[0];
-          if (!t) return null;
-          var tot = totalOf(d, 'views') || 0;
-          return tot ? +((Number(t.views) || 0) / tot * 100).toFixed(2) : null;
-        })
-      };
-    });
-    chart.hideLoading();
-    chart.setOption({
-      tooltip: { trigger: 'axis', valueFormatter: function(v){ return v == null ? '—' : v + '%'; } },
-      legend: { type: 'scroll', top: 0, itemWidth: 10, itemHeight: 10, textStyle: { fontSize: 11, color: '#64748b' } },
-      grid: { left: 10, right: 20, top: 34, bottom: 24, containLabel: true },
-      xAxis: { type: 'category', data: days.map(function(x){ return x.substring(5); }),
-        axisLabel: { fontSize: 10, color: '#94a3b8' }, axisLine: { lineStyle: { color: '#e2e8f0' } } },
-      yAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%', fontSize: 10, color: '#94a3b8' },
-        splitLine: { lineStyle: { color: '#f1f5f9' } } },
-      series: series
-    }, true);
-  });
-}
-
-function renderTable(day, d){
-  var terms = terminalsOf(d).slice().sort(function(a, b){ return (b.views || 0) - (a.views || 0); });
-  document.getElementById('tmTableSub').textContent = '按观看次数排序 · 共 ' + terms.length + ' 类';
-  var maxViews = terms.reduce(function(m, t){ return Math.max(m, t.views || 0); }, 0) || 1;
-  document.getElementById('tmTbody').innerHTML = terms.map(function(t){
-    var w = Math.max(2, Math.round((t.views || 0) / maxViews * 56));
-    var evr = t.impressions ? (t.views || 0) / t.impressions : null;
-    return '<tr>' +
-      '<td class="term">' + esc(t.name) + '</td>' +
-      '<td>' + fmtInt(t.impressions) + '</td>' +
-      '<td><span class="mini-bar" style="width:' + w + 'px"></span>' + fmtInt(t.views) + '</td>' +
-      '<td>' + fmtPct(evr) + '</td>' +
-      '<td>' + fmtInt(t.product_clicks) + '</td>' +
-      '<td>' + fmtInt(t.paid_orders) + '</td>' +
-      '<td>' + fmtMoney(t.paid_amount) + '</td>' +
-      '<td>' + fmtPct(shareOf(d, t, 'views'), 1) + '</td>' +
-    '</tr>';
-  }).join('') || '<tr><td colspan="8" style="text-align:center;color:#94a3b8">当天没有终端明细</td></tr>';
-}
-
-function renderAll(day, d){
-  document.getElementById('tmContent').style.display = 'block';
-  document.getElementById('tmEmpty').style.display = 'none';
-  document.getElementById('tmLoading').style.display = 'none';
-  renderStatus(day, d);
-  renderKpis(day, d);
-  renderPie(day, d);
-  renderBar(day, d);
-  renderTable(day, d);
-  renderTrend();
-}
-
-/* ---------- 交互 ---------- */
-function fillMonthSelect(){
-  var months = (INDEX && INDEX.months) || [];
-  var sel = document.getElementById('monthSelect');
-  sel.innerHTML = months.slice().reverse().map(function(m){
-    return '<option value="' + m.ym + '">' + (m.label || m.ym) + '（' + (m.count || 0) + ' 天）</option>';
-  }).join('');
-  sel.value = getMonth(CURDAY);
-}
-function fillDaySelect(ym){
-  var days = ((INDEX && INDEX.days) || []).filter(function(x){ return x.date.indexOf(ym) === 0; });
-  days.sort(function(a, b){ return a.date < b.date ? 1 : -1; });
-  var sel = document.getElementById('daySelect');
-  sel.innerHTML = days.map(function(x){
-    return '<option value="' + x.date + '">' + (x.pretty || x.date) + '（' + x.date.substring(5) + '）</option>';
-  }).join('');
-  if (days.length) sel.value = CURDAY;
-}
-function showDay(day){
-  CURDAY = day;
-  document.getElementById('tmLoading').style.display = 'block';
-  document.getElementById('tmContent').style.display = 'none';
-  loadDay(day).then(function(d){
-    DAY = d;
-    renderAll(day, d);
-  }).catch(function(e){
+function showDay(d) {
+  if (!INDEX) return Promise.resolve();
+  d = d || CURDAY;
+  var months = (INDEX.months || []).map(function (m) { return m.ym; });
+  var ym = getMonth(d);
+  if (months.indexOf(ym) < 0) ym = months[0];
+  CH.pie = CH.pie || 'paid_amount';
+  CURDAY = d;
+  fillMonthSelect(ym);
+  fillDaySelect(ym, d);
+  var days = (INDEX.days || []).map(function (x) { return x.date; });
+  var i = days.indexOf(d);
+  PREVDAY = i > 0 ? days[i - 1] : null;
+  busy(true);
+  var need = [d];
+  if (PREVDAY) need.push(PREVDAY);
+  return loadTrend().then(function () {
+    return Promise.all(need.map(function (x) { return loadDay(x).catch(function () { return null; }); }));
+  }).then(function () {
+    DAY = dayObj(d);
+    if (!DAY) { noData(); return; }
+    document.getElementById('tmContent').hidden = false;
+    document.getElementById('tmEmpty').hidden = true;
+    document.getElementById('tmLoading').hidden = true;
+    renderAll();
+    if (location.hash !== '#' + d) {
+      try { history.replaceState(null, '', '#' + d); } catch (e) { location.hash = d; }
+    }
+  }).catch(function (e) {
     console.error(e);
-    document.getElementById('tmLoading').style.display = 'none';
-    document.getElementById('tmEmpty').style.display = 'block';
-  });
-}
-function switchDay(day){
-  if (!day) return;
-  fillDaySelect(getMonth(day));
-  showDay(day);
-  if (location.hash !== '#' + day) { try { history.replaceState(null, '', '#' + day); } catch(e) {} }
-}
-function switchMonth(ym){
-  if (!ym) return;
-  var days = ((INDEX && INDEX.days) || []).filter(function(x){ return x.date.indexOf(ym) === 0; });
-  if (!days.length) return;
-  days.sort(function(a, b){ return a.date < b.date ? 1 : -1; });
-  switchDay(days[0].date);
-}
-document.addEventListener('click', function(e){
-  var chip = e.target.closest ? e.target.closest('.tm-chip') : null;
-  if (chip && chip.getAttribute('data-k')) {
-    BARMETRIC = chip.getAttribute('data-k');
-    renderBar(CURDAY, DAY);
-  }
-});
-window.addEventListener('resize', function(){
-  Object.keys(CHARTS).forEach(function(k){ try { CHARTS[k].resize(); } catch(e) {} });
-});
-
-/* ---------- 启动 ---------- */
-function noData(){
-  document.getElementById('tmLoading').style.display = 'none';
-  document.getElementById('tmEmpty').style.display = 'block';
-  ['monthSelect', 'daySelect'].forEach(function(id){
-    var sel = document.getElementById(id);
-    if (!sel) return;
-    sel.innerHTML = '<option>暂无数据</option>';
-    sel.disabled = true;
-  });
+    noData();
+  }).then(function () { busy(false); });
 }
 
-function init(){
-  document.getElementById('backHome').style.display = 'inline-block';
-  fetchJson('./data/index.json', true).then(function(idx){
-    INDEX = idx;
-    if (!idx || !idx.days || !idx.days.length) { noData(); return; }
+function noData() {
+  document.getElementById('tmLoading').hidden = true;
+  document.getElementById('tmContent').hidden = true;
+  document.getElementById('tmEmpty').hidden = false;
+  document.getElementById('monthSelect').innerHTML = '<option>暂无数据</option>';
+  document.getElementById('daySelect').innerHTML = '<option>暂无数据</option>';
+  document.getElementById('monthSelect').disabled = true;
+  document.getElementById('daySelect').disabled = true;
+}
+
+/* ---------- 下拉 ---------- */
+function fillMonthSelect(ym) {
+  var months = INDEX.months || [];
+  var el = document.getElementById('monthSelect');
+  el.innerHTML = months.map(function (m) {
+    var lab = m.label + '（' + m.count + ' 天）';
+    return '<option value="' + esc(m.ym) + '"' + (m.ym === ym ? ' selected' : '') + '>' + esc(lab) + '</option>';
+  }).join('');
+}
+function fillDaySelect(ym, cur) {
+  var m = (INDEX.months || []).filter(function (x) { return x.ym === ym; })[0];
+  var dates = m ? m.dates.slice() : [];
+  var prettyMap = {};
+  (INDEX.days || []).forEach(function (d) { prettyMap[d.date] = d.pretty; });
+  var el = document.getElementById('daySelect');
+  el.innerHTML = dates.map(function (d) {
+    var lab = (prettyMap[d] || d.substring(5)) + '（' + d.substring(5).replace('-', '/') + '）';
+    return '<option value="' + esc(d) + '"' + (d === cur ? ' selected' : '') + '>' + esc(lab) + '</option>';
+  }).join('');
+}
+function switchMonth(ym) {
+  var m = (INDEX.months || []).filter(function (x) { return x.ym === ym; })[0];
+  if (!m || !m.dates.length) return;
+  showDay(m.dates[0]);
+}
+function switchDay(d) { if (d && d !== CURDAY) showDay(d); }
+
+/* ---------- 初始化 ---------- */
+function init() {
+  fetchJson('./data/index.json').then(function (ix) {
+    INDEX = ix;
+    if (!ix.days || !ix.days.length) { noData(); return; }
     var hash = (location.hash || '').replace('#', '');
-    var daysAll = idx.days.map(function(x){ return x.date; }).sort();
-    CURDAY = daysAll.indexOf(hash) >= 0 ? hash : daysAll[daysAll.length - 1];
-    fillMonthSelect();
-    fillDaySelect(getMonth(CURDAY));
-    showDay(CURDAY);
-  }).catch(function(e){
+    var exists = (ix.days || []).some(function (x) { return x.date === hash; });
+    var d = exists ? hash : ix.days[ix.days.length - 1].date;
+    return showDay(d);
+  }).catch(function (e) {
     console.error(e);
     noData();
   });
 }
+
+window.addEventListener('resize', function () {
+  Object.keys(CHARTS).forEach(function (k) { if (CHARTS[k]) CHARTS[k].resize(); });
+});
+window.addEventListener('hashchange', function () {
+  var d = (location.hash || '').replace('#', '');
+  if (d && d !== CURDAY) showDay(d);
+});
+document.addEventListener('keydown', function (e) {
+  if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  var days = (INDEX && INDEX.days || []).map(function (x) { return x.date; });
+  var i = days.indexOf(CURDAY);
+  if (i < 0) return;
+  var j = e.key === 'ArrowLeft' ? i - 1 : i + 1;
+  if (days[j]) { e.preventDefault(); showDay(days[j]); }
+});
 init();
 </script>
 <script src="../ux-polish.js" defer></script>
