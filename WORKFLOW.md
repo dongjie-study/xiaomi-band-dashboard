@@ -130,6 +130,20 @@ history 最新 : 2026-09-13     ← 订单入库到哪天
 
 > ⛔ **不许互相污染**：订单流程**不许碰** `业绩demo.html`；业绩流程**不许碰** `sales_analysis/`；流量流程**不许碰**上面两者。
 
+### 🅴 收到「流量-终端构成」文件 → **终端流量分析**（独立页面，2026-11-05 起）
+
+| # | 做什么 | 说明 |
+|---|--------|------|
+| 0 | **认文件** | 文件名含 **`流量-终端构成`** 或 **`终端构成`** → 走这条线，**不要**塞给 🅲 的流量入库（两个独立页面、两个独立数据目录） |
+| 1 | **入口** | 工作台侧边栏「**终端流量分析**」（紧跟在「流量分析」下方）→ `terminal_analysis/index.html` |
+| 2 | **现在** | **页面已就绪、入库脚本待接入**：首个文件到达时补 `terminal_analysis/daily_update.py`（解析 → `terminal_analysis/data/YYYY/YYYY-MM-DD.json` + `data/index.json`），复核/提交/推送沿用 🅲 的同一套做法 |
+
+> 📐 **数据契约（页面已按此实现，入库脚本照此写）**
+> - `terminal_analysis/data/index.json`：`{"months":[{"ym":"2026-11","label":"11月","count":N}], "days":[{"date","pretty","n_terminals","views","paid_amount"}]}`
+> - `terminal_analysis/data/YYYY/YYYY-MM-DD.json`：`{"date","source_files":[],"terminals":[{"name","impressions","views","interactions","new_followers","product_clicks","paid_orders","paid_amount"}],"totals":{同名字段合计}}`
+> - 页面 **只读不重算**：曝光/观看/点击/订单/支付直接显示产物数值；占比与「曝光→观看率」由页面用同两个数相除
+> - `terminals` 支持数组或 `{终端名: {...}}` 两种写法；缺天不插值（趋势图断线）
+
 ---
 
 ### ✅ 自校验三条铁律（每次订单入库后、commit 之前）
