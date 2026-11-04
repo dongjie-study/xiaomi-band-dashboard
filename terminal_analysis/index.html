@@ -96,6 +96,7 @@ try { if (!localStorage.getItem('mi_band_auth_v1')) { window.location.href = '..
   <div id="tmContent" hidden>
     <div class="tm-status" id="tmStatus"></div>
     <h2 class="tm-headline" id="tmHeadline"></h2>
+    <div class="tm-chips" id="tmScopeChips" hidden></div>
     <section class="tm-card">
       <h3>核心指标 <span class="tm-sub" id="tmKpiSub">当日终端合计 · 含环比</span></h3>
       <div class="tm-kpis" id="tmKpi"></div>
@@ -120,8 +121,10 @@ try { if (!localStorage.getItem('mi_band_auth_v1')) { window.location.href = '..
     </section>
     <section class="tm-card">
       <h3>各终端指标逐日趋势 <span class="tm-sub" id="tmLineSub"></span></h3>
+      <div class="tm-chips" id="tmLineTerms"></div>
       <div class="tm-chips" id="tmLineChips"></div>
       <div class="tm-chips" id="tmLineSell"></div>
+      <div class="tm-note" id="tmLineMeta" style="margin:-2px 0 8px"></div>
       <div class="tm-chart" id="chartTmLine"></div>
     </section>
     <section class="tm-card">
@@ -140,7 +143,8 @@ try { if (!localStorage.getItem('mi_band_auth_v1')) { window.location.href = '..
 /* ============ 终端流量分析 · 前端 ============ */
 var INDEX = null, CURDAY = null, PREVDAY = null, DAY = null;
 var CACHE = {}, CHARTS = {}, TREND_DAYS = [];
-var HL = null;                                   /* 当前高亮的终端 */
+var HL = null;                                   /* 当前高亮的终端（聚焦） */
+var SCOPES = [], CURSCOPE = '店铺整体';          /* 口径：账号级时只有「店铺整体」，逐间导出时会有多间 */
 var CH = { pie: 'paid_amount', sell: 'paid_amount', bar: 'paid_amount', line: 'paid_amount', lineSell: '全部', share: 'paid_amount' };
 var SHORT = { paid_amount: '支付金额', gmv: '成交金额', product_impressions: '商品曝光', product_clicks: '商品点击',
   paid_orders: '成交订单', paid_items: '成交件数', evr_click: '曝光→点击率', click_cvr: '点击→成交率',
@@ -229,7 +233,7 @@ function busy(on) { document.body.classList.toggle('tm-busy', !!on); }
 /* ---------- 数据访问 ---------- */
 function scopeOf(day) {
   if (!day || !day.scopes) return null;
-  return day.scopes['店铺整体'] || day.scopes[Object.keys(day.scopes)[0]] || null;
+  return day.scopes[CURSCOPE] || day.scopes['店铺整体'] || day.scopes[Object.keys(day.scopes)[0]] || null;
 }
 function terms(day) {
   var s = scopeOf(day);
@@ -256,7 +260,8 @@ function renderStatus() {
   var html = '<span class="ok">● 已同步</span>';
   html += '<span>数据日期 <b>' + esc(CURDAY) + '</b></span>';
   html += prev ? ('<span>对比基准 <b>' + esc(PREVDAY) + '</b></span>') : '<span>无对比基准（首日）</span>';
-  html += '<span>口径 <b>店铺整体（账号级）</b></span>';
+  var mode = (DAY && DAY.scope_mode === 'rooms') ? '逐直播间' : '账号级（全店）';
+  html += '<span>口径 <b>' + esc(CURSCOPE) + '（' + mode + '）</b></span>';
   var n = DAY && DAY.source_n ? DAY.source_n : 0;
   html += '<span>' + (n > 1 ? ('来源 ' + n + ' 份文件，内容一致已去重') : ('来源 ' + n + ' 份文件')) + '</span>';
   el.innerHTML = html;
@@ -295,8 +300,9 @@ function renderKpis() {
       '<div class="v">' + fmtVal(key, v) + '</div>' + dHtml + '</div>';
   });
   el.innerHTML = html;
-  document.getElementById('tmNote').textContent =
-    '口径：平台「流量-终端构成」为账号级（全店）数据，含直播、短视频、商品卡等全部成交渠道，与「流量分析」的直播间口径不可直接相加或对比。';
+  document.getElementById('tmNote').textContent = (DAY && DAY.scope_mode === 'rooms')
+    ? '口径：' + CURSCOPE + '（逐直播间导出），含该间直播 / 短视频 / 商品卡等全部成交渠道；与「流量分析」的直播间流量口径不可直接相加（终端构成含商品卡等成交）。'
+    : '口径：平台「流量-终端构成」为账号级（全店）数据，含直播、短视频、商品卡等全部成交渠道，与「流量分析」的直播间口径不可直接相加或对比。';
 }
 
 /* ---------- 指标 chips ---------- */
@@ -311,7 +317,31 @@ function renderChips() {
   document.getElementById('tmLineChips').innerHTML = chipHtml(CHIP_KEYS, CH.line, 'setLine');
   document.getElementById('tmShareChips').innerHTML = chipHtml(CHIP_KEYS, CH.share, 'setShare');
   document.getElementById('tmSellChips').innerHTML = chipHtml(['paid_amount','gmv','paid_orders'], CH.sell, 'setSell');
+  renderLineTerms();
 }
+
+/* ---------- 折线图的「终端聚焦」chips + 口径 chips ---------- */
+function renderLineTerms() {
+  var el = document.getElementById('tmLineTerms');
+  if (!el) return;
+  var list = [null].concat(terms(DAY));
+  el.innerHTML = list.map(function (t) {
+    var on = (t == null) ? (HL == null) : (HL === t);
+    var cb = (t == null) ? 'setHighlight(null)' : "setHighlight('" + esc(t) + "')";
+    return '<span class="tm-chip' + (on ? ' on' : '') + '" onclick="' + cb + '">' + esc(t == null ? '全部终端' : t) + '</span>';
+  }).join('');
+}
+function renderScopeChips() {
+  var el = document.getElementById('tmScopeChips');
+  if (!el) return;
+  var names = (DAY && DAY.scopes) ? Object.keys(DAY.scopes) : [];
+  if (names.length <= 1) { el.hidden = true; el.innerHTML = ''; return; }
+  el.hidden = false;
+  el.innerHTML = names.map(function (n) {
+    return '<span class="tm-chip' + (n === CURSCOPE ? ' on' : '') + '" onclick="setScope(\'' + esc(n) + '\')">' + esc(n) + '</span>';
+  }).join('');
+}
+function setScope(n) { if (!n || n === CURSCOPE) return; CURSCOPE = n; HL = null; renderAll(); }
 
 /* ---------- 图表 1：终端构成饼图 ---------- */
 function renderPie() {
@@ -410,26 +440,71 @@ function renderBar() {
   c.resize();
 }
 
-/* ---------- 图表 4：各终端指标逐日趋势（折线） ---------- */
+/* ---------- 图表 4：各终端指标逐日趋势（折线，支持单终端聚焦） ---------- */
+function linePoints(name, key, sell, dates) {
+  return dates.map(function (d) {
+    var day = dayObj(d);
+    return day ? val(day, name, sell, key) : null;
+  });
+}
+function lineMetaText(name, key, sell, dates) {
+  var vals = linePoints(name, key, sell, dates), pairs = [];
+  vals.forEach(function (v, i) { if (v != null) pairs.push([dates[i], v]); });
+  if (!pairs.length) return '该终端在这段时间没有数据。';
+  var peak = pairs[0], sum = 0;
+  pairs.forEach(function (p) { if (p[1] > peak[1]) peak = p; sum += p[1]; });
+  var avg = sum / pairs.length;
+  var first = pairs[0], last = pairs[pairs.length - 1], chg = '';
+  if (kindOf(key) === 'rate') chg = (last[1] - first[1] >= 0 ? '+' : '') + ((last[1] - first[1]) * 100).toFixed(2) + 'pp';
+  else if (first[1]) chg = (last[1] / first[1] - 1 >= 0 ? '+' : '') + ((last[1] / first[1] - 1) * 100).toFixed(1) + '%';
+  return '峰值 <b>' + fmtVal(key, peak[1]) + '</b>（' + peak[0].substring(5) + '）· 日均 <b>' + fmtVal(key, avg) +
+    '</b> · 首 ' + fmtVal(key, first[1]) + ' → 末 <b>' + fmtVal(key, last[1]) + '</b>' + (chg ? '（' + chg + '）' : '') +
+    ' · ' + pairs.length + '/' + dates.length + ' 天有数据';
+}
 function renderLine() {
   var c = initChart('chartTmLine');
   if (!c) return;
   var key = CH.line, sell = CH.lineSell;
   var dates = TREND_DAYS;
-  var series = terms(DAY).map(function (t, i) {
-    var color = TERM_COLOR[t] || FALLBACK[i % FALLBACK.length];
-    return {
-      name: t, type: 'line', smooth: 0.25, symbol: 'circle', symbolSize: 5,
-      connectNulls: false, lineStyle: { width: (HL === t ? 3.4 : 2), color: color },
-      itemStyle: { color: color }, opacity: (HL && HL !== t) ? 0.25 : 1,
-      emphasis: { focus: 'series' },
-      data: dates.map(function (d) {
-        var day = dayObj(d);
-        return day ? val(day, t, sell, key) : null;
-      })
-    };
-  });
-  document.getElementById('tmLineSub').textContent = labelOf(key) + ' · 售卖类型「' + sell + '」· ' + dates.length + ' 天';
+  var focus = HL;
+  var series;
+  if (focus) {
+    var fcolor = TERM_COLOR[focus] || FALLBACK[0];
+    series = [{
+      name: focus, type: 'line', smooth: 0.25, symbol: 'circle', symbolSize: 7,
+      connectNulls: false, lineStyle: { width: 3.2, color: fcolor }, itemStyle: { color: fcolor },
+      areaStyle: { color: fcolor, opacity: 0.10 }, emphasis: { focus: 'series' },
+      markPoint: { symbolSize: 42, itemStyle: { color: fcolor }, label: { fontSize: 10, color: '#fff' },
+        data: [{ type: 'max', name: '峰值' }, { type: 'min', name: '低点' }] },
+      data: linePoints(focus, key, sell, dates)
+    }, {
+      name: '整体（该口径）', type: 'line', smooth: 0.25, symbol: 'circle', symbolSize: 4,
+      connectNulls: false, lineStyle: { width: 1.8, type: 'dashed', color: '#94a3b8' },
+      itemStyle: { color: '#94a3b8' },
+      data: linePoints('整体', key, sell, dates)
+    }];
+  } else {
+    series = terms(DAY).map(function (t, i) {
+      var color = TERM_COLOR[t] || FALLBACK[i % FALLBACK.length];
+      return {
+        name: t, type: 'line', smooth: 0.25, symbol: 'circle', symbolSize: 5,
+        connectNulls: false, lineStyle: { width: 2, color: color },
+        itemStyle: { color: color },
+        emphasis: { focus: 'series' },
+        data: linePoints(t, key, sell, dates)
+      };
+    });
+  }
+  var sub = focus
+    ? (focus + ' · ' + labelOf(key) + ' · 售卖类型「' + sell + '」· ' + dates[0].substring(5) + ' ~ ' + dates[dates.length - 1].substring(5) + ' · 共 ' + dates.length + ' 天')
+    : (labelOf(key) + ' · 售卖类型「' + sell + '」· ' + dates.length + ' 天');
+  document.getElementById('tmLineSub').textContent = sub;
+  var metaEl = document.getElementById('tmLineMeta');
+  if (metaEl) {
+    metaEl.innerHTML = focus
+      ? lineMetaText(focus, key, sell, dates) + '　·　再点一次「' + esc(focus) + '」取消聚焦'
+      : '点上方终端 chip、饼图扇区、条形或明细表行 → 折线只显示该终端（叠加「整体」虚线对照），单独看它每天怎么变。';
+  }
   c.setOption({
     grid: { left: 8, right: 20, top: 44, bottom: 8, containLabel: true },
     legend: { top: 6, itemWidth: 12, itemHeight: 8, textStyle: { color: '#475569', fontSize: 11 } },
@@ -447,7 +522,7 @@ function renderLine() {
       axisLabel: { color: '#94a3b8', fontSize: 10, formatter: function (v) { return fmtAxis(key, v); } } },
     series: series,
     toolbox: { right: 6, top: 0, iconStyle: { borderColor: '#94a3b8' }, feature: {
-      saveAsImage: { title: '保存图片', name: '终端趋势_' + key + '_' + CURDAY, pixelRatio: 2 } } }
+      saveAsImage: { title: '保存图片', name: '终端趋势_' + (HL ? HL + '_' : '') + key + '_' + CURDAY, pixelRatio: 2 } } }
   }, true);
   c.off('click');
   c.on('click', function (p) {
@@ -540,7 +615,7 @@ function renderTable() {
 /* ---------- 高亮联动 ---------- */
 function setHighlight(name) {
   HL = name;
-  renderBar(); renderLine(); renderTable(); renderShare();
+  renderBar(); renderLine(); renderTable(); renderShare(); renderLineTerms();
   var pie = CHARTS['chartTmPie'], sell = CHARTS['chartTmSell'];
   if (pie) {
     pie.dispatchAction({ type: 'downplay', seriesIndex: 0 });
@@ -577,7 +652,7 @@ function loadTrend() {
 
 /* ---------- 渲染总控 ---------- */
 function renderAll() {
-  renderStatus(); renderHeadline(); renderKpis(); renderChips();
+  renderStatus(); renderHeadline(); renderKpis(); renderScopeChips(); renderChips();
   renderPie(); renderSellPie(); renderBar(); renderLine(); renderShare(); renderTable();
 }
 function showDay(d) {
@@ -601,6 +676,7 @@ function showDay(d) {
   }).then(function () {
     DAY = dayObj(d);
     if (!DAY) { noData(); return; }
+    if (!DAY.scopes || !DAY.scopes[CURSCOPE]) CURSCOPE = (DAY.scopes && Object.keys(DAY.scopes)[0]) || '店铺整体';
     document.getElementById('tmContent').hidden = false;
     document.getElementById('tmEmpty').hidden = true;
     document.getElementById('tmLoading').hidden = true;

@@ -53,6 +53,7 @@ DERIVED = ['evr_click', 'click_cvr', 'evr_order', 'gpm_1k', 'unit_price']
 
 PAGE_HOOKS = ['chartTmPie', 'chartTmSell', 'chartTmBar', 'chartTmLine', 'chartTmShare',
               'tmKpi', 'tmTableBody', 'tmStatus', 'tmHeadline', 'renderShare', 'setHighlight',
+              'tmLineTerms', 'tmLineMeta', 'tmScopeChips', 'renderLineTerms', 'setScope',
               'PLACEHOLDER_NO']
 
 
