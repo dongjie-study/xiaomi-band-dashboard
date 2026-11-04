@@ -25,6 +25,13 @@
 .content-topbar select:hover { border-color: #ffd2ab; }
 .content-topbar select:focus { outline: none; border-color: var(--mi-orange, #ff6900); box-shadow: 0 0 0 3px rgba(255,105,0,.14); }
 .content-body { max-width: 1500px; margin: 0 auto; padding: 18px 22px 60px; }
+@media (max-width: 620px) {
+  .content-topbar { flex-wrap: wrap; padding: 10px 12px; row-gap: 8px; }
+  .content-topbar .spacer { display: none; }
+  .content-topbar h1 { font-size: 1.02em; }
+  .content-topbar select { flex: 1 1 132px; min-width: 0; max-width: 100%; }
+  .content-body { padding: 14px 12px 48px; }
+}
 .tm-card { background: #fff; border: 1px solid #e8eef5; border-radius: 14px; padding: 16px 18px; margin-bottom: 16px;
   box-shadow: 0 1px 3px rgba(15,23,42,.04); }
 .tm-card h3 { font-size: .95em; font-weight: 700; margin: 0 0 12px; color: #1e293b; }
@@ -156,9 +163,21 @@ var SHORT = { paid_amount: '支付金额', gmv: '成交金额', product_impressi
 var TERM_COLOR = { '抖音': '#ff6900', '抖音极速版': '#f5a623', '抖音商城APP': '#4a90d9',
   '红果短剧': '#10b981', '豆包': '#8b5cf6', '其他': '#64748b' };
 var FALLBACK = ['#ff6900','#f5a623','#4a90d9','#10b981','#8b5cf6','#ef4444','#14b8a6','#64748b'];
-var CHIP_KEYS = ['paid_amount','gmv','product_impressions','product_clicks','paid_orders','paid_items',
-  'evr_click','click_cvr','evr_order','gpm_1k','unit_price','refund_rate'];
-var KPI_KEYS = ['paid_amount','gmv','product_impressions','product_clicks','paid_orders','paid_items','evr_click','click_cvr'];
+/* 指标列表不再写死：一律取 index.json 的 metrics（截图链路只有 8 个指标，xlsx 链路有 26 个都能用） */
+var KEY_PREF = ['paid_amount','paid_orders','product_impressions','product_clicks',
+  'evr_click','click_cvr','evr_order','gpm_1k','gmv','paid_items','unit_price','refund_rate'];
+function availKeys() {
+  return (INDEX && INDEX.metrics ? INDEX.metrics : []).map(function (m) { return m.key; });
+}
+function chipKeys() {
+  var have = availKeys();
+  var out = KEY_PREF.filter(function (k) { return have.indexOf(k) >= 0; });
+  have.forEach(function (k) { if (out.indexOf(k) < 0) out.push(k); });
+  return out;
+}
+function kpiKeys() { return chipKeys().slice(0, 8); }
+function sellTypes(day) { return (day && day.sell_types && day.sell_types.length) ? day.sell_types : ['全部']; }
+function curSell() { return sellTypes(DAY)[0]; }
 
 /* ---------- 基础工具 ---------- */
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -251,7 +270,7 @@ function val(day, term, sell, key) {
   var r = rec(day, term, sell);
   return r ? r[key] : null;
 }
-function total(day, key) { return val(day, '整体', '全部', key); }
+function total(day, key) { return val(day, '整体', curSell(), key); }
 
 /* ---------- 状态区 ---------- */
 function renderStatus() {
@@ -263,7 +282,14 @@ function renderStatus() {
   var mode = (DAY && DAY.scope_mode === 'rooms') ? '逐直播间' : '账号级（全店）';
   html += '<span>口径 <b>' + esc(CURSCOPE) + '（' + mode + '）</b></span>';
   var n = DAY && DAY.source_n ? DAY.source_n : 0;
-  html += '<span>' + (n > 1 ? ('来源 ' + n + ' 份文件，内容一致已去重') : ('来源 ' + n + ' 份文件')) + '</span>';
+  var lvl = (DAY && DAY.scope_mode === 'rooms')
+    ? ('来源 ' + n + ' 张截图（每间一张，按直播间筛选）')
+    : ('来源 ' + n + ' 份文件' + (n > 1 ? '，内容一致已去重' : ''));
+  html += '<span>' + lvl + '</span>';
+  if (DAY && DAY.truncated && Object.keys(DAY.truncated).length) {
+    html += '<span class="warn" title="截图被截断的间会在明细表里出现「未显示（截图截断）」行，比率留空">⚠ ' +
+      Object.keys(DAY.truncated).length + ' 间截图不完整（已按差额补齐可见字段）</span>';
+  }
   el.innerHTML = html;
 }
 
@@ -291,7 +317,7 @@ function deltaOf(key) {
 function renderKpis() {
   var el = document.getElementById('tmKpi');
   var html = '';
-  KPI_KEYS.forEach(function (key) {
+  kpiKeys().forEach(function (key) {
     var v = total(DAY, key), d = deltaOf(key);
     var dHtml = d ? ('<div class="d">前一日 ' + fmtVal(key, total(PREVDAY ? dayObj(PREVDAY) : null, key)) +
       ' · <span class="' + (d.up ? 'up' : 'down') + '">' + esc(d.text) + '</span></div>')
@@ -300,9 +326,12 @@ function renderKpis() {
       '<div class="v">' + fmtVal(key, v) + '</div>' + dHtml + '</div>';
   });
   el.innerHTML = html;
+  var st = sellTypes(DAY).join('/');
+  var estNote = (availKeys().indexOf('paid_amount') >= 0 && (INDEX.metrics || []).some(function (m) { return m.key === 'paid_amount' && m.est; }))
+    ? '「支付金额」「成交订单」为推算值（=千次曝光支付×曝光÷1000、点击×点击→成交率），其余为平台原值。' : '';
   document.getElementById('tmNote').textContent = (DAY && DAY.scope_mode === 'rooms')
-    ? '口径：' + CURSCOPE + '（逐直播间导出），含该间直播 / 短视频 / 商品卡等全部成交渠道；与「流量分析」的直播间流量口径不可直接相加（终端构成含商品卡等成交）。'
-    : '口径：平台「流量-终端构成」为账号级（全店）数据，含直播、短视频、商品卡等全部成交渠道，与「流量分析」的直播间口径不可直接相加或对比。';
+    ? '口径：' + CURSCOPE + '（平台「终端构成」按直播间筛选 · 售卖类型「' + st + '」），含该间直播 / 短视频 / 商品卡等全部成交渠道；与「流量分析」的直播间流量口径不可直接相加。' + estNote
+    : '口径：平台「流量-终端构成」为账号级（全店）数据，含直播、短视频、商品卡等全部成交渠道，与「流量分析」的直播间口径不可直接相加或对比。' + estNote;
 }
 
 /* ---------- 指标 chips ---------- */
@@ -312,11 +341,14 @@ function chipHtml(keys, cur, cbName) {
   }).join('');
 }
 function renderChips() {
-  document.getElementById('tmPieChips').innerHTML = chipHtml(CHIP_KEYS, CH.pie, 'setPie');
-  document.getElementById('tmBarChips').innerHTML = chipHtml(CHIP_KEYS, CH.bar, 'setBar');
-  document.getElementById('tmLineChips').innerHTML = chipHtml(CHIP_KEYS, CH.line, 'setLine');
-  document.getElementById('tmShareChips').innerHTML = chipHtml(CHIP_KEYS, CH.share, 'setShare');
-  document.getElementById('tmSellChips').innerHTML = chipHtml(['paid_amount','gmv','paid_orders'], CH.sell, 'setSell');
+  var ks = chipKeys();
+  document.getElementById('tmPieChips').innerHTML = chipHtml(ks, CH.pie, 'setPie');
+  document.getElementById('tmBarChips').innerHTML = chipHtml(ks, CH.bar, 'setBar');
+  document.getElementById('tmLineChips').innerHTML = chipHtml(ks, CH.line, 'setLine');
+  document.getElementById('tmShareChips').innerHTML = chipHtml(ks, CH.share, 'setShare');
+  var st = sellTypes(DAY), sEl = document.getElementById('tmSellChips');
+  if (st.length <= 1) { sEl.innerHTML = ''; sEl.style.display = 'none'; }
+  else { sEl.style.display = ''; sEl.innerHTML = chipHtml(ks.slice(0, 3), CH.sell, 'setSell'); }
   renderLineTerms();
 }
 
@@ -349,7 +381,7 @@ function renderPie() {
   if (!c) return;
   var key = CH.pie;
   var data = terms(DAY).map(function (t) {
-    return { name: t, value: val(DAY, t, '全部', key) || 0,
+    return { name: t, value: val(DAY, t, curSell(), key) || 0,
       itemStyle: { color: TERM_COLOR[t] || FALLBACK[0] } };
   }).filter(function (d) { return d.value > 0; });
   document.getElementById('tmPieSub').textContent = labelOf(key) + ' · 共 ' + data.length + ' 类';
@@ -410,7 +442,7 @@ function renderBar() {
   var c = initChart('chartTmBar');
   if (!c) return;
   var key = CH.bar;
-  var list = terms(DAY).map(function (t) { return { t: t, v: val(DAY, t, '全部', key) || 0 }; })
+  var list = terms(DAY).map(function (t) { return { t: t, v: val(DAY, t, curSell(), key) || 0 }; })
     .sort(function (a, b) { return a.v - b.v; });
   document.getElementById('tmBarSub').textContent = labelOf(key) + ' · 当日 · 横向越长越大';
   c.setOption({
@@ -551,7 +583,7 @@ function renderShare() {
       data: dates.map(function (d, j) {
         var day = dayObj(d);
         if (!day) return null;
-        var v = val(day, t, '全部', key);
+        var v = val(day, t, curSell(), key);
         if (v == null || !totals[j]) return null;
         return +(v / totals[j] * 100).toFixed(2);
       })
@@ -585,16 +617,16 @@ function renderTable() {
   html += '</tr>';
   head.innerHTML = html;
 
-  var rows = terms(DAY).concat(['整体']);
+  var rows = ['整体'].concat(terms(DAY));  // 整体（合计行）置顶，与旧版一致
   var out = '';
   rows.forEach(function (t) {
-    ['全部', '自营', '合作'].forEach(function (s, si) {
+    sellTypes(DAY).forEach(function (s, si) {
       var r = rec(DAY, t, s);
       if (!r) return;
       var cls = (t === '整体' ? 'total' : '') + (HL === t ? ' sel' : '');
       out += '<tr class="' + cls + '" data-t="' + esc(t) + '">';
       if (si === 0) {
-        out += '<td rowspan="3" style="font-weight:700">' + esc(t) + '</td>';
+        out += '<td rowspan="' + sellTypes(DAY).length + '" style="font-weight:700">' + esc(t) + '</td>';
       }
       out += '<td>' + esc(s) + '</td>';
       keys.forEach(function (k) { out += '<td>' + esc(fmtRaw(k, r[k])) + '</td>'; });
@@ -651,9 +683,21 @@ function loadTrend() {
 }
 
 /* ---------- 渲染总控 ---------- */
+function layoutSellCard() {
+  var sellEl = document.getElementById('chartTmSell');
+  var pieEl = document.getElementById('chartTmPie');
+  if (!sellEl || !pieEl) return;
+  var one = sellTypes(DAY).length <= 1;
+  var sellCard = sellEl.closest('section'), pieCard = pieEl.closest('section');
+  if (sellCard) sellCard.style.display = one ? 'none' : '';
+  var row = pieCard ? pieCard.parentNode : null;
+  if (row && row.style) row.style.gridTemplateColumns = one ? '1fr' : '';
+}
 function renderAll() {
   renderStatus(); renderHeadline(); renderKpis(); renderScopeChips(); renderChips();
-  renderPie(); renderSellPie(); renderBar(); renderLine(); renderShare(); renderTable();
+  layoutSellCard();
+  renderPie(); if (sellTypes(DAY).length > 1) renderSellPie();
+  renderBar(); renderLine(); renderShare(); renderTable();
 }
 function showDay(d) {
   if (!INDEX) return Promise.resolve();
@@ -677,6 +721,11 @@ function showDay(d) {
     DAY = dayObj(d);
     if (!DAY) { noData(); return; }
     if (!DAY.scopes || !DAY.scopes[CURSCOPE]) CURSCOPE = (DAY.scopes && Object.keys(DAY.scopes)[0]) || '店铺整体';
+    var _ks = chipKeys();
+    if (_ks.length) {
+      ['pie', 'sell', 'bar', 'line', 'share'].forEach(function (k) { if (_ks.indexOf(CH[k]) < 0) CH[k] = _ks[0]; });
+    }
+    if (sellTypes(DAY).indexOf(CH.lineSell) < 0) CH.lineSell = sellTypes(DAY)[0];
     document.getElementById('tmContent').hidden = false;
     document.getElementById('tmEmpty').hidden = true;
     document.getElementById('tmLoading').hidden = true;

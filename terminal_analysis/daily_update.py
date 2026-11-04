@@ -1,6 +1,11 @@
 # -*- coding: utf-8 -*-
 """终端流量分析 · 入库脚本（「流量-终端构成」表）
 
+⚠️ 【2026-11-05 起已停用】平台导出的「流量-终端构成」xlsx 是**账号级（全店）**口径，
+   不认直播间筛选（6 份按直播间命名的文件内容逐格相同，md5 全等 a31a68061f35）。
+   现在按直播间取数走「页面筛选后截图 → shots/<日期>.json → ingest_shots.py」。
+   本脚本保留仅作历史参考，页面已改为 scope_mode='rooms'，不再用它入库。
+
 用法：
     python -X utf8 terminal_analysis/daily_update.py <文件或文件夹...>
     python -X utf8 terminal_analysis/daily_update.py --rebuild-only   # 只重建索引

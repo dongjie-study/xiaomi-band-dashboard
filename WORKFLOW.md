@@ -134,22 +134,24 @@ history 最新 : 2026-09-13     ← 订单入库到哪天
 
 | # | 做什么 | 说明 |
 |---|--------|------|
-| 0 | **认文件** | 文件名含 **`流量-终端构成`** 或 **`终端构成`** → 走这条线，**不要**塞给 🅲 的流量入库（两个独立页面、两个独立数据目录） |
+| 0 | **认输入** | **截图**（平台「终端构成」页**按直播间筛选后**截的图，右上角下拉写着 `自营 / <直播间名>`）→ 走这条线，**不要**塞给 🅲 的流量入库（两个独立页面、两个独立数据目录）。⚠️ 名字含 `流量-终端构成`/`终端构成` 的 **xlsx 已停用**：导出不认直播间筛选，6 份内容逐格相同 |
 | 1 | **入口** | 工作台侧边栏「**终端流量分析**」（紧跟在「流量分析」下方）→ `terminal_analysis/index.html` |
-| 2 | **入库（一条命令）** | `python -X utf8 terminal_analysis/daily_update.py "<文件1>" "<文件2>" …`（不带参数时自动找桌面/下载里文件名含「终端构成」的 xlsx）→ 写 `terminal_analysis/data/YYYY/YYYY-MM-DD.json` + `data/index.json`，末尾自动跑 `verify_day` 的 A/B/D 三项 |
-| 3 | **复核** | `python -X utf8 terminal_analysis/verify_day.py`（A 源表「整体/全部」26 项 ↔ 日档、B 源表恒等式、C 比率重算、D 索引、E 页面钩子；全 ✅ 才提交） |
-| 4 | **提交推送** | `git add terminal_analysis/data terminal_analysis/index.html terminal_analysis/daily_update.py terminal_analysis/verify_day.py` → `git commit -m "feat: 终端流量 11.x日数据更新"` → `git pull --rebase --autostash` → `git push` |
+| 2 | **转写 → 入库** | ① 逐张看右上角确认直播间（名字被截断按唯一前缀匹配，判不出就**问用户**）② 把每行的 6 个数字列转写进 `terminal_analysis/shots/YYYY-MM-DD.json`（`{date, sell:'自营', rooms:{直播间:{终端:[曝光,点击,曝光→点击率%,点击→成交率%,曝光→成交率%,千次曝光支付元]}}}`）③ `python -X utf8 terminal_analysis/ingest_shots.py terminal_analysis/shots/YYYY-MM-DD.json` → 写 `data/YYYY/YYYY-MM-DD.json` + `data/index.json`（`scope_mode='rooms'`，6 间） |
+| 3 | **复核** | `python -X utf8 terminal_analysis/verify_day.py`（A `shots` 源数字 ↔ 日档 6 个原值、B 每间 整体 = Σ各终端、C 派生公式自洽、D 索引、E 页面 17 钩子；全 ✅ 才提交） |
+| 4 | **提交推送** | `git add terminal_analysis/shots terminal_analysis/data terminal_analysis/index.html terminal_analysis/ingest_shots.py terminal_analysis/verify_day.py` → `git commit -m "feat: 终端流量 11.x日数据更新（按直播间截图）"` → `git pull --rebase --autostash` → `git push` |
 | 5 | **线上复检** | `curl -sSL -A "<UA>" https://xiaomi-band-dashboard.pages.dev/terminal_analysis/data/index.json` 看末条日期；页面 URL：`/terminal_analysis/index.html#YYYY-MM-DD` |
 
-> ⚠️ **口径铁律（2026-11-05 实测，最关键）**：平台导出的「流量-终端构成」是**账号级（全店）**口径，
-> 6 份按直播间命名的文件**内容完全相同**（只有文件元数据不同）。脚本按**内容指纹去重**后归为单一「店铺整体」口径，
-> **绝不能 6 份相加**（会把支付放大 6 倍）。若哪天导出真能按直播间过滤，脚本会自动切到 `scope_mode='rooms'`。
+> ⚠️ **口径铁律（2026-11-05 二次实测，最关键）**：平台**导出**的「流量-终端构成」xlsx 是**账号级（全店）**口径 ——
+> 6 份按直播间命名的文件**内容逐格相同**（md5 全等 `a31a68061f35`），**绝不能 6 份相加**（会把支付放大 6 倍）。
+> 要按直播间取数，**只有在平台页面上筛好直播间再截图**（页面筛选是真的生效，导出不是）。所以数据源 = 截图转写，`daily_update.py` 停用。
+> 截图被截断时用「整体 − 已见终端」的**差额行**补曝光/点击，其余留空，**绝不猜**。
 
 > 📐 **数据契约**
 > - `terminal_analysis/data/index.json`：`{"months":[{"ym","label","count","dates"}], "days":[{"date","pretty","scopes","scope_mode","source_n","paid_amount","product_impressions","paid_orders"}], "scopes","metrics":[{"key","label","kind"}]}`
-> - `terminal_analysis/data/YYYY/YYYY-MM-DD.json`：`{"date","scope_mode","source_files","source_n","terminal_order","sell_order","metric_keys","scopes":{"店铺整体":{"terminals":{"终端":{"全部|自营|合作":{26 个指标}}}}}}`
-> - 26 个指标 = 源表 26 列原值（金额/次数/比率/单价）；比率与单价类**跨口径合计时按公式重算**，页面只读不重算
-> - **退款率 / 1小时退款率不可用「退款订单数 ÷ 成交订单数」重算**（平台算法不同：实测 0.55 vs 0.27），单口径用源表值、合计时置空
+> - `terminal_analysis/data/YYYY/YYYY-MM-DD.json`：`{"date","scope_mode":"rooms","sell_types":["自营"],"source","source_n","terminal_order","metric_keys","metrics","scopes":{"<直播间>":{"terminals":{"整体|抖音|抖音极速版|抖音商城APP|红果短剧|豆包|其他|未显示（截图截断）":{"自营":{8 个指标}}}}},"truncated"}`
+> - `terminal_analysis/shots/YYYY-MM-DD.json`：**审计源**（人工转写的截图数字），改数只改这里再重跑 `ingest_shots.py`，不要手改 `data/`
+> - 8 个指标 = 6 个平台原值（商品曝光/商品点击/曝光→点击率/点击→成交率/曝光→成交率/千次曝光支付）+ 2 个**推算值**（支付金额 = 千次曝光支付×曝光÷1000、成交订单 = 点击×点击→成交率），页面已标注「推算」
+> - **退款率 / 1小时退款率不可用「退款订单数 ÷ 成交订单数」重算**（平台算法不同：实测 0.55 vs 0.27）
 > - 缺天不插值：趋势图缺该天就断线
 
 ---
