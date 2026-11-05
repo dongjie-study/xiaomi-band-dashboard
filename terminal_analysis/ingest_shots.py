@@ -42,6 +42,8 @@ DATA = os.path.join(BASE, 'data')
 SHOTS = os.path.join(BASE, 'shots')
 
 TRUNC = '未显示（截图截断）'
+MICRO_IMP = 100   # 平台「整体」比可见终端之和少 ≤100 次曝光 → 视为口径微差
+MICRO_CLK = 20    # 同上，点击 ≤20 次
 TERMINAL_ORDER = ['抖音', '抖音极速版', '抖音商城APP', '红果短剧', '豆包', '其他']
 
 # 指标定义：键 / 中文名 / 类型 / 是否推算
@@ -80,6 +82,7 @@ def build_day(payload):
     rooms = payload['rooms']
     scopes = {}
     trunc_report = []
+    micro_report = []
     sells = []
     for room, spec in rooms.items():
         if isinstance(spec, dict) and 'terminals' in spec:
@@ -99,7 +102,14 @@ def build_day(payload):
         d_clk = round(o[1] - sum_clk)
         if d_imp != 0 or d_clk != 0:
             if d_imp < 0 or d_clk < 0:
-                raise SystemExit('❌ %s 各终端之和大于整体（曝光差 %s / 点击差 %s），转写有误' % (room, d_imp, d_clk))
+                # 平台「整体」偶尔比可见终端之和少一丁点（去重/四舍五入），属口径微差、不是转写错。
+                # 阈值刻意收得很紧（曝光 ≤100、点击 ≤20），超了仍然报错让人复核。
+                if abs(d_imp) <= MICRO_IMP and abs(d_clk) <= MICRO_CLK:
+                    micro_report.append((room, d_imp, d_clk))
+                    d_imp = d_clk = 0
+                else:
+                    raise SystemExit('❌ %s 各终端之和大于整体（曝光差 %s / 点击差 %s），转写有误' % (room, d_imp, d_clk))
+        if d_imp != 0 or d_clk != 0:
             known[TRUNC] = [d_imp, d_clk,
                             0 if not d_imp else round(d_clk / d_imp * 100, 2),
                             None, None, None]
@@ -140,8 +150,9 @@ def build_day(payload):
         'metrics': METRIC_META,
         'scopes': scopes,
         'truncated': payload.get('meta', {}).get('truncated') or {},
+        'micro_diff': {room: {'impressions': di, 'clicks': dc} for room, di, dc in micro_report},
     }
-    return day, trunc_report
+    return day, trunc_report, micro_report
 
 
 def write_json(path, obj):
@@ -225,12 +236,14 @@ def main(argv):
     for path in argv:
         with open(path, 'r', encoding='utf-8') as f:
             payload = json.load(f)
-        day, trunc = build_day(payload)
+        day, trunc, micro = build_day(payload)
         out = os.path.join(DATA, day['date'][:4], day['date'] + '.json')
         changed = write_json(out, day)
         print('%s %s → %s（%d 间 / %d 指标）' % ('✅' if changed else '·', day['date'], os.path.relpath(out, BASE), len(day['scopes']), len(METRIC_KEYS)))
         for room, imp, clk in trunc:
             print('   ⚠️  %s 截图截断：差额行 %s 曝光 %s / 点击 %s（该行比率留空，请补发完整截图）' % (room, TRUNC, imp, clk))
+        for room, imp, clk in micro:
+            print('   ℹ️  %s 平台整体比可见终端之和少 曝光 %s / 点击 %s（口径微差，保留平台「整体」值，不补行）' % (room, -imp, -clk))
         for room, sc in day['scopes'].items():
             o = sc['terminals']['整体'][sc['sell_types'][0]]
             print('   %-16s [%s] 曝光 %10s  点击 %8s  曝光→点击 %6.2f%%  点击→成交 %6.2f%%  千次支付 ¥%.2f  推算支付 ¥%.2f' % (

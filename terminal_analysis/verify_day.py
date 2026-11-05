@@ -100,18 +100,28 @@ def check_day(date):
 
     # B 整体 = Σ终端
     errs = 0
+    micro = day.get('micro_diff') or {}
     for room, sc in day['scopes'].items():
         sell = sc['sell_types'][0]
         o = sc['terminals']['整体'][sell]
         ts = [v[sell] for k, v in sc['terminals'].items() if k != '整体']
-        for k in ('product_impressions', 'product_clicks'):
+        m = micro.get(room) or {}
+        mi, mc = abs(m.get('impressions') or 0), abs(m.get('clicks') or 0)
+        for k, tol_k in (('product_impressions', mi + 0.001), ('product_clicks', mc + 0.001)):
             s = sum((x.get(k) or 0) for x in ts)
-            if not near(o.get(k), s, 0.001):
+            if not near(o.get(k), s, tol_k):
                 fail('%s 整体%s(%s) ≠ Σ终端(%s)' % (room, k, o.get(k), s)); errs += 1
+            elif abs((o.get(k) or 0) - s) > 0.001:
+                print('  ℹ️  %s 整体%s %s vs 可见终端之和 %s（平台口径微差，以整体为准）' % (
+                    room, '曝光' if k == 'product_impressions' else '点击', '{:,.0f}'.format(o.get(k) or 0), '{:,.0f}'.format(s)))
         sp = sum((x.get('paid_amount') or 0) for x in ts)
         # 支付金额是推算值（=千次曝光支付×曝光/1000），千次支付本身只显示 2 位小数，
         # 每行误差上限 0.005 元/千次曝光 → 整体与 Σ终端 的差额上限 = 0.005×(整体曝光+Σ曝光)/1000
         tol_paid = 0.005 * ((o.get('product_impressions') or 0) + sum((x.get('product_impressions') or 0) for x in ts)) / 1000.0 + 0.01
+        if mi:
+            # 平台整体比可见终端少 mi 次曝光 → 少掉的推算支付最多 mi×最大千次支付/1000
+            gmax = max([x.get('gpm_1k') or 0 for x in ts] + [o.get('gpm_1k') or 0])
+            tol_paid += mi * (gmax + 5) / 1000.0 + 0.02
         has_trunc = TRUNC in sc['terminals']
         if has_trunc:
             # 截图截断时「整体」里含看不到的终端行，其支付金额无从拆解；

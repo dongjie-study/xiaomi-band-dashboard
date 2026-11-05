@@ -147,12 +147,14 @@ history 最新 : 2026-09-13     ← 订单入库到哪天
 > 截图被截断时用「整体 − 已见终端」的**差额行**补曝光/点击，其余留空，**绝不猜**。
 > ⚠️ 截断的间「整体推算支付」与「可见终端相加」本来就**不闭合**（看不到的行也带支付；平台的千次支付是各行四舍五入值），
 > `verify_day.py` 对这类间放宽到 2% 并打印 ℹ️ 提示；没截断的间仍是精确容差。
+> ⚠️ 平台侧「口径微差」：偶尔「整体」会比可见终端之和**少一丁点**（2026-11-03 数码旗舰店曝光少 20、11-04 官方耳机点击少 2；逐格复核确认不是转写错）。
+> `ingest_shots.py` 只在「曝光差 ≤100 且点击差 ≤20」时放过，记进日档 `micro_diff`（保留平台「整体」值、不补差额行、不猜数），超出仍报错；`verify_day.py` 按 `micro_diff` 同步放宽并打印 ℹ️。
 > ⚠️ 售卖类型**逐间判断**：同一批截图里可能混着「自营」和「合作」（2026-11-02 小米官旗手表直播间是「合作」）。
 > 日档里 `scopes[<直播间>]['sell_types']` 各存各的；页面按当前口径取，跨日口径不同时**不做环比**（KPI 显示「前一日『自营』口径 · 无同口径对比」）。
 
 > 📐 **数据契约**
 > - `terminal_analysis/data/index.json`：`{"months":[{"ym","label","count","dates"}], "days":[{"date","pretty","scopes","scope_mode","source_n","paid_amount","product_impressions","paid_orders"}], "scopes","metrics":[{"key","label","kind"}]}`
-> - `terminal_analysis/data/YYYY/YYYY-MM-DD.json`：`{"date","scope_mode":"rooms","sell_types":["自营"],"source","source_n","terminal_order","metric_keys","metrics","scopes":{"<直播间>":{"sell_types":["自营"],"terminals":{"整体|抖音|抖音极速版|抖音商城APP|红果短剧|豆包|其他|未显示（截图截断）":{"自营":{8 个指标}}}}},"truncated"}`
+> - `terminal_analysis/data/YYYY/YYYY-MM-DD.json`：`{"date","scope_mode":"rooms","sell_types":["自营"],"source","source_n","terminal_order","metric_keys","metrics","scopes":{"<直播间>":{"sell_types":["自营"],"terminals":{"整体|抖音|抖音极速版|抖音商城APP|红果短剧|豆包|其他|未显示（截图截断）":{"自营":{8 个指标}}}}},"truncated","micro_diff":{"<直播间>":{"impressions":-20,"clicks":0}}`
 > - `terminal_analysis/shots/YYYY-MM-DD.json`：**审计源**（人工转写的截图数字），改数只改这里再重跑 `ingest_shots.py`，不要手改 `data/`；顶层 `sell` 是默认售卖类型，单间不同就写 `{sell:'合作', terminals:{…}}`（2026-11-02 起支持）
 > - 8 个指标 = 6 个平台原值（商品曝光/商品点击/曝光→点击率/点击→成交率/曝光→成交率/千次曝光支付）+ 2 个**推算值**（支付金额 = 千次曝光支付×曝光÷1000、成交订单 = 点击×点击→成交率），页面已标注「推算」
 > - **退款率 / 1小时退款率不可用「退款订单数 ÷ 成交订单数」重算**（平台算法不同：实测 0.55 vs 0.27）
