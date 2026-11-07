@@ -64,7 +64,7 @@ history 最新 : 2026-09-13     ← 订单入库到哪天
 | # | 做什么 | 命令 / 判据 |
 |---|--------|------------|
 | 1 | **认文件** | A列=主播名、C列=场次(A1/B2/E…)、**F列=总 GSV（不是 E 列）**、G列=日期 |
-| 2 | **解析入库** | 逐行提取 → 转成 `{roomId, shift, anchor, sales}` → 插入 `主播业绩/业绩demo.html` 的 `DAILY_RECORDS`，**插在上一天块之后** |
+| 2 | **解析入库** | 逐行提取 → 转成 `{roomId, shift, anchor, sales}` → 插入 `主播业绩/业绩demo.html` 的 `DAILY_RECORDS`，**插在上一天块之后**。**入库前必须先过主播名归一表**（`from anchor_aliases import normalize`，表在 `主播业绩/anchor_aliases.json`），源表里的旧名/同音/错别字一律换成标准名再写 |
 | 3 | **自校验** | 逐条比对 + node 语法校验 + 姓名归一，见「六、入库自校验」 |
 | 4 | **提交推送** | 跑下面「📦 提交清单」，commit message 用 `feat: x.xx日业绩数据更新` |
 
