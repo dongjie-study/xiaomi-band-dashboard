@@ -133,9 +133,16 @@ def check_day(date):
             # 截图截断时「整体」里含看不到的终端行，其支付金额无从拆解；
             # 平台「千次曝光用户支付金额」是各自四舍五入后的值，加总本就不闭合 → 放宽到 2%，只做合理性检查
             tol_paid = max(tol_paid, 0.02 * abs(o.get('paid_amount') or 0))
+        # 平台「整体」支付按用户去重（同一用户经多个终端进入只算一次），Σ可见终端会略高/略低；
+        # 千次支付只显示 2 位小数也带来毫厘差 → 差额 ≤0.1% 视为口径微差，打印 ℹ️ 放过。
+        strict_tol = tol_paid
+        tol_paid = max(tol_paid, 0.001 * abs(o.get('paid_amount') or 0))
         d_paid = (o['paid_amount'] - sp) if o.get('paid_amount') is not None else 0
         if o.get('paid_amount') is not None and abs(d_paid) > tol_paid:
             fail('%s 整体推算支付(%s) 与 Σ终端(%s) 差 %.2f 元（容差 %.2f）' % (room, o['paid_amount'], sp, d_paid, tol_paid)); errs += 1
+        elif not has_trunc and abs(d_paid) > strict_tol and abs(d_paid) > 0.01:
+            print('  ℹ️  %s 整体推算支付 %s vs Σ终端 %s（差 %.2f 元 = %.4f%%，平台整体按用户去重所致，已放过）' % (
+                room, ('%.2f' % o['paid_amount']), ('%.2f' % sp), d_paid, 100.0 * d_paid / (o.get('paid_amount') or 1)))
         elif has_trunc and abs(d_paid) > 0.01:
             print('  ℹ️  %s 整体推算支付 %s vs 可见终端相加 %s（差 %.2f 元 = %.2f%%，截图截断所致，已放宽）' % (
                 room, ('%.2f' % o['paid_amount']), ('%.2f' % sp), d_paid, 100.0 * d_paid / (o.get('paid_amount') or 1)))
