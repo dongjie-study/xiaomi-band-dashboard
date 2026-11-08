@@ -1,0 +1,625 @@
+{
+ "date": "2026-11-01",
+ "created_at": "2026-11-05 01:44:01",
+ "scope_mode": "rooms",
+ "sell_types": [
+  "自营"
+ ],
+ "source": "截图 6 张（桌面 11.1日终端流量构成/），平台「终端构成」报表右上角选「自营 / <直播间>」",
+ "source_n": 6,
+ "note": "表格列：商品曝光次数 / 商品点击次数 / 商品曝光-点击转化率 / 商品点击-成交转化率 / 商品曝光-成交转化率 / 千次曝光用户支付金额",
+ "terminal_order": [
+  "整体",
+  "抖音",
+  "抖音极速版",
+  "抖音商城APP",
+  "红果短剧",
+  "豆包",
+  "其他",
+  "未显示（截图截断）"
+ ],
+ "metric_keys": [
+  "paid_amount",
+  "paid_orders",
+  "product_impressions",
+  "product_clicks",
+  "evr_click",
+  "click_cvr",
+  "evr_order",
+  "gpm_1k"
+ ],
+ "metrics": [
+  {
+   "key": "paid_amount",
+   "label": "支付金额（推算）",
+   "kind": "money",
+   "est": true
+  },
+  {
+   "key": "paid_orders",
+   "label": "成交订单（推算）",
+   "kind": "int",
+   "est": true
+  },
+  {
+   "key": "product_impressions",
+   "label": "商品曝光次数",
+   "kind": "int",
+   "est": false
+  },
+  {
+   "key": "product_clicks",
+   "label": "商品点击次数",
+   "kind": "int",
+   "est": false
+  },
+  {
+   "key": "evr_click",
+   "label": "商品曝光→点击率",
+   "kind": "rate",
+   "est": false
+  },
+  {
+   "key": "click_cvr",
+   "label": "商品点击→成交率",
+   "kind": "rate",
+   "est": false
+  },
+  {
+   "key": "evr_order",
+   "label": "商品曝光→成交率",
+   "kind": "rate",
+   "est": false
+  },
+  {
+   "key": "gpm_1k",
+   "label": "千次曝光支付金额",
+   "kind": "perunit",
+   "est": false
+  }
+ ],
+ "scopes": {
+  "小米官方手表": {
+   "sell_types": [
+    "自营"
+   ],
+   "terminals": {
+    "整体": {
+     "自营": {
+      "product_impressions": 464281.0,
+      "product_clicks": 39757.0,
+      "evr_click": 0.0856,
+      "click_cvr": 0.0954,
+      "evr_order": 0.0082,
+      "gpm_1k": 975.2,
+      "paid_amount": 452766.83,
+      "paid_orders": 3792.8
+     }
+    },
+    "抖音": {
+     "自营": {
+      "product_impressions": 356999.0,
+      "product_clicks": 31751.0,
+      "evr_click": 0.0889,
+      "click_cvr": 0.0915,
+      "evr_order": 0.0081,
+      "gpm_1k": 1051.88,
+      "paid_amount": 375520.11,
+      "paid_orders": 2905.2
+     }
+    },
+    "抖音极速版": {
+     "自营": {
+      "product_impressions": 53940.0,
+      "product_clicks": 4589.0,
+      "evr_click": 0.0851,
+      "click_cvr": 0.0418,
+      "evr_order": 0.0036,
+      "gpm_1k": 834.95,
+      "paid_amount": 45037.2,
+      "paid_orders": 191.8
+     }
+    },
+    "抖音商城APP": {
+     "自营": {
+      "product_impressions": 23194.0,
+      "product_clicks": 1674.0,
+      "evr_click": 0.0722,
+      "click_cvr": 0.0454,
+      "evr_order": 0.0033,
+      "gpm_1k": 929.99,
+      "paid_amount": 21570.19,
+      "paid_orders": 76.0
+     }
+    },
+    "红果短剧": {
+     "自营": {
+      "product_impressions": 23772.0,
+      "product_clicks": 1330.0,
+      "evr_click": 0.0559,
+      "click_cvr": 0.4511,
+      "evr_order": 0.0252,
+      "gpm_1k": 417.3,
+      "paid_amount": 9920.06,
+      "paid_orders": 600.0
+     }
+    },
+    "豆包": {
+     "自营": {
+      "product_impressions": 1252.0,
+      "product_clicks": 101.0,
+      "evr_click": 0.0807,
+      "click_cvr": 0.0099,
+      "evr_order": 0.0008,
+      "gpm_1k": 406.55,
+      "paid_amount": 509.0,
+      "paid_orders": 1.0
+     }
+    },
+    "其他": {
+     "自营": {
+      "product_impressions": 5124.0,
+      "product_clicks": 312.0,
+      "evr_click": 0.0609,
+      "click_cvr": 0.0673,
+      "evr_order": 0.0041,
+      "gpm_1k": 40.98,
+      "paid_amount": 209.98,
+      "paid_orders": 21.0
+     }
+    }
+   }
+  },
+  "小米官方手环直播间": {
+   "sell_types": [
+    "自营"
+   ],
+   "terminals": {
+    "整体": {
+     "自营": {
+      "product_impressions": 876707.0,
+      "product_clicks": 106750.0,
+      "evr_click": 0.1218,
+      "click_cvr": 0.0199,
+      "evr_order": 0.0024,
+      "gpm_1k": 750.82,
+      "paid_amount": 658249.15,
+      "paid_orders": 2124.3
+     }
+    },
+    "抖音": {
+     "自营": {
+      "product_impressions": 645350.0,
+      "product_clicks": 81747.0,
+      "evr_click": 0.1267,
+      "click_cvr": 0.02,
+      "evr_order": 0.0025,
+      "gpm_1k": 786.06,
+      "paid_amount": 507283.82,
+      "paid_orders": 1634.9
+     }
+    },
+    "抖音极速版": {
+     "自营": {
+      "product_impressions": 118758.0,
+      "product_clicks": 14228.0,
+      "evr_click": 0.1198,
+      "click_cvr": 0.015,
+      "evr_order": 0.0018,
+      "gpm_1k": 554.2,
+      "paid_amount": 65815.68,
+      "paid_orders": 213.4
+     }
+    },
+    "抖音商城APP": {
+     "自营": {
+      "product_impressions": 48513.0,
+      "product_clicks": 4905.0,
+      "evr_click": 0.1011,
+      "click_cvr": 0.0263,
+      "evr_order": 0.0027,
+      "gpm_1k": 821.87,
+      "paid_amount": 39871.38,
+      "paid_orders": 129.0
+     }
+    },
+    "红果短剧": {
+     "自营": {
+      "product_impressions": 12433.0,
+      "product_clicks": 1247.0,
+      "evr_click": 0.1003,
+      "click_cvr": 0.0104,
+      "evr_order": 0.001,
+      "gpm_1k": 325.68,
+      "paid_amount": 4049.18,
+      "paid_orders": 13.0
+     }
+    },
+    "豆包": {
+     "自营": {
+      "product_impressions": 43891.0,
+      "product_clicks": 4027.0,
+      "evr_click": 0.0918,
+      "click_cvr": 0.0333,
+      "evr_order": 0.0031,
+      "gpm_1k": 931.09,
+      "paid_amount": 40866.47,
+      "paid_orders": 134.1
+     }
+    },
+    "其他": {
+     "自营": {
+      "product_impressions": 7762.0,
+      "product_clicks": 596.0,
+      "evr_click": 0.0768,
+      "click_cvr": 0.0017,
+      "evr_order": 0.0001,
+      "gpm_1k": 46.25,
+      "paid_amount": 358.99,
+      "paid_orders": 1.0
+     }
+    }
+   }
+  },
+  "小米数码旗舰店": {
+   "sell_types": [
+    "自营"
+   ],
+   "terminals": {
+    "整体": {
+     "自营": {
+      "product_impressions": 795748.0,
+      "product_clicks": 66407.0,
+      "evr_click": 0.0835,
+      "click_cvr": 0.0255,
+      "evr_order": 0.0021,
+      "gpm_1k": 693.39,
+      "paid_amount": 551763.71,
+      "paid_orders": 1693.4
+     }
+    },
+    "抖音": {
+     "自营": {
+      "product_impressions": 555813.0,
+      "product_clicks": 47252.0,
+      "evr_click": 0.085,
+      "click_cvr": 0.0234,
+      "evr_order": 0.002,
+      "gpm_1k": 646.53,
+      "paid_amount": 359349.78,
+      "paid_orders": 1105.7
+     }
+    },
+    "抖音极速版": {
+     "自营": {
+      "product_impressions": 103220.0,
+      "product_clicks": 9575.0,
+      "evr_click": 0.0928,
+      "click_cvr": 0.0183,
+      "evr_order": 0.0017,
+      "gpm_1k": 553.0,
+      "paid_amount": 57080.66,
+      "paid_orders": 175.2
+     }
+    },
+    "抖音商城APP": {
+     "自营": {
+      "product_impressions": 98628.0,
+      "product_clicks": 6939.0,
+      "evr_click": 0.0704,
+      "click_cvr": 0.0535,
+      "evr_order": 0.0038,
+      "gpm_1k": 1245.19,
+      "paid_amount": 122810.6,
+      "paid_orders": 371.2
+     }
+    },
+    "红果短剧": {
+     "自营": {
+      "product_impressions": 8696.0,
+      "product_clicks": 816.0,
+      "evr_click": 0.0938,
+      "click_cvr": 0.011,
+      "evr_order": 0.001,
+      "gpm_1k": 347.82,
+      "paid_amount": 3024.64,
+      "paid_orders": 9.0
+     }
+    },
+    "豆包": {
+     "自营": {
+      "product_impressions": 15744.0,
+      "product_clicks": 923.0,
+      "evr_click": 0.0586,
+      "click_cvr": 0.0293,
+      "evr_order": 0.0017,
+      "gpm_1k": 519.43,
+      "paid_amount": 8177.91,
+      "paid_orders": 27.0
+     }
+    },
+    "其他": {
+     "自营": {
+      "product_impressions": 13647.0,
+      "product_clicks": 902.0,
+      "evr_click": 0.0661,
+      "click_cvr": 0.0044,
+      "evr_order": 0.0003,
+      "gpm_1k": 96.45,
+      "paid_amount": 1316.25,
+      "paid_orders": 4.0
+     }
+    }
+   }
+  },
+  "小米智能设备旗舰店直播间": {
+   "sell_types": [
+    "自营"
+   ],
+   "terminals": {
+    "整体": {
+     "自营": {
+      "product_impressions": 70053.0,
+      "product_clicks": 3334.0,
+      "evr_click": 0.0476,
+      "click_cvr": 0.0243,
+      "evr_order": 0.0012,
+      "gpm_1k": 848.65,
+      "paid_amount": 59450.48,
+      "paid_orders": 81.0
+     }
+    },
+    "抖音": {
+     "自营": {
+      "product_impressions": 51057.0,
+      "product_clicks": 2586.0,
+      "evr_click": 0.0506,
+      "click_cvr": 0.0166,
+      "evr_order": 0.0008,
+      "gpm_1k": 654.44,
+      "paid_amount": 33413.74,
+      "paid_orders": 42.9
+     }
+    },
+    "抖音极速版": {
+     "自营": {
+      "product_impressions": 6275.0,
+      "product_clicks": 274.0,
+      "evr_click": 0.0437,
+      "click_cvr": 0.0219,
+      "evr_order": 0.001,
+      "gpm_1k": 637.49,
+      "paid_amount": 4000.25,
+      "paid_orders": 6.0
+     }
+    },
+    "抖音商城APP": {
+     "自营": {
+      "product_impressions": 5448.0,
+      "product_clicks": 217.0,
+      "evr_click": 0.0398,
+      "click_cvr": 0.0876,
+      "evr_order": 0.0035,
+      "gpm_1k": 2902.27,
+      "paid_amount": 15811.57,
+      "paid_orders": 19.0
+     }
+    },
+    "豆包": {
+     "自营": {
+      "product_impressions": 6251.0,
+      "product_clicks": 200.0,
+      "evr_click": 0.032,
+      "click_cvr": 0.065,
+      "evr_order": 0.0021,
+      "gpm_1k": 995.81,
+      "paid_amount": 6224.81,
+      "paid_orders": 13.0
+     }
+    },
+    "未显示（截图截断）": {
+     "自营": {
+      "product_impressions": 1022.0,
+      "product_clicks": 57.0,
+      "evr_click": 0.055773,
+      "click_cvr": null,
+      "evr_order": null,
+      "gpm_1k": null,
+      "paid_amount": null,
+      "paid_orders": null,
+      "truncated": true
+     }
+    }
+   }
+  },
+  "小米官方耳机直播间": {
+   "sell_types": [
+    "自营"
+   ],
+   "terminals": {
+    "整体": {
+     "自营": {
+      "product_impressions": 101524.0,
+      "product_clicks": 5505.0,
+      "evr_click": 0.0542,
+      "click_cvr": 0.453,
+      "evr_order": 0.0246,
+      "gpm_1k": 831.19,
+      "paid_amount": 84385.73,
+      "paid_orders": 2493.8
+     }
+    },
+    "抖音": {
+     "自营": {
+      "product_impressions": 82756.0,
+      "product_clicks": 4479.0,
+      "evr_click": 0.0541,
+      "click_cvr": 0.4389,
+      "evr_order": 0.0238,
+      "gpm_1k": 797.69,
+      "paid_amount": 66013.63,
+      "paid_orders": 1965.8
+     }
+    },
+    "抖音极速版": {
+     "自营": {
+      "product_impressions": 8406.0,
+      "product_clicks": 447.0,
+      "evr_click": 0.0532,
+      "click_cvr": 0.2192,
+      "evr_order": 0.0117,
+      "gpm_1k": 277.86,
+      "paid_amount": 2335.69,
+      "paid_orders": 98.0
+     }
+    },
+    "抖音商城APP": {
+     "自营": {
+      "product_impressions": 8054.0,
+      "product_clicks": 485.0,
+      "evr_click": 0.0602,
+      "click_cvr": 0.0598,
+      "evr_order": 0.0036,
+      "gpm_1k": 166.21,
+      "paid_amount": 1338.66,
+      "paid_orders": 29.0
+     }
+    },
+    "红果短剧": {
+     "自营": {
+      "product_impressions": 443.0,
+      "product_clicks": 35.0,
+      "evr_click": 0.079,
+      "click_cvr": 6.9714,
+      "evr_order": 0.5508,
+      "gpm_1k": 29632.51,
+      "paid_amount": 13127.2,
+      "paid_orders": 244.0
+     }
+    },
+    "其他": {
+     "自营": {
+      "product_impressions": 391.0,
+      "product_clicks": 30.0,
+      "evr_click": 0.0767,
+      "click_cvr": 5.2333,
+      "evr_order": 0.4015,
+      "gpm_1k": 4015.35,
+      "paid_amount": 1570.0,
+      "paid_orders": 157.0
+     }
+    },
+    "未显示（截图截断）": {
+     "自营": {
+      "product_impressions": 1474.0,
+      "product_clicks": 29.0,
+      "evr_click": 0.019674,
+      "click_cvr": null,
+      "evr_order": null,
+      "gpm_1k": null,
+      "paid_amount": null,
+      "paid_orders": null,
+      "truncated": true
+     }
+    }
+   }
+  },
+  "小米官旗手表直播间": {
+   "sell_types": [
+    "自营"
+   ],
+   "terminals": {
+    "整体": {
+     "自营": {
+      "product_impressions": 62269.0,
+      "product_clicks": 4574.0,
+      "evr_click": 0.0735,
+      "click_cvr": 0.0149,
+      "evr_order": 0.0011,
+      "gpm_1k": 600.39,
+      "paid_amount": 37385.68,
+      "paid_orders": 68.2
+     }
+    },
+    "抖音": {
+     "自营": {
+      "product_impressions": 40792.0,
+      "product_clicks": 3146.0,
+      "evr_click": 0.0771,
+      "click_cvr": 0.0143,
+      "evr_order": 0.0011,
+      "gpm_1k": 640.53,
+      "paid_amount": 26128.5,
+      "paid_orders": 45.0
+     }
+    },
+    "抖音极速版": {
+     "自营": {
+      "product_impressions": 8336.0,
+      "product_clicks": 624.0,
+      "evr_click": 0.0749,
+      "click_cvr": 0.016,
+      "evr_order": 0.0012,
+      "gpm_1k": 525.85,
+      "paid_amount": 4383.49,
+      "paid_orders": 10.0
+     }
+    },
+    "抖音商城APP": {
+     "自营": {
+      "product_impressions": 9810.0,
+      "product_clicks": 562.0,
+      "evr_click": 0.0573,
+      "click_cvr": 0.0178,
+      "evr_order": 0.001,
+      "gpm_1k": 580.69,
+      "paid_amount": 5696.57,
+      "paid_orders": 10.0
+     }
+    },
+    "红果短剧": {
+     "自营": {
+      "product_impressions": 672.0,
+      "product_clicks": 64.0,
+      "evr_click": 0.0952,
+      "click_cvr": 0.0,
+      "evr_order": 0.0,
+      "gpm_1k": 0.0,
+      "paid_amount": 0.0,
+      "paid_orders": 0.0
+     }
+    },
+    "豆包": {
+     "自营": {
+      "product_impressions": 2004.0,
+      "product_clicks": 140.0,
+      "evr_click": 0.0699,
+      "click_cvr": 0.0214,
+      "evr_order": 0.0015,
+      "gpm_1k": 587.33,
+      "paid_amount": 1177.01,
+      "paid_orders": 3.0
+     }
+    },
+    "未显示（截图截断）": {
+     "自营": {
+      "product_impressions": 655.0,
+      "product_clicks": 38.0,
+      "evr_click": 0.058015,
+      "click_cvr": null,
+      "evr_order": null,
+      "gpm_1k": null,
+      "paid_amount": null,
+      "paid_orders": null,
+      "truncated": true
+     }
+    }
+   }
+  }
+ },
+ "truncated": {
+  "小米智能设备旗舰店直播间": "截图底部截断，红果短剧/其他 行未显示",
+  "小米官方耳机直播间": "截图底部截断，豆包 行未显示",
+  "小米官旗手表直播间": "截图底部截断，其他 行未显示"
+ }
+}

@@ -36,6 +36,19 @@
           ]
         },
         {
+          "id": "terminal",
+          "title": "终端流量分析",
+          "url": "terminal_analysis/index.html",
+          "icon": "🖥️",
+          "description": "直播间终端构成：各终端类型的曝光、点击、成交与支付占比，按天查看逐日变化（与「流量分析」相互独立，数据来自带「终端构成」的截图/表）",
+          "tag": "Device Traffic",
+          "badge": "NEW",
+          "hasSubMenu": true,
+          "subModules": [
+            { "id": "terminalLatest", "title": "最新一天", "url": "terminal_analysis/index.html" }
+          ]
+        },
+        {
           "id": "monthlySummary",
           "title": "月度总结",
           "url": "月度总结/六月销量分析.html",
