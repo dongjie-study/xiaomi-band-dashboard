@@ -113,6 +113,7 @@ if (window.top === window.self) {
     <div class="tm-status" id="tmStatus"></div>
     <h2 class="tm-headline" id="tmHeadline"></h2>
     <div class="tm-chips" id="tmScopeChips" hidden></div>
+    <div class="tm-note" id="tmExcludedNote" hidden></div>
     <section class="tm-card">
       <h3>核心指标 <span class="tm-sub" id="tmKpiSub">当日终端合计 · 含环比</span></h3>
       <div class="tm-kpis" id="tmKpi"></div>
@@ -369,6 +370,20 @@ function renderKpis() {
   document.getElementById('tmNote').textContent = (DAY && DAY.scope_mode === 'rooms')
     ? '口径：' + CURSCOPE + '（平台「终端构成」按直播间筛选 · 售卖类型「' + st + '」），含该间直播 / 短视频 / 商品卡等全部成交渠道；与「流量分析」的直播间流量口径不可直接相加。' + estNote
     : '口径：平台「流量-终端构成」为账号级（全店）数据，含直播、短视频、商品卡等全部成交渠道，与「流量分析」的直播间口径不可直接相加或对比。' + estNote;
+
+  /* 被排除的间（如小号账号）：明示不纳入，避免「少了一间」被当成数据缺失 */
+  var exn = document.getElementById('tmExcludedNote');
+  var ex = (DAY && DAY.excluded_scopes) || [];
+  if (exn) {
+    if (ex.length) {
+      exn.hidden = false;
+      exn.innerHTML = 'ℹ️ 已排除 <b>' + ex.map(function (e) { return esc(e.scope); }).join('、') + '</b>：' +
+        esc(ex[0].reason) +
+        '。该间截图给的是小号账号口径（曝光/成交远小于直播间口径），与其余各间不可比，故不纳入本页合计与趋势。';
+    } else {
+      exn.hidden = true;
+    }
+  }
 }
 
 /* ---------- 指标 chips ---------- */

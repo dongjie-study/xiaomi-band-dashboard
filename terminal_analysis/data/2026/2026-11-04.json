@@ -1,6 +1,6 @@
 {
  "date": "2026-11-04",
- "created_at": "2026-11-05 18:46:30",
+ "created_at": "2026-11-09 01:25:27",
  "scope_mode": "rooms",
  "sell_types": [
   "合作",
@@ -537,97 +537,6 @@
      }
     }
    }
-  },
-  "小米官方耳机直播间": {
-   "sell_types": [
-    "自营"
-   ],
-   "terminals": {
-    "整体": {
-     "自营": {
-      "product_impressions": 90280.0,
-      "product_clicks": 3966.0,
-      "evr_click": 0.0439,
-      "click_cvr": 0.0595,
-      "evr_order": 0.0026,
-      "gpm_1k": 28.44,
-      "paid_amount": 2567.56,
-      "paid_orders": 236.0
-     }
-    },
-    "抖音": {
-     "自营": {
-      "product_impressions": 83833.0,
-      "product_clicks": 3675.0,
-      "evr_click": 0.0438,
-      "click_cvr": 0.0593,
-      "evr_order": 0.0026,
-      "gpm_1k": 28.49,
-      "paid_amount": 2388.4,
-      "paid_orders": 217.9
-     }
-    },
-    "抖音极速版": {
-     "自营": {
-      "product_impressions": 2917.0,
-      "product_clicks": 150.0,
-      "evr_click": 0.0514,
-      "click_cvr": 0.04,
-      "evr_order": 0.0021,
-      "gpm_1k": 20.57,
-      "paid_amount": 60.0,
-      "paid_orders": 6.0
-     }
-    },
-    "抖音商城APP": {
-     "自营": {
-      "product_impressions": 1746.0,
-      "product_clicks": 85.0,
-      "evr_click": 0.0475,
-      "click_cvr": 0.0723,
-      "evr_order": 0.0034,
-      "gpm_1k": 34.36,
-      "paid_amount": 59.99,
-      "paid_orders": 6.1
-     }
-    },
-    "红果短剧": {
-     "自营": {
-      "product_impressions": 926.0,
-      "product_clicks": 39.0,
-      "evr_click": 0.0421,
-      "click_cvr": 0.0513,
-      "evr_order": 0.0022,
-      "gpm_1k": 21.6,
-      "paid_amount": 20.0,
-      "paid_orders": 2.0
-     }
-    },
-    "豆包": {
-     "自营": {
-      "product_impressions": 520.0,
-      "product_clicks": 10.0,
-      "evr_click": 0.0192,
-      "click_cvr": 0.3,
-      "evr_order": 0.0058,
-      "gpm_1k": 57.69,
-      "paid_amount": 30.0,
-      "paid_orders": 3.0
-     }
-    },
-    "其他": {
-     "自营": {
-      "product_impressions": 338.0,
-      "product_clicks": 9.0,
-      "evr_click": 0.0266,
-      "click_cvr": 0.1111,
-      "evr_order": 0.003,
-      "gpm_1k": 29.59,
-      "paid_amount": 10.0,
-      "paid_orders": 1.0
-     }
-    }
-   }
   }
  },
  "truncated": {
@@ -635,10 +544,11 @@
   "小米官方手表": "缺「其他」行（截图底部被截断）",
   "小米智能设备旗舰店直播间": "缺「其他」行（截图底部被截断）"
  },
- "micro_diff": {
-  "小米官方耳机直播间": {
-   "impressions": 0,
-   "clicks": -2
+ "micro_diff": {},
+ "excluded_scopes": [
+  {
+   "scope": "小米官方耳机直播间",
+   "reason": "小号账号；用户 2026-11-09「小号的终端流量先不考虑」"
   }
- }
+ ]
 }

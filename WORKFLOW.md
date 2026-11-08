@@ -156,6 +156,8 @@ history 最新 : 2026-09-13     ← 订单入库到哪天
 > 📊 **占比红线（2026-11-09 起）**：饼图 / 占比 / 100% 堆叠**只画可加指标**（支付金额、成交金额、商品曝光、商品点击、成交订单、成交件数）；
 > 比率型指标（曝光→点击率、点击→成交率、千次曝光支付、件单价、退款率）**只画原值**，不出占比（占比会算出 >100%，用户会当成数据错）。
 > 页面已由 `isAdditive()` + `additiveKeys()` 强制约束，往 chip 里加新指标时先看它是不是可加量。
+> 🚫 **小号账号不纳入（2026-11-09 起）**：`小米官方耳机直播间` 的终端截图画的是**小号账号**（11-03~11-05 成交只有 1.7k~4.7k，而直播间口径 6.9万~9.5万），与直播间口径差 0.05 倍，不可比。
+> `ingest_shots.py` 的 `EXCLUDE_SCOPES` 直接跳过它，日档写 `excluded_scopes` 明示原因，页面 `#tmExcludedNote` 显示「已排除 xxx」；截图转写文件原样保留，将来要纳入只需删那一行。
 
 > 📐 **数据契约**
 > - `terminal_analysis/data/index.json`：`{"months":[{"ym","label","count","dates"}], "days":[{"date","pretty","scopes","scope_mode","source_n","paid_amount","product_impressions","paid_orders"}], "scopes","metrics":[{"key","label","kind"}]}`

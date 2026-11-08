@@ -46,6 +46,13 @@ MICRO_IMP = 100   # 平台「整体」比可见终端之和少 ≤100 次曝光 
 MICRO_CLK = 20    # 同上，点击 ≤20 次
 TERMINAL_ORDER = ['抖音', '抖音极速版', '抖音商城APP', '红果短剧', '豆包', '其他']
 
+# 2026-11-09 用户：「我看只有一个官方耳机，小米官方耳机直播间！小号的终端流量可以先不考虑！」
+# 该间截图里的曝光/成交远小于直播间口径（11-03~11-05 只有 1.7k~4.7k 元 vs 直播间 6.9万~9.5万），
+# 判定为小号账号的终端数据 → 入库时跳过，写进日档 excluded_scopes，截图转写原样保留（要恢复就删这一行）。
+EXCLUDE_SCOPES = {
+    '小米官方耳机直播间': '小号账号；用户 2026-11-09「小号的终端流量先不考虑」',
+}
+
 # 指标定义：键 / 中文名 / 类型 / 是否推算
 METRICS = [
     ('paid_amount',         '支付金额（推算）',   'money',   True),
@@ -79,7 +86,8 @@ def _row(vals):
 def build_day(payload):
     date = payload['date']
     sell = payload.get('sell') or '自营'
-    rooms = payload['rooms']
+    rooms = {k: v for k, v in payload['rooms'].items() if k not in EXCLUDE_SCOPES}
+    excluded = [{'scope': k, 'reason': EXCLUDE_SCOPES[k]} for k in payload['rooms'] if k in EXCLUDE_SCOPES]
     scopes = {}
     trunc_report = []
     micro_report = []
@@ -143,7 +151,7 @@ def build_day(payload):
         'scope_mode': 'rooms',
         'sell_types': [s for i, s in enumerate(sells) if s not in sells[:i]],
         'source': payload.get('source') or '截图转写',
-        'source_n': len(rooms),
+        'source_n': len(payload['rooms']),
         'note': payload.get('note') or '',
         'terminal_order': ['整体'] + TERMINAL_ORDER + [TRUNC],
         'metric_keys': METRIC_KEYS,
@@ -152,6 +160,8 @@ def build_day(payload):
         'truncated': payload.get('meta', {}).get('truncated') or {},
         'micro_diff': {room: {'impressions': di, 'clicks': dc} for room, di, dc in micro_report},
     }
+    if excluded:
+        day['excluded_scopes'] = excluded
     return day, trunc_report, micro_report
 
 

@@ -76,7 +76,13 @@ def check_day(date):
 
     # A 源指标逐项（售卖类型按每间自己的取：2026-11-02 官旗手表=合作，其余=自营）
     errs = 0
+    excluded = {e['scope']: e.get('reason', '') for e in (day.get('excluded_scopes') or [])}
+    n_checked = 0
     for room, spec in shot['rooms'].items():
+        if room in excluded:
+            print('  ℹ️  %s 按「排除」跳过（%s）' % (room, excluded[room]))
+            continue
+        n_checked += 1
         if isinstance(spec, dict) and 'terminals' in spec:
             terms = spec['terminals']
         else:
@@ -96,7 +102,7 @@ def check_day(date):
                 if not near(got, want, 1e-6 if abs(want) < 1 else 1e-4):
                     fail('%s / %s 数值不一致：%s ≠ %s' % (room, t, got, want)); errs += 1
     if not errs:
-        ok('[A] %d 间 × 全部终端 × 6 个源指标 ↔ 日档逐项相等' % len(shot['rooms']))
+        ok('[A] %d 间 × 全部终端 × 6 个源指标 ↔ 日档逐项相等' % n_checked)
 
     # B 整体 = Σ终端
     errs = 0
