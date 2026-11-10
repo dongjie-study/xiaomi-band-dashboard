@@ -1,0 +1,898 @@
+{
+ "scope": "全店",
+ "room": "全店",
+ "is_all": true,
+ "date": "2026-11-09",
+ "prev_date": "2026-11-08",
+ "generated_at": "2026-11-10 21:36:57",
+ "prev_scope_exists": true,
+ "totals": {
+  "impressions": 4444212.0,
+  "views": 243943.0,
+  "interactions": 49564.0,
+  "new_followers": 1275.0,
+  "product_impressions": 1778304.0,
+  "product_clicks": 129726.0,
+  "paid_orders": 3235.0,
+  "paid_amount": 1241523.52,
+  "qianchuan": 43730.17,
+  "live_duration": 8129.4
+ },
+ "metrics": {
+  "exposure_view_rate": 0.05489,
+  "view_interaction_rate": 0.203179,
+  "interaction_rate": 0.152138,
+  "product_ctr": 0.072949,
+  "click_cvr": 0.024937,
+  "order_per_1000_view": 13.261295,
+  "new_follower_rate": 0.005227,
+  "gpm": 5089.400065,
+  "uv_value": 5.0894,
+  "aov": 383.778522,
+  "qianchuan_roi": 28.390549,
+  "live_duration": 8129.4,
+  "qianchuan": 43730.17,
+  "funnel": [
+   {
+    "key": "impressions",
+    "label": "直播间曝光",
+    "value": 4444212.0
+   },
+   {
+    "key": "views",
+    "label": "直播间观看",
+    "value": 243943.0
+   },
+   {
+    "key": "product_impressions",
+    "label": "商品曝光",
+    "value": 1778304.0
+   },
+   {
+    "key": "product_clicks",
+    "label": "商品点击",
+    "value": 129726.0
+   },
+   {
+    "key": "paid_orders",
+    "label": "成交订单",
+    "value": 3235.0
+   }
+  ],
+  "orders_per_hour": 23.876301,
+  "gmv_per_hour": 9163.211455
+ },
+ "ok_totals": {
+  "impressions": 4417049.0,
+  "views": 242543.0,
+  "interactions": 36900.0,
+  "new_followers": 1266.0,
+  "product_impressions": 1759834.0,
+  "product_clicks": 128943.0,
+  "paid_orders": 3212.0,
+  "paid_amount": 1232406.84
+ },
+ "source_file": "小米官方手环直播间11.9日流量.xlsx＋小米官方手表11.9日流量.xlsx＋小米官方耳机直播间11.9日流量.xlsx＋小米官旗手表直播间11.9日流量.xlsx＋小米数码旗舰店11.9日流量.xlsx＋小米智能设备旗舰店直播间11.9日流量.xlsx",
+ "source_sheet": "多直播间合计",
+ "totals_source": "各直播间相加",
+ "anomaly_channels": [
+  "个人主页&店铺&橱窗",
+  "关注"
+ ],
+ "suspect_channels": [
+  "关注",
+  "其他",
+  "抖音商城推荐",
+  "直播广场"
+ ],
+ "excluded_share": 0.2555,
+ "row_sum_mismatch": {},
+ "dod": [
+  {
+   "key": "impressions",
+   "label": "直播间曝光次数",
+   "unit": "次",
+   "cur": 4444212.0,
+   "prev": 4631930.0,
+   "chg": -0.040526950968602704,
+   "is_rate": false,
+   "dir": "down"
+  },
+  {
+   "key": "views",
+   "label": "直播间观看次数",
+   "unit": "次",
+   "cur": 243943.0,
+   "prev": 265034.0,
+   "chg": -0.07957846917753952,
+   "is_rate": false,
+   "dir": "down"
+  },
+  {
+   "key": "interactions",
+   "label": "直播间互动次数",
+   "unit": "次",
+   "cur": 49564.0,
+   "prev": 47023.0,
+   "chg": 0.05403738596006202,
+   "is_rate": false,
+   "dir": "up"
+  },
+  {
+   "key": "new_followers",
+   "label": "新增粉丝数",
+   "unit": "人",
+   "cur": 1275.0,
+   "prev": 1374.0,
+   "chg": -0.07205240174672489,
+   "is_rate": false,
+   "dir": "down"
+  },
+  {
+   "key": "product_impressions",
+   "label": "商品曝光次数",
+   "unit": "次",
+   "cur": 1778304.0,
+   "prev": 1857594.0,
+   "chg": -0.042684246396144654,
+   "is_rate": false,
+   "dir": "down"
+  },
+  {
+   "key": "product_clicks",
+   "label": "商品点击次数",
+   "unit": "次",
+   "cur": 129726.0,
+   "prev": 147176.0,
+   "chg": -0.11856552698809586,
+   "is_rate": false,
+   "dir": "down"
+  },
+  {
+   "key": "paid_orders",
+   "label": "成交订单数",
+   "unit": "单",
+   "cur": 3235.0,
+   "prev": 3353.0,
+   "chg": -0.03519236504622725,
+   "is_rate": false,
+   "dir": "down"
+  },
+  {
+   "key": "paid_amount",
+   "label": "用户支付金额",
+   "unit": "元",
+   "cur": 1241523.52,
+   "prev": 1242863.57,
+   "chg": -0.0010781955737909632,
+   "is_rate": false,
+   "dir": "down"
+  },
+  {
+   "key": "exposure_view_rate",
+   "label": "曝光→观看率",
+   "unit": "%",
+   "cur": 5.49,
+   "prev": 5.72,
+   "chg": -0.040703262902182805,
+   "pp_diff": -0.23,
+   "is_rate": true,
+   "dir": "down"
+  },
+  {
+   "key": "interaction_rate",
+   "label": "观看→互动率",
+   "unit": "%",
+   "cur": 15.21,
+   "prev": 15.17,
+   "chg": 0.003032740410606602,
+   "pp_diff": 0.05,
+   "is_rate": true,
+   "dir": "up"
+  },
+  {
+   "key": "product_ctr",
+   "label": "商品点击率",
+   "unit": "%",
+   "cur": 7.29,
+   "prev": 7.92,
+   "chg": -0.07926390589304415,
+   "pp_diff": -0.63,
+   "is_rate": true,
+   "dir": "down"
+  },
+  {
+   "key": "click_cvr",
+   "label": "点击→成交转化率",
+   "unit": "%",
+   "cur": 2.49,
+   "prev": 2.28,
+   "chg": 0.09459222192959357,
+   "pp_diff": 0.22,
+   "is_rate": true,
+   "dir": "up"
+  },
+  {
+   "key": "new_follower_rate",
+   "label": "涨粉率",
+   "unit": "%",
+   "cur": 0.52,
+   "prev": 0.52,
+   "chg": 0.008294753086419682,
+   "pp_diff": 0.0,
+   "is_rate": true,
+   "dir": "flat"
+  },
+  {
+   "key": "gpm",
+   "label": "GPM",
+   "unit": "元",
+   "cur": 5089.0,
+   "prev": 4689.0,
+   "chg": 0.08528730705340416,
+   "pp_diff": 400.0,
+   "is_rate": true,
+   "dir": "up"
+  },
+  {
+   "key": "uv_value",
+   "label": "UV 价值",
+   "unit": "元",
+   "cur": 5.09,
+   "prev": 4.69,
+   "chg": 0.0852871871967929,
+   "pp_diff": 0.4,
+   "is_rate": true,
+   "dir": "up"
+  },
+  {
+   "key": "aov",
+   "label": "客单价",
+   "unit": "元",
+   "cur": 383.78,
+   "prev": 370.67,
+   "chg": 0.035358517104062924,
+   "pp_diff": 13.11,
+   "is_rate": true,
+   "dir": "up"
+  },
+  {
+   "key": "qianchuan_roi",
+   "label": "千川 ROI",
+   "unit": "倍",
+   "cur": 28.39,
+   "prev": 28.07,
+   "chg": 0.011520349104942894,
+   "pp_diff": 0.32,
+   "is_rate": true,
+   "dir": "up"
+  }
+ ],
+ "rules": [
+  {
+   "key": "exposure_view_rate",
+   "label": "曝光→观看率",
+   "status": "ok",
+   "unit": "%",
+   "value": 5.489,
+   "value_disp": "5.49%",
+   "range": "≥ 3.5%",
+   "why": "直播间曝光后愿意点进来的人占比。低于 3.5% 说明封面/标题/贴片没吸引力，平台判定「推了没人看」直接收量。"
+  },
+  {
+   "key": "interaction_rate",
+   "label": "观看→互动率",
+   "status": "ok",
+   "unit": "%",
+   "value": 15.2138,
+   "value_disp": "15.21%",
+   "range": "≥ 5%",
+   "why": "进来的人愿不愿意说话（评论/点赞/加团/停留）。低于 5% 会被判低质直播间，进入「推荐—无互动—少推荐」负循环；已剔除口径异常的渠道。"
+  },
+  {
+   "key": "product_ctr",
+   "label": "商品点击率",
+   "status": "ok",
+   "unit": "%",
+   "value": 7.2949,
+   "value_disp": "7.29%",
+   "range": "4 ~ 25%",
+   "why": "商品卡曝光后被点开的比例。低于 4% 通常是排品顺序/讲解节奏问题：主推品没在前 30 分钟曝光。"
+  },
+  {
+   "key": "click_cvr",
+   "label": "点击→成交转化率",
+   "status": "ok",
+   "unit": "%",
+   "value": 2.4937,
+   "value_disp": "2.49%",
+   "range": "1.5 ~ 10%",
+   "why": "点开商品的人最终下单的比例。低于 1.5% 要看价格力、库存、运费险、支付引导。"
+  },
+  {
+   "key": "new_follower_rate",
+   "label": "涨粉率",
+   "status": "ok",
+   "unit": "%",
+   "value": 0.5227,
+   "value_disp": "0.52%",
+   "range": "0.2 ~ 3%",
+   "why": "观看人数转化成粉丝的比例。涨粉是平台判断「值得持续分发」的正反馈，低于 0.2% 说明没有引导关注动作。"
+  },
+  {
+   "key": "gpm",
+   "label": "GPM（千次观看成交额）",
+   "status": "ok",
+   "unit": "元",
+   "value": 5089.4001,
+   "value_disp": "5,089 元",
+   "range": "≥ 2000 元",
+   "why": "每 1000 次观看带来的支付金额，平台最核心的分发指标。本店客单价 157~694 元，品类基线取 2000 元；GPM 高就继续给量，掉就收量。"
+  },
+  {
+   "key": "qianchuan_roi",
+   "label": "千川投放 ROI",
+   "status": "ok",
+   "unit": "倍",
+   "value": 28.3905,
+   "value_disp": "28.39 倍",
+   "range": "≥ 10 倍",
+   "why": "支付金额 ÷ 千川消耗。低于 10 倍说明付费流量买贵了，要继续放量必须先优化转化率或出价。"
+  }
+ ],
+ "channels": [
+  {
+   "name": "推荐feed",
+   "impressions": 1458112.0,
+   "views": 84809.0,
+   "interactions": 8005.0,
+   "new_followers": 335.0,
+   "product_impressions": 426393.0,
+   "product_clicks": 32950.0,
+   "paid_orders": 342.0,
+   "paid_amount": 131540.47,
+   "evr": 5.82,
+   "ctr": 7.73,
+   "cvr": 1.04,
+   "gpm": 1551,
+   "share": 34.77,
+   "prev_views": 99446.0,
+   "chg": -0.1471854071556422,
+   "anomaly": false,
+   "suspect": false,
+   "interaction_ratio": 9.44
+  },
+  {
+   "name": "短视频引流",
+   "impressions": 960216.0,
+   "views": 52127.0,
+   "interactions": 4710.0,
+   "new_followers": 242.0,
+   "product_impressions": 379661.0,
+   "product_clicks": 33152.0,
+   "paid_orders": 450.0,
+   "paid_amount": 167725.27,
+   "evr": 5.43,
+   "ctr": 8.73,
+   "cvr": 1.36,
+   "gpm": 3218,
+   "share": 21.37,
+   "prev_views": 40392.0,
+   "chg": 0.2905278272925331,
+   "anomaly": false,
+   "suspect": false,
+   "interaction_ratio": 9.04
+  },
+  {
+   "name": "其他",
+   "impressions": 1295386.0,
+   "views": 50316.0,
+   "interactions": 7360.0,
+   "new_followers": 363.0,
+   "product_impressions": 460795.0,
+   "product_clicks": 26818.0,
+   "paid_orders": 1032.0,
+   "paid_amount": 406217.38,
+   "evr": 3.88,
+   "ctr": 5.82,
+   "cvr": 3.85,
+   "gpm": 8073,
+   "share": 20.63,
+   "prev_views": 60050.0,
+   "chg": -0.1620982514571191,
+   "anomaly": false,
+   "suspect": false,
+   "interaction_ratio": 14.63
+  },
+  {
+   "name": "搜索",
+   "impressions": 316872.0,
+   "views": 35698.0,
+   "interactions": 6904.0,
+   "new_followers": 213.0,
+   "product_impressions": 307759.0,
+   "product_clicks": 24914.0,
+   "paid_orders": 675.0,
+   "paid_amount": 268100.12,
+   "evr": 11.27,
+   "ctr": 8.1,
+   "cvr": 2.71,
+   "gpm": 7510,
+   "share": 14.63,
+   "prev_views": 41493.0,
+   "chg": -0.13966211168148845,
+   "anomaly": false,
+   "suspect": false,
+   "interaction_ratio": 19.34
+  },
+  {
+   "name": "抖音商城推荐",
+   "impressions": 146968.0,
+   "views": 9069.0,
+   "interactions": 2973.0,
+   "new_followers": 69.0,
+   "product_impressions": 75142.0,
+   "product_clicks": 6205.0,
+   "paid_orders": 429.0,
+   "paid_amount": 157773.29,
+   "evr": 6.17,
+   "ctr": 8.26,
+   "cvr": 6.91,
+   "gpm": 17397,
+   "share": 3.72,
+   "prev_views": 10529.0,
+   "chg": -0.13866464051666827,
+   "anomaly": false,
+   "suspect": false,
+   "interaction_ratio": 32.78
+  },
+  {
+   "name": "关注",
+   "impressions": 168433.0,
+   "views": 6017.0,
+   "interactions": 6797.0,
+   "new_followers": 17.0,
+   "product_impressions": 49857.0,
+   "product_clicks": 2491.0,
+   "paid_orders": 67.0,
+   "paid_amount": 25178.02,
+   "evr": 3.57,
+   "ctr": 5.0,
+   "cvr": 2.69,
+   "gpm": 4184,
+   "share": 2.47,
+   "prev_views": 6615.0,
+   "chg": -0.09040060468631894,
+   "anomaly": false,
+   "suspect": true,
+   "interaction_ratio": 112.96
+  },
+  {
+   "name": "个人主页&店铺&橱窗",
+   "impressions": 47895.0,
+   "views": 2779.0,
+   "interactions": 12223.0,
+   "new_followers": 28.0,
+   "product_impressions": 51488.0,
+   "product_clicks": 2030.0,
+   "paid_orders": 48.0,
+   "paid_amount": 18033.81,
+   "evr": 5.8,
+   "ctr": 3.94,
+   "cvr": 2.36,
+   "gpm": 6489,
+   "share": 1.14,
+   "prev_views": 2581.0,
+   "chg": 0.07671445176288261,
+   "anomaly": true,
+   "suspect": false,
+   "interaction_ratio": 439.83
+  },
+  {
+   "name": "直播广场",
+   "impressions": 33990.0,
+   "views": 1725.0,
+   "interactions": 349.0,
+   "new_followers": 8.0,
+   "product_impressions": 16045.0,
+   "product_clicks": 533.0,
+   "paid_orders": 10.0,
+   "paid_amount": 4805.04,
+   "evr": 5.08,
+   "ctr": 3.32,
+   "cvr": 1.88,
+   "gpm": 2786,
+   "share": 0.71,
+   "prev_views": 2318.0,
+   "chg": -0.2558239861949957,
+   "anomaly": false,
+   "suspect": false,
+   "interaction_ratio": 20.23
+  },
+  {
+   "name": "活动页",
+   "impressions": 320.0,
+   "views": 822.0,
+   "interactions": 81.0,
+   "new_followers": 2.0,
+   "product_impressions": 6580.0,
+   "product_clicks": 454.0,
+   "paid_orders": 181.0,
+   "paid_amount": 61661.12,
+   "evr": 256.88,
+   "ctr": 6.9,
+   "cvr": 39.87,
+   "gpm": 75014,
+   "share": 0.34,
+   "prev_views": 822.0,
+   "chg": 0.0,
+   "anomaly": false,
+   "suspect": false,
+   "interaction_ratio": 9.85
+  },
+  {
+   "name": "头条西瓜",
+   "impressions": 11403.0,
+   "views": 471.0,
+   "interactions": 146.0,
+   "new_followers": 1.0,
+   "product_impressions": 4022.0,
+   "product_clicks": 156.0,
+   "paid_orders": 1.0,
+   "paid_amount": 489.0,
+   "evr": 4.13,
+   "ctr": 3.88,
+   "cvr": 0.64,
+   "gpm": 1038,
+   "share": 0.19,
+   "prev_views": 678.0,
+   "chg": -0.30530973451327437,
+   "anomaly": false,
+   "suspect": false,
+   "interaction_ratio": 31.0
+  },
+  {
+   "name": "直播推荐-其他推荐场景",
+   "impressions": 3073.0,
+   "views": 88.0,
+   "interactions": 16.0,
+   "new_followers": 1.0,
+   "product_impressions": 530.0,
+   "product_clicks": 23.0,
+   "paid_orders": 0.0,
+   "paid_amount": 0.0,
+   "evr": 2.86,
+   "ctr": 4.34,
+   "cvr": 0.0,
+   "gpm": 0,
+   "share": 0.04,
+   "prev_views": 82.0,
+   "chg": 0.07317073170731714,
+   "anomaly": false,
+   "suspect": false,
+   "interaction_ratio": 18.18
+  },
+  {
+   "name": "同城",
+   "impressions": 1544.0,
+   "views": 22.0,
+   "interactions": 0.0,
+   "new_followers": 0.0,
+   "product_impressions": 32.0,
+   "product_clicks": 0.0,
+   "paid_orders": 0.0,
+   "paid_amount": 0.0,
+   "evr": 1.42,
+   "ctr": 0.0,
+   "cvr": null,
+   "gpm": 0,
+   "share": 0.01,
+   "prev_views": 28.0,
+   "chg": -0.2142857142857143,
+   "anomaly": false,
+   "suspect": false,
+   "interaction_ratio": 0.0
+  }
+ ],
+ "room_compare": [
+  {
+   "name": "小米官方手表",
+   "views": 108314.0,
+   "impressions": 1911186.0,
+   "view_share": 44.4,
+   "paid_amount": 599534.27,
+   "paid_orders": 1474.0,
+   "evr": 5.67,
+   "ctr": 6.55,
+   "cvr": 2.76,
+   "gpm": 5535,
+   "aov": 407,
+   "roi": 28.204923,
+   "uv_value": 5.5351,
+   "interaction_rate": 13.04,
+   "new_follower_rate": 0.58,
+   "anomaly_channels": [
+    "个人主页&店铺&橱窗"
+   ],
+   "suspect_channels": [
+    "关注"
+   ],
+   "vs_peer_gpm": 1.21
+  },
+  {
+   "name": "小米官方手环直播间",
+   "views": 65518.0,
+   "impressions": 1103558.0,
+   "view_share": 26.86,
+   "paid_amount": 308287.16,
+   "paid_orders": 957.0,
+   "evr": 5.94,
+   "ctr": 9.78,
+   "cvr": 2.25,
+   "gpm": 4705,
+   "aov": 322,
+   "roi": 28.496926,
+   "uv_value": 4.7054,
+   "interaction_rate": 17.07,
+   "new_follower_rate": 0.5,
+   "anomaly_channels": [],
+   "suspect_channels": [
+    "关注"
+   ],
+   "vs_peer_gpm": 1.03
+  },
+  {
+   "name": "小米数码旗舰店",
+   "views": 34087.0,
+   "impressions": 827573.0,
+   "view_share": 13.97,
+   "paid_amount": 135849.81,
+   "paid_orders": 397.0,
+   "evr": 4.12,
+   "ctr": 7.14,
+   "cvr": 2.23,
+   "gpm": 3985,
+   "aov": 342,
+   "roi": 23.096521,
+   "uv_value": 3.9854,
+   "interaction_rate": 20.05,
+   "new_follower_rate": 0.45,
+   "anomaly_channels": [],
+   "suspect_channels": [
+    "直播广场"
+   ],
+   "vs_peer_gpm": 0.87
+  },
+  {
+   "name": "小米官旗手表直播间",
+   "views": 14906.0,
+   "impressions": 223520.0,
+   "view_share": 6.11,
+   "paid_amount": 66312.27,
+   "paid_orders": 148.0,
+   "evr": 6.67,
+   "ctr": 5.22,
+   "cvr": 2.17,
+   "gpm": 4449,
+   "aov": 448,
+   "roi": 24.345856,
+   "uv_value": 4.4487,
+   "interaction_rate": 6.32,
+   "new_follower_rate": 0.41,
+   "anomaly_channels": [
+    "关注"
+   ],
+   "suspect_channels": [],
+   "vs_peer_gpm": 0.97
+  },
+  {
+   "name": "小米官方耳机直播间",
+   "views": 13513.0,
+   "impressions": 268013.0,
+   "view_share": 5.54,
+   "paid_amount": 46525.54,
+   "paid_orders": 99.0,
+   "evr": 5.04,
+   "ctr": 8.17,
+   "cvr": 1.77,
+   "gpm": 3443,
+   "aov": 470,
+   "roi": 32.791483,
+   "uv_value": 3.443,
+   "interaction_rate": 21.7,
+   "new_follower_rate": 0.42,
+   "anomaly_channels": [],
+   "suspect_channels": [
+    "关注",
+    "抖音商城推荐",
+    "其他"
+   ],
+   "vs_peer_gpm": 0.75
+  },
+  {
+   "name": "小米智能设备旗舰店直播间",
+   "views": 7605.0,
+   "impressions": 110362.0,
+   "view_share": 3.12,
+   "paid_amount": 85014.47,
+   "paid_orders": 160.0,
+   "evr": 6.89,
+   "ctr": 4.46,
+   "cvr": 4.59,
+   "gpm": 11179,
+   "aov": 531,
+   "roi": 52.120304,
+   "uv_value": 11.1788,
+   "interaction_rate": 13.77,
+   "new_follower_rate": 0.55,
+   "anomaly_channels": [],
+   "suspect_channels": [],
+   "vs_peer_gpm": 2.44
+  }
+ ],
+ "peer_benchmark": [
+  {
+   "key": "gpm",
+   "label": "GPM（元/千次观看）",
+   "unit": "元",
+   "decimals": 0,
+   "median": 4577.0,
+   "best": {
+    "name": "小米智能设备旗舰店直播间",
+    "value": 11179
+   },
+   "worst": {
+    "name": "小米官方耳机直播间",
+    "value": 3443
+   }
+  },
+  {
+   "key": "aov",
+   "label": "客单价（元/单）",
+   "unit": "元",
+   "decimals": 0,
+   "median": 428.0,
+   "best": {
+    "name": "小米智能设备旗舰店直播间",
+    "value": 531
+   },
+   "worst": {
+    "name": "小米官方手环直播间",
+    "value": 322
+   }
+  },
+  {
+   "key": "uv_value",
+   "label": "UV 价值（元/次观看）",
+   "unit": "元",
+   "decimals": 2,
+   "median": 4.58,
+   "best": {
+    "name": "小米智能设备旗舰店直播间",
+    "value": 11.18
+   },
+   "worst": {
+    "name": "小米官方耳机直播间",
+    "value": 3.44
+   }
+  },
+  {
+   "key": "evr",
+   "label": "曝光→观看率",
+   "unit": "%",
+   "decimals": 2,
+   "median": 5.8,
+   "best": {
+    "name": "小米智能设备旗舰店直播间",
+    "value": 6.89
+   },
+   "worst": {
+    "name": "小米数码旗舰店",
+    "value": 4.12
+   }
+  },
+  {
+   "key": "interaction_rate",
+   "label": "观看→互动率",
+   "unit": "%",
+   "decimals": 2,
+   "median": 15.42,
+   "best": {
+    "name": "小米官方耳机直播间",
+    "value": 21.7
+   },
+   "worst": {
+    "name": "小米官旗手表直播间",
+    "value": 6.32
+   }
+  },
+  {
+   "key": "ctr",
+   "label": "商品点击率",
+   "unit": "%",
+   "decimals": 2,
+   "median": 6.84,
+   "best": {
+    "name": "小米官方手环直播间",
+    "value": 9.78
+   },
+   "worst": {
+    "name": "小米智能设备旗舰店直播间",
+    "value": 4.46
+   }
+  },
+  {
+   "key": "cvr",
+   "label": "点击→成交转化率",
+   "unit": "%",
+   "decimals": 2,
+   "median": 2.24,
+   "best": {
+    "name": "小米智能设备旗舰店直播间",
+    "value": 4.59
+   },
+   "worst": {
+    "name": "小米官方耳机直播间",
+    "value": 1.77
+   }
+  },
+  {
+   "key": "new_follower_rate",
+   "label": "涨粉率",
+   "unit": "%",
+   "decimals": 2,
+   "median": 0.47,
+   "best": {
+    "name": "小米官方手表",
+    "value": 0.58
+   },
+   "worst": {
+    "name": "小米官旗手表直播间",
+    "value": 0.41
+   }
+  },
+  {
+   "key": "roi",
+   "label": "千川投放 ROI（倍）",
+   "unit": "倍",
+   "decimals": 2,
+   "median": 28.35,
+   "best": {
+    "name": "小米智能设备旗舰店直播间",
+    "value": 52.12
+   },
+   "worst": {
+    "name": "小米数码旗舰店",
+    "value": 23.1
+   }
+  }
+ ],
+ "insights": {
+  "headline": [
+   "观看 243,943 次（前一日 265,034，-8.0%）"
+  ],
+  "data": [
+   "直播间曝光次数 4,444,212 次，前一日 4,631,930，↓ 4.1%",
+   "商品点击次数 129,726 次，前一日 147,176，↓ 11.9%",
+   "成交订单数 3,235 单，前一日 3,353，↓ 3.5%",
+   "用户支付金额 1,241,524 元，前一日 1,242,864，↓ 0.1%",
+   "曝光→观看率 5.49%（前一日 5.72%，-0.23pp）",
+   "观看→互动率 15.21%（前一日 15.17%，+0.05pp）",
+   "商品点击率 7.29%（前一日 7.92%，-0.63pp）",
+   "点击→成交转化率 2.49%（前一日 2.28%，+0.22pp）",
+   "渠道结构：推荐feed 贡献观看 84,809 次（占 34.8%），共 12 个入口",
+   "渠道里 短视频引流 涨得最猛（观看 +29.1%）；头条西瓜 掉得最多（-30.5%）",
+   "直播间对比：小米官方手表 观看最多（108,314 次，占 44.4%）；小米官方手环直播间 占 26.9%、小米数码旗舰店 占 14.0%、小米官旗手表直播间 占 6.1%",
+   "变现效率：小米智能设备旗舰店直播间 GPM 11,179 元最高，小米官方耳机直播间 3,443 元最低（差 225%）",
+   "ℹ️ 渠道「个人主页&店铺&橱窗、关注」在部分直播间内口径异常（互动次数 ÷ 观看次数 ≥ 250%），对应房间的这些渠道已从互动率合算中剔除；被剔除的互动数占全场 25.6%，若占比过高请找平台核对两列口径。"
+  ],
+  "rules": [
+   "✅ 达标：曝光→观看率 5.49%（平台参考 ≥ 3.5%）、观看→互动率 15.21%（平台参考 ≥ 5%）、商品点击率 7.29%（平台参考 4 ~ 25%）、点击→成交转化率 2.49%（平台参考 1.5 ~ 10%）、涨粉率 0.52%（平台参考 0.2 ~ 3%）、GPM（千次观看成交额） 5,089 元（平台参考 ≥ 2000 元）、千川投放 ROI 28.39 倍（平台参考 ≥ 10 倍）",
+   "✅ 全部核心指标落在平台推荐区间内，当前分发逻辑健康，重点是保住这套节奏。"
+  ],
+  "actions": [
+   "**流量分配**：小米智能设备旗舰店直播间 观看占比不足 5%，属于「开播了但平台没给量」。先补齐这间的开播时长与场次稳定性（平台按历史场次给初始流量），再谈投放。",
+   "**复制高效场**：小米智能设备旗舰店直播间（GPM 11,179 元、客单价 531 元）、小米官方手表（GPM 5,535 元、客单价 407 元） 是本店变现效率最高的两间，把它们的排品顺序、开播时段、话术脚本抄到低效直播间。"
+  ]
+ }
+}
