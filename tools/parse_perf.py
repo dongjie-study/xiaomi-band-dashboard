@@ -35,6 +35,7 @@ ROOM_MAP = OrderedDict([
     ('小米智能设备直播间', 'room_xiaomi_smart_device_new'),
     ('小米手环官旗直播间', 'room_xiaomi_band_flagship'),
     ('小米官方智能设备直播间', 'room_xiaomi_smart_device_official'),
+    ('小米ai眼镜官方直播间', 'room_xiaomi_ai_glasses_official'),
 ])
 PREORDER_MAP = OrderedDict([
     ('手环', 'room_xiaomi_band_preorder'),
